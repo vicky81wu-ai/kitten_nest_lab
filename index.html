@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Kitten Nest Lab</title>
+  <style>
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#120b12;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Arial,sans-serif}body{display:flex;align-items:center;justify-content:center}.stage{position:relative;width:min(100vw,calc(100vh*852/1846));height:min(100vh,calc(100vw*1846/852));overflow:hidden;background:#f4c3b5}.base{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:opacity .72s ease;pointer-events:none}.day{opacity:1}.night{opacity:0}body.night .day{opacity:0}body.night .night{opacity:1}.clock{position:absolute;left:9.7%;top:20.7%;width:33%;aspect-ratio:1/1;border-radius:50%;pointer-events:none;filter:drop-shadow(0 0 8px rgba(255,210,205,.55));opacity:.95}.hand{position:absolute;left:50%;bottom:50%;transform-origin:50% 100%;background:rgba(122,63,68,.78);border-radius:999px;box-shadow:0 0 5px rgba(255,220,215,.36),inset 0 0 2px rgba(255,255,255,.42)}.hour{width:2.7%;height:23%;margin-left:-1.35%}.minute{width:2.1%;height:33%;margin-left:-1.05%}.second{width:1.15%;height:36%;margin-left:-.575%;background:rgba(160,86,98,.45);opacity:.55}.center{position:absolute;left:50%;top:50%;width:7.5%;aspect-ratio:1/1;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff7f4 0%,#e5a2a2 35%,#9e5a63 100%);box-shadow:0 0 7px rgba(255,230,224,.7),0 2px 5px rgba(70,20,20,.22)}body.night .clock{opacity:.68;filter:drop-shadow(0 0 6px rgba(216,165,255,.35))}.weather{position:absolute;left:48%;top:23.8%;width:27%;height:12%;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;color:rgba(255,255,255,.88);text-shadow:0 0 7px rgba(255,255,255,.72),0 0 16px rgba(180,225,255,.48);transition:opacity .72s ease,color .72s ease,text-shadow .72s ease;animation:float 4.8s ease-in-out infinite}.weather .temp{font-size:clamp(24px,7.1vw,42px);line-height:1;font-weight:300;letter-spacing:.02em}.weather .desc{margin-top:7px;font-size:clamp(11px,3.1vw,18px);font-weight:400;letter-spacing:.04em;opacity:.78}body.night .weather{color:rgba(232,214,255,.82);text-shadow:0 0 7px rgba(230,210,255,.72),0 0 18px rgba(165,105,255,.45);opacity:.78}.spark{position:absolute;width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.68;box-shadow:0 0 10px currentColor;animation:twinkle 2.4s ease-in-out infinite}.a{left:17%;top:24%;animation-delay:.1s}.b{left:76%;top:34%;animation-delay:.9s}.c{left:59%;top:71%;animation-delay:1.5s}@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}@keyframes twinkle{0%,100%{transform:scale(.75);opacity:.28}50%{transform:scale(1.35);opacity:.85}}.moon{position:absolute;left:79.5%;top:29.8%;width:15.5%;height:15%;border:none;background:transparent;cursor:pointer;z-index:10}.pulse{position:absolute;left:86.8%;top:37.2%;width:44px;height:44px;transform:translate(-50%,-50%) scale(.3);border-radius:50%;border:1px solid rgba(255,228,244,.86);box-shadow:0 0 22px rgba(255,190,235,.75);opacity:0;pointer-events:none;z-index:9}.pulse.active{animation:pulse .62s ease-out}@keyframes pulse{0%{opacity:.95;transform:translate(-50%,-50%) scale(.35)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.5)}}body.debug .moon{background:rgba(255,0,120,.16);outline:2px solid rgba(255,0,120,.65);border-radius:22px}body.debug .clock{outline:2px solid rgba(60,160,255,.75)}body.debug .weather{outline:2px solid rgba(120,255,170,.75)}.missing{position:absolute;inset:0;display:none;align-items:center;justify-content:center;text-align:center;padding:24px;color:#fff;background:#1b1018;line-height:1.7;font-size:16px;z-index:20}.base[src=""]+.missing{display:flex}
+  </style>
+</head>
+<body>
+  <main class="stage">
+    <img class="base day" src="nest-day.jpg" alt="" onerror="showMissing()" />
+    <img class="base night" src="nest-night.jpg" alt="" onerror="showMissing()" />
+    <div class="missing" id="missing">还差两张图片：<br>nest-day.jpg<br>nest-night.jpg<br><br>把亮图和暗图上传到仓库根目录，文件名必须完全一样。</div>
+    <div class="clock" aria-hidden="true"><div class="hand hour" id="hourHand"></div><div class="hand minute" id="minuteHand"></div><div class="hand second" id="secondHand"></div><div class="center"></div></div>
+    <div class="weather" aria-hidden="true"><div class="spark a"></div><div class="spark b"></div><div class="spark c"></div><div class="temp" id="weatherTemp">23°C</div><div class="desc" id="weatherDesc">Soft breeze</div></div>
+    <button class="moon" id="moonHotspot" aria-label="Toggle moon light"></button><div class="pulse" id="tapPulse"></div>
+  </main>
+  <script>
+    const body=document.body, moon=document.getElementById('moonHotspot'), pulse=document.getElementById('tapPulse');
+    const hour=document.getElementById('hourHand'), minute=document.getElementById('minuteHand'), second=document.getElementById('secondHand');
+    const wt=document.getElementById('weatherTemp'), wd=document.getElementById('weatherDesc');
+    const params=new URLSearchParams(location.search); if(params.get('debug')==='1') body.classList.add('debug');
+    function showMissing(){document.getElementById('missing').style.display='flex'}
+    let isNight=false; moon.addEventListener('click',()=>{isNight=!isNight;body.classList.toggle('night',isNight);wt.textContent=isNight?'22°C':'23°C';wd.textContent=isNight?'Moonlit breeze':'Soft breeze';pulse.classList.remove('active');void pulse.offsetWidth;pulse.classList.add('active')});
+    function updateClock(){const n=new Date(),s=n.getSeconds(),m=n.getMinutes(),h=n.getHours()%12;second.style.transform=`rotate(${s*6}deg)`;minute.style.transform=`rotate(${m*6+s*.1}deg)`;hour.style.transform=`rotate(${h*30+m*.5}deg)`}
+    updateClock();setInterval(updateClock,1000);
+  </script>
+</body>
+</html>
