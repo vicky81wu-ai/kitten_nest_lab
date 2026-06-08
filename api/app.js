@@ -28,7 +28,8 @@ async function readCloudState() {
 }
 
 function hydrateHtml(html, state) {
-  const bubbleText = state.alexBubble || 'come here, kitten.';
+  const queue = Array.isArray(state.alexBubbles) && state.alexBubbles.length ? state.alexBubbles : [];
+  const bubbleText = queue[0] || state.alexBubble || 'come here, kitten.';
   const bubbleHtml = escapeHtml(bubbleText);
   const bubbleJs = escapeJs(bubbleText);
 
@@ -42,7 +43,7 @@ function hydrateHtml(html, state) {
 const bridge = `
 <script>
 (function(){
-  window.__kittenNestBridge = 'cloud-bridge-v8-server-hydrate';
+  window.__kittenNestBridge = 'cloud-bridge-v10-bubble-queue';
 
   const css = document.createElement('style');
   css.textContent = [
@@ -54,10 +55,34 @@ const bridge = `
   const STATE_URL = '/api/state';
   let cloudState = null;
   let applying = false;
+  let queueIndex = 0;
+  let lastStateStamp = '';
 
   function bubbleEl(){ return document.getElementById('bubble'); }
   function panelOpen(){ return document.querySelector('.gameMenu.show,.gomokuPanel.show,.memoriesPanel.show'); }
-  function cloudText(){ return cloudState && cloudState.alexBubble ? String(cloudState.alexBubble) : ''; }
+  function bubbleQueue(){
+    if(!cloudState) return [];
+    if(Array.isArray(cloudState.alexBubbles)){
+      return cloudState.alexBubbles.map(function(x){ return String(x || '').trim(); }).filter(Boolean);
+    }
+    return cloudState.alexBubble ? [String(cloudState.alexBubble)] : [];
+  }
+  function cloudText(){
+    const q = bubbleQueue();
+    if(!q.length) return '';
+    const i = ((queueIndex % q.length) + q.length) % q.length;
+    return q[i];
+  }
+
+  function syncQueueIndex(){
+    if(!cloudState) return;
+    const stamp = String(cloudState.updatedAt || '') + '|' + JSON.stringify(cloudState.alexBubbles || cloudState.alexBubble || '');
+    if(stamp !== lastStateStamp){
+      lastStateStamp = stamp;
+      const n = Number(cloudState.bubbleIndex || 0);
+      queueIndex = Number.isFinite(n) ? n : 0;
+    }
+  }
 
   function applyState(force){
     const bubble = bubbleEl();
@@ -67,6 +92,7 @@ const bridge = `
     applying = true;
     bubble.textContent = text;
     bubble.setAttribute('data-cloud', '1');
+    bubble.classList.remove('hidden');
     setTimeout(function(){ applying = false; }, 30);
   }
 
@@ -76,6 +102,7 @@ const bridge = `
       if(!res.ok) return;
       cloudState = await res.json();
       window.kittenNestCloudState = cloudState;
+      syncQueueIndex();
       applyState(force);
     }catch(e){ console.log('nest cloud state unavailable', e); }
   }
@@ -91,10 +118,28 @@ const bridge = `
         setTimeout(function(){ applyState(false); }, 220);
       }
     });
-    mo.observe(bubble, { childList:true, characterData:true, subtree:true });
+    mo.observe(bubble, { childList:true, characterData:true, subtree:true, attributes:true, attributeFilter:['class'] });
   }
 
-  function tick(force){ installObserver(); loadState(force); }
+  function nextBubble(e){
+    const q = bubbleQueue();
+    if(q.length <= 1 || panelOpen()) return;
+    if(e){ e.preventDefault(); e.stopPropagation(); if(e.stopImmediatePropagation) e.stopImmediatePropagation(); }
+    queueIndex = (queueIndex + 1) % q.length;
+    applyState(true);
+  }
+
+  function installCycler(){
+    const bubble = bubbleEl();
+    const tattoo = document.querySelector('.tattooHot');
+    [bubble, tattoo].forEach(function(el){
+      if(!el || el.__cloudCyclerInstalled) return;
+      el.__cloudCyclerInstalled = true;
+      el.addEventListener('click', nextBubble, true);
+    });
+  }
+
+  function tick(force){ installObserver(); installCycler(); loadState(force); }
 
   document.addEventListener('visibilitychange', function(){ if(!document.hidden) tick(true); });
   window.addEventListener('focus', function(){ tick(true); });
