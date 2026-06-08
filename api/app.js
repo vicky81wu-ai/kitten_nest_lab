@@ -4,14 +4,14 @@ const path = require('path');
 const bridge = `
 <script>
 (function(){
-  window.__kittenNestBridge = 'cloud-bridge-v3';
+  window.__kittenNestBridge = 'cloud-bridge-v4';
 
   const css = document.createElement('style');
-  css.textContent = `
-    .memoriesPanel .panel{max-height:calc(100dvh - 96px)!important;padding-bottom:calc(22px + env(safe-area-inset-bottom,0px))!important;}
-    .memoriesPanel .bar{position:sticky!important;bottom:0!important;padding-top:10px!important;padding-bottom:max(8px,env(safe-area-inset-bottom,0px))!important;background:linear-gradient(180deg,rgba(255,242,241,0),rgba(255,242,241,.92) 35%,rgba(255,242,241,.96))!important;}
-    iframe[src*="vercel"], [data-vercel-toolbar], [data-nextjs-toast]{display:none!important;pointer-events:none!important;opacity:0!important;}
-  `;
+  css.textContent = [
+    '.memoriesPanel .panel{max-height:calc(100dvh - 96px)!important;padding-bottom:calc(22px + env(safe-area-inset-bottom,0px))!important;}',
+    '.memoriesPanel .bar{position:sticky!important;bottom:0!important;padding-top:10px!important;padding-bottom:max(8px,env(safe-area-inset-bottom,0px))!important;background:linear-gradient(180deg,rgba(255,242,241,0),rgba(255,242,241,.92) 35%,rgba(255,242,241,.96))!important;}',
+    'iframe[src*=vercel], [data-vercel-toolbar], [data-nextjs-toast]{display:none!important;pointer-events:none!important;opacity:0!important;}'
+  ].join('\n');
   document.head.appendChild(css);
 
   const STATE_URL = '/api/state';
