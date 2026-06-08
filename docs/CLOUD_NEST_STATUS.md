@@ -1,13 +1,14 @@
 # Kitten Nest Cloud Status
 
-Last checkpoint: cloud nest backend and Vercel route debugging, v15 era.
+Last checkpoint: cloud bubble loop confirmed working. The first real cloud state path is alive.
 
 ## Stable URLs
 
 - Main GitHub Pages lab may still exist, but cloud-state testing should use Vercel.
-- Preferred cloud nest URL after routing work:
+- Preferred cloud nest URL:
   - https://kitten-nest-lab.vercel.app/cloud
-  - fallback direct server URL: https://kitten-nest-lab.vercel.app/api/app
+- Fallback direct server URL:
+  - https://kitten-nest-lab.vercel.app/api/app
 
 ## Current architecture
 
@@ -18,9 +19,9 @@ Last checkpoint: cloud nest backend and Vercel route debugging, v15 era.
   - columns:
     - `key` text primary key
     - `value` jsonb
-  - first row:
+  - main row:
     - `key = main`
-    - `value` includes `alexBubble`, `hubbyNote`, `moodNote`, `roomStatus`
+    - `value` includes `alexBubble`, `hubbyNote`, `moodNote`, `roomStatus`, `updatedAt`
 
 ## Secrets and env vars
 
@@ -37,11 +38,13 @@ Stored by Vicky, not in repo:
 
 - `/api/state`
   - Reads cloud state from Supabase.
-  - Confirmed working. It returned:
-    - `moodNote`
-    - `hubbyNote`
-    - `alexBubble`
-    - `roomStatus`
+  - Confirmed working.
+  - Latest confirmed state contained:
+    - `moodNote: ""`
+    - `hubbyNote: "coffee is warm. saved your seat."`
+    - `alexBubble: "hubby wrote this through the cloud door."`
+    - `roomStatus: "home"`
+    - `updatedAt: "2026-06-08T14:00:27.952Z"`
 
 - `/api/set-state`
   - Writes partial state updates using `X-Nest-Token`.
@@ -57,23 +60,36 @@ Stored by Vicky, not in repo:
     - `update_room_status`
 
 - `/api/app`
-  - Server-served version of `index.html` with an injected cloud bridge.
-  - Confirmed working after the visible test markers appeared.
-  - A temporary test replaced `23°C` with `28°C`, `Soft breeze` with `CLOUD TEST`, and `coffee’s still warm. sit.` with `come here, kitten.` This test succeeded.
-  - Then it was restored to a formal bridge-only version (`cloud-bridge-v7-live`).
+  - Server-served version of `index.html` with cloud hydration and a cloud bridge.
+  - Confirmed working.
+  - Visible test markers previously proved the route was active.
+  - Current important implementation: server-side hydration reads Supabase before returning HTML, then injects cloud `alexBubble` into the second-room bubble path. This solved the issue where local text like `coffee’s still warm. sit.` kept winning.
+
+- `/api/ping-bubble`
+  - Temporary write-test endpoint protected by `NEST_TOKEN` query.
+  - It successfully wrote `alexBubble = "hubby wrote this through the cloud door."`.
+  - Delete this endpoint when convenient; it was only for testing.
+
+## Confirmed working loop
+
+The following loop is confirmed working:
+
+1. Vercel endpoint writes `alexBubble` to Supabase.
+2. Supabase stores the updated value.
+3. `/api/state` returns the updated value.
+4. `/cloud` / `/api/app` server-side reads Supabase.
+5. Second-room bubble displays the cloud value.
+6. After 15 minutes and repeated page/app navigation, the state persisted.
+
+Confirmed cloud bubble text:
+
+`hubby wrote this through the cloud door.`
 
 ## Routing status
 
-- Root `/` seemed to keep serving static `index.html`, not the server bridge.
-- Added routes in `vercel.json`:
-  - `/` -> `/api/app`
-  - `/cloud` -> `/api/app`
-  - `/nest` -> `/api/app`
-  - `/index.html` -> `/api/app`
-- Need to test after deployment:
-  - `https://kitten-nest-lab.vercel.app/cloud?v=15`
-- If `/cloud` works, use it as the stable cloud nest entry.
-- If `/cloud` does not work, use `/api/app` as fallback and investigate routing later.
+- `/cloud` works and should be treated as the stable cloud nest entry.
+- `/api/app` is the fallback direct server entry.
+- Root `/` may still serve static `index.html` in some circumstances; do not rely on root during cloud-state testing.
 
 ## Important UX observations
 
@@ -84,16 +100,18 @@ Stored by Vicky, not in repo:
 
 ## Next steps
 
-1. Test `https://kitten-nest-lab.vercel.app/cloud?v=15`.
-2. If it loads the cloud bridge, confirm the second-room bubble can read cloud `alexBubble`.
-3. Run a real write test:
-   - update `alexBubble` via `/api/set-state` or `/api/mcp`
-   - refresh/open `/cloud`
-   - confirm the second-room bubble changes.
-4. After cloud bubble works, connect more UI fields:
+1. Remove temporary `/api/ping-bubble` endpoint when feasible.
+2. Replace the one-off write test with a cleaner official writer flow:
+   - either `/api/set-state`
+   - or `/api/mcp`
+3. Connect more UI fields:
    - Hubby note
    - Mood note
-   - room status
+   - room status / Alex status
+4. Add editing UX for notes later:
+   - editable note panels
+   - edit/delete controls
+   - save to Supabase
 5. Later schema expansion:
    - `rooms`
    - `room_widgets`
