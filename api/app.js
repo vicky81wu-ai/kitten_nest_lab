@@ -4,7 +4,7 @@ const path = require('path');
 const bridge = `
 <script>
 (function(){
-  window.__kittenNestBridge = 'cloud-bridge-v5-temp28';
+  window.__kittenNestBridge = 'cloud-bridge-v6-server-marker';
 
   const css = document.createElement('style');
   css.textContent = [
@@ -74,6 +74,13 @@ const bridge = `
 module.exports = function handler(req, res) {
   const file = path.join(process.cwd(), 'index.html');
   let html = fs.readFileSync(file, 'utf8');
+
+  html = html
+    .replace('<div id="temp" class="temp">23°C</div>', '<div id="temp" class="temp">28°C</div>')
+    .replace('Soft breeze', 'CLOUD TEST')
+    .replaceAll('coffee’s still warm. sit.', 'come here, kitten.')
+    .replaceAll('coffee\'s still warm. sit.', 'come here, kitten.');
+
   html = html.replace('</body>', bridge + '\n</body>');
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('Cache-Control', 'no-store');
