@@ -3,6 +3,7 @@
     { "src": "^/$", "dest": "/api/app" },
     { "src": "^/cloud$", "dest": "/api/app" },
     { "src": "^/nest$", "dest": "/api/app" },
+    { "src": "^/write$", "dest": "/write.html" },
     { "src": "^/index.html$", "dest": "/api/app" },
     { "src": "^/(.*)$", "dest": "/$1" }
   ]
