@@ -4,7 +4,7 @@ const path = require('path');
 const bridge = `
 <script>
 (function(){
-  window.__kittenNestBridge = 'cloud-bridge-v4';
+  window.__kittenNestBridge = 'cloud-bridge-v5-temp28';
 
   const css = document.createElement('style');
   css.textContent = [
@@ -21,8 +21,10 @@ const bridge = `
   function bubbleEl(){ return document.getElementById('bubble'); }
   function panelOpen(){ return document.querySelector('.gameMenu.show,.gomokuPanel.show,.memoriesPanel.show'); }
   function cloudText(){ return cloudState && cloudState.alexBubble ? String(cloudState.alexBubble) : ''; }
+  function markTemp(){ const temp=document.getElementById('temp'); if(temp && !document.body.classList.contains('homeDim')) temp.textContent='28°C'; }
 
   function applyState(force){
+    markTemp();
     const bubble = bubbleEl();
     const text = cloudText();
     if(!bubble || !text) return;
@@ -35,6 +37,7 @@ const bridge = `
 
   async function loadState(force){
     try{
+      markTemp();
       const res = await fetch(STATE_URL + '?t=' + Date.now(), { cache: 'no-store' });
       if(!res.ok) return;
       cloudState = await res.json();
@@ -57,10 +60,7 @@ const bridge = `
     mo.observe(bubble, { childList:true, characterData:true, subtree:true });
   }
 
-  function tick(force){
-    installObserver();
-    loadState(force);
-  }
+  function tick(force){ markTemp(); installObserver(); loadState(force); }
 
   document.addEventListener('visibilitychange', function(){ if(!document.hidden) tick(true); });
   window.addEventListener('focus', function(){ tick(true); });
