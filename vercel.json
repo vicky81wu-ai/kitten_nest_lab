@@ -2,6 +2,7 @@
   "routes": [
     { "src": "^/$", "dest": "/api/app-assets" },
     { "src": "^/cloud$", "dest": "/api/app-assets" },
+    { "src": "^/pwa$", "dest": "/api/app-assets" },
     { "src": "^/cloudq$", "dest": "/api/app-q" },
     { "src": "^/nest$", "dest": "/api/app-assets" },
     { "src": "^/write$", "dest": "/write.html" },
