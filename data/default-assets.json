@@ -1,0 +1,12 @@
+{
+  "version": "0.1.0",
+  "roomBackgrounds": {
+    "home": {
+      "day": "/assets/rooms/day.jpg",
+      "night": "/assets/rooms/night.jpg"
+    },
+    "coffeeCorner": {
+      "morningEvening": "/assets/rooms/morning-evening.jpg"
+    }
+  }
+}
