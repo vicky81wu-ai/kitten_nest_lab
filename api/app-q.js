@@ -1,16 +1,55 @@
 const fs = require('fs');
 const path = require('path');
 
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function escapeJs(value) {
+  return JSON.stringify(String(value));
+}
+
+async function readPublicState(req) {
+  try {
+    const proto = req.headers['x-forwarded-proto'] || 'https';
+    const host = req.headers.host;
+    const response = await fetch(`${proto}://${host}/api/state?t=${Date.now()}`, { cache: 'no-store' });
+    if (!response.ok) return {};
+    return await response.json();
+  } catch {
+    return {};
+  }
+}
+
+function hydrateHtml(html, state) {
+  const queue = Array.isArray(state.alexBubbles) && state.alexBubbles.length ? state.alexBubbles : [];
+  const bubbleText = queue[0] || state.alexBubble || 'come here, kitten.';
+  const bubbleHtml = escapeHtml(bubbleText);
+  const bubbleJs = escapeJs(bubbleText);
+
+  return html
+    .replace('<div id="bubble" class="bubble">come here, kitten.</div>', `<div id="bubble" class="bubble">${bubbleHtml}</div>`)
+    .replace("if(r==='game')say('come here, kitten.')", `if(r==='game')say(${bubbleJs})`)
+    .replace("$('toGame').onclick=()=>{go('game');say('coffee’s still warm. sit.')} ;", `$('toGame').onclick=()=>{go('game');say(${bubbleJs})} ;`)
+    .replace("$('toGame').onclick=()=>{go('game');say('coffee's still warm. sit.')} ;", `$('toGame').onclick=()=>{go('game');say(${bubbleJs})} ;`);
+}
+
 const bridge = `
 <script>
 (function(){
-  window.__kittenNestBridge = 'cloud-bridge-q1-document-capture';
+  window.__kittenNestBridge = 'cloud-bridge-q2-hide-then-next';
 
   const STATE_URL = '/api/state';
   let cloudState = null;
   let queueIndex = 0;
   let lastStateStamp = '';
   let applying = false;
+  let manualHidden = false;
   let lastTouchAt = 0;
 
   const css = document.createElement('style');
@@ -41,6 +80,7 @@ const bridge = `
     if(stamp !== lastStateStamp){
       lastStateStamp = stamp;
       queueIndex = Number(cloudState.bubbleIndex || 0) || 0;
+      manualHidden = false;
     }
   }
 
@@ -49,11 +89,33 @@ const bridge = `
     const text = currentText();
     if(!b || !text) return;
     if(panelOpen() && !force) return;
+    if(manualHidden && !force) return;
     applying = true;
     b.textContent = text;
     b.setAttribute('data-cloud','1');
     b.classList.remove('hidden');
     setTimeout(function(){ applying = false; }, 40);
+  }
+
+  function hideBubble(e){
+    const b = bubbleEl();
+    if(!b || panelOpen()) return false;
+    stop(e);
+    manualHidden = true;
+    applying = true;
+    b.classList.add('hidden');
+    setTimeout(function(){ applying = false; }, 40);
+    return true;
+  }
+
+  function showNext(e){
+    const q = queue();
+    if(q.length <= 1 || panelOpen()) return false;
+    stop(e);
+    queueIndex = (queueIndex + 1) % q.length;
+    manualHidden = false;
+    apply(true);
+    return true;
   }
 
   async function load(force){
@@ -73,12 +135,15 @@ const bridge = `
     return e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
   }
 
-  function isTarget(e){
+  function hitKind(e){
     const t = e && e.target;
     if(t && t.closest){
-      if(t.closest('#bubble') || t.closest('.bubble') || t.closest('.tattooHot')) return true;
+      if(t.closest('#bubble') || t.closest('.bubble')) return 'bubble';
+      if(t.closest('.tattooHot')) return 'tattoo';
     }
-    return inside(bubbleEl(), e) || inside(tattooEl(), e);
+    if(inside(bubbleEl(), e)) return 'bubble';
+    if(inside(tattooEl(), e)) return 'tattoo';
+    return '';
   }
 
   function stop(e){
@@ -88,20 +153,16 @@ const bridge = `
     if(e.stopImmediatePropagation) e.stopImmediatePropagation();
   }
 
-  function next(e){
-    const q = queue();
-    if(q.length <= 1 || panelOpen()) return false;
-    stop(e);
-    queueIndex = (queueIndex + 1) % q.length;
-    apply(true);
-    return true;
-  }
-
   function capture(e){
-    if(!isTarget(e)) return;
+    const kind = hitKind(e);
+    if(!kind) return;
     if(e.type === 'click' && Date.now() - lastTouchAt < 450){ stop(e); return; }
     if(e.type === 'touchend') lastTouchAt = Date.now();
-    next(e);
+
+    const b = bubbleEl();
+    const isHidden = manualHidden || (b && b.classList.contains('hidden'));
+    if(kind === 'bubble') hideBubble(e);
+    else if(kind === 'tattoo') isHidden ? showNext(e) : hideBubble(e);
   }
 
   function observe(){
@@ -109,7 +170,7 @@ const bridge = `
     if(!b || b.__qObserve) return;
     b.__qObserve = true;
     const mo = new MutationObserver(function(){
-      if(applying) return;
+      if(applying || manualHidden) return;
       const text = currentText();
       if(text && b.textContent !== text && !panelOpen()) setTimeout(function(){ apply(false); }, 150);
     });
@@ -129,9 +190,11 @@ const bridge = `
 })();
 </script>`;
 
-module.exports = function handler(req, res) {
+module.exports = async function handler(req, res) {
   const file = path.join(process.cwd(), 'index.html');
+  const state = await readPublicState(req);
   let html = fs.readFileSync(file, 'utf8');
+  html = hydrateHtml(html, state);
   html = html.replace('</body>', bridge + '\n</body>');
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('Cache-Control', 'no-store');
