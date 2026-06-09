@@ -1,6 +1,6 @@
 const appQ = require('./app-q');
 
-const ASSET_VERSION = 'room-assets-20260609-6';
+const ASSET_VERSION = 'room-assets-20260609-7';
 
 function asset(key) {
   return `/api/room-asset?key=${key}&v=${ASSET_VERSION}`;
@@ -35,6 +35,7 @@ const defaultAssetScript = `
 
     function failed(){
       img.style.display = 'none';
+      document.body.classList.remove(cls);
       console.warn('default asset failed', id, img.getAttribute('src'));
       hideSetup();
     }
@@ -45,7 +46,7 @@ const defaultAssetScript = `
     if(img.complete) loaded();
   }
 
-  document.body.classList.add('cloudDefaultAssets','hasHomeOn','hasHomeOff','hasGameRoom');
+  document.body.classList.add('cloudDefaultAssets');
   hideSetup();
   markWhenReady('homeOn', 'hasHomeOn');
   markWhenReady('homeOff', 'hasHomeOff');
@@ -70,7 +71,7 @@ const defaultAssetScript = `
 
 function injectDefaultAssets(html) {
   return String(html)
-    .replace('<body>', '<body class="cloudDefaultAssets hasHomeOn hasHomeOff hasGameRoom">')
+    .replace('<body>', '<body class="cloudDefaultAssets">')
     .replace('</head>', `${setupPatchStyle}\n</head>`)
     .replace('<div id="setup" class="setup">', '<div id="setup" class="setup hidden">')
     .replace('<img id="homeOn" class="bg home-on">', `<img id="homeOn" class="bg home-on" src="${asset('home-day')}">`)
