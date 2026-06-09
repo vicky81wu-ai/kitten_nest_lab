@@ -43,6 +43,25 @@
     </section>
 
     <section class="card">
+      <h2>创建草稿</h2>
+      <p class="small">用于测试草稿箱，也能当工具缓存没刷新时的手动草稿入口。草稿不会直接显示，发布全部后才进猫窝气泡。</p>
+      <label for="draftRoom">Target room</label>
+      <select id="draftRoom">
+        <option value="coffeeCorner">coffeeCorner</option>
+        <option value="home">home</option>
+        <option value="global">global</option>
+        <option value="restaurant">restaurant</option>
+        <option value="fountain">fountain</option>
+      </select>
+      <label for="draftText">Draft text</label>
+      <textarea id="draftText">测试草稿：小猫早上好，猫窝中控台上线。</textarea>
+      <div class="row">
+        <button id="createDraft">保存为草稿</button>
+        <button class="secondary" id="createTestDraft">创建测试草稿</button>
+      </div>
+    </section>
+
+    <section class="card">
       <h2>手动兜底写入</h2>
       <p class="small">工具写入炸毛时，把 Alex 在聊天里写好的内容粘这里保存。</p>
       <label for="field">Field</label>
@@ -68,6 +87,8 @@
   const field = document.getElementById('field');
   const draftList = document.getElementById('draftList');
   const draftCount = document.getElementById('draftCount');
+  const draftRoom = document.getElementById('draftRoom');
+  const draftText = document.getElementById('draftText');
   let currentState = null;
   const saved = localStorage.getItem('kittenNestToken');
   if(saved) token.value = saved;
@@ -80,6 +101,8 @@
   function lines(v){ return String(v || '').split(/\r?\n/).map(s => s.trim()).filter(Boolean).slice(0,30); }
   function setStatus(msg){ status.textContent = msg; }
   function setResult(msg){ result.textContent = msg; }
+  function makeDraftId(){ return 'draft_' + Date.now() + '_' + Math.random().toString(36).slice(2,8); }
+  function pendingDraftsOf(state){ return Array.isArray(state && state.pendingDrafts) ? state.pendingDrafts : []; }
 
   async function readState(){
     const res = await fetch('/api/state?ts=' + Date.now(), { cache:'no-store' });
@@ -125,6 +148,28 @@
       renderDrafts(data.pendingDrafts || []);
       setStatus('Drafts refreshed: ' + ((data.pendingDrafts || []).length));
     }catch(e){ setStatus('Failed: ' + e.message); }
+  }
+  async function createDraft(customText){
+    setResult('Creating draft...');
+    try{
+      const raw = String(customText || draftText.value || '').trim();
+      if(!raw){ setResult('Need draft text.'); return; }
+      const state = currentState || await readState();
+      const draft = {
+        id: makeDraftId(),
+        source: 'console',
+        targetRoom: draftRoom.value || 'coffeeCorner',
+        type: 'bubbleDraft',
+        text: raw.slice(0, 5000),
+        status: 'pending',
+        createdAt: new Date().toISOString()
+      };
+      const pendingDrafts = [draft, ...pendingDraftsOf(state)].slice(0, 50);
+      await writePatch({ pendingDrafts });
+      renderDrafts(pendingDrafts);
+      setResult('Draft created.\n' + draft.text);
+      setStatus('Pending drafts: ' + pendingDrafts.length);
+    }catch(e){ setResult('Failed: ' + e.message); }
   }
   async function publishAll(){
     setResult('Publishing drafts...');
@@ -204,6 +249,8 @@
   document.getElementById('clearDrafts').onclick = clearDrafts;
   document.getElementById('manualSave').onclick = manualSave;
   document.getElementById('restoreLast').onclick = restoreLast;
+  document.getElementById('createDraft').onclick = function(){ createDraft(); };
+  document.getElementById('createTestDraft').onclick = function(){ createDraft('测试草稿：小猫早上好，猫窝中控台上线。'); };
   refreshState();
 })();
 </script>
