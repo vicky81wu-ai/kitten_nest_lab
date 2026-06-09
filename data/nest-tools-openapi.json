@@ -1,0 +1,116 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Kitten Nest Tools",
+    "version": "0.1.0",
+    "description": "Cloud writing tools for Kitten Nest. Use the private nest token as the X-Nest-Token header."
+  },
+  "servers": [
+    {
+      "url": "https://kitten-nest-lab.vercel.app"
+    }
+  ],
+  "paths": {
+    "/api/state": {
+      "get": {
+        "operationId": "read_nest_state",
+        "summary": "Read current Kitten Nest state",
+        "responses": {
+          "200": {
+            "description": "Current state"
+          }
+        }
+      }
+    },
+    "/api/say": {
+      "post": {
+        "operationId": "update_alex_bubble",
+        "summary": "Update Alex bubble queue; one line becomes one bubble",
+        "security": [
+          {
+            "NestToken": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "description": "Bubble text. Multiple lines become a rotating queue."
+                  },
+                  "t": {
+                    "type": "string",
+                    "description": "Private nest token. Prefer X-Nest-Token where supported."
+                  }
+                },
+                "required": ["text", "t"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Bubble updated"
+          }
+        }
+      }
+    },
+    "/api/set-state": {
+      "post": {
+        "operationId": "update_nest_state_patch",
+        "summary": "Patch Kitten Nest state fields",
+        "security": [
+          {
+            "NestToken": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true,
+                "properties": {
+                  "hubbyNote": {
+                    "type": "string"
+                  },
+                  "moodNote": {
+                    "type": "string"
+                  },
+                  "roomStatus": {
+                    "type": "string"
+                  },
+                  "weatherNote": {
+                    "type": "string"
+                  },
+                  "windowText": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "State patched"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "NestToken": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Nest-Token"
+      }
+    }
+  }
+}
