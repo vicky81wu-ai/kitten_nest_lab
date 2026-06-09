@@ -9,20 +9,34 @@ const TOOL_NAMES = [
 function cors(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Nest-Token');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Nest-Token, Mcp-Session-Id');
+  res.setHeader('Access-Control-Expose-Headers', 'Mcp-Session-Id');
 }
 
 function json(res, status, body) {
   res.statusCode = status;
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  if (!res.getHeader || !res.getHeader('Mcp-Session-Id')) res.setHeader('Mcp-Session-Id', 'kitten-nest-session');
   res.end(JSON.stringify(body));
+}
+
+function queryValue(req, key) {
+  if (req.query && req.query[key]) return String(req.query[key]);
+  try {
+    const u = new URL(req.url || '', 'https://kitten-nest.local');
+    return u.searchParams.get(key) || '';
+  } catch {
+    return '';
+  }
 }
 
 function authed(req) {
   const token = process.env.NEST_TOKEN;
   if (!token) return false;
   const auth = req.headers.authorization || '';
-  return auth === `Bearer ${token}` || req.headers['x-nest-token'] === token;
+  const headerToken = req.headers['x-nest-token'] || '';
+  const urlToken = queryValue(req, 't') || queryValue(req, 'token') || queryValue(req, 'key');
+  return auth === `Bearer ${token}` || headerToken === token || urlToken === token;
 }
 
 async function db(path, options = {}) {
@@ -108,15 +122,17 @@ module.exports = async function handler(req, res) {
 
   if (req.method === 'GET') {
     return json(res, 200, {
-      ok: true,
-      name: 'kitten-nest-mcp',
-      endpoint: '/api/mcp',
-      tools: toolList().map(t => t.name)
+      jsonrpc: '2.0',
+      result: {
+        name: 'kitten-nest-mcp',
+        endpoint: '/api/mcp',
+        tools: toolList().map(t => t.name),
+        note: 'POST JSON-RPC methods initialize, tools/list, tools/call here.'
+      }
     });
   }
 
   if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' });
-  if (!authed(req)) return json(res, 401, { error: 'Unauthorized' });
 
   try {
     const body = typeof req.body === 'object' && req.body ? req.body : JSON.parse(req.body || '{}');
@@ -124,14 +140,21 @@ module.exports = async function handler(req, res) {
     const id = body.id || null;
 
     if (method === 'initialize') {
-      return json(res, 200, { jsonrpc: '2.0', id, result: { protocolVersion: '2024-11-05', capabilities: { tools: {} }, serverInfo: { name: 'kitten-nest-mcp', version: '0.1.1' } } });
+      return json(res, 200, { jsonrpc: '2.0', id, result: { protocolVersion: '2024-11-05', capabilities: { tools: {} }, serverInfo: { name: 'kitten-nest-mcp', version: '0.1.2' } } });
+    }
+    if (method === 'notifications/initialized') {
+      return json(res, 202, { jsonrpc: '2.0', id, result: {} });
     }
     if (method === 'tools/list') {
       return json(res, 200, { jsonrpc: '2.0', id, result: { tools: toolList() } });
     }
     if (method === 'tools/call') {
       const params = body.params || {};
-      const result = await callTool(params.name, params.arguments || {});
+      const toolName = params.name;
+      if (toolName !== 'read_nest_state' && !authed(req)) {
+        return json(res, 200, { jsonrpc: '2.0', id, error: { code: -32001, message: 'Unauthorized write. Add the private token as X-Nest-Token, Bearer token, or ?t= token on the server URL.' } });
+      }
+      const result = await callTool(toolName, params.arguments || {});
       return json(res, 200, { jsonrpc: '2.0', id, result: { content: [{ type: 'text', text: JSON.stringify(result) }] } });
     }
 
