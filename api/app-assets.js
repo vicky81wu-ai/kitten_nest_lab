@@ -1,6 +1,6 @@
 const appQ = require('./app-q');
 
-const ASSET_VERSION = 'room-assets-20260609-10';
+const ASSET_VERSION = 'room-assets-20260609-11';
 
 const STATIC_ASSETS = {
   'home-day': '/assets/rooms/home/day.jpg',
@@ -102,6 +102,65 @@ const defaultAssetScript = `
 })();
 </script>`;
 
+const cloudTextPatchScript = `
+<script>
+(function(){
+  window.__kittenNestTextPatch = 'text-patch-20260610-1';
+  var lastStamp = '';
+  var index = 0;
+  function bubble(){ return document.getElementById('bubble'); }
+  function items(state){
+    if(!state) return [];
+    if(Array.isArray(state.alexBubbles)) return state.alexBubbles.map(function(x){ return String(x||'').trim(); }).filter(Boolean);
+    return state.alexBubble ? [String(state.alexBubble)] : [];
+  }
+  function show(text){
+    var b = bubble();
+    if(!b || !text) return;
+    b.textContent = text;
+    b.classList.remove('hidden');
+    b.setAttribute('data-cloud-refresh','1');
+    try{ window.bubbleOn = true; }catch(e){}
+  }
+  async function refresh(force){
+    try{
+      var res = await fetch('/api/state?t=' + Date.now(), { cache:'no-store' });
+      if(!res.ok) return;
+      var state = await res.json();
+      var q = items(state);
+      if(!q.length) return;
+      var stamp = String(state.updatedAt || '') + '|' + JSON.stringify(q);
+      if(stamp !== lastStamp){
+        lastStamp = stamp;
+        index = Number(state.bubbleIndex || 0) || 0;
+        show(q[index % q.length]);
+      }else if(force){
+        show(q[index % q.length]);
+      }
+    }catch(e){}
+  }
+  function isHot(e){
+    var t = e && e.target;
+    if(t && t.closest && t.closest('.tattooHot')) return true;
+    return false;
+  }
+  function onHot(e){
+    if(!isHot(e)) return;
+    var b = bubble();
+    if(!b || !b.classList.contains('hidden')) return;
+    if(e){ e.preventDefault(); e.stopPropagation(); if(e.stopImmediatePropagation) e.stopImmediatePropagation(); }
+    refresh(true);
+  }
+  document.addEventListener('click', onHot, true);
+  document.addEventListener('touchend', onHot, true);
+  window.addEventListener('load', function(){ refresh(true); setInterval(function(){ refresh(false); }, 2500); });
+  window.addEventListener('focus', function(){ refresh(true); });
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) refresh(true); });
+  setTimeout(function(){ refresh(true); }, 200);
+  setTimeout(function(){ refresh(true); }, 1000);
+})();
+</script>`;
+
 function injectDefaultAssets(html) {
   return String(html)
     .replace('<body>', '<body class="cloudDefaultAssets">')
@@ -111,7 +170,7 @@ function injectDefaultAssets(html) {
     .replace('<img id="homeOn" class="bg home-on">', `<img id="homeOn" class="bg home-on" src="${homeDay}">`)
     .replace('<img id="homeOff" class="bg home-off">', `<img id="homeOff" class="bg home-off" src="${homeNight}">`)
     .replace('<img id="gameBg" class="bg">', `<img id="gameBg" class="bg" src="${coffeeCorner}">`)
-    .replace('</body>', `${defaultAssetScript}\n</body>`);
+    .replace('</body>', `${defaultAssetScript}\n${cloudTextPatchScript}\n</body>`);
 }
 
 module.exports = async function handler(req, res) {
