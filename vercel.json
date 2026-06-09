@@ -1,11 +1,11 @@
 {
   "routes": [
-    { "src": "^/$", "dest": "/api/app" },
-    { "src": "^/cloud$", "dest": "/api/app" },
+    { "src": "^/$", "dest": "/api/app-q" },
+    { "src": "^/cloud$", "dest": "/api/app-q" },
     { "src": "^/cloudq$", "dest": "/api/app-q" },
-    { "src": "^/nest$", "dest": "/api/app" },
+    { "src": "^/nest$", "dest": "/api/app-q" },
     { "src": "^/write$", "dest": "/write.html" },
-    { "src": "^/index.html$", "dest": "/api/app" },
+    { "src": "^/index.html$", "dest": "/api/app-q" },
     { "src": "^/(.*)$", "dest": "/$1" }
   ]
 }
