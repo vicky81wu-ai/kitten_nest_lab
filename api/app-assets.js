@@ -1,6 +1,6 @@
 const appQ = require('./app-q');
 
-const ASSET_VERSION = 'room-assets-20260609-9';
+const ASSET_VERSION = 'room-assets-20260609-10';
 
 const STATIC_ASSETS = {
   'home-day': '/assets/rooms/home/day.jpg',
@@ -107,6 +107,7 @@ function injectDefaultAssets(html) {
     .replace('<body>', '<body class="cloudDefaultAssets">')
     .replace('</head>', `${setupPatchStyle}\n</head>`)
     .replace('<div id="setup" class="setup">', '<div id="setup" class="setup hidden">')
+    .replace("function say(t){$('bubble').textContent=t}", "function say(t){bubbleOn=true;$('bubble').textContent=t;syncBubble()}")
     .replace('<img id="homeOn" class="bg home-on">', `<img id="homeOn" class="bg home-on" src="${homeDay}">`)
     .replace('<img id="homeOff" class="bg home-off">', `<img id="homeOff" class="bg home-off" src="${homeNight}">`)
     .replace('<img id="gameBg" class="bg">', `<img id="gameBg" class="bg" src="${coffeeCorner}">`)
