@@ -1,10 +1,7 @@
-const fs = require('fs');
-const path = require('path');
-
 const ASSETS = {
-  'home-day': 'assets/rooms/home/day.jpg',
-  'home-night': 'assets/rooms/home/night.jpg',
-  'coffee-corner-morning-evening': 'assets/rooms/coffee-corner/morning-evening.jpg'
+  'home-day': '/assets/rooms/home/day.jpg',
+  'home-night': '/assets/rooms/home/night.jpg',
+  'coffee-corner-morning-evening': '/assets/rooms/coffee-corner/morning-evening.jpg'
 };
 
 module.exports = async function handler(req, res) {
@@ -17,16 +14,21 @@ module.exports = async function handler(req, res) {
       return res.end('Unknown room asset');
     }
 
-    const file = path.join(process.cwd(), rel);
-    if (!fs.existsSync(file)) {
-      res.statusCode = 404;
+    const proto = req.headers['x-forwarded-proto'] || 'https';
+    const host = req.headers.host;
+    const url = `${proto}://${host}${rel}`;
+    const upstream = await fetch(url, { cache: 'no-store' });
+
+    if (!upstream.ok) {
+      res.statusCode = upstream.status;
       res.setHeader('Content-Type', 'text/plain; charset=utf-8');
       return res.end('Room asset not found');
     }
 
-    const buf = fs.readFileSync(file);
+    const arrayBuffer = await upstream.arrayBuffer();
+    const buf = Buffer.from(arrayBuffer);
     res.statusCode = 200;
-    res.setHeader('Content-Type', 'image/jpeg');
+    res.setHeader('Content-Type', upstream.headers.get('content-type') || 'image/jpeg');
     res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
     res.setHeader('Content-Length', String(buf.length));
     return res.end(buf);
