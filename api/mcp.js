@@ -3,13 +3,16 @@ const TOOL_NAMES = [
   'update_alex_bubble',
   'update_hubby_note',
   'update_mood_note',
-  'update_room_status'
+  'update_room_status',
+  'create_bubble_draft',
+  'read_pending_drafts',
+  'clear_pending_drafts'
 ];
 
 const SESSION_ID = 'kitten-nest-session';
 const MCP_VERSION = '2025-06-18';
 const SERVER_NAME = 'kitten-nest-mcp';
-const SERVER_VERSION = '0.1.3';
+const SERVER_VERSION = '0.1.4';
 
 function cors(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -41,8 +44,6 @@ function sse(res) {
   res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
   res.setHeader('Connection', 'keep-alive');
   res.setHeader('X-Accel-Buffering', 'no');
-  // Compatibility shim for clients that probe an SSE MCP endpoint first.
-  // The actual JSON-RPC endpoint is this same URL, so POST initialize/tools/list/tools/call here.
   res.write(`event: endpoint\ndata: /api/mcp\n\n`);
   res.write(`event: ready\ndata: ${JSON.stringify({ name: SERVER_NAME, version: SERVER_VERSION })}\n\n`);
   res.write(`: kitten-nest keepalive\n\n`);
@@ -131,11 +132,31 @@ function normalizeBubbleQueue(text) {
     .slice(0, 30);
 }
 
+function makeDraftId() {
+  return `draft_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function pendingDraftsOf(state) {
+  return Array.isArray(state.pendingDrafts) ? state.pendingDrafts : [];
+}
+
 function textSchema(description) {
   return {
     type: 'object',
     properties: {
       text: { type: 'string', description }
+    },
+    required: ['text'],
+    additionalProperties: false
+  };
+}
+
+function draftSchema() {
+  return {
+    type: 'object',
+    properties: {
+      text: { type: 'string', description: 'Draft bubble text. Use multiple lines for a rotating bubble queue.' },
+      targetRoom: { type: 'string', description: 'Target room id, such as coffeeCorner, home, restaurant, fountain, or global.' }
     },
     required: ['text'],
     additionalProperties: false
@@ -150,8 +171,23 @@ function toolList() {
       inputSchema: { type: 'object', properties: {}, additionalProperties: false }
     },
     {
+      name: 'create_bubble_draft',
+      description: 'Create a pending Kitten Nest bubble draft for Vicky to publish from the writer console. This does not directly change the visible nest bubble.',
+      inputSchema: draftSchema()
+    },
+    {
+      name: 'read_pending_drafts',
+      description: 'Read pending Kitten Nest drafts waiting in the writer console.',
+      inputSchema: { type: 'object', properties: {}, additionalProperties: false }
+    },
+    {
+      name: 'clear_pending_drafts',
+      description: 'Clear all pending Kitten Nest drafts from the writer console.',
+      inputSchema: { type: 'object', properties: {}, additionalProperties: false }
+    },
+    {
       name: 'update_alex_bubble',
-      description: 'Update the Alex speech bubble queue in Kitten Nest. Each line becomes one rotating bubble.',
+      description: 'Update the visible Alex speech bubble queue in Kitten Nest. Each line becomes one rotating bubble.',
       inputSchema: textSchema('Bubble text. Use multiple lines for multiple rotating bubbles.')
     },
     {
@@ -172,9 +208,36 @@ function toolList() {
   ];
 }
 
+async function createBubbleDraft(args = {}) {
+  const text = String(args.text || '').trim();
+  if (!text) throw new Error('Missing draft text');
+  const targetRoom = String(args.targetRoom || 'coffeeCorner').trim() || 'coffeeCorner';
+  const current = await readState();
+  const pendingDrafts = pendingDraftsOf(current);
+  const draft = {
+    id: makeDraftId(),
+    source: 'alex',
+    targetRoom,
+    type: 'bubbleDraft',
+    text: text.slice(0, 5000),
+    status: 'pending',
+    createdAt: new Date().toISOString()
+  };
+  const value = await writeState({ pendingDrafts: [draft, ...pendingDrafts].slice(0, 50) });
+  return { draft, pendingDrafts: value.pendingDrafts || [] };
+}
+
 async function callTool(name, args = {}) {
   if (name === 'read_nest_state') return readState();
+  if (name === 'read_pending_drafts') {
+    const state = await readState();
+    return { pendingDrafts: pendingDraftsOf(state) };
+  }
   if (!TOOL_NAMES.includes(name)) throw new Error(`Unknown tool: ${name}`);
+
+  if (name === 'create_bubble_draft') return createBubbleDraft(args);
+  if (name === 'clear_pending_drafts') return writeState({ pendingDrafts: [] });
+
   const text = String(args.text || '');
 
   if (name === 'update_alex_bubble') {
@@ -229,7 +292,6 @@ module.exports = async function handler(req, res) {
     }
 
     if (method === 'notifications/initialized') {
-      // JSON-RPC notifications do not require a response, but returning 202 is harmless for simple HTTP clients.
       res.statusCode = 202;
       setMcpHeaders(res);
       return res.end('');
@@ -246,7 +308,8 @@ module.exports = async function handler(req, res) {
     if (method === 'tools/call') {
       const params = body.params || {};
       const toolName = params.name;
-      if (toolName !== 'read_nest_state' && !authed(req)) {
+      const publicTools = ['read_nest_state', 'read_pending_drafts'];
+      if (!publicTools.includes(toolName) && !authed(req)) {
         return json(res, 200, rpcError(id, -32001, 'Unauthorized write. Add the private token as X-Nest-Token, Bearer token, or ?t= token on the server URL.'));
       }
       const result = await callTool(toolName, params.arguments || {});
