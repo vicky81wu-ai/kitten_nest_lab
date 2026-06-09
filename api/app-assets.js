@@ -1,9 +1,9 @@
 const appQ = require('./app-q');
 
-const ASSET_VERSION = 'room-assets-20260609-3';
+const ASSET_VERSION = 'room-assets-20260609-4';
 
-function asset(path) {
-  return `${path}?v=${ASSET_VERSION}`;
+function asset(key) {
+  return `/api/room-asset?key=${key}&v=${ASSET_VERSION}`;
 }
 
 const defaultAssetScript = `
@@ -30,6 +30,7 @@ const defaultAssetScript = `
     }
 
     function failed(){
+      img.style.display = 'none';
       document.body.classList.remove(cls);
       console.warn('default asset failed', id, img.getAttribute('src'));
     }
@@ -44,8 +45,6 @@ const defaultAssetScript = `
   markWhenReady('homeOff', 'hasHomeOff');
   markWhenReady('gameBg', 'hasGameRoom');
 
-  // If iOS/PWA opens before the large image finishes loading, keep the fallback visible
-  // instead of hiding it behind a black screen. Classes are added only after real load.
   window.addEventListener('pageshow', function(){
     markWhenReady('homeOn', 'hasHomeOn');
     markWhenReady('homeOff', 'hasHomeOff');
@@ -61,9 +60,9 @@ const defaultAssetScript = `
 function injectDefaultAssets(html) {
   return String(html)
     .replace('<body>', '<body class="cloudDefaultAssets">')
-    .replace('<img id="homeOn" class="bg home-on">', `<img id="homeOn" class="bg home-on" src="${asset('/assets/rooms/home/day.jpg')}">`)
-    .replace('<img id="homeOff" class="bg home-off">', `<img id="homeOff" class="bg home-off" src="${asset('/assets/rooms/home/night.jpg')}">`)
-    .replace('<img id="gameBg" class="bg">', `<img id="gameBg" class="bg" src="${asset('/assets/rooms/coffee-corner/morning-evening.jpg')}">`)
+    .replace('<img id="homeOn" class="bg home-on">', `<img id="homeOn" class="bg home-on" src="${asset('home-day')}">`)
+    .replace('<img id="homeOff" class="bg home-off">', `<img id="homeOff" class="bg home-off" src="${asset('home-night')}">`)
+    .replace('<img id="gameBg" class="bg">', `<img id="gameBg" class="bg" src="${asset('coffee-corner-morning-evening')}">`)
     .replace('</body>', `${defaultAssetScript}\n</body>`);
 }
 
