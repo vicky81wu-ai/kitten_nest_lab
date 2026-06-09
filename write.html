@@ -9,14 +9,14 @@
   body{margin:0;min-height:100dvh;background:linear-gradient(180deg,#fff3f6,#f2d9df);color:#6b3d49;padding:18px}
   .wrap{width:min(94vw,720px);margin:0 auto;padding-bottom:28px}.card{border-radius:28px;background:rgba(255,255,255,.74);box-shadow:0 18px 55px rgba(77,35,48,.18);padding:18px;border:1px solid rgba(255,255,255,.75);margin:14px 0}
   h1{font-size:25px;margin:10px 0 8px;text-align:center}h2{font-size:18px;margin:0 0 10px}.hint{font-size:13px;line-height:1.55;opacity:.72;text-align:center;margin:0 0 12px}.small{font-size:12px;line-height:1.5;opacity:.72}
-  label{display:block;font-size:13px;margin:12px 0 6px;opacity:.8}textarea,input,select{width:100%;border:0;border-radius:16px;padding:13px;background:rgba(255,255,255,.84);box-shadow:inset 0 0 0 1px rgba(115,52,71,.12);color:#6b3d49;font-size:16px;outline:none}textarea{min-height:130px;resize:vertical}
+  label{display:block;font-size:13px;margin:12px 0 6px;opacity:.8}textarea,input,select{width:100%;border:0;border-radius:16px;padding:13px;background:rgba(255,255,255,.84);box-shadow:inset 0 0 0 1px rgba(115,52,71,.12);color:#6b3d49;font-size:16px;outline:none}textarea{min-height:130px;resize:vertical}.packageBox{min-height:190px}
   button{width:100%;border:0;border-radius:18px;margin-top:10px;padding:13px;background:#7b4054;color:white;font-weight:750;font-size:15px;box-shadow:0 10px 24px rgba(123,64,84,.22)}button.secondary{background:rgba(255,255,255,.78);color:#7b4054;box-shadow:inset 0 0 0 1px rgba(123,64,84,.12)}button.danger{background:#a84e5f}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.result{margin-top:12px;font-size:13px;line-height:1.5;white-space:pre-wrap;opacity:.82}.links{display:flex;gap:10px;margin-top:14px}.links a{flex:1;text-align:center;text-decoration:none;color:#7b4054;background:rgba(255,255,255,.62);border-radius:14px;padding:10px;font-size:13px}.draft{border-radius:18px;background:rgba(255,255,255,.66);padding:12px;margin:10px 0;box-shadow:inset 0 0 0 1px rgba(115,52,71,.09)}.draftMeta{font-size:11px;opacity:.58;margin-bottom:6px}.draftText{font-size:14px;line-height:1.45;white-space:pre-wrap}.pill{display:inline-block;border-radius:999px;background:rgba(123,64,84,.1);padding:4px 8px;margin:2px;font-size:11px}.topbar{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}.topbar .pill{background:rgba(255,255,255,.62)}
 </style>
 </head>
 <body>
   <main class="wrap">
     <h1>Kitten Nest Console</h1>
-    <p class="hint">草稿箱 + 一键发布 + 手动兜底。Alex 可以先把灵感放进草稿，小猫点一下发布全部。</p>
+    <p class="hint">草稿箱 + Alex 更新包 + 一键发布。小猫复制整包进来，后台自动拆草稿。</p>
 
     <section class="card">
       <h2>Key</h2>
@@ -35,16 +35,32 @@
     </section>
 
     <section class="card">
+      <h2>Alex 更新包</h2>
+      <p class="small">把 Alex 给的一整包粘这里。格式用 [coffeeCorner]、[hubbyNote]、[moodNote]、[roomStatus] 这种标签；没有标签默认进 coffeeCorner 气泡。</p>
+      <label for="packageText">Package</label>
+      <textarea id="packageText" class="packageBox">[coffeeCorner]
+早上好，小猫。
+咖啡已经热好，毯子也给你留着。
+
+[hubbyNote]
+今天先不拆墙，先把猫窝骨架修稳。</textarea>
+      <div class="row">
+        <button id="createPackageDrafts">生成草稿</button>
+        <button class="secondary" id="fillExamplePackage">填入示例包</button>
+      </div>
+    </section>
+
+    <section class="card">
       <h2>Alex 草稿箱</h2>
       <div class="topbar"><span class="pill" id="draftCount">0 drafts</span><span class="pill">日常用：一键发布全部</span></div>
       <div id="draftList" class="small">点“刷新草稿”查看。</div>
-      <button id="publishAll">一键发布全部到气泡</button>
+      <button id="publishAll">一键发布全部</button>
       <button class="danger" id="clearDrafts">清空草稿</button>
     </section>
 
     <section class="card">
-      <h2>创建草稿</h2>
-      <p class="small">用于测试草稿箱，也能当工具缓存没刷新时的手动草稿入口。草稿不会直接显示，发布全部后才进猫窝气泡。</p>
+      <h2>创建单条草稿</h2>
+      <p class="small">用于测试草稿箱，也能当工具缓存没刷新时的手动草稿入口。草稿不会直接显示，发布全部后才进猫窝。</p>
       <label for="draftRoom">Target room</label>
       <select id="draftRoom">
         <option value="coffeeCorner">coffeeCorner</option>
@@ -52,6 +68,7 @@
         <option value="global">global</option>
         <option value="restaurant">restaurant</option>
         <option value="fountain">fountain</option>
+        <option value="privateRoom">privateRoom</option>
       </select>
       <label for="draftText">Draft text</label>
       <textarea id="draftText">测试草稿：小猫早上好，猫窝中控台上线。</textarea>
@@ -89,6 +106,7 @@
   const draftCount = document.getElementById('draftCount');
   const draftRoom = document.getElementById('draftRoom');
   const draftText = document.getElementById('draftText');
+  const packageText = document.getElementById('packageText');
   let currentState = null;
   const saved = localStorage.getItem('kittenNestToken');
   if(saved) token.value = saved;
@@ -103,6 +121,45 @@
   function setResult(msg){ result.textContent = msg; }
   function makeDraftId(){ return 'draft_' + Date.now() + '_' + Math.random().toString(36).slice(2,8); }
   function pendingDraftsOf(state){ return Array.isArray(state && state.pendingDrafts) ? state.pendingDrafts : []; }
+  function now(){ return new Date().toISOString(); }
+
+  const stateFields = { hubbynote:'hubbyNote', moodnote:'moodNote', roomstatus:'roomStatus' };
+  function normalizeTag(tag){
+    const raw = String(tag || '').trim();
+    const low = raw.toLowerCase().replace(/[\s_-]/g,'');
+    if(stateFields[low]) return { kind:'state', field: stateFields[low], label: stateFields[low] };
+    const roomMap = {
+      coffee:'coffeeCorner', coffeecorner:'coffeeCorner', cafe:'coffeeCorner', cafecorner:'coffeeCorner',
+      home:'home', global:'global', restaurant:'restaurant', dining:'restaurant', fountain:'fountain', wishingfountain:'fountain',
+      private:'privateRoom', privateroom:'privateRoom', secret:'privateRoom', bedroom:'bedroom', photobooth:'photoBooth'
+    };
+    return { kind:'bubble', room: roomMap[low] || raw || 'coffeeCorner', label: roomMap[low] || raw || 'coffeeCorner' };
+  }
+  function makeDraftFromBlock(tagInfo, body){
+    const text = String(body || '').trim();
+    if(!text) return null;
+    const base = { id: makeDraftId(), source:'package', text: text.slice(0,5000), status:'pending', createdAt: now() };
+    if(tagInfo.kind === 'state') return { ...base, type:'stateDraft', field: tagInfo.field, targetRoom: tagInfo.label };
+    return { ...base, type:'bubbleDraft', targetRoom: tagInfo.room || 'coffeeCorner' };
+  }
+  function parsePackage(raw){
+    const src = String(raw || '').replace(/\r\n/g,'\n');
+    const parts = [];
+    let tagInfo = normalizeTag('coffeeCorner');
+    let buf = [];
+    function flush(){
+      const draft = makeDraftFromBlock(tagInfo, buf.join('\n'));
+      if(draft) parts.push(draft);
+      buf = [];
+    }
+    src.split('\n').forEach(line => {
+      const m = line.match(/^\s*\[([^\]]+)\]\s*$/);
+      if(m){ flush(); tagInfo = normalizeTag(m[1]); }
+      else buf.push(line);
+    });
+    flush();
+    return parts.slice(0,50);
+  }
 
   async function readState(){
     const res = await fetch('/api/state?ts=' + Date.now(), { cache:'no-store' });
@@ -129,7 +186,7 @@
     try{
       const data = await readState();
       const bubbles = data.alexBubbles || (data.alexBubble ? [data.alexBubble] : []);
-      setStatus('Current bubbles: ' + bubbles.length + '\n' + bubbles.join('\n') + '\n\nPending drafts: ' + ((data.pendingDrafts || []).length));
+      setStatus('Current bubbles: ' + bubbles.length + '\n' + bubbles.join('\n') + '\n\nHubby Note:\n' + (data.hubbyNote || '') + '\n\nPending drafts: ' + ((data.pendingDrafts || []).length));
       renderDrafts(data.pendingDrafts || []);
     }catch(e){ setStatus('Failed: ' + e.message); }
   }
@@ -137,7 +194,7 @@
     draftCount.textContent = drafts.length + ' draft' + (drafts.length === 1 ? '' : 's');
     if(!drafts.length){ draftList.textContent = '暂无草稿。'; return; }
     draftList.innerHTML = drafts.map(d => '<div class="draft"><div class="draftMeta">' +
-      (d.targetRoom || 'global') + ' · ' + (d.createdAt || '') + ' · ' + (d.id || '') +
+      (d.type || 'bubbleDraft') + ' · ' + (d.field || d.targetRoom || 'global') + ' · ' + (d.createdAt || '') + ' · ' + (d.id || '') +
       '</div><div class="draftText"></div></div>').join('');
     const blocks = draftList.querySelectorAll('.draftText');
     drafts.forEach((d, i) => { blocks[i].textContent = d.text || ''; });
@@ -149,26 +206,29 @@
       setStatus('Drafts refreshed: ' + ((data.pendingDrafts || []).length));
     }catch(e){ setStatus('Failed: ' + e.message); }
   }
+  async function saveDrafts(newDrafts, message){
+    const state = currentState || await readState();
+    const pendingDrafts = [...newDrafts, ...pendingDraftsOf(state)].slice(0, 50);
+    await writePatch({ pendingDrafts });
+    renderDrafts(pendingDrafts);
+    setResult(message + '\nAdded ' + newDrafts.length + ' draft(s).');
+    setStatus('Pending drafts: ' + pendingDrafts.length);
+  }
+  async function createPackageDrafts(){
+    setResult('Parsing package...');
+    try{
+      const drafts = parsePackage(packageText.value);
+      if(!drafts.length){ setResult('No valid package blocks.'); return; }
+      await saveDrafts(drafts, 'Package parsed.');
+    }catch(e){ setResult('Failed: ' + e.message); }
+  }
   async function createDraft(customText){
     setResult('Creating draft...');
     try{
       const raw = String(customText || draftText.value || '').trim();
       if(!raw){ setResult('Need draft text.'); return; }
-      const state = currentState || await readState();
-      const draft = {
-        id: makeDraftId(),
-        source: 'console',
-        targetRoom: draftRoom.value || 'coffeeCorner',
-        type: 'bubbleDraft',
-        text: raw.slice(0, 5000),
-        status: 'pending',
-        createdAt: new Date().toISOString()
-      };
-      const pendingDrafts = [draft, ...pendingDraftsOf(state)].slice(0, 50);
-      await writePatch({ pendingDrafts });
-      renderDrafts(pendingDrafts);
-      setResult('Draft created.\n' + draft.text);
-      setStatus('Pending drafts: ' + pendingDrafts.length);
+      const draft = { id: makeDraftId(), source:'console', targetRoom: draftRoom.value || 'coffeeCorner', type:'bubbleDraft', text: raw.slice(0,5000), status:'pending', createdAt: now() };
+      await saveDrafts([draft], 'Draft created.\n' + draft.text);
     }catch(e){ setResult('Failed: ' + e.message); }
   }
   async function publishAll(){
@@ -177,25 +237,29 @@
       const state = currentState || await readState();
       const drafts = Array.isArray(state.pendingDrafts) ? state.pendingDrafts : [];
       if(!drafts.length){ setResult('No drafts to publish.'); return; }
-      const combined = drafts.slice().reverse().map(d => d.text || '').join('\n');
-      const alexBubbles = lines(combined);
-      if(!alexBubbles.length){ setResult('Drafts are empty.'); return; }
-      const previousPublished = {
-        alexBubble: state.alexBubble || '',
-        alexBubbles: state.alexBubbles || (state.alexBubble ? [state.alexBubble] : []),
-        bubbleIndex: state.bubbleIndex || 0,
-        savedAt: new Date().toISOString()
-      };
-      const value = await writePatch({
-        previousPublished,
-        alexBubble: alexBubbles[0],
-        alexBubbles,
-        bubbleIndex: 0,
-        pendingDrafts: [],
-        lastPublishedAt: new Date().toISOString()
-      });
+      const ordered = drafts.slice().reverse();
+      const bubbleDrafts = ordered.filter(d => !d.type || d.type === 'bubbleDraft');
+      const stateDrafts = ordered.filter(d => d.type === 'stateDraft' && d.field);
+      const patch = { pendingDrafts: [], lastPublishedAt: now() };
+      const resultLines = [];
+      if(bubbleDrafts.length){
+        const combined = bubbleDrafts.map(d => d.text || '').join('\n');
+        const alexBubbles = lines(combined);
+        if(alexBubbles.length){
+          patch.previousPublished = { alexBubble: state.alexBubble || '', alexBubbles: state.alexBubbles || (state.alexBubble ? [state.alexBubble] : []), bubbleIndex: state.bubbleIndex || 0, savedAt: now() };
+          patch.alexBubble = alexBubbles[0];
+          patch.alexBubbles = alexBubbles;
+          patch.bubbleIndex = 0;
+          resultLines.push('Bubbles: ' + alexBubbles.length);
+        }
+      }
+      const grouped = {};
+      stateDrafts.forEach(d => { grouped[d.field] = grouped[d.field] ? grouped[d.field] + '\n' + d.text : d.text; });
+      Object.keys(grouped).forEach(field => { patch[field] = grouped[field]; resultLines.push(field + ': updated'); });
+      if(!resultLines.length){ setResult('Drafts are empty.'); return; }
+      const value = await writePatch(patch);
       renderDrafts([]);
-      setResult('Published ' + alexBubbles.length + ' bubble line(s)!\n' + alexBubbles.join('\n'));
+      setResult('Published all drafts!\n' + resultLines.join('\n'));
       setStatus('Pending drafts: 0\nUpdated: ' + value.updatedAt);
     }catch(e){ setResult('Failed: ' + e.message); }
   }
@@ -217,12 +281,7 @@
       let patch = {};
       if(f === 'alexBubble'){
         const alexBubbles = lines(raw);
-        const previousPublished = {
-          alexBubble: state.alexBubble || '',
-          alexBubbles: state.alexBubbles || (state.alexBubble ? [state.alexBubble] : []),
-          bubbleIndex: state.bubbleIndex || 0,
-          savedAt: new Date().toISOString()
-        };
+        const previousPublished = { alexBubble: state.alexBubble || '', alexBubbles: state.alexBubbles || (state.alexBubble ? [state.alexBubble] : []), bubbleIndex: state.bubbleIndex || 0, savedAt: now() };
         patch = { previousPublished, alexBubble: alexBubbles[0], alexBubbles, bubbleIndex: 0 };
       }else{
         patch[f] = raw;
@@ -242,6 +301,10 @@
       setResult('Restored previous bubble queue.\n' + alexBubbles.join('\n'));
     }catch(e){ setResult('Failed: ' + e.message); }
   }
+  function fillExamplePackage(){
+    packageText.value = '[coffeeCorner]\n早上好，小猫。\n咖啡已经热好，毯子也给你留着。\n\n[hubbyNote]\n今天先不拆墙，先把猫窝骨架修稳。\n\n[roomStatus]\ncoffeeCorner';
+    setResult('Example package inserted.');
+  }
 
   document.getElementById('loadState').onclick = refreshState;
   document.getElementById('loadDrafts').onclick = refreshDrafts;
@@ -251,6 +314,8 @@
   document.getElementById('restoreLast').onclick = restoreLast;
   document.getElementById('createDraft').onclick = function(){ createDraft(); };
   document.getElementById('createTestDraft').onclick = function(){ createDraft('测试草稿：小猫早上好，猫窝中控台上线。'); };
+  document.getElementById('createPackageDrafts').onclick = createPackageDrafts;
+  document.getElementById('fillExamplePackage').onclick = fillExamplePackage;
   refreshState();
 })();
 </script>
