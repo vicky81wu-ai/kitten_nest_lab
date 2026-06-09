@@ -1,6 +1,6 @@
 const appQ = require('./app-q');
 
-const ASSET_VERSION = 'room-assets-20260609-2';
+const ASSET_VERSION = 'room-assets-20260609-3';
 
 function asset(path) {
   return `${path}?v=${ASSET_VERSION}`;
@@ -11,12 +11,22 @@ const defaultAssetScript = `
 (function(){
   window.__kittenNestDefaultAssets = '${ASSET_VERSION}';
 
+  function finishDefaultSetup(){
+    if(document.body.classList.contains('hasHomeOn') && document.body.classList.contains('hasGameRoom')){
+      var setup = document.getElementById('setup');
+      if(setup) setup.classList.add('hidden');
+    }
+  }
+
   function markWhenReady(id, cls){
     var img = document.getElementById(id);
     if(!img) return;
 
     function loaded(){
-      if(img.naturalWidth > 0) document.body.classList.add(cls);
+      if(img.naturalWidth > 0){
+        document.body.classList.add(cls);
+        finishDefaultSetup();
+      }
     }
 
     function failed(){
@@ -40,7 +50,11 @@ const defaultAssetScript = `
     markWhenReady('homeOn', 'hasHomeOn');
     markWhenReady('homeOff', 'hasHomeOff');
     markWhenReady('gameBg', 'hasGameRoom');
+    finishDefaultSetup();
   });
+
+  setTimeout(finishDefaultSetup, 300);
+  setTimeout(finishDefaultSetup, 1200);
 })();
 </script>`;
 
