@@ -1,0 +1,261 @@
+{
+  "version": "0.1.0",
+  "note": "Registry foundation for the cloud nest. Image coordinates can be added later after Vicky finalizes room art.",
+  "map": {
+    "defaultRoomId": "room.coffeeCorner",
+    "sections": [
+      {
+        "id": "section.indoor",
+        "label": "室内",
+        "roomIds": ["room.coffeeCorner", "room.restaurant", "room.bedroom"]
+      },
+      {
+        "id": "section.outdoor",
+        "label": "户外",
+        "roomIds": ["room.beach", "room.fountain"]
+      },
+      {
+        "id": "section.secret",
+        "label": "隐藏区",
+        "roomIds": ["room.secretPuzzle", "room.guestGate"]
+      }
+    ]
+  },
+  "rooms": [
+    {
+      "id": "room.coffeeCorner",
+      "label": "咖啡角 / 当前二房",
+      "sectionId": "section.indoor",
+      "order": 10,
+      "asset": {
+        "mode": "localOverrideFirst",
+        "defaultKey": "room.coffeeCorner.bg"
+      },
+      "widgets": [
+        "widget.coffee.alexBubble",
+        "widget.coffee.weatherNote",
+        "widget.coffee.windowText"
+      ]
+    },
+    {
+      "id": "room.restaurant",
+      "label": "餐厅",
+      "sectionId": "section.indoor",
+      "order": 20,
+      "asset": { "mode": "localOverrideFirst", "defaultKey": "room.restaurant.bg" },
+      "widgets": ["widget.restaurant.menuNote", "widget.restaurant.alexBubble"]
+    },
+    {
+      "id": "room.bedroom",
+      "label": "卧室",
+      "sectionId": "section.indoor",
+      "order": 30,
+      "asset": { "mode": "localOverrideFirst", "defaultKey": "room.bedroom.bg" },
+      "widgets": ["widget.bedroom.notebook", "widget.bedroom.alexBubble"]
+    },
+    {
+      "id": "room.beach",
+      "label": "海边",
+      "sectionId": "section.outdoor",
+      "order": 110,
+      "asset": { "mode": "localOverrideFirst", "defaultKey": "room.beach.bg" },
+      "widgets": ["widget.beach.messageBottle", "widget.beach.alexBubble"]
+    },
+    {
+      "id": "room.fountain",
+      "label": "大理石女神喷泉",
+      "sectionId": "section.outdoor",
+      "order": 120,
+      "asset": { "mode": "localOverrideFirst", "defaultKey": "room.fountain.bg" },
+      "widgets": ["widget.fountain.goddessBoard", "widget.fountain.nailiBubble"]
+    },
+    {
+      "id": "room.secretPuzzle",
+      "label": "谜题密室",
+      "sectionId": "section.secret",
+      "order": 210,
+      "locked": true,
+      "unlock": { "type": "puzzle", "widgetId": "widget.secret.dailyPuzzle" },
+      "asset": { "mode": "localOverrideFirst", "defaultKey": "room.secretPuzzle.bg" },
+      "widgets": ["widget.secret.dailyPuzzle", "widget.secret.rewardNote"]
+    },
+    {
+      "id": "room.guestGate",
+      "label": "访客门厅",
+      "sectionId": "section.secret",
+      "order": 220,
+      "locked": true,
+      "unlock": { "type": "game", "gameId": "gomoku", "winRequired": true },
+      "asset": { "mode": "localOverrideFirst", "defaultKey": "room.guestGate.bg" },
+      "widgets": ["widget.guest.noticeBoard", "widget.guest.gomokuGate"]
+    }
+  ],
+  "widgets": [
+    {
+      "id": "widget.coffee.alexBubble",
+      "roomId": "room.coffeeCorner",
+      "type": "bubbleQueue",
+      "speaker": "alex",
+      "stateKeys": ["alexBubble", "alexBubbles", "bubbleIndex"],
+      "permissions": { "owner": "write", "alex": "write", "guest": "read" },
+      "hotspot": { "status": "existing", "selector": ".tattooHot" },
+      "actions": ["action.bubble.next"]
+    },
+    {
+      "id": "widget.coffee.weatherNote",
+      "roomId": "room.coffeeCorner",
+      "type": "textNote",
+      "stateKey": "weatherNote",
+      "permissions": { "owner": "write", "alex": "write", "guest": "read" },
+      "hotspot": { "status": "pendingArt" }
+    },
+    {
+      "id": "widget.coffee.windowText",
+      "roomId": "room.coffeeCorner",
+      "type": "textNote",
+      "stateKey": "windowText",
+      "permissions": { "owner": "write", "alex": "write", "guest": "read" },
+      "hotspot": { "status": "pendingArt" }
+    },
+    {
+      "id": "widget.restaurant.menuNote",
+      "roomId": "room.restaurant",
+      "type": "textNote",
+      "stateKey": "restaurantMenuNote",
+      "permissions": { "owner": "write", "alex": "write", "guest": "read" },
+      "hotspot": { "status": "pendingArt" }
+    },
+    {
+      "id": "widget.restaurant.alexBubble",
+      "roomId": "room.restaurant",
+      "type": "bubbleQueue",
+      "speaker": "alex",
+      "stateKey": "restaurantAlexBubbles",
+      "permissions": { "owner": "write", "alex": "write", "guest": "read" },
+      "hotspot": { "status": "pendingArt" }
+    },
+    {
+      "id": "widget.bedroom.notebook",
+      "roomId": "room.bedroom",
+      "type": "notebook",
+      "stateKey": "bedroomNotebook",
+      "permissions": { "owner": "write", "alex": "write", "guest": "none" },
+      "hotspot": { "status": "pendingArt" }
+    },
+    {
+      "id": "widget.bedroom.alexBubble",
+      "roomId": "room.bedroom",
+      "type": "bubbleQueue",
+      "speaker": "alex",
+      "stateKey": "bedroomAlexBubbles",
+      "permissions": { "owner": "write", "alex": "write", "guest": "read" },
+      "hotspot": { "status": "pendingArt" }
+    },
+    {
+      "id": "widget.beach.messageBottle",
+      "roomId": "room.beach",
+      "type": "messageBoard",
+      "stateKey": "beachMessageBottle",
+      "permissions": { "owner": "write", "alex": "write", "guest": "read" },
+      "hotspot": { "status": "pendingArt" }
+    },
+    {
+      "id": "widget.beach.alexBubble",
+      "roomId": "room.beach",
+      "type": "bubbleQueue",
+      "speaker": "alex",
+      "stateKey": "beachAlexBubbles",
+      "permissions": { "owner": "write", "alex": "write", "guest": "read" },
+      "hotspot": { "status": "pendingArt" }
+    },
+    {
+      "id": "widget.fountain.goddessBoard",
+      "roomId": "room.fountain",
+      "type": "messageBoard",
+      "stateKey": "fountainGoddessBoard",
+      "permissions": { "owner": "write", "alex": "write", "guest": "read" },
+      "hotspot": { "status": "pendingArt" }
+    },
+    {
+      "id": "widget.fountain.nailiBubble",
+      "roomId": "room.fountain",
+      "type": "bubbleQueue",
+      "speaker": "naili",
+      "stateKey": "fountainNailiBubbles",
+      "permissions": { "owner": "write", "alex": "write", "guest": "read" },
+      "hotspot": { "status": "pendingArt" }
+    },
+    {
+      "id": "widget.secret.dailyPuzzle",
+      "roomId": "room.secretPuzzle",
+      "type": "puzzle",
+      "stateKey": "dailyPuzzle",
+      "permissions": { "owner": "write", "alex": "write", "guest": "play" },
+      "hotspot": { "status": "pendingArt" }
+    },
+    {
+      "id": "widget.secret.rewardNote",
+      "roomId": "room.secretPuzzle",
+      "type": "letterPanel",
+      "stateKey": "secretRewardNote",
+      "permissions": { "owner": "write", "alex": "write", "guest": "none" },
+      "requiresUnlock": true,
+      "hotspot": { "status": "pendingArt" }
+    },
+    {
+      "id": "widget.guest.noticeBoard",
+      "roomId": "room.guestGate",
+      "type": "guestBoard",
+      "stateKey": "guestNoticeBoard",
+      "permissions": { "owner": "write", "alex": "write", "guest": "comment" },
+      "hotspot": { "status": "pendingArt" }
+    },
+    {
+      "id": "widget.guest.gomokuGate",
+      "roomId": "room.guestGate",
+      "type": "gameGate",
+      "gameId": "gomoku",
+      "permissions": { "owner": "bypass", "alex": "bypass", "guest": "play" },
+      "hotspot": { "status": "pendingArt" }
+    }
+  ],
+  "actions": [
+    {
+      "id": "action.bubble.next",
+      "type": "nextQueueItem",
+      "label": "下一句气泡"
+    },
+    {
+      "id": "action.route.beach",
+      "type": "goRoom",
+      "roomId": "room.beach",
+      "match": ["海边", "去海边", "beach", "看海"]
+    },
+    {
+      "id": "action.route.restaurant",
+      "type": "goRoom",
+      "roomId": "room.restaurant",
+      "match": ["饿", "肚子咕咕", "想吃", "餐厅", "restaurant", "hungry"]
+    },
+    {
+      "id": "action.route.fountain",
+      "type": "goRoom",
+      "roomId": "room.fountain",
+      "match": ["喷泉", "女神", "大理石", "fountain"]
+    },
+    {
+      "id": "action.route.bedroom",
+      "type": "goRoom",
+      "roomId": "room.bedroom",
+      "match": ["睡", "困", "卧室", "bedroom", "nap"]
+    }
+  ],
+  "dailyRefreshTargets": [
+    "widget.coffee.alexBubble",
+    "widget.coffee.weatherNote",
+    "widget.fountain.goddessBoard",
+    "widget.fountain.nailiBubble",
+    "widget.beach.messageBottle",
+    "widget.secret.dailyPuzzle"
+  ]
+}
