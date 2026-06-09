@@ -1,10 +1,15 @@
 const appQ = require('./app-q');
 
-const ASSET_VERSION = 'room-assets-20260609-5';
+const ASSET_VERSION = 'room-assets-20260609-6';
 
 function asset(key) {
   return `/api/room-asset?key=${key}&v=${ASSET_VERSION}`;
 }
+
+const setupPatchStyle = `
+<style id="cloudDefaultAssetsSetupPatch">
+body.cloudDefaultAssets #setup{display:none!important;}
+</style>`;
 
 const defaultAssetScript = `
 <script>
@@ -40,6 +45,7 @@ const defaultAssetScript = `
     if(img.complete) loaded();
   }
 
+  document.body.classList.add('cloudDefaultAssets','hasHomeOn','hasHomeOff','hasGameRoom');
   hideSetup();
   markWhenReady('homeOn', 'hasHomeOn');
   markWhenReady('homeOff', 'hasHomeOff');
@@ -54,6 +60,7 @@ const defaultAssetScript = `
 
   window.addEventListener('load', hideSetup);
   document.addEventListener('visibilitychange', hideSetup);
+  setTimeout(hideSetup, 0);
   setTimeout(hideSetup, 50);
   setTimeout(hideSetup, 300);
   setTimeout(hideSetup, 1200);
@@ -63,7 +70,8 @@ const defaultAssetScript = `
 
 function injectDefaultAssets(html) {
   return String(html)
-    .replace('<body>', '<body class="cloudDefaultAssets">')
+    .replace('<body>', '<body class="cloudDefaultAssets hasHomeOn hasHomeOff hasGameRoom">')
+    .replace('</head>', `${setupPatchStyle}\n</head>`)
     .replace('<div id="setup" class="setup">', '<div id="setup" class="setup hidden">')
     .replace('<img id="homeOn" class="bg home-on">', `<img id="homeOn" class="bg home-on" src="${asset('home-day')}">`)
     .replace('<img id="homeOff" class="bg home-off">', `<img id="homeOff" class="bg home-off" src="${asset('home-night')}">`)
