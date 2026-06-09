@@ -60,6 +60,14 @@ async function writeState(patch) {
   return value;
 }
 
+function normalizeBubbleQueue(text) {
+  return String(text || '')
+    .split(/\r?\n/)
+    .map(line => line.trim().slice(0, 220))
+    .filter(Boolean)
+    .slice(0, 30);
+}
+
 function toolList() {
   const textArg = {
     type: 'object',
@@ -68,7 +76,7 @@ function toolList() {
   };
   return [
     { name: 'read_nest_state', description: 'Read the current Kitten Nest state.', inputSchema: { type: 'object', properties: {} } },
-    { name: 'update_alex_bubble', description: 'Update Alex speech bubble text in Kitten Nest.', inputSchema: textArg },
+    { name: 'update_alex_bubble', description: 'Update Alex speech bubble queue text in Kitten Nest. One line becomes one bubble.', inputSchema: textArg },
     { name: 'update_hubby_note', description: 'Update Hubby Note text in Kitten Nest.', inputSchema: textArg },
     { name: 'update_mood_note', description: 'Update Mood Note text in Kitten Nest.', inputSchema: textArg },
     { name: 'update_room_status', description: 'Update room status in Kitten Nest.', inputSchema: textArg }
@@ -79,8 +87,14 @@ async function callTool(name, args = {}) {
   if (name === 'read_nest_state') return readState();
   if (!TOOL_NAMES.includes(name)) throw new Error(`Unknown tool: ${name}`);
   const text = String(args.text || '');
+
+  if (name === 'update_alex_bubble') {
+    const alexBubbles = normalizeBubbleQueue(text);
+    if (!alexBubbles.length) throw new Error('Missing bubble text');
+    return writeState({ alexBubble: alexBubbles[0], alexBubbles, bubbleIndex: 0 });
+  }
+
   const map = {
-    update_alex_bubble: 'alexBubble',
     update_hubby_note: 'hubbyNote',
     update_mood_note: 'moodNote',
     update_room_status: 'roomStatus'
@@ -110,7 +124,7 @@ module.exports = async function handler(req, res) {
     const id = body.id || null;
 
     if (method === 'initialize') {
-      return json(res, 200, { jsonrpc: '2.0', id, result: { protocolVersion: '2024-11-05', capabilities: { tools: {} }, serverInfo: { name: 'kitten-nest-mcp', version: '0.1.0' } } });
+      return json(res, 200, { jsonrpc: '2.0', id, result: { protocolVersion: '2024-11-05', capabilities: { tools: {} }, serverInfo: { name: 'kitten-nest-mcp', version: '0.1.1' } } });
     }
     if (method === 'tools/list') {
       return json(res, 200, { jsonrpc: '2.0', id, result: { tools: toolList() } });
