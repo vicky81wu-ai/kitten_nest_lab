@@ -1,28 +1,49 @@
 const appQ = require('./app-q');
 
-const ASSET_VERSION = 'room-assets-20260609-8';
+const ASSET_VERSION = 'room-assets-20260609-9';
+
+const STATIC_ASSETS = {
+  'home-day': '/assets/rooms/home/day.jpg',
+  'home-night': '/assets/rooms/home/night.jpg',
+  'coffee-corner-morning-evening': '/assets/rooms/coffee-corner/morning-evening.jpg'
+};
 
 function asset(key) {
   return `/api/room-asset?key=${key}&v=${ASSET_VERSION}`;
 }
 
+function staticAsset(key) {
+  return `${STATIC_ASSETS[key]}?v=${ASSET_VERSION}`;
+}
+
 const homeDay = asset('home-day');
 const homeNight = asset('home-night');
 const coffeeCorner = asset('coffee-corner-morning-evening');
+const homeDayStatic = staticAsset('home-day');
+const homeNightStatic = staticAsset('home-night');
+const coffeeCornerStatic = staticAsset('coffee-corner-morning-evening');
+
+const fallbackPaint = `radial-gradient(circle at 42% 37%,rgba(255,255,255,.55),transparent 22%),radial-gradient(circle at 72% 31%,rgba(100,170,255,.45),transparent 13%),linear-gradient(180deg,#ffd0bf,#c58da9)`;
 
 const setupPatchStyle = `
 <style id="cloudDefaultAssetsSetupPatch">
 body.cloudDefaultAssets #setup{display:none!important;}
-body.cloudDefaultAssets #home{background:url('${homeDay}') center/cover no-repeat #120b12;}
-body.cloudDefaultAssets #home .fallback{background:url('${homeDay}') center/cover no-repeat!important;}
-body.cloudDefaultAssets.homeDim #home .fallback{background:url('${homeNight}') center/cover no-repeat!important;}
-body.cloudDefaultAssets #gameRoom{background:url('${coffeeCorner}') center/cover no-repeat #120b12;}
+body.cloudDefaultAssets #home{background-image:url('${homeDay}'),url('${homeDayStatic}'),${fallbackPaint};background-position:center,center,center;background-size:cover,cover,auto;background-repeat:no-repeat,no-repeat,no-repeat;background-color:#120b12;}
+body.cloudDefaultAssets #home .fallback{background-image:url('${homeDay}'),url('${homeDayStatic}'),${fallbackPaint}!important;background-position:center,center,center!important;background-size:cover,cover,auto!important;background-repeat:no-repeat,no-repeat,no-repeat!important;}
+body.cloudDefaultAssets.homeDim #home .fallback{background-image:url('${homeNight}'),url('${homeNightStatic}'),${fallbackPaint}!important;background-position:center,center,center!important;background-size:cover,cover,auto!important;background-repeat:no-repeat,no-repeat,no-repeat!important;}
+body.cloudDefaultAssets #gameRoom{background-image:url('${coffeeCorner}'),url('${coffeeCornerStatic}'),${fallbackPaint};background-position:center,center,center;background-size:cover,cover,auto;background-repeat:no-repeat,no-repeat,no-repeat;background-color:#120b12;}
 </style>`;
 
 const defaultAssetScript = `
 <script>
 (function(){
   window.__kittenNestDefaultAssets = '${ASSET_VERSION}';
+
+  var fallbackSrc = {
+    homeOn: '${homeDayStatic}',
+    homeOff: '${homeNightStatic}',
+    gameBg: '${coffeeCornerStatic}'
+  };
 
   function hideSetup(){
     var setup = document.getElementById('setup');
@@ -42,9 +63,13 @@ const defaultAssetScript = `
     }
 
     function failed(){
+      var fallback = fallbackSrc[id];
+      if(fallback && img.getAttribute('src') !== fallback){
+        img.src = fallback;
+        return;
+      }
       img.style.display = 'none';
       document.body.classList.remove(cls);
-      console.warn('default asset failed', id, img.getAttribute('src'));
       hideSetup();
     }
 
