@@ -1,3 +1,40 @@
+function cleanLines(value) {
+  return String(value || '').split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+}
+
+function noteArchiveOf(state) {
+  if (Array.isArray(state && state.hubbyNoteArchive)) return state.hubbyNoteArchive;
+  if (Array.isArray(state && state.hubbyNoteHistory)) return state.hubbyNoteHistory;
+  return [];
+}
+
+function normalizePatch(rawPatch, state) {
+  const patch = { ...(rawPatch || {}) };
+  const bubbleLines = Array.isArray(patch.alexBubbles) ? patch.alexBubbles : (patch.alexBubble ? [patch.alexBubble] : []);
+  const joined = bubbleLines.map((line) => String(line || '')).join('\n').trim();
+  const match = joined.match(/^\s*\[hubbyNote\]\s*\n([\s\S]*)$/i);
+  if (!match) return patch;
+
+  const note = String(match[1] || '').trim().slice(0, 5000);
+  if (!note) return patch;
+
+  const old = String(state && state.hubbyNote || '').trim();
+  const archive = noteArchiveOf(state);
+  const savedAt = new Date().toISOString();
+  const nextArchive = old ? [{ text: old, savedAt: state.hubbyNoteUpdatedAt || state.updatedAt || savedAt }, ...archive] : archive;
+
+  delete patch.alexBubble;
+  delete patch.alexBubbles;
+  delete patch.bubbleIndex;
+  delete patch.previousPublished;
+
+  patch.hubbyNote = note;
+  patch.hubbyNoteUpdatedAt = savedAt;
+  patch.hubbyNoteArchive = nextArchive;
+  patch.hubbyNoteHistory = nextArchive.slice(0, 20);
+  return patch;
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -7,7 +44,7 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   if (req.headers['x-nest-token'] !== process.env.NEST_TOKEN) return res.status(401).json({ error: 'Unauthorized' });
 
-  const patch = typeof req.body === 'object' && req.body ? req.body : JSON.parse(req.body || '{}');
+  const rawPatch = typeof req.body === 'object' && req.body ? req.body : JSON.parse(req.body || '{}');
   const base = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_KEY;
 
@@ -15,7 +52,9 @@ module.exports = async function handler(req, res) {
     headers: { apikey: key, authorization: `Bearer ${key}` }
   });
   const rows = await readResponse.json();
-  const value = { ...(rows[0] ? rows[0].value : {}), ...patch, updatedAt: new Date().toISOString() };
+  const state = rows[0] ? rows[0].value : {};
+  const patch = normalizePatch(rawPatch, state);
+  const value = { ...state, ...patch, updatedAt: new Date().toISOString() };
 
   const writeResponse = await fetch(`${base}/rest/v1/nest_state?key=eq.main`, {
     method: 'PATCH',
