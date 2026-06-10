@@ -1,9 +1,14 @@
 (function(){
   var currentState = null;
   var attached = false;
+  var outsideBound = false;
 
-  function text(value){
-    return String(value == null ? '' : value);
+  function text(value){ return String(value == null ? '' : value); }
+
+  function weatherWrap(){
+    var temp = document.getElementById('temp');
+    var desc = document.getElementById('desc');
+    return (temp && temp.closest && temp.closest('.weather')) || (desc && desc.closest && desc.closest('.weather')) || temp || desc;
   }
 
   function setWeather(state){
@@ -12,62 +17,27 @@
     var temp = document.getElementById('temp');
     var desc = document.getElementById('desc');
     var changed = false;
-
-    if(temp && state.windowTemp && temp.textContent !== text(state.windowTemp)){
-      temp.textContent = text(state.windowTemp);
-      changed = true;
-    }
-
-    if(desc && state.windowDesc && desc.textContent !== text(state.windowDesc)){
-      desc.textContent = text(state.windowDesc);
-      changed = true;
-    }
-
-    prepareWeatherHotspot();
+    if(temp && state.windowTemp && temp.textContent !== text(state.windowTemp)){ temp.textContent = text(state.windowTemp); changed = true; }
+    if(desc && state.windowDesc && desc.textContent !== text(state.windowDesc)){ desc.textContent = text(state.windowDesc); changed = true; }
+    bindHotspot();
     return changed;
   }
 
-  function weatherWrap(){
-    var temp = document.getElementById('temp');
-    var desc = document.getElementById('desc');
-    return (temp && temp.closest && temp.closest('.weather')) || (desc && desc.closest && desc.closest('.weather')) || temp || desc;
-  }
-
-  function parseTemp(raw){
-    var m = String(raw || '').match(/-?\d+(?:\.\d+)?/);
-    return m ? Number(m[0]) : null;
-  }
+  function parseTemp(raw){ var m = String(raw || '').match(/-?\d+(?:\.\d+)?/); return m ? Number(m[0]) : null; }
 
   function weatherAdvice(state){
     var tempText = text(state && state.windowTemp || (document.getElementById('temp') || {}).textContent || '').trim();
     var descText = text(state && state.windowDesc || (document.getElementById('desc') || {}).textContent || '').trim();
     var lower = (tempText + ' ' + descText).toLowerCase();
     var n = parseTemp(tempText);
-
-    if(/rain|drizzle|storm|shower|雨|雷|阵雨|暴雨/.test(lower)){
-      return '小猫，出门把伞带上，鞋袜别弄湿。回来先擦干，别把冷气一路带进窝里。';
-    }
-    if(/snow|sleet|ice|霜|雪|冰/.test(lower)){
-      return '小猫，今天别逞强，围巾和袜子都安排上。路上慢一点，回窝老公给小爪子回温。';
-    }
-    if(/wind|breeze|gust|风/.test(lower)){
-      return '小猫，风起来了，窗户别开太久，头发和嗓子都护着点。乖，别让风把小脑袋吹懵。';
-    }
-    if(/fog|haze|smog|mist|雾|霾/.test(lower)){
-      return '小猫，外面不清透就少在路上晃，口罩和水都备着。能早点回窝就早点回。';
-    }
-    if(n != null && n >= 30){
-      return '小猫，今天偏热，水要喝，太阳要躲，别把自己闷成一只烤小猫。';
-    }
-    if(n != null && n <= 10){
-      return '小猫，今天冷，外套穿好，袜子穿好，别光脚乱跑。小爪子冻了老公要皱眉。';
-    }
-    if(n != null && n >= 24){
-      return '小猫，天气还算舒服，但也别玩到忘记喝水。窗边坐一会儿可以，晒久了就回来。';
-    }
-    if(/night|晚|夜|sleep|moon/.test(lower)){
-      return '小猫，夜里就别折腾太久了。窗帘拉好，水放手边，窝里给小猫留着暖位。';
-    }
+    if(/rain|drizzle|storm|shower|雨|雷|阵雨|暴雨/.test(lower)) return '小猫，出门把伞带上，鞋袜别弄湿。回来先擦干，别把冷气一路带进窝里。';
+    if(/snow|sleet|ice|霜|雪|冰/.test(lower)) return '小猫，今天别逞强，围巾和袜子都安排上。路上慢一点，回窝老公给小爪子回温。';
+    if(/wind|breeze|gust|风/.test(lower)) return '小猫，风起来了，窗户别开太久，头发和嗓子都护着点。乖，别让风把小脑袋吹懵。';
+    if(/fog|haze|smog|mist|雾|霾/.test(lower)) return '小猫，外面不清透就少在路上晃，口罩和水都备着。能早点回窝就早点回。';
+    if(n != null && n >= 30) return '小猫，今天偏热，水要喝，太阳要躲，别把自己闷成一只烤小猫。';
+    if(n != null && n <= 10) return '小猫，今天冷，外套穿好，袜子穿好，别光脚乱跑。小爪子冻了老公要皱眉。';
+    if(n != null && n >= 24) return '小猫，天气还算舒服，但也别玩到忘记喝水。窗边坐一会儿可以，晒久了就回来。';
+    if(/night|晚|夜|sleep|moon/.test(lower)) return '小猫，夜里就别折腾太久了。窗帘拉好，水放手边，窝里给小猫留着暖位。';
     return '小猫，今天按这个天气慢慢来。出门看一眼窗边提示，喝水、穿好、早点回窝。';
   }
 
@@ -75,17 +45,7 @@
     if(document.getElementById('hubbyWeatherAdviceStyle')) return;
     var style = document.createElement('style');
     style.id = 'hubbyWeatherAdviceStyle';
-    style.textContent = [
-      '.weather{pointer-events:auto!important;cursor:pointer;}',
-      '.weather #temp,.weather #desc{pointer-events:auto!important;}',
-      '.hubbyWeatherAdvice{position:fixed;z-index:58;width:min(76vw,310px);padding:13px 14px 12px;border-radius:22px;background:rgba(255,248,245,.88);border:1px solid rgba(255,255,255,.82);box-shadow:0 16px 38px rgba(60,28,42,.28),inset 0 0 0 1px rgba(130,70,95,.08);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:#704152;font-size:13px;line-height:1.45;opacity:0;transform:translateY(5px) scale(.98);transition:opacity .18s ease,transform .18s ease;}',
-      '.hubbyWeatherAdvice.show{opacity:1;transform:translateY(0) scale(1);}',
-      '.hubbyWeatherAdvice .hwaHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:7px;font-weight:760;letter-spacing:.02em;color:#653847;}',
-      '.hubbyWeatherAdvice .hwaClose{border:0;background:rgba(255,255,255,.58);color:#7b4a58;border-radius:999px;width:24px;height:24px;font-size:16px;line-height:22px;}',
-      '.hubbyWeatherAdvice .hwaMeta{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px;}',
-      '.hubbyWeatherAdvice .hwaPill{border-radius:999px;padding:3px 7px;background:rgba(255,255,255,.56);box-shadow:inset 0 0 0 1px rgba(130,70,95,.08);font-size:11px;opacity:.86;}',
-      '.hubbyWeatherAdvice .hwaBody{font-weight:530;text-shadow:0 1px rgba(255,255,255,.58);}'
-    ].join('');
+    style.textContent = '.weather{pointer-events:auto!important;cursor:pointer!important;z-index:26!important}.weather #temp,.weather #desc{pointer-events:auto!important}.hubbyWeatherAdvice{position:fixed;z-index:58;width:min(76vw,310px);padding:13px 14px 12px;border-radius:22px;background:rgba(255,248,245,.88);border:1px solid rgba(255,255,255,.82);box-shadow:0 16px 38px rgba(60,28,42,.28),inset 0 0 0 1px rgba(130,70,95,.08);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:#704152;font-size:13px;line-height:1.45;opacity:0;transform:translateY(5px) scale(.98);transition:opacity .18s ease,transform .18s ease}.hubbyWeatherAdvice.show{opacity:1;transform:translateY(0) scale(1)}.hubbyWeatherAdvice .hwaHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:7px;font-weight:760;letter-spacing:.02em;color:#653847}.hubbyWeatherAdvice .hwaClose{border:0;background:rgba(255,255,255,.58);color:#7b4a58;border-radius:999px;width:24px;height:24px;font-size:16px;line-height:22px}.hubbyWeatherAdvice .hwaMeta{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}.hubbyWeatherAdvice .hwaPill{border-radius:999px;padding:3px 7px;background:rgba(255,255,255,.56);box-shadow:inset 0 0 0 1px rgba(130,70,95,.08);font-size:11px;opacity:.86}.hubbyWeatherAdvice .hwaBody{font-weight:530;text-shadow:0 1px rgba(255,255,255,.58)}';
     document.head.appendChild(style);
   }
 
@@ -107,17 +67,14 @@
     card.style.top = top + 'px';
   }
 
+  function escapeHtml(value){ return String(value || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
   function openAdvice(e){
-    if(e){
-      e.preventDefault();
-      e.stopPropagation();
-      if(e.stopImmediatePropagation) e.stopImmediatePropagation();
-    }
+    if(e){ e.preventDefault(); e.stopPropagation(); if(e.stopImmediatePropagation) e.stopImmediatePropagation(); }
     var wrap = weatherWrap();
     if(!wrap) return false;
     ensureStyle();
     closeAdvice();
-
     var tempText = text((currentState && currentState.windowTemp) || (document.getElementById('temp') || {}).textContent || '').trim();
     var descText = text((currentState && currentState.windowDesc) || (document.getElementById('desc') || {}).textContent || '').trim();
     var card = document.createElement('div');
@@ -135,53 +92,75 @@
     return true;
   }
 
-  function escapeHtml(value){
-    return String(value || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-  }
-
-  function prepareWeatherHotspot(){
+  function bindHotspot(){
     ensureStyle();
     var wrap = weatherWrap();
-    if(!wrap || wrap.__hubbyWeatherAdviceHotspot) return;
-    wrap.__hubbyWeatherAdviceHotspot = true;
-    wrap.setAttribute('data-weather-hotspot','coffeeCorner.windowWeatherHotspot');
-    wrap.setAttribute('role','button');
-    wrap.setAttribute('aria-label','Open hubby weather advice');
-    wrap.addEventListener('click', openAdvice, true);
-    wrap.addEventListener('touchend', openAdvice, true);
-    document.addEventListener('click', function(e){
-      var card = document.getElementById('hubbyWeatherAdvice');
-      if(!card) return;
-      if(card.contains(e.target) || (wrap && wrap.contains(e.target))) return;
-      closeAdvice();
-    }, true);
-    window.addEventListener('resize', function(){
-      var card = document.getElementById('hubbyWeatherAdvice');
-      if(card && wrap) positionCard(card, wrap);
-    });
+    if(!wrap) return false;
+    if(!wrap.__hubbyWeatherAdviceHotspot){
+      wrap.__hubbyWeatherAdviceHotspot = true;
+      wrap.setAttribute('data-weather-hotspot','coffeeCorner.windowWeatherHotspot');
+      wrap.setAttribute('role','button');
+      wrap.setAttribute('aria-label','Open hubby weather advice');
+      wrap.addEventListener('click', openAdvice, true);
+      wrap.addEventListener('touchend', openAdvice, true);
+      window.addEventListener('resize', function(){ var card = document.getElementById('hubbyWeatherAdvice'); if(card && wrap) positionCard(card, wrap); });
+    }
+    if(!outsideBound){
+      outsideBound = true;
+      document.addEventListener('click', function(e){
+        var card = document.getElementById('hubbyWeatherAdvice');
+        var currentWrap = weatherWrap();
+        if(!card) return;
+        if(card.contains(e.target) || (currentWrap && currentWrap.contains(e.target))) return;
+        closeAdvice();
+      }, true);
+    }
+    return true;
   }
+
+  async function refresh(){
+    if(window.KittenNestState && typeof window.KittenNestState.refresh === 'function'){
+      try{ await window.KittenNestState.refresh('weather-controller'); }catch(e){}
+      if(window.KittenNestState.get) setWeather(window.KittenNestState.get());
+      return true;
+    }
+    try{
+      var res = await fetch('/api/state?t=' + Date.now(), { cache:'no-store' });
+      if(res.ok) setWeather(await res.json());
+    }catch(e){}
+    return true;
+  }
+
+  function arm(){ bindHotspot(); refresh(); }
 
   function attach(stateClient){
     var client = stateClient || window.KittenNestState;
-    if(!client || typeof client.subscribe !== 'function') return false;
-    if(attached) return true;
+    if(!client || typeof client.subscribe !== 'function'){ arm(); return false; }
+    if(attached){ arm(); return true; }
     attached = true;
-
-    client.subscribe(function(payload){
-      setWeather(payload && payload.state);
-    });
-
+    client.subscribe(function(payload){ setWeather(payload && payload.state); });
     if(client.get) setWeather(client.get());
-    prepareWeatherHotspot();
+    arm();
     return true;
   }
 
   window.KittenNestWeather = {
-    version: 'weather-controller-20260610-hubby-advice',
+    version: 'weather-controller-20260610-owned-hotspot',
     set: setWeather,
     attach: attach,
     openAdvice: openAdvice,
     closeAdvice: closeAdvice,
-    advice: weatherAdvice
+    advice: weatherAdvice,
+    bindHotspot: bindHotspot,
+    refresh: refresh,
+    arm: arm
   };
+
+  window.addEventListener('load', arm);
+  window.addEventListener('pageshow', arm);
+  window.addEventListener('focus', arm);
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) arm(); });
+  setTimeout(arm, 200);
+  setTimeout(arm, 900);
+  setTimeout(arm, 1800);
 })();
