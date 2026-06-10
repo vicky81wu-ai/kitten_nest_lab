@@ -1,12 +1,17 @@
 {
-  "version": "0.1.0",
-  "status": "foundation-only",
-  "note": "Room configuration foundation for the Kitten Nest world. This file is not wired into runtime yet; it documents future room structure, text ports, asset keys, and interaction intent.",
+  "version": "0.1.1",
+  "status": "foundation-with-active-coordinates",
+  "note": "Room configuration foundation for the Kitten Nest world. This file documents current active coffeeCorner ports and approved coordinate anchors. It is not a full roomEngine runtime yet.",
   "currentRuntime": {
     "activeRoomId": "coffeeCorner",
+    "liveEntry": "/cloud",
+    "writerEntry": "/write",
     "visibleTextPorts": [
       "coffeeCorner.bubbles",
       "coffeeCorner.windowWeather"
+    ],
+    "activeHotspots": [
+      "coffeeCorner.tattooHot"
     ],
     "stableWorkflow": "Alex update package -> /write -> generate drafts -> publish all -> /cloud"
   },
@@ -15,7 +20,7 @@
       "type": "bubbleQueue",
       "target": "coffeeCorner.bubbles",
       "runtimeStatus": "active",
-      "lineRule": "Each non-empty line becomes one rotating bubble."
+      "lineRule": "Each non-empty line becomes one rotating bubble. If there is only one bubble, the 19.8 hotspot still re-shows it after hiding."
     },
     "windowWeather": {
       "type": "weatherText",
@@ -63,14 +68,14 @@
       "assetKey": "coffee-corner-morning-evening",
       "defaultAssetPath": "assets/rooms/coffee-corner/morning-evening.jpg",
       "vibe": "Warm, soft, domestic coffee corner. A place for morning greetings, small notes, weather-by-the-window, sleepy affection, tiny daily discoveries, and Nest stability checks.",
-      "sceneNotes": "Current real front-stage room. This is the only active room with published bubble text. It also owns the window weather text.",
+      "sceneNotes": "Current real front-stage room. This is the only active room with published bubble text. It also owns the window weather text and the active 19.8 coordinate hotspot.",
       "textPorts": [
         {
           "id": "coffeeCorner.bubbles",
           "packageTag": "coffeeCorner",
           "stateFields": ["alexBubble", "alexBubbles", "bubbleIndex"],
           "displayStatus": "active",
-          "description": "Main rotating speech bubble in the coffee corner."
+          "description": "Main rotating speech bubble in the coffee corner. Bubble tap hides it; 19.8 tap shows or advances it."
         },
         {
           "id": "coffeeCorner.windowWeather",
@@ -85,20 +90,45 @@
           "id": "coffeeCorner.tattooHot",
           "label": "19.8 tattoo hotspot",
           "runtimeStatus": "active",
-          "intent": "Toggle or advance the coffeeCorner bubble. Must stay responsive and should not be mixed with weather logic.",
+          "intent": "Toggle or advance the coffeeCorner bubble. If the bubble queue has only one item, re-show that single bubble after hiding. Must stay responsive and should not be mixed with weather logic.",
           "coordinateMode": "lockedToBaseImage",
           "imageId": "gameBg",
+          "selector": ".tattooHot",
           "approvedCoordinate": {
             "x": 0.73,
-            "y": 0.385
+            "y": 0.345,
+            "width": 0.15,
+            "height": 0.08
           },
           "verifiedOn": "2026-06-10",
-          "verificationNote": "Approved in /cloud-coords as the 19.8 left-shoulder anchor. This is a documented anchor only; it is not wired into runtime hotspot replacement yet."
+          "runtimePath": "/cloud",
+          "testPath": "/cloud-hotspot-test",
+          "implementation": "assets/hotspot-positioner.js",
+          "version": "coordinate-hotspot-20260610-tight",
+          "verificationNote": "Approved by Vicky as the tight 19.8 left-shoulder hotspot. This coordinate hotspot is active on the official /cloud route."
+        }
+      ],
+      "overlays": [
+        {
+          "id": "coffeeCorner.bubbleOverlay",
+          "label": "coffee corner speech bubble",
+          "runtimeStatus": "active-legacy-position",
+          "kind": "visualTextOverlay",
+          "coordinateMode": "future",
+          "description": "Currently positioned by existing page/CSS behavior. Future work may lock this to a base-image coordinate after the coordinate system is generalized."
+        },
+        {
+          "id": "coffeeCorner.windowWeatherOverlay",
+          "label": "window weather text",
+          "runtimeStatus": "active-legacy-position",
+          "kind": "visualTextOverlay",
+          "coordinateMode": "future",
+          "description": "Currently positioned by existing page/CSS behavior. Future work may lock this to the window area by base-image coordinate."
         }
       ],
       "future": {
         "coordinateMode": "lockedToBaseImage",
-        "notes": "When the room engine is built, hotspots and overlays should be positioned by base-image coordinates rather than viewport cover offsets."
+        "notes": "Future hotspots and overlays should be positioned by base-image coordinates rather than viewport cover offsets. Do not add new API functions for this; use front-end assets and room config."
       }
     },
     {
@@ -160,10 +190,16 @@
     "doNotBreak": [
       "/write Alex update package workflow",
       "coffeeCorner bubble publishing",
-      "19.8 tattoo hotspot behavior",
-      "windowWeather state fields"
+      "19.8 tight coordinate hotspot behavior",
+      "single-bubble 19.8 re-show behavior",
+      "windowWeather state fields",
+      "Vercel Hobby function count budget"
     ],
-    "nextRefactorGoal": "Collect scattered front-end state readers into formal modules: stateClient, bubbleController, weatherController, and roomEngine.",
-    "principle": "Stop adding runtime patches after the current stable coffeeCorner and weather ports. Future work should collect patches into modules before adding more rooms."
+    "removedApiFunctions": [
+      "api/room-asset.js",
+      "api/registry.js"
+    ],
+    "nextRefactorGoal": "Make hotspot and overlay placement configuration-driven inside existing front-end assets without adding new API wrappers.",
+    "principle": "Static assets, front-end controllers, and JSON config should carry future world expansion. Do not add more runtime API functions for rooms, image proxies, or hotspot wrappers."
   }
 }
