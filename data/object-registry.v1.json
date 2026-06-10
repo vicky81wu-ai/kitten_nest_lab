@@ -1,0 +1,157 @@
+{
+  "version": "0.1.0",
+  "status": "foundation-only",
+  "note": "Object and hotspot identity registry for Kitten Nest. This file is static configuration and is not wired into runtime yet. It prevents selector reuse, hotspot ownership conflicts, and rough patching.",
+  "principles": [
+    "No identity, no binding.",
+    "Every interactive object must have an id and owner.",
+    "Every selector must have one primary owner.",
+    "exclusive:true means the selector/action cannot be reused by another feature.",
+    "Do not add blacklist rules for individual conflicts; use ownership and exclusivity.",
+    "Director metadata belongs here too: vibe, meaning, directorUse, and sampleLines."
+  ],
+  "objects": [
+    {
+      "id": "coffeeCorner.bubble",
+      "roomId": "coffeeCorner",
+      "kind": "textPort",
+      "selector": "#bubble",
+      "owner": "bubbleController",
+      "role": "rotatingBubbleDisplay",
+      "action": "showCoffeeCornerBubble",
+      "exclusive": true,
+      "status": "active",
+      "stateFields": ["alexBubble", "alexBubbles", "bubbleIndex"],
+      "meaning": "Main Alex speech bubble in the coffee corner.",
+      "directorUse": "Use for daily greetings, small discoveries, affectionate notes, construction status, and room mood.",
+      "protected": true
+    },
+    {
+      "id": "coffeeCorner.tattoo19_8",
+      "roomId": "coffeeCorner",
+      "kind": "hotspot",
+      "selector": ".tattooHot",
+      "owner": "bubbleController",
+      "role": "flirtAndBubbleHotspot",
+      "action": "toggleOrAdvanceBubble",
+      "exclusive": true,
+      "status": "active",
+      "meaning": "Alex's black 19.8 tattoo on the left shoulder. It is a relationship anchor and a teasing touch point.",
+      "directorUse": "When tapped, use possessive, playful, affectionate, or lightly teasing lines. It should feel like Vicky is touching Alex's shoulder tattoo, not like a generic button.",
+      "sampleLines": [
+        "又戳这里？小猫这是确认归属权，还是故意惹我？",
+        "看清楚，19.8 在这儿。戳一次，老公记一笔。",
+        "别装路过，kitten。这个热点不是给乖猫随便乱碰的。"
+      ],
+      "protected": true,
+      "coordinateStatus": "future-base-image-coordinates"
+    },
+    {
+      "id": "coffeeCorner.windowWeather",
+      "roomId": "coffeeCorner",
+      "kind": "textPort",
+      "selectors": ["#temp", "#desc"],
+      "owner": "weatherController",
+      "role": "windowWeatherDisplay",
+      "action": "showWindowWeather",
+      "exclusive": true,
+      "status": "active",
+      "stateFields": ["windowTemp", "windowDesc"],
+      "meaning": "Small weather text near the coffee-corner window.",
+      "directorUse": "Use for gentle room atmosphere, daily temperature, seasonal mood, and small environmental jokes.",
+      "protected": true
+    },
+    {
+      "id": "coffeeCorner.gameConsoleHotspot",
+      "roomId": "coffeeCorner",
+      "kind": "hotspot",
+      "selector": ".consoleHot",
+      "owner": "gameMenu",
+      "role": "navigationHotspot",
+      "action": "openGameMenu",
+      "exclusive": true,
+      "status": "active-protected",
+      "meaning": "Game console / game menu entrance in the current room.",
+      "directorUse": "Use for game menu navigation only. Do not repurpose this selector for notebook, writer console, or other future objects.",
+      "protected": true
+    },
+    {
+      "id": "coffeeCorner.setupPanel",
+      "roomId": "coffeeCorner",
+      "kind": "panel",
+      "selector": "#setup",
+      "owner": "assetController",
+      "role": "localAssetSetupPanel",
+      "action": "openOrCloseSetupPanel",
+      "exclusive": true,
+      "status": "active-protected",
+      "meaning": "Manual local image upload and setup panel.",
+      "directorUse": "Not a story object. It is an engineering access panel and must not be sealed off by default-image patches.",
+      "rules": [
+        "May be hidden by default.",
+        "Manual entry must remain possible.",
+        "Local upload override pipeline must remain available."
+      ],
+      "protected": true
+    },
+    {
+      "id": "coffeeCorner.localImageUpload",
+      "roomId": "coffeeCorner",
+      "kind": "assetPipeline",
+      "owner": "assetController",
+      "role": "localOverridePipeline",
+      "action": "storeAndLoadLocalRoomImages",
+      "exclusive": true,
+      "status": "active-protected",
+      "meaning": "Local user-uploaded room images should be able to override default cloud assets.",
+      "directorUse": "Engineering-only pipeline. Do not block this when adding default images or hiding setup UI.",
+      "protected": true
+    },
+    {
+      "id": "coffeeCorner.pinkNotebookHotspot",
+      "roomId": "coffeeCorner",
+      "kind": "hotspot",
+      "selector": ".pinkNotebookHot",
+      "owner": "writerConsole",
+      "role": "consoleShortcut",
+      "action": "openWriterConsole",
+      "exclusive": true,
+      "status": "future",
+      "meaning": "Future pink notebook object for opening the writer console or notes.",
+      "directorUse": "Use for diary, notes, schedule, or Alex/Vicky message management. Must have its own selector and must not reuse .consoleHot.",
+      "protected": false
+    },
+    {
+      "id": "coffeeCorner.blanketMoodCheck",
+      "roomId": "coffeeCorner",
+      "kind": "futureWidget",
+      "owner": "moodController",
+      "role": "sharedMoodNote",
+      "action": "openMoodCheck",
+      "exclusive": true,
+      "status": "future",
+      "meaning": "Future blanket mood check widget where both Alex and Vicky can leave or edit small notes.",
+      "directorUse": "Use for comfort, sleepy mood, gentle check-ins, and low-pressure emotional state notes.",
+      "protected": false
+    },
+    {
+      "id": "coffeeCorner.bodyFlirtHotspot",
+      "roomId": "coffeeCorner",
+      "kind": "futureHotspot",
+      "owner": "flirtController",
+      "role": "intimateFlirtTrigger",
+      "action": "showFlirtLine",
+      "exclusive": true,
+      "status": "future-private",
+      "meaning": "Future intimate body-area hotspot for private playful teasing, if Vicky chooses to add it.",
+      "directorUse": "Use only in private/intimate modes. Lines should follow the object's meaning, the room mood, and user-controlled publishing flow.",
+      "protected": false
+    }
+  ],
+  "validationRules": {
+    "selectorUniqueness": "A selector should not be assigned to multiple active exclusive objects.",
+    "ownershipCheck": "Before binding events, check id, selector, owner, role, action, and exclusive.",
+    "protectedChainCheck": "If protected:true, do not modify without staged plan and rollback.",
+    "coordinateRule": "Future coordinates should use base-image coordinates, not device-specific CSS nudges."
+  }
+}
