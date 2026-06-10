@@ -8,20 +8,54 @@ These rules exist to prevent rough patching as the nest grows from a small page 
 
 No identity, no binding.
 
-Before adding or changing any event binding, hotspot, overlay, panel, or text port, check the room config and object registry first.
+Before adding or changing any event binding, hotspot, overlay, panel, text port, asset path, or room object, check the room config and object registry first.
 
-## Required preflight before code changes
+## Object identity card
+
+Every active or planned interactive object should have a static identity card in `data/object-registry.v1.json` or `data/room-config.v1.json` before runtime code binds to it.
+
+Minimum identity fields:
+
+```text
+id
+roomId
+kind
+selector or plannedSelector
+owner
+role
+action
+exclusive
+runtimeStatus
+versionStatus
+changePolicy
+```
+
+Recommended meaning:
+
+```text
+runtimeStatus: active | partial | future | deprecated
+coordinateStatus: baseImageLocked | legacyViewport | future | none
+versionStatus: canonicalCurrent | draft | legacy | experimental
+changePolicy: mutableWithVersion | fixedUntilReplaced | futureDecision
+```
+
+`canonicalCurrent` means "current official truth", not "unchangeable forever".
+
+A current official object can still change later if the change is explicit, versioned, and documented. The nest is a living map, not a stone tablet.
+
+## Required preflight before runtime code changes
 
 Before changing runtime code, answer these questions:
 
 1. Which room is affected?
-2. Which object, hotspot, overlay, panel, or text port is affected?
-3. Does it already have an identity card in `data/object-registry.v1.json`?
+2. Which object, hotspot, overlay, panel, text port, or asset pipeline is affected?
+3. Does it already have an identity card in `data/object-registry.v1.json` or `data/room-config.v1.json`?
 4. Does the selector already have a primary owner?
 5. Is the existing item `exclusive: true`?
-6. What stable chain could this affect?
-7. Is this a bug fix, a feature, or architecture collection?
-8. What is the rollback plan?
+6. Is the current object `canonicalCurrent` and `mutableWithVersion`?
+7. What stable chain could this affect?
+8. Is this a bug fix, a feature, architecture collection, or pure visual polish?
+9. What is the rollback plan?
 
 If the object has no identity card, create or update the registry entry first. Do not bind code by guessing.
 
@@ -33,6 +67,7 @@ If the object has no identity card, create or update the registry entry first. D
 - `exclusive: true` means the selector/action cannot be reused by another feature.
 - Do not reuse an existing class or selector just because it is convenient.
 - Do not build blacklist rules like "X cannot steal Y". Use ownership and exclusivity instead.
+- If an object needs to share a selector, the identity card must say so explicitly with a shared owner or a deliberate `exclusive:false` policy.
 
 ## Protected stable chains
 
@@ -41,8 +76,11 @@ Do not casually change these without a staged plan:
 - `/write` update package workflow
 - coffee-corner bubble publishing
 - 19.8 tattoo hotspot behavior
-- window weather display
+- window weather display and weather advice popup
+- powder notebook current page, archive, favorite/delete, and key hiding
+- game console / game menu hotspot
 - local upload / setup panel access
+- default static image loading
 
 ## Setup panel rule
 
@@ -56,11 +94,13 @@ A visual patch must not block interaction.
 
 Do not cover a layout issue with a color band or invisible layer if it interferes with panels, buttons, or touch areas.
 
+Visual polish should not change ownership, selector bindings, cloud state, or room navigation.
+
 ## Coordinate rule
 
 Hotspots and overlays should be locked to base-image coordinates, not to device-specific offsets.
 
-Do not solve Safari/PWA differences by nudging one device separately. The future direction is:
+Do not solve Safari/PWA differences by nudging one device separately. The intended direction is:
 
 ```text
 base image coordinates
@@ -68,15 +108,42 @@ base image coordinates
 -> screen coordinates
 ```
 
+If a coordinate is current and approved, mark it as:
+
+```text
+coordinateStatus: baseImageLocked
+versionStatus: canonicalCurrent
+changePolicy: mutableWithVersion
+```
+
+This means the coordinate is the official current version, while still allowing future versioned adjustment.
+
 ## PWA rule
 
 PWA cold-start issues are a separate testing track.
 
-Do not mix PWA cold-start debugging with hotspot, coordinate, or panel changes. Record network/VPN state before judging whether code is broken.
+Do not mix PWA cold-start debugging with hotspot, coordinate, panel, or room-expansion work. Record network/VPN state before judging whether code is broken.
+
+Safari success plus PWA failure does not automatically mean runtime code is broken. Check network, cache, static asset loading, and local image fallback before structural changes.
+
+## Documentation rule
+
+Do not write a giant incident diary for every bug.
+
+Long-term docs should prefer:
+
+```text
+framework rule
+current object identity
+current owner/exclusive policy
+one short example only if it teaches the rule
+```
+
+Incident details belong in temporary handoff notes or a short construction-log note, not in a sprawling permanent casebook.
 
 ## Patch rule
 
-Temporary patches must be documented.
+Temporary patches must be documented at the level needed to prevent confusion.
 
 Each patch should have:
 
