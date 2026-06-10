@@ -1,7 +1,7 @@
 const appAssetctl = require('./app-assetctl');
 
 const bubbleControllerScript = '<script src="/assets/bubble-controller.js?v=20260610-1"></script>';
-const hubbyNoteControllerScript = '<script src="/assets/hubby-note-controller.js?v=20260610-editor-1"></script>';
+const hubbyNoteControllerScript = '<script src="/assets/hubby-note-controller.js?v=20260610-controls-1"></script>';
 const bubbleBootScript = `
 <script>
 (function(){
