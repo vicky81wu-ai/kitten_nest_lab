@@ -1,7 +1,7 @@
 {
   "routes": [
     { "src": "^/$", "dest": "/api/app-assets" },
-    { "src": "^/cloud$", "dest": "/api/app-assets" },
+    { "src": "^/cloud$", "dest": "/api/app-weather" },
     { "src": "^/cloud-weather$", "dest": "/api/app-weather" },
     { "src": "^/pwa$", "dest": "/api/app-assets" },
     { "src": "^/cloudq$", "dest": "/api/app-q" },
