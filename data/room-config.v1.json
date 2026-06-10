@@ -85,7 +85,15 @@
           "id": "coffeeCorner.tattooHot",
           "label": "19.8 tattoo hotspot",
           "runtimeStatus": "active",
-          "intent": "Toggle or advance the coffeeCorner bubble. Must stay responsive and should not be mixed with weather logic."
+          "intent": "Toggle or advance the coffeeCorner bubble. Must stay responsive and should not be mixed with weather logic.",
+          "coordinateMode": "lockedToBaseImage",
+          "imageId": "gameBg",
+          "approvedCoordinate": {
+            "x": 0.73,
+            "y": 0.385
+          },
+          "verifiedOn": "2026-06-10",
+          "verificationNote": "Approved in /cloud-coords as the 19.8 left-shoulder anchor. This is a documented anchor only; it is not wired into runtime hotspot replacement yet."
         }
       ],
       "future": {
