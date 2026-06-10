@@ -1,7 +1,7 @@
 {
-  "version": "0.1.1",
-  "status": "foundation-with-active-coordinates",
-  "note": "Room configuration foundation for the Kitten Nest world. This file documents current active coffeeCorner ports and approved coordinate anchors. It is not a full roomEngine runtime yet.",
+  "version": "0.1.2",
+  "status": "foundation-with-active-coordinates-and-element-cards",
+  "note": "Room configuration foundation for the Kitten Nest world. This file documents current active coffeeCorner ports, approved coordinate anchors, and element cards for future director/runtime work. It is not a full roomEngine runtime yet.",
   "currentRuntime": {
     "activeRoomId": "coffeeCorner",
     "liveEntry": "/cloud",
@@ -12,6 +12,9 @@
     ],
     "activeHotspots": [
       "coffeeCorner.tattooHot"
+    ],
+    "futureHotspots": [
+      "coffeeCorner.windowWeatherHotspot"
     ],
     "stableWorkflow": "Alex update package -> /write -> generate drafts -> publish all -> /cloud"
   },
@@ -75,14 +78,25 @@
           "packageTag": "coffeeCorner",
           "stateFields": ["alexBubble", "alexBubbles", "bubbleIndex"],
           "displayStatus": "active",
-          "description": "Main rotating speech bubble in the coffee corner. Bubble tap hides it; 19.8 tap shows or advances it."
+          "description": "Main rotating speech bubble in the coffee corner. Bubble tap hides it; 19.8 tap shows or advances it.",
+          "directorCard": {
+            "role": "main mouth of the room",
+            "vibe": ["daily companionship", "morning and bedtime check-ins", "hubby presence", "warm teasing", "soft domestic intimacy"],
+            "bubbleStyle": ["natural", "short-to-medium", "emotionally warm", "playful", "context-aware"],
+            "futureUse": "Can receive lines selected by room, hotspot, weather, time, or mood later. Current runtime still uses the published coffeeCorner queue."
+          }
         },
         {
           "id": "coffeeCorner.windowWeather",
           "packageTag": "windowWeather",
           "stateFields": ["windowTemp", "windowDesc"],
           "displayStatus": "active",
-          "description": "Small weather text near the window."
+          "description": "Small weather text near the window.",
+          "directorCard": {
+            "role": "window-side care signal",
+            "vibe": ["daily care", "window life", "weather check", "hubby looking after kitten", "soft practical reminder"],
+            "futureUse": "Can feed a future weather advice hotspot without replacing the main coffeeCorner bubble queue."
+          }
         }
       ],
       "hotspots": [
@@ -105,7 +119,49 @@
           "testPath": "/cloud-hotspot-test",
           "implementation": "assets/hotspot-positioner.js",
           "version": "coordinate-hotspot-20260610-tight",
+          "directorCard": {
+            "vibe": ["possessive", "teasing", "intimate", "hubby presence"],
+            "sceneUse": ["left shoulder tattoo", "close-up teasing", "claiming mark", "coffee corner check-in"],
+            "bubbleStyle": ["short", "low-voiced", "flirty", "protective", "direct"],
+            "linkedTextPort": "coffeeCorner.bubbles",
+            "flirtLevel": "medium-high",
+            "memoryHook": "Alex left-shoulder 19.8 tattoo",
+            "futureUse": "Can choose or filter bubble lines by hotspot mood later. Currently the runtime uses the normal coffeeCorner bubble queue."
+          },
           "verificationNote": "Approved by Vicky as the tight 19.8 left-shoulder hotspot. This coordinate hotspot is active on the official /cloud route."
+        },
+        {
+          "id": "coffeeCorner.windowWeatherHotspot",
+          "label": "window weather advice hotspot",
+          "runtimeStatus": "future-card-only",
+          "intent": "Future clickable weather area. When tapped, it should open or show a hubby weather advice note based on windowTemp and windowDesc.",
+          "coordinateMode": "future-lockedToBaseImage",
+          "imageId": "gameBg",
+          "selector": null,
+          "approvedCoordinate": null,
+          "stateSources": ["windowTemp", "windowDesc"],
+          "futureBehavior": {
+            "action": "openHubbyWeatherAdvice",
+            "outputMode": "small weather card or temporary bubble",
+            "shouldAffectMainBubbleQueue": false,
+            "adviceRules": [
+              { "weatherHint": "hot", "tone": "protective", "exampleIntent": "drink water, avoid sun, do not overheat" },
+              { "weatherHint": "cold", "tone": "protective", "exampleIntent": "wear layers, socks, do not wander barefoot" },
+              { "weatherHint": "rain", "tone": "careful", "exampleIntent": "bring an umbrella, avoid puddles, dry off after returning" },
+              { "weatherHint": "wind", "tone": "gentle", "exampleIntent": "protect hair and throat, close the window if needed" },
+              { "weatherHint": "sleepy/night", "tone": "soft", "exampleIntent": "close curtains, warm drink, settle into the nest" }
+            ]
+          },
+          "directorCard": {
+            "vibe": ["window-side care", "domestic reminder", "hubby looking after kitten", "weather-based affection"],
+            "sceneUse": ["morning before going out", "rainy day", "hot afternoon", "windy window", "sleepy night"],
+            "bubbleStyle": ["caring", "practical", "warm", "lightly bossy", "short"],
+            "linkedTextPort": "coffeeCorner.windowWeather",
+            "flirtLevel": "low-medium",
+            "memoryHook": "hubby weather advice by the coffee corner window",
+            "futureUse": "This is planned as a separate weather advice interaction and should not overwrite the main coffeeCorner bubble queue."
+          },
+          "verificationNote": "Card only. Not visible and not clickable yet. Add coordinates and runtime later after coffeeCorner remains stable."
         }
       ],
       "overlays": [
@@ -115,7 +171,13 @@
           "runtimeStatus": "active-legacy-position",
           "kind": "visualTextOverlay",
           "coordinateMode": "future",
-          "description": "Currently positioned by existing page/CSS behavior. Future work may lock this to a base-image coordinate after the coordinate system is generalized."
+          "stateSource": "coffeeCorner.bubbles",
+          "description": "Currently positioned by existing page/CSS behavior. Future work may lock this to a base-image coordinate after the coordinate system is generalized.",
+          "directorCard": {
+            "role": "main visible speech surface",
+            "vibe": ["companion voice", "check-in", "daily note", "playful affection"],
+            "futureUse": "Could become a coordinate-locked overlay and receive text based on room, hotspot, weather, or time."
+          }
         },
         {
           "id": "coffeeCorner.windowWeatherOverlay",
@@ -123,7 +185,13 @@
           "runtimeStatus": "active-legacy-position",
           "kind": "visualTextOverlay",
           "coordinateMode": "future",
-          "description": "Currently positioned by existing page/CSS behavior. Future work may lock this to the window area by base-image coordinate."
+          "stateSource": "coffeeCorner.windowWeather",
+          "description": "Currently positioned by existing page/CSS behavior. Future work may lock this to the window area by base-image coordinate.",
+          "directorCard": {
+            "role": "ambient care/weather surface",
+            "vibe": ["window life", "small daily signal", "care reminder", "weather mood"],
+            "futureUse": "Should pair with the future windowWeatherHotspot to show hubby's weather advice."
+          }
         }
       ],
       "future": {
