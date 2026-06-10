@@ -43,6 +43,7 @@ height = 0.08
 - The tight 19.8 coordinate hotspot is active on `/cloud`.
 - `/cloud-hotspot-test` remains available as the test line.
 - `/cloud-coords` remains available as the marker/debug line.
+- The 19.8 coordinate is now treated as `canonicalCurrent` and `mutableWithVersion`: current official truth, not permanent immutability.
 
 ### Vercel Hobby function-limit incident
 
@@ -123,6 +124,25 @@ Status:
 current note, permanent archive, in-nest editor, favorite/delete, soft-delete trash, and key hiding are working; visual polish should wait for dedicated notebook art
 ```
 
+### Object identity rule added
+
+- Added/updated the static object identity layer:
+
+```text
+data/object-registry.v1.json
+data/room-config.v1.json
+```
+
+- Long-term rule:
+
+```text
+No identity, no binding.
+```
+
+- Selectors should be governed by owner/exclusive policy, not by one-off blacklists.
+- `canonicalCurrent` means current official truth, while `mutableWithVersion` allows future versioned changes.
+- Short lesson kept as a specimen: a notebook entry once reused the game console selector and took over the game menu. The long-term fix is not a blacklist; it is identity, ownership, and exclusivity.
+
 ### Current protected areas
 
 - Keep the daily `/write` package workflow stable.
@@ -132,6 +152,9 @@ current note, permanent archive, in-nest editor, favorite/delete, soft-delete tr
 - Keep window weather working.
 - Keep weather advice popup working.
 - Keep powder notebook current note, archive, in-nest editor, favorite/delete, soft-delete trash, and key hiding working.
+- Keep game console / GAME MENU hotspot ownership stable.
+- Keep setup/materials panel manual access available.
+- Keep local image upload override pipeline available.
 - Keep the old cached `/write` guard in `api/set-state.js` until cache issues are no longer a risk.
 - Keep the top-level handoff docs free of private keys or service credentials.
 - Keep deployment under the Vercel Hobby function limit.
@@ -141,7 +164,7 @@ current note, permanent archive, in-nest editor, favorite/delete, soft-delete tr
 
 - Do not add new rooms yet.
 - Do not add new `api/*.js` wrappers.
-- Follow `docs/CODEX_CLEANUP_PLAN.md`.
+- Follow `docs/CODEX_CLEANUP_PLAN.md` and `docs/CONSTRUCTION_RULES.md`.
 - Continue cleanup one line at a time.
 - Cleanup should preserve visible behavior while reducing duplicated ownership.
 - Future pure UI polish for the notebook should wait for dedicated notebook art.
@@ -149,5 +172,5 @@ current note, permanent archive, in-nest editor, favorite/delete, soft-delete tr
 ### New-window handoff rule
 
 - New construction windows should read `PROJECT_STATUS.md` first.
-- Then read `docs/CURRENT_STATUS.md`, `docs/ARCHITECTURE_NOTES.md`, `docs/CONSTRUCTION_LOG.md`, `docs/CODEX_CLEANUP_PLAN.md`, and `data/room-config.v1.json`.
-- The nest is stable but still has wrapper-chain debt; protect `/write`, `/cloud`, coffeeCorner bubbles, windowWeather, weather advice, powder notebook, Vercel function count, and 19.8 hotspot behavior before refactoring.
+- Then read `docs/CURRENT_STATUS.md`, `docs/ARCHITECTURE_NOTES.md`, `docs/CONSTRUCTION_LOG.md`, `docs/CONSTRUCTION_RULES.md`, `docs/CODEX_CLEANUP_PLAN.md`, `data/room-config.v1.json`, and `data/object-registry.v1.json`.
+- The nest is stable but still has wrapper-chain debt; protect `/write`, `/cloud`, coffeeCorner bubbles, windowWeather, weather advice, powder notebook, setup/local upload, Vercel function count, object identity, and 19.8 hotspot behavior before refactoring.
