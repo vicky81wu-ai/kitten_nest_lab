@@ -146,7 +146,7 @@ const cloudTextPatchScript = `
 })();
 </script>`;
 
-const weatherPatchScript = '<script src="/assets/weather-patch.js?v=20260610-note-cache-1"></script>';
+const weatherPatchScript = '<script src="/assets/weather-patch.js?v=20260610-note-cache-1"></script><script src="/assets/weather-advice-hotspot.js?v=20260610-guard-2"></script>';
 
 function injectDefaultAssets(html) {
   return String(html)
