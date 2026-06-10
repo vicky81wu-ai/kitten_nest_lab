@@ -24,6 +24,7 @@ const homeNightStatic = staticAsset('home-night');
 const coffeeCornerStatic = staticAsset('coffee-corner-morning-evening');
 
 const fallbackPaint = `radial-gradient(circle at 42% 37%,rgba(255,255,255,.55),transparent 22%),radial-gradient(circle at 72% 31%,rgba(100,170,255,.45),transparent 13%),linear-gradient(180deg,#ffd0bf,#c58da9)`;
+const canvasFillCss = '<link rel="stylesheet" href="/assets/canvas-fill.css?v=20260610-1">';
 
 const setupPatchStyle = `
 <style id="cloudDefaultAssetsSetupPatch">
@@ -149,7 +150,7 @@ const cloudTextPatchScript = `
 function injectDefaultAssets(html) {
   return String(html)
     .replace('<body>', '<body class="cloudDefaultAssets">')
-    .replace('</head>', `${setupPatchStyle}\n</head>`)
+    .replace('</head>', `${canvasFillCss}\n${setupPatchStyle}\n</head>`)
     .replace('<div id="setup" class="setup">', '<div id="setup" class="setup hidden">')
     .replace("function say(t){$('bubble').textContent=t}", "function say(t){bubbleOn=true;$('bubble').textContent=t;syncBubble()}")
     .replace('<img id="homeOn" class="bg home-on">', `<img id="homeOn" class="bg home-on" src="${homeDay}">`)
