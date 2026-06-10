@@ -40,11 +40,13 @@
   }
 
   function noteText(state){
-    return text(state && state.hubbyNote || '').trim() || '粉本本还空着。用 /write 的 [hubbyNote] 写一页，老公就把它存进云端。';
+    return text(state && state.hubbyNote || '').trim() || '粉本本还空着。用 /write 的 [hubbyNote] 写一页，老公就把它存进云端永久档案。';
   }
 
-  function noteHistory(state){
-    return Array.isArray(state && state.hubbyNoteHistory) ? state.hubbyNoteHistory : [];
+  function noteArchive(state){
+    if(Array.isArray(state && state.hubbyNoteArchive)) return state.hubbyNoteArchive;
+    if(Array.isArray(state && state.hubbyNoteHistory)) return state.hubbyNoteHistory;
+    return [];
   }
 
   function ensurePanel(){
@@ -54,7 +56,7 @@
     panel = document.createElement('div');
     panel.id = 'hubbyNotePanel';
     panel.className = 'hubbyNotePanel';
-    panel.innerHTML = '<div class="hubbyNoteCard" role="dialog" aria-label="hubby note notebook"><div class="hubbyNoteHead"><div class="hubbyNoteTitle">粉本本 · Hubby note</div><button class="hubbyNoteClose" type="button" aria-label="close">×</button></div><div class="hubbyNoteMeta" id="hubbyNoteMeta"></div><div class="hubbyNoteBody" id="hubbyNoteBody"></div><div class="hubbyNoteSection">最近收藏</div><div class="hubbyNoteHistory" id="hubbyNoteHistory"></div><div class="hubbyNoteHint">用 /write 发布 [hubbyNote]，这里会永久存进云端。</div></div>';
+    panel.innerHTML = '<div class="hubbyNoteCard" role="dialog" aria-label="hubby note notebook"><div class="hubbyNoteHead"><div class="hubbyNoteTitle">粉本本 · Hubby note</div><button class="hubbyNoteClose" type="button" aria-label="close">×</button></div><div class="hubbyNoteMeta" id="hubbyNoteMeta"></div><div class="hubbyNoteBody" id="hubbyNoteBody"></div><div class="hubbyNoteSection" id="hubbyNoteArchiveTitle">永久档案 · 最近显示</div><div class="hubbyNoteHistory" id="hubbyNoteHistory"></div><div class="hubbyNoteHint">用 /write 发布 [hubbyNote]，云端会永久追加保存；这里先显示最近几条。</div></div>';
     document.body.appendChild(panel);
     panel.addEventListener('click', function(e){ if(e.target === panel) close(); });
     panel.querySelector('.hubbyNoteClose').addEventListener('click', close);
@@ -66,12 +68,15 @@
     var body = panel.querySelector('#hubbyNoteBody');
     var meta = panel.querySelector('#hubbyNoteMeta');
     var history = panel.querySelector('#hubbyNoteHistory');
+    var title = panel.querySelector('#hubbyNoteArchiveTitle');
     var updated = text(state && (state.hubbyNoteUpdatedAt || state.updatedAt) || '').trim();
+    var archive = noteArchive(state);
     body.textContent = noteText(state);
-    meta.textContent = updated ? ('云端保存 · ' + shortDate(updated)) : '云端保存';
-    var items = noteHistory(state).slice(0,6);
+    meta.textContent = updated ? ('云端保存 · ' + shortDate(updated) + ' · 永久档案 ' + archive.length + ' 条') : ('云端保存 · 永久档案 ' + archive.length + ' 条');
+    if(title) title.textContent = '永久档案 · 最近显示 ' + Math.min(archive.length, 6) + ' 条';
+    var items = archive.slice(0,6);
     if(!items.length){
-      history.innerHTML = '<div class="hubbyNoteItem"><div class="hubbyNoteItemText">还没有历史收藏。今天施工第一条，正等小猫写进去。</div></div>';
+      history.innerHTML = '<div class="hubbyNoteItem"><div class="hubbyNoteItemText">还没有历史档案。今天施工第一条，正等小猫写进去。</div></div>';
     }else{
       history.innerHTML = items.map(function(item){
         return '<div class="hubbyNoteItem"><div class="hubbyNoteItemTime">' + escapeHtml(shortDate(item.savedAt || item.createdAt || item.updatedAt || '')) + '</div><div class="hubbyNoteItemText">' + escapeHtml(item.text || item.note || '') + '</div></div>';
@@ -151,7 +156,7 @@
   }
 
   window.KittenNestHubbyNote = {
-    version: 'hubby-note-notebook-20260610-1',
+    version: 'hubby-note-notebook-20260610-permanent-archive',
     attach: attach,
     open: open,
     close: close,
