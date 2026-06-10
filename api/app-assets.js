@@ -1,6 +1,6 @@
 const appQ = require('./app-q');
 
-const ASSET_VERSION = 'room-assets-20260609-11';
+const ASSET_VERSION = 'room-assets-20260609-12';
 
 const STATIC_ASSETS = {
   'home-day': '/assets/rooms/home/day.jpg',
@@ -105,7 +105,7 @@ const defaultAssetScript = `
 const cloudTextPatchScript = `
 <script>
 (function(){
-  window.__kittenNestTextPatch = 'text-patch-20260610-1';
+  window.__kittenNestTextPatch = 'text-patch-20260610-2';
   var lastStamp = '';
   var index = 0;
   function bubble(){ return document.getElementById('bubble'); }
@@ -120,7 +120,6 @@ const cloudTextPatchScript = `
     b.textContent = text;
     b.classList.remove('hidden');
     b.setAttribute('data-cloud-refresh','1');
-    try{ window.bubbleOn = true; }catch(e){}
   }
   async function refresh(force){
     try{
@@ -139,20 +138,6 @@ const cloudTextPatchScript = `
       }
     }catch(e){}
   }
-  function isHot(e){
-    var t = e && e.target;
-    if(t && t.closest && t.closest('.tattooHot')) return true;
-    return false;
-  }
-  function onHot(e){
-    if(!isHot(e)) return;
-    var b = bubble();
-    if(!b || !b.classList.contains('hidden')) return;
-    if(e){ e.preventDefault(); e.stopPropagation(); if(e.stopImmediatePropagation) e.stopImmediatePropagation(); }
-    refresh(true);
-  }
-  document.addEventListener('click', onHot, true);
-  document.addEventListener('touchend', onHot, true);
   window.addEventListener('load', function(){ refresh(true); setInterval(function(){ refresh(false); }, 2500); });
   window.addEventListener('focus', function(){ refresh(true); });
   document.addEventListener('visibilitychange', function(){ if(!document.hidden) refresh(true); });
