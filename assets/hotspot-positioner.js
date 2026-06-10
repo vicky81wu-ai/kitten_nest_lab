@@ -3,9 +3,9 @@
     imageId: 'gameBg',
     selector: '.tattooHot',
     x: 0.73,
-    y: 0.385,
-    width: 0.24,
-    height: 0.17
+    y: 0.345,
+    width: 0.15,
+    height: 0.08
   };
 
   function coverBox(img){
@@ -82,7 +82,7 @@
   }
 
   window.KittenNestHotspots = {
-    version: 'coordinate-hotspot-20260610',
+    version: 'coordinate-hotspot-20260610-tight',
     anchor: anchor,
     coverBox: coverBox,
     apply: apply,
