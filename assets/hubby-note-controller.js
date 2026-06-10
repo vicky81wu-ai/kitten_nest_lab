@@ -12,15 +12,23 @@
       return String(d.getMonth()+1).padStart(2,'0') + '/' + String(d.getDate()).padStart(2,'0') + ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
     }catch(e){ return text(raw); }
   }
-
+  function id(){ return 'note_' + Date.now() + '_' + Math.random().toString(36).slice(2,8); }
   function token(){ return localStorage.getItem('kittenNestToken') || localStorage.getItem('nestToken') || ''; }
-  function saveToken(value){ if(String(value || '').trim()) localStorage.setItem('kittenNestToken', String(value).trim()); }
+  function saveToken(value){ if(text(value).trim()) localStorage.setItem('kittenNestToken', text(value).trim()); }
   function noteArchive(state){
     if(Array.isArray(state && state.hubbyNoteArchive)) return state.hubbyNoteArchive;
     if(Array.isArray(state && state.hubbyNoteHistory)) return state.hubbyNoteHistory;
     return [];
   }
+  function noteTrash(state){ return Array.isArray(state && state.hubbyNoteTrash) ? state.hubbyNoteTrash : []; }
   function noteText(state){ return text(state && state.hubbyNote || '').trim() || '粉本本还空着。直接在下面写一页，点保存，就进云端永久档案。'; }
+  function itemId(item, index){ return text(item && item.id || item && item.savedAt || '') + '|' + index; }
+  function archiveWithIds(list){
+    return (Array.isArray(list) ? list : []).map(function(item){
+      if(item && item.id) return item;
+      return Object.assign({}, item || {}, { id: id() });
+    });
+  }
 
   function ensureStyle(){
     if(document.getElementById('hubbyNoteStyle')) return;
@@ -36,6 +44,9 @@
       '.hubbyNoteClose{border:0;width:30px;height:30px;border-radius:999px;background:rgba(255,255,255,.66);color:#7a4054;font-size:20px;line-height:28px;}',
       '.hubbyNoteMeta{font-size:11px;opacity:.62;margin:0 0 10px;}',
       '.hubbyNoteBody{white-space:pre-wrap;font-size:14px;line-height:1.55;background:rgba(255,255,255,.52);border-radius:20px;padding:13px;box-shadow:inset 0 0 0 1px rgba(120,55,80,.08);font-weight:540;}',
+      '.hubbyNoteActions{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:9px 0 0;}',
+      '.hubbyNoteMiniBtn{border:0;border-radius:14px;padding:8px 7px;background:rgba(255,255,255,.62);color:#7a4054;box-shadow:inset 0 0 0 1px rgba(120,55,80,.09);font-weight:760;font-size:12px;}',
+      '.hubbyNoteMiniBtn.danger{color:#9a3d50;background:rgba(255,235,240,.62);}',
       '.hubbyNoteEditor{margin-top:12px;display:grid;gap:8px;}',
       '.hubbyNoteTextarea{width:100%;min-height:116px;resize:vertical;border:0;border-radius:18px;padding:12px;background:rgba(255,255,255,.7);box-shadow:inset 0 0 0 1px rgba(120,55,80,.1);color:#6f3d4e;font-size:14px;line-height:1.5;outline:none;}',
       '.hubbyNoteToken{width:100%;border:0;border-radius:14px;padding:10px;background:rgba(255,255,255,.62);box-shadow:inset 0 0 0 1px rgba(120,55,80,.09);color:#6f3d4e;font-size:13px;outline:none;}',
@@ -44,8 +55,10 @@
       '.hubbyNoteSection{margin-top:14px;font-size:12px;font-weight:820;opacity:.78;}',
       '.hubbyNoteHistory{margin-top:8px;display:grid;gap:8px;}',
       '.hubbyNoteItem{border-radius:16px;background:rgba(255,255,255,.42);padding:9px 10px;box-shadow:inset 0 0 0 1px rgba(120,55,80,.07);}',
+      '.hubbyNoteItem.favorite{background:rgba(255,247,210,.54);}',
       '.hubbyNoteItemTime{font-size:10px;opacity:.55;margin-bottom:4px;}',
       '.hubbyNoteItemText{font-size:12px;line-height:1.42;white-space:pre-wrap;}',
+      '.hubbyNoteItemBtns{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:7px;}',
       '.hubbyNoteHint{margin-top:12px;font-size:11px;opacity:.6;line-height:1.45;text-align:center;}'
     ].join('');
     document.head.appendChild(style);
@@ -58,11 +71,15 @@
     panel = document.createElement('div');
     panel.id = 'hubbyNotePanel';
     panel.className = 'hubbyNotePanel';
-    panel.innerHTML = '<div class="hubbyNoteCard" role="dialog" aria-label="hubby note notebook"><div class="hubbyNoteHead"><div class="hubbyNoteTitle">粉本本 · Hubby note</div><button class="hubbyNoteClose" type="button" aria-label="close">×</button></div><div class="hubbyNoteMeta" id="hubbyNoteMeta"></div><div class="hubbyNoteBody" id="hubbyNoteBody"></div><div class="hubbyNoteEditor"><textarea class="hubbyNoteTextarea" id="hubbyNoteEditor" placeholder="小猫在这里写今天的猫窝进展……"></textarea><input class="hubbyNoteToken" id="hubbyNoteToken" autocomplete="off" placeholder="Nest key：本机保存一次，以后直接保存"/><button class="hubbyNoteSave" id="hubbyNoteSave" type="button">保存到粉本本</button><div class="hubbyNoteSaveStatus" id="hubbyNoteSaveStatus"></div></div><div class="hubbyNoteSection" id="hubbyNoteArchiveTitle">永久档案 · 最近显示</div><div class="hubbyNoteHistory" id="hubbyNoteHistory"></div><div class="hubbyNoteHint">保存会更新当前页；旧当前页自动进永久档案。以后换成专用粉本本图，只换入口热点，不换保存管线。</div></div>';
+    panel.innerHTML = '<div class="hubbyNoteCard" role="dialog" aria-label="hubby note notebook"><div class="hubbyNoteHead"><div class="hubbyNoteTitle">粉本本 · Hubby note</div><button class="hubbyNoteClose" type="button" aria-label="close">×</button></div><div class="hubbyNoteMeta" id="hubbyNoteMeta"></div><div class="hubbyNoteBody" id="hubbyNoteBody"></div><div class="hubbyNoteActions"><button class="hubbyNoteMiniBtn" id="hubbyNoteEdit" type="button">编辑</button><button class="hubbyNoteMiniBtn" id="hubbyNoteFavorite" type="button">收藏</button><button class="hubbyNoteMiniBtn danger" id="hubbyNoteDelete" type="button">删除</button></div><div class="hubbyNoteEditor"><textarea class="hubbyNoteTextarea" id="hubbyNoteEditor" placeholder="小猫在这里写今天的猫窝进展……"></textarea><input class="hubbyNoteToken" id="hubbyNoteToken" autocomplete="off" placeholder="Nest key：本机保存一次，以后直接保存"/><button class="hubbyNoteSave" id="hubbyNoteSave" type="button">保存到粉本本</button><div class="hubbyNoteSaveStatus" id="hubbyNoteSaveStatus"></div></div><div class="hubbyNoteSection" id="hubbyNoteArchiveTitle">永久档案 · 最近显示</div><div class="hubbyNoteHistory" id="hubbyNoteHistory"></div><div class="hubbyNoteHint">保存会更新当前页；旧当前页自动进永久档案。删除是软删除，先进 trash；以后换专用图只换入口热点。</div></div>';
     document.body.appendChild(panel);
     panel.addEventListener('click', function(e){ if(e.target === panel) close(); });
     panel.querySelector('.hubbyNoteClose').addEventListener('click', close);
     panel.querySelector('#hubbyNoteSave').addEventListener('click', saveCurrent);
+    panel.querySelector('#hubbyNoteEdit').addEventListener('click', editCurrent);
+    panel.querySelector('#hubbyNoteFavorite').addEventListener('click', toggleCurrentFavorite);
+    panel.querySelector('#hubbyNoteDelete').addEventListener('click', deleteCurrent);
+    panel.querySelector('#hubbyNoteHistory').addEventListener('click', archiveAction);
     var keyInput = panel.querySelector('#hubbyNoteToken');
     keyInput.value = token();
     keyInput.addEventListener('change', function(){ saveToken(keyInput.value); });
@@ -78,20 +95,24 @@
     var title = panel.querySelector('#hubbyNoteArchiveTitle');
     var editor = panel.querySelector('#hubbyNoteEditor');
     var keyInput = panel.querySelector('#hubbyNoteToken');
+    var favBtn = panel.querySelector('#hubbyNoteFavorite');
     var updated = text(state && (state.hubbyNoteUpdatedAt || state.updatedAt) || '').trim();
     var archive = noteArchive(state);
     var note = noteText(state);
-    body.textContent = note;
+    body.textContent = (state && state.hubbyNoteFavorite ? '★ ' : '') + note;
     if(editor && !editor.matches(':focus')) editor.value = text(state && state.hubbyNote || '').trim();
     if(keyInput && !keyInput.matches(':focus')) keyInput.value = token();
+    if(favBtn) favBtn.textContent = state && state.hubbyNoteFavorite ? '已收藏' : '收藏';
     meta.textContent = updated ? ('云端保存 · ' + shortDate(updated) + ' · 永久档案 ' + archive.length + ' 条') : ('云端保存 · 永久档案 ' + archive.length + ' 条');
     if(title) title.textContent = '永久档案 · 最近显示 ' + Math.min(archive.length, 6) + ' 条';
     var items = archive.slice(0,6);
     if(!items.length){
       history.innerHTML = '<div class="hubbyNoteItem"><div class="hubbyNoteItemText">还没有历史档案。今天施工第一条，正等小猫写进去。</div></div>';
     }else{
-      history.innerHTML = items.map(function(item){
-        return '<div class="hubbyNoteItem"><div class="hubbyNoteItemTime">' + escapeHtml(shortDate(item.savedAt || item.createdAt || item.updatedAt || '')) + '</div><div class="hubbyNoteItemText">' + escapeHtml(item.text || item.note || '') + '</div></div>';
+      history.innerHTML = items.map(function(item, i){
+        var fav = item && item.favorite;
+        var key = itemId(item, i);
+        return '<div class="hubbyNoteItem ' + (fav ? 'favorite' : '') + '" data-key="' + escapeHtml(key) + '"><div class="hubbyNoteItemTime">' + (fav ? '★ ' : '') + escapeHtml(shortDate(item.savedAt || item.createdAt || item.updatedAt || '')) + '</div><div class="hubbyNoteItemText">' + escapeHtml(item.text || item.note || '') + '</div><div class="hubbyNoteItemBtns"><button class="hubbyNoteMiniBtn" data-action="load" data-key="' + escapeHtml(key) + '" type="button">载入编辑</button><button class="hubbyNoteMiniBtn" data-action="favorite" data-key="' + escapeHtml(key) + '" type="button">' + (fav ? '取消收藏' : '收藏') + '</button><button class="hubbyNoteMiniBtn danger" data-action="delete" data-key="' + escapeHtml(key) + '" type="button">删除</button></div></div>';
       }).join('');
     }
   }
@@ -123,77 +144,96 @@
     var note = text(raw).trim().slice(0,5000);
     if(!note) throw new Error('粉本本不能保存空白页。');
     var old = text(state && state.hubbyNote || '').trim();
-    var archive = noteArchive(state);
+    var archive = archiveWithIds(noteArchive(state));
     var savedAt = new Date().toISOString();
-    var nextArchive = old ? [{ text: old, savedAt: state.hubbyNoteUpdatedAt || state.updatedAt || savedAt }, ...archive] : archive;
-    return { hubbyNote: note, hubbyNoteUpdatedAt: savedAt, hubbyNoteArchive: nextArchive, hubbyNoteHistory: nextArchive.slice(0,20) };
+    var nextArchive = old ? [{ id:id(), text:old, savedAt: state.hubbyNoteUpdatedAt || state.updatedAt || savedAt, favorite: !!(state && state.hubbyNoteFavorite) }, ...archive] : archive;
+    return { hubbyNote:note, hubbyNoteUpdatedAt:savedAt, hubbyNoteFavorite:false, hubbyNoteArchive:nextArchive, hubbyNoteHistory:nextArchive.slice(0,20) };
   }
+
+  function setStatus(msg){ var s = ensurePanel().querySelector('#hubbyNoteSaveStatus'); if(s) s.textContent = msg; }
 
   async function saveCurrent(){
     var panel = ensurePanel();
-    var status = panel.querySelector('#hubbyNoteSaveStatus');
     var editor = panel.querySelector('#hubbyNoteEditor');
+    try{ setStatus('保存中……'); var state = currentState || await refresh() || {}; var value = await writePatch(notePatch(editor.value, state)); currentState = value; render(value); setStatus('保存好了，已经进云端。'); }
+    catch(e){ setStatus('保存失败：' + e.message); }
+  }
+
+  function editCurrent(){ var editor = ensurePanel().querySelector('#hubbyNoteEditor'); if(editor){ editor.focus(); editor.scrollIntoView({ block:'center', behavior:'smooth' }); } }
+
+  async function toggleCurrentFavorite(){
+    try{ setStatus('更新收藏……'); var state = currentState || await refresh() || {}; var value = await writePatch({ hubbyNoteFavorite: !(state && state.hubbyNoteFavorite) }); currentState = value; render(value); setStatus(value.hubbyNoteFavorite ? '当前页已收藏。' : '当前页已取消收藏。'); }
+    catch(e){ setStatus('收藏失败：' + e.message); }
+  }
+
+  async function deleteCurrent(){
     try{
-      status.textContent = '保存中……';
       var state = currentState || await refresh() || {};
-      var value = await writePatch(notePatch(editor.value, state));
-      currentState = value;
-      render(value);
-      status.textContent = '保存好了，已经进云端。';
-    }catch(e){ status.textContent = '保存失败：' + e.message; }
+      var old = text(state.hubbyNote || '').trim();
+      if(!old){ setStatus('当前页已经是空的。'); return; }
+      if(!confirm('删除当前粉本本页面？会放进 trash，不会直接消失。')) return;
+      var trash = [{ id:id(), text:old, deletedAt:new Date().toISOString(), source:'current', favorite:!!state.hubbyNoteFavorite }, ...noteTrash(state)];
+      var value = await writePatch({ hubbyNote:'', hubbyNoteUpdatedAt:new Date().toISOString(), hubbyNoteFavorite:false, hubbyNoteTrash:trash });
+      currentState = value; render(value); setStatus('当前页已删除，放进 trash。');
+    }catch(e){ setStatus('删除失败：' + e.message); }
+  }
+
+  function findArchiveItem(state, key){
+    var archive = archiveWithIds(noteArchive(state));
+    for(var i=0;i<archive.length;i++){ if(itemId(archive[i], i) === key) return { archive:archive, index:i, item:archive[i] }; }
+    return { archive:archive, index:-1, item:null };
+  }
+
+  async function archiveAction(e){
+    var btn = e.target && e.target.closest && e.target.closest('button[data-action]');
+    if(!btn) return;
+    e.preventDefault(); e.stopPropagation();
+    var action = btn.getAttribute('data-action');
+    var key = btn.getAttribute('data-key');
+    var state = currentState || await refresh() || {};
+    var found = findArchiveItem(state, key);
+    if(found.index < 0) return;
+    if(action === 'load'){
+      var editor = ensurePanel().querySelector('#hubbyNoteEditor');
+      if(editor){ editor.value = text(found.item.text || found.item.note || ''); editor.focus(); editor.scrollIntoView({ block:'center', behavior:'smooth' }); setStatus('已载入编辑框，改完点保存。'); }
+      return;
+    }
+    if(action === 'favorite'){
+      found.archive[found.index] = Object.assign({}, found.item, { favorite: !found.item.favorite });
+      var value = await writePatch({ hubbyNoteArchive:found.archive, hubbyNoteHistory:found.archive.slice(0,20) });
+      currentState = value; render(value); setStatus(found.archive[found.index].favorite ? '历史条目已收藏。' : '历史条目已取消收藏。');
+      return;
+    }
+    if(action === 'delete'){
+      if(!confirm('删除这条历史档案？会放进 trash。')) return;
+      var removed = found.archive.splice(found.index, 1)[0];
+      var trash = [{ id:id(), text:text(removed.text || removed.note || ''), deletedAt:new Date().toISOString(), source:'archive', favorite:!!removed.favorite }, ...noteTrash(state)];
+      var value2 = await writePatch({ hubbyNoteArchive:found.archive, hubbyNoteHistory:found.archive.slice(0,20), hubbyNoteTrash:trash });
+      currentState = value2; render(value2); setStatus('历史条目已删除，放进 trash。');
+    }
   }
 
   async function open(e){
     if(e){ e.preventDefault(); e.stopPropagation(); if(e.stopImmediatePropagation) e.stopImmediatePropagation(); }
-    ensureStyle();
-    var panel = ensurePanel();
-    var state = await refresh();
-    render(state || currentState || {});
-    panel.classList.add('show');
+    ensureStyle(); var panel = ensurePanel(); var state = await refresh(); render(state || currentState || {}); panel.classList.add('show');
   }
-
   function close(){ var panel = document.getElementById('hubbyNotePanel'); if(panel) panel.classList.remove('show'); }
-
   function ensureButton(){
     ensureStyle();
     var btn = document.getElementById('hubbyNoteButton');
-    if(!btn){
-      btn = document.createElement('button');
-      btn.id = 'hubbyNoteButton';
-      btn.className = 'hubbyNoteButton';
-      btn.type = 'button';
-      btn.textContent = '粉本本';
-      btn.setAttribute('aria-label','Open hubby note notebook');
-      document.body.appendChild(btn);
-      btn.addEventListener('click', open, true);
-      btn.addEventListener('touchend', open, true);
-    }
+    if(!btn){ btn = document.createElement('button'); btn.id = 'hubbyNoteButton'; btn.className = 'hubbyNoteButton'; btn.type = 'button'; btn.textContent = '粉本本'; btn.setAttribute('aria-label','Open hubby note notebook'); document.body.appendChild(btn); btn.addEventListener('click', open, true); btn.addEventListener('touchend', open, true); }
     var bookHot = document.querySelector('.consoleHot');
-    if(bookHot && !bookHot.__hubbyNoteBound){
-      bookHot.__hubbyNoteBound = true;
-      bookHot.setAttribute('data-note-hotspot','hubbyNote');
-      bookHot.addEventListener('click', open, true);
-      bookHot.addEventListener('touchend', open, true);
-    }
+    if(bookHot && !bookHot.__hubbyNoteBound){ bookHot.__hubbyNoteBound = true; bookHot.setAttribute('data-note-hotspot','hubbyNote'); bookHot.addEventListener('click', open, true); bookHot.addEventListener('touchend', open, true); }
   }
-
-  function setState(state){
-    currentState = state || currentState;
-    if(document.getElementById('hubbyNotePanel') && document.getElementById('hubbyNotePanel').classList.contains('show')) render(currentState || {});
-  }
-
+  function setState(state){ currentState = state || currentState; if(document.getElementById('hubbyNotePanel') && document.getElementById('hubbyNotePanel').classList.contains('show')) render(currentState || {}); }
   function attach(stateClient){
     var client = stateClient || window.KittenNestState;
     if(!client || typeof client.subscribe !== 'function') return false;
     if(attached) return true;
-    attached = true;
-    ensureButton();
-    client.subscribe(function(payload){ setState(payload && payload.state); });
-    if(client.get) setState(client.get());
-    return true;
+    attached = true; ensureButton(); client.subscribe(function(payload){ setState(payload && payload.state); }); if(client.get) setState(client.get()); return true;
   }
 
-  window.KittenNestHubbyNote = { version:'hubby-note-notebook-20260610-in-nest-editor', attach:attach, open:open, close:close, render:render, setState:setState, saveCurrent:saveCurrent };
+  window.KittenNestHubbyNote = { version:'hubby-note-notebook-20260610-controls', attach:attach, open:open, close:close, render:render, setState:setState, saveCurrent:saveCurrent };
   window.addEventListener('load', ensureButton);
   setTimeout(ensureButton, 400);
   setTimeout(ensureButton, 1400);
