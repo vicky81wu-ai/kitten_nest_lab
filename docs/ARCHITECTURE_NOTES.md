@@ -10,7 +10,7 @@ Updated: 2026-06-10
   -> publish all
   -> shared state
   -> /cloud
-  -> coffee-corner bubble, window weather, weather advice, 19.8 hotspot, and powder notebook
+  -> coffee-corner bubble, window weather, weather advice, 19.8 hotspot, game menu, setup/local upload, and powder notebook
 ```
 
 ## Current live route chain
@@ -45,7 +45,7 @@ Preferred pattern:
 ```text
 static assets
 + front-end controllers
-+ JSON room config
++ JSON room/object config
 + a small number of shared API functions
 ```
 
@@ -56,25 +56,59 @@ api/room-asset.js
 api/registry.js
 ```
 
-`api/room-asset.js` was replaced by direct static `/assets/rooms/...` paths. `api/registry.js` was not needed for current runtime.
+`api/room-asset.js` was replaced by direct static `/assets/rooms/...` paths. `api/registry.js` was not needed for current runtime. If a registry API becomes necessary later, it can be reintroduced after consolidating other wrappers. For now, static JSON is the right home for object identity.
+
+## Static identity layer
+
+The current identity/config layer is static and does not consume Serverless Function budget:
+
+```text
+data/object-registry.v1.json
+data/room-config.v1.json
+```
+
+Its job is not to run the nest yet. Its job is to make object ownership obvious before runtime code binds to selectors.
+
+Core policy:
+
+```text
+No identity, no binding.
+```
+
+Object cards should prefer ownership and versioned change policy over blacklists:
+
+```text
+owner
+exclusive
+runtimeStatus
+coordinateStatus
+versionStatus
+changePolicy
+```
+
+`canonicalCurrent` means current official truth, not permanent immutability. A current object can change later through `mutableWithVersion`.
 
 ## Current file roles
 
 - `index.html`: original page structure, room DOM, local image setup, base interactions.
 - `api/app-q.js`: server-side page hydration and main cloud bridge for bubbles. It owns the protective cloud bubble behavior and supports single-bubble 19.8 re-show.
 - `api/set-state.js`: cloud state writer. It also guards against old cached `/write` pages accidentally sending `[hubbyNote]` as a bubble and reroutes that write into notebook fields.
-- `api/app-assets.js`: default static asset injection, fallback image handling, setup hiding, and legacy text patch injection. It no longer loads the legacy weather patch or weather hotspot guard.
+- `api/app-assets.js`: default static asset injection, fallback image handling, setup hiding, canvas CSS loading, and legacy text patch injection.
 - `api/app-weather.js`: injects `state-client` and `weather-controller` around the asset stack.
 - `api/app-assetctl.js`: injects `asset-controller` around the weather stack.
-- `api/app-bubble.js`: injects `bubble-controller` and `hubby-note-controller` around the asset-controller stack.
+- `api/app-bubble.js`: injects `bubble-controller`, `hubby-note-controller`, setup toggle, and console-hotspot restore around the asset-controller stack.
 - `api/app-coords.js`: injects coordinate and hotspot scripts. It is the current `/cloud` wrapper.
 - `assets/hotspot-positioner.js`: applies the tight 19.8 coordinate hotspot using base-image cover math.
 - `assets/weather-controller.js`: current runtime owner for temp/desc display, weather hotspot binding, and weather advice popup.
 - `assets/weather-patch.js`: legacy fallback file retained in the repo but not loaded by `/cloud` after weather cleanup.
 - `assets/weather-advice-hotspot.js`: legacy guard file retained in the repo but not loaded by `/cloud` after weather cleanup.
 - `assets/hubby-note-controller.js`: current runtime owner for the cloud powder notebook popup, current note display, in-nest edit/save, archive preview, favorite/delete controls, soft-delete trash, and stored-key hiding.
+- `assets/setup-toggle.js`: visible manual entry/close helper for the setup/materials panel. It protects local upload access while setup is hidden by default.
+- `assets/console-hot-restore.js`: small helper that keeps the console/game-menu hotspot owned by the game menu after notebook work.
+- `assets/canvas-fill.css`: front-end canvas fill fallback. It should not become a device-specific coordinate solution.
 - `write.html`: writer console, package parsing, draft creation, publish-all workflow, `[hubbyNote]` publishing, and backup publishing path.
-- `data/room-config.v1.json`: foundation-only room map and element card documentation. Not a full roomEngine runtime yet.
+- `data/room-config.v1.json`: static room and active-object documentation. Not a full roomEngine runtime yet.
+- `data/object-registry.v1.json`: static object identity and selector ownership registry. Not wired into runtime yet.
 
 ## Current coordinate state
 
@@ -89,9 +123,18 @@ height = 0.08
 
 This is locked to the base image, not to viewport percentage.
 
+Current status:
+
+```text
+runtimeStatus: active
+coordinateStatus: baseImageLocked
+versionStatus: canonicalCurrent
+changePolicy: mutableWithVersion
+```
+
 ## Current ownership after cleanup
 
-The app works and has fewer duplicated owners than before.
+The app works and has fewer duplicated owners than before, but wrapper-chain debt remains.
 
 ### Bubble ownership
 
@@ -114,8 +157,6 @@ assets/weather-advice-hotspot.js retained but not loaded
 
 Status: stable after cleanup. Visible behavior must remain: weather text displays and tapping weather opens the advice popup.
 
-Future cleanup: after longer stability, remove unused legacy weather files if no rollback need remains.
-
 ### Hubby note ownership
 
 ```text
@@ -124,9 +165,32 @@ write.html remains backup/package publishing path
 api/set-state.js protects old cached writes and handles cloud writes
 ```
 
-Status: stable after cleanup. `hubby-note-controller` owns display, edit/save, favorite/delete, archive preview, soft-delete trash, and stored-key hiding. The standalone notebook auth guard was removed.
+Status: stable after cleanup. Notebook entry currently belongs to `#hubbyNoteButton`. Future notebook art may replace that entry point only after a new identity card exists.
 
-Future UI polish should wait for dedicated notebook art. Entry point/hotspot can change later without changing save/archive logic.
+### Game console ownership
+
+```text
+#console / .consoleHot
+  -> owner: gameMenu
+  -> action: openGameMenu
+  -> exclusive: true
+```
+
+Status: active and protected. New features must not reuse this selector.
+
+### Setup/local upload ownership
+
+```text
+#setupToggleButton
+  -> owner: assetController
+  -> action: openSetupPanel
+
+#setup
+  -> owner: assetController
+  -> action: openOrCloseSetupPanel
+```
+
+Status: active and protected. Setup may be hidden by default, but manual access and local upload override must remain available.
 
 ## Technical debt
 
@@ -135,6 +199,7 @@ Highest-risk areas:
 - coffee-corner bubble display;
 - 19.8 tattoo hotspot behavior;
 - `/write` publish path;
+- setup/local upload access;
 - Vercel function-count budget;
 - old wrapper chain depth.
 
@@ -146,12 +211,13 @@ Recommended order:
 
 1. Keep deployment under the Vercel Hobby function limit.
 2. Keep `/write` and `/cloud` stable.
-3. Clean up one line at a time.
-4. Keep visible behavior identical during cleanup.
-5. Deploy and verify after each line.
-6. Update docs and room-config.
-7. Evaluate `roomConfig` runtime connection later.
-8. Resume visible room expansion only after cleanup is under control.
+3. Check object identity before changing selectors or bindings.
+4. Clean up one line at a time.
+5. Keep visible behavior identical during cleanup.
+6. Deploy and verify after each line.
+7. Update docs and static config.
+8. Evaluate `roomConfig` runtime connection later.
+9. Resume visible room expansion only after cleanup is under control.
 
 ## Principle
 
@@ -162,5 +228,5 @@ Do not add new API functions for room/hotspot/image work. Use static files, fron
 Cleanup slogan:
 
 ```text
-same behavior, fewer owners, no new API, one line at a time
+same behavior, fewer owners, no new API, one line at a time, no identity, no binding
 ```
