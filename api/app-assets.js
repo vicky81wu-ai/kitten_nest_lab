@@ -28,7 +28,7 @@ const canvasFillCss = '<link rel="stylesheet" href="/assets/canvas-fill.css?v=20
 
 const setupPatchStyle = `
 <style id="cloudDefaultAssetsSetupPatch">
-body.cloudDefaultAssets #setup{display:none!important;}
+body.cloudDefaultAssets #setup.hidden{display:none!important;}
 body.cloudDefaultAssets #home{background-image:url('${homeDay}'),url('${homeDayStatic}'),${fallbackPaint};background-position:center,center,center;background-size:cover,cover,auto;background-repeat:no-repeat,no-repeat,no-repeat;background-color:#120b12;}
 body.cloudDefaultAssets #home .fallback{background-image:url('${homeDay}'),url('${homeDayStatic}'),${fallbackPaint}!important;background-position:center,center,center!important;background-size:cover,cover,auto!important;background-repeat:no-repeat,no-repeat,no-repeat!important;}
 body.cloudDefaultAssets.homeDim #home .fallback{background-image:url('${homeNight}'),url('${homeNightStatic}'),${fallbackPaint}!important;background-position:center,center,center!important;background-size:cover,cover,auto!important;background-repeat:no-repeat,no-repeat,no-repeat!important;}
