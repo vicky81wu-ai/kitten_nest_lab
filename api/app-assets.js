@@ -9,7 +9,7 @@ const STATIC_ASSETS = {
 };
 
 function asset(key) {
-  return `/api/room-asset?key=${key}&v=${ASSET_VERSION}`;
+  return `${STATIC_ASSETS[key]}?v=${ASSET_VERSION}`;
 }
 
 function staticAsset(key) {
