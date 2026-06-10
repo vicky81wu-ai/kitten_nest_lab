@@ -22,9 +22,9 @@ Updated: 2026-06-10
 - `/cloud` routes through `api/app-coords.js` and enables the tight 19.8 coordinate hotspot.
 - `/cloud-hotspot-test` remains available as a coordinate hotspot test line.
 - `/cloud-coords` remains available for coordinate marker debugging.
-- `/write` remains the normal phone-friendly publishing console.
-- The weather text area is now also a clickable weather advice hotspot.
-- The powder notebook has a cloud-backed current page and permanent archive.
+- `/write` remains the phone-friendly publishing console.
+- The weather text area is a clickable weather advice hotspot.
+- The powder notebook has a cloud-backed current page, permanent archive, in-nest editor, favorite/delete controls, soft-delete trash, and stored-key hiding.
 
 ## Verified behavior
 
@@ -38,6 +38,10 @@ Updated: 2026-06-10
 - The 19.8 hotspot uses the approved tight coordinate position on the base image.
 - Tapping the window weather area opens the weather advice popup.
 - Tapping the powder notebook entry opens the cloud notebook popup.
+- The powder notebook can be edited and saved directly inside `/cloud` through existing `/api/set-state`.
+- The powder notebook supports current-page edit, favorite, delete, archive-item load/edit, archive-item favorite, and archive-item delete.
+- Notebook deletion is soft-delete into `hubbyNoteTrash`, not permanent destruction.
+- Stored Nest key is hidden in the notebook panel after authorization; the panel shows an authorized chip and only reveals key input when changing key.
 - Old cached `/write` pages that accidentally send `[hubbyNote]` as a bubble are protected by `api/set-state.js`, which reroutes the write into the notebook fields instead of polluting the bubble queue.
 
 Approved 19.8 coordinate hotspot:
@@ -74,7 +78,7 @@ api/registry.js
 - Keep the tight 19.8 coordinate hotspot stable.
 - Keep window weather working.
 - Keep weather advice popup working.
-- Keep powder notebook current note and permanent archive working.
+- Keep powder notebook current note, permanent archive, in-nest editor, favorite/delete controls, trash, and key hiding working.
 - Do not connect future rooms yet.
 - Do not add new `api/*.js` wrappers unless another function is removed or existing wrappers are consolidated.
 
@@ -91,6 +95,8 @@ no new API
 one line at a time
 ```
 
-The first cleanup target is the weather line, because it currently has `weather-controller`, `weather-patch`, and `weather-advice-hotspot` cooperating.
+Weather line has been partially cleaned: `weather-controller` is now the runtime owner of display and advice hotspot behavior, and the legacy weather patch/guard are no longer loaded by `/cloud`.
 
-Do not add more visible rooms before this cleanup pass is under control.
+Powder notebook line has been partially cleaned: `hubby-note-controller` owns display, edit/save, favorite/delete, soft-delete trash, and stored-key hiding. The standalone notebook auth guard was removed.
+
+Do not add more visible rooms before these cleaned lines remain stable through normal use.
