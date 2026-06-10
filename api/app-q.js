@@ -42,7 +42,7 @@ function hydrateHtml(html, state) {
 const bridge = `
 <script>
 (function(){
-  window.__kittenNestBridge = 'cloud-bridge-q2-hide-then-next';
+  window.__kittenNestBridge = 'cloud-bridge-q3-single-bubble-hotspot';
 
   const STATE_URL = '/api/state';
   let cloudState = null;
@@ -53,7 +53,7 @@ const bridge = `
   let lastTouchAt = 0;
 
   const css = document.createElement('style');
-  css.textContent = '.bubble{pointer-events:auto!important;}';
+  css.textContent = '.bubble{pointer-events:auto!important;}.tattooHot{pointer-events:auto!important;}';
   document.head.appendChild(css);
 
   function bubbleEl(){ return document.getElementById('bubble'); }
@@ -110,9 +110,9 @@ const bridge = `
 
   function showNext(e){
     const q = queue();
-    if(q.length <= 1 || panelOpen()) return false;
+    if(!q.length || panelOpen()) return false;
     stop(e);
-    queueIndex = (queueIndex + 1) % q.length;
+    if(q.length > 1) queueIndex = (queueIndex + 1) % q.length;
     manualHidden = false;
     apply(true);
     return true;
