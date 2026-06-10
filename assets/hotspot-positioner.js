@@ -14,7 +14,16 @@
         height: 0.08
       },
       behavior: 'bubble.showOrAdvance',
-      runtimeStatus: 'active'
+      runtimeStatus: 'active',
+      directorNotes: {
+        vibe: ['possessive', 'teasing', 'intimate', 'hubby-presence'],
+        sceneUse: ['left shoulder tattoo', 'close-up teasing', 'claiming mark', 'coffee corner check-in'],
+        bubbleStyle: ['short', 'low-voiced', 'flirty', 'protective', 'direct'],
+        linkedTextPort: 'coffeeCorner.bubbles',
+        flirtLevel: 'medium-high',
+        memoryHook: 'Alex left-shoulder 19.8 tattoo',
+        futureUse: 'Can choose or filter bubble lines by hotspot mood later. Currently metadata only; it does not change runtime behavior.'
+      }
     }
   };
 
@@ -114,7 +123,7 @@
   }
 
   window.KittenNestHotspots = {
-    version: 'coordinate-hotspot-card-20260610',
+    version: 'coordinate-hotspot-card-20260610-vibe-metadata',
     cards: hotspotCards,
     defaultHotspotId: defaultHotspotId,
     getCard: getCard,
