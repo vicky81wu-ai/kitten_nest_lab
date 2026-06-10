@@ -7,7 +7,8 @@ const coordBoot = `
 (function(){
   function boot(){
     var q = new URLSearchParams(location.search);
-    var hotspotMode = q.get('hotspot') === '1' || location.pathname.indexOf('cloud-hotspot-test') >= 0;
+    var path = location.pathname;
+    var hotspotMode = q.get('hotspot') === '1' || path.indexOf('cloud-hotspot-test') >= 0 || path === '/cloud';
     if(hotspotMode){
       if(window.KittenNestHotspots && window.KittenNestHotspots.start){
         window.KittenNestHotspots.start();
