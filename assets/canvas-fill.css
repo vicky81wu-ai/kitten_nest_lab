@@ -1,3 +1,8 @@
+html,
+body{
+  background:#f3d2d7;
+}
+
 body.cloudDefaultAssets #app,
 body.cloudDefaultAssets .screen{
   position:fixed;
@@ -9,7 +14,7 @@ body.cloudDefaultAssets .screen{
   height:auto;
   min-height:100vh;
   overflow:hidden;
-  background:#120b12;
+  background:#f3d2d7;
 }
 
 body.cloudDefaultAssets .room{
@@ -22,6 +27,7 @@ body.cloudDefaultAssets .room{
   height:100%;
   min-height:100%;
   overflow:hidden;
+  background:#f3d2d7;
 }
 
 body.cloudDefaultAssets .bg{
