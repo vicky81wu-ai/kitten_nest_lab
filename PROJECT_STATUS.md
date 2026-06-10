@@ -4,7 +4,7 @@ Updated: 2026-06-10
 
 This is the top-level handoff file for the Kitten Nest Cloud project. New construction windows should read this file first, then read the detailed docs in `docs/` and the foundation config in `data/room-config.v1.json`.
 
-Private write keys and service credentials must never be committed to this repository. Repository docs should only use placeholders such as `<PRIVATE_NEST_KEY>`.
+Private write keys and service credentials must never be committed to this repository. Repository docs should only use placeholders such as `<NEST_TOKEN>`, `<SUPABASE_URL>`, and `<SUPABASE_SERVICE_KEY>`.
 
 ---
 
@@ -34,11 +34,36 @@ Current writer console:
 https://kitten-nest-lab.vercel.app/write
 ```
 
-Current daily rule: use `/cloud` for checking the live nest and `/write` for publishing text updates.
+Current daily rule: use `/write` for publishing text updates and `/cloud` for checking the live nest.
 
 ---
 
-## 2. Project goal
+## 2. Current deployment status
+
+Current stable deployment has been verified after the Vercel Hobby function-limit incident.
+
+Latest verified runtime changes:
+
+```text
+- `api/room-asset.js` was removed.
+- `api/registry.js` was removed.
+- `api/app-assets.js` now uses static `/assets/rooms/...` image paths instead of the removed room-asset API proxy.
+- `/cloud` now routes through `api/app-coords.js`.
+- The approved tight 19.8 coordinate hotspot is active on `/cloud`.
+- Single-bubble publishing was fixed: tapping 19.8 can re-show the only current bubble.
+```
+
+Important Vercel constraint:
+
+```text
+Vercel Hobby deployment fails when more than 12 Serverless Functions are added.
+```
+
+Do not add new `api/*.js` wrapper files casually. Prefer static assets, front-end controllers, JSON configuration, and existing API wrappers.
+
+---
+
+## 3. Project goal
 
 The project is turning the original static Kitten Nest page into a cloud-backed nest:
 
@@ -46,18 +71,18 @@ The project is turning the original static Kitten Nest page into a cloud-backed 
 - Alex can prepare update packages for Vicky to paste into `/write`.
 - Text state lives in cloud state.
 - Local images remain user-controlled in the browser where possible.
-- GitHub-hosted default images are used as fallback when no local image is available.
+- GitHub-hosted default images are used as static fallback assets.
 - Future direct tool writing is possible, but it is not the current daily workflow.
 
 Current important principle:
 
 ```text
-Keep the existing coffeeCorner / windowWeather workflow stable before adding more rooms.
+Keep the existing coffeeCorner / windowWeather / 19.8 workflow stable before adding more rooms.
 ```
 
 ---
 
-## 3. Stable daily workflow
+## 4. Stable daily workflow
 
 The stable daily publishing chain is:
 
@@ -69,7 +94,7 @@ Alex update package
   -> publish all drafts
   -> cloud state
   -> /cloud
-  -> coffeeCorner bubble / windowWeather / 19.8 hotspot behavior
+  -> coffeeCorner bubble / windowWeather / 19.8 coordinate hotspot behavior
 ```
 
 Vicky's normal operation:
@@ -84,7 +109,7 @@ The debug direct-write sections in `/write` are not the normal daily path. They 
 
 ---
 
-## 4. Current active update package tags
+## 5. Current active update package tags
 
 Only these tags are active in the current runtime:
 
@@ -115,7 +140,7 @@ Future room tags may exist in parser/config notes, but they should not be connec
 
 ---
 
-## 5. Stable and manually verified features
+## 6. Stable and manually verified features
 
 The following are considered stable and protected:
 
@@ -124,16 +149,26 @@ The following are considered stable and protected:
 - `[windowWeather]` publishing to the small window weather text.
 - `/cloud` displaying the current coffee-corner bubble queue.
 - 19.8 tattoo hotspot behavior:
+  - `/cloud` uses the tight coordinate hotspot.
   - tapping the bubble hides the bubble;
-  - tapping the 19.8 hotspot shows or advances the bubble;
-  - this chain should not be casually refactored.
+  - tapping the 19.8 hotspot shows the current bubble or advances the queue;
+  - if only one bubble exists, tapping 19.8 re-shows that single bubble.
 - Window weather display.
-- GitHub default room images and fallback behavior for `/cloud`.
+- Static default room images and fallback behavior for `/cloud`.
 - Local user-uploaded image priority where the browser has local image data.
+
+Approved 19.8 coordinate hotspot:
+
+```text
+x = 0.73
+y = 0.345
+width = 0.15
+height = 0.08
+```
 
 ---
 
-## 6. Current runtime state model
+## 7. Current runtime state model
 
 The primary cloud state object currently includes active fields such as:
 
@@ -161,7 +196,7 @@ Those older fields are part of the project's history and may be useful later, bu
 
 ---
 
-## 7. Current important files and roles
+## 8. Current important files and roles
 
 ### `index.html`
 
@@ -173,23 +208,29 @@ Do not treat `index.html` as a clean module yet. It is still the original monoli
 
 Server-side cloud page generator and main cloud bridge for bubbles.
 
-It currently reads public state, injects the initial bubble text, injects a browser bridge for the bubble queue, and controls the stable hide/show/advance behavior for the coffee-corner bubble and 19.8 hotspot.
+It reads public state, injects the initial bubble text, injects a browser bridge for the bubble queue, and controls the stable hide/show/advance behavior for the coffee-corner bubble and 19.8 hotspot. It now handles single-bubble queues correctly.
 
-This is a sensitive file. Do not start refactoring here unless the earlier lower-risk architecture collection steps are stable.
+This is a sensitive file. Do not start refactoring here without a clear rollback plan.
 
 ### `api/app-assets.js`
 
-Wrapper around `api/app-q.js` for `/cloud`.
+Wrapper around `api/app-q.js` for static default asset injection, setup-panel hiding patches, small text refresh behavior, and the weather patch script.
 
-It currently injects default room assets, image fallback behavior, setup-panel hiding patches, small text refresh behavior, and the weather patch script.
+It now points default room images directly at static `/assets/rooms/...` files. Do not reintroduce `api/room-asset.js` just to proxy static images.
 
-This file works, but it is also where several patches are collected. It should eventually become or delegate to an `assetController` rather than accumulating more unrelated front-end patches.
+### `api/app-coords.js`
+
+Coordinate-controller wrapper. `/cloud`, `/cloud-coords`, and `/cloud-hotspot-test` route here. On `/cloud`, it enables the tight 19.8 coordinate hotspot. On `/cloud-coords`, it can still show the coordinate marker.
+
+### `assets/hotspot-positioner.js`
+
+Applies the approved coordinate-locked 19.8 hotspot using base-image coordinates and `object-fit: cover` math.
 
 ### `assets/weather-patch.js`
 
 Small independent weather updater. It reads current state, then updates `#temp` and `#desc` from `windowTemp` and `windowDesc`.
 
-Do not delete this file until a replacement `weatherController` has been built and verified.
+Do not delete this file until a replacement `weatherController` has been proven equivalent in the live `/cloud` route.
 
 ### `write.html`
 
@@ -199,22 +240,39 @@ Do not break this workflow.
 
 ### `data/room-config.v1.json`
 
-Foundation-only room configuration. It documents active room/text ports and future room intent. It is not wired into runtime yet.
+Foundation-only room configuration. It documents active room/text ports, current coordinate anchors, and future room intent. It is not a full runtime room engine yet.
 
 ---
 
-## 8. Protected areas: do not touch casually
+## 9. Removed API functions
+
+Removed to stay under the Vercel Hobby function limit:
+
+```text
+api/room-asset.js
+api/registry.js
+```
+
+Reasoning:
+
+- `api/room-asset.js` only proxied static room images and was replaced with direct static asset paths.
+- `api/registry.js` was a future-facing registry endpoint, not required for current `/cloud`, `/write`, coffeeCorner bubbles, windowWeather, or 19.8 behavior.
+
+Future work should avoid adding new `api/*.js` files unless an existing function is removed or multiple wrappers are consolidated first.
+
+---
+
+## 10. Protected areas: do not touch casually
 
 Do not change these during status/documentation work:
 
 - private write key handling;
 - cloud state storage setup;
-- experimental direct tool endpoints;
-- write endpoints;
-- read endpoints unless explicitly doing API maintenance;
+- `/api/state`;
+- `/api/set-state`;
+- `/api/mcp`;
 - `/write` daily workflow;
-- `/cloud` stable route without a clear rollback plan;
-- `api/app-q.js` bubble bridge;
+- `api/app-q.js` bubble bridge without a rollback plan;
 - 19.8 tattoo hotspot behavior;
 - coffee-corner bubble publishing chain;
 - window weather display chain;
@@ -223,9 +281,9 @@ Do not change these during status/documentation work:
 
 ---
 
-## 9. Current technical debt
+## 11. Current technical debt
 
-The project works, but the front-end behavior is spread across several layers.
+The project works, but the front-end behavior is still spread across several layers.
 
 Main technical debt:
 
@@ -238,65 +296,41 @@ Main technical debt:
 2. Bubble ownership is split.
    - `index.html` has original `say()` and tattoo click behavior.
    - `api/app-q.js` protects cloud bubble behavior.
-   - `api/app-assets.js` injects additional text refresh behavior.
+   - `assets/bubble-controller.js` exists as collected front-end logic.
 
-3. Weather is working but separate.
-   - `assets/weather-patch.js` is simple and stable, but it does not share a common state client.
+3. Weather is working but still has redundancy.
+   - `assets/weather-patch.js` is simple and stable.
+   - `assets/weather-controller.js` exists, but do not remove the old patch until equivalence is proven.
 
 4. Asset fallback is patch-based.
    - `api/app-assets.js` injects default images, fallback behavior, and setup hiding from the server wrapper.
-   - This is effective, but it should eventually be formalized as an asset controller.
+   - `assets/asset-controller.js` exists but runtime layering still needs cleanup.
 
-5. Future room metadata exists before a room engine exists.
-   - `data/room-config.v1.json` is useful as a map, but it should not become runtime until the core active room is modularized.
+5. Coordinate hotspot is active but not fully configuration-driven.
+   - 19.8 is coordinate-locked through `assets/hotspot-positioner.js`.
+   - Future hotspots/overlays should move toward configuration-driven placement instead of hard-coded one-off scripts.
 
 ---
 
-## 10. Recommended architecture collection order
+## 12. Recommended next order
 
-Do not add new visible rooms yet. Collect the current stable behavior first.
+Do not add new visible rooms yet.
 
 Recommended order:
 
 ```text
-stateClient
-  -> weatherController
-  -> assetController
-  -> bubbleController
-  -> roomConfig runtime evaluation
+1. Keep `/cloud` and `/write` stable.
+2. Keep API function count under the Vercel Hobby limit.
+3. Record approved 19.8 coordinates in room config.
+4. Make coordinate/hotspot logic more configuration-driven inside existing front-end assets.
+5. Only after coffeeCorner is stable, evaluate a roomEngine runtime.
 ```
 
-### Phase 1: `stateClient`
-
-Collect state reading into a single front-end state client. Initial version should be low-risk and read-only: fetch state, cache current state, compute a stable change stamp, and provide subscribe/onChange style hooks.
-
-Do not start by changing the 19.8 hotspot or bubble bridge.
-
-### Phase 2: `weatherController`
-
-Move the window weather display behind a clear controller. It should consume state, update `#temp` from `windowTemp`, and update `#desc` from `windowDesc`.
-
-Do not delete `assets/weather-patch.js` until the new controller is proven equivalent.
-
-### Phase 3: `assetController`
-
-Formalize default image and fallback handling. Preserve local browser image priority, GitHub default images as fallback, setup-panel hiding behavior for `/cloud`, and safe behavior in Safari/PWA views.
-
-Do not redesign coordinates or room rendering in this phase.
-
-### Phase 4: `bubbleController`
-
-Only after earlier phases are stable, collect coffee-corner bubble behavior. Preserve initial cloud bubble render, rotating `alexBubbles`, `bubbleIndex` reset behavior, bubble tap hide, 19.8 tap show/advance, and protection against old local `say()` calls overriding cloud text.
-
-This is the highest-risk phase.
-
-### Phase 5: roomConfig runtime connection evaluation
-
-Evaluate how `data/room-config.v1.json` should be used by runtime. Do not connect future rooms yet.
+Do not add new room APIs. Do not add new hotspot APIs. Do not add new image proxy APIs.
 
 ---
 
-## 11. Future rooms policy
+## 13. Future rooms policy
 
 Future rooms are documented but not active.
 
@@ -312,17 +346,15 @@ photoBooth
 
 Do not add visible restaurant/fountain/privateRoom/bedroom/photoBooth text in `/cloud` until there is a real room engine and separate text ports.
 
-Do not build coordinate systems, room navigation engines, or new room UIs as part of the current architecture collection task.
-
 ---
 
-## 12. Quick test package
+## 14. Quick test package
 
 Use this to verify the current stable active ports:
 
 ```text
 [coffeeCorner]
-0610 架构收编前验收。
+0610 稳定回归验收。
 小猫坐在咖啡角，奶栗看窗。
 
 [windowWeather]
@@ -337,29 +369,5 @@ Expected result:
 - `/cloud` shows the new coffee-corner bubble queue.
 - `/cloud` shows `26°C` and `Tiny breeze` near the window.
 - Bubble click hides the bubble.
-- 19.8 hotspot shows or advances the bubble.
-
----
-
-## 13. New construction window instructions
-
-When starting a new construction window:
-
-1. Read `PROJECT_STATUS.md` first.
-2. Then read:
-   - `docs/CURRENT_STATUS.md`
-   - `docs/ARCHITECTURE_NOTES.md`
-   - `docs/CONSTRUCTION_LOG.md`
-   - `data/room-config.v1.json`
-3. Do not ask Vicky to re-explain the whole project.
-4. Do not request private keys unless an operation truly requires Vicky-side authorization.
-5. Do not write private keys to the repository.
-6. If the task is architecture collection, start with read-only evaluation.
-
-Default stance for the next phase:
-
-```text
-The nest is not broken. It is stable but patch-layered.
-Protect the working coffeeCorner, windowWeather, /write, and 19.8 hotspot flows.
-Collect architecture before adding new rooms.
-```
+- 19.8 tight coordinate hotspot shows the current bubble or advances the bubble queue.
+- If only one bubble exists, 19.8 still re-shows that single bubble.
