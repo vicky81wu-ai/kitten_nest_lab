@@ -1,7 +1,7 @@
 const appAssets = require('./app-assets');
 
 const stateClientScript = '<script src="/assets/state-client.js?v=20260610-1"></script>';
-const weatherControllerScript = '<script src="/assets/weather-controller.js?v=20260610-1"></script>';
+const weatherControllerScript = '<script src="/assets/weather-controller.js?v=20260610-advice-1"></script>';
 const weatherBootScript = `
 <script>
 (function(){
