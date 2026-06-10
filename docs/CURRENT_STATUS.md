@@ -14,6 +14,7 @@ Updated: 2026-06-10
 
 - `[coffeeCorner]` for rotating bubble lines.
 - `[windowWeather]` for two-line weather text.
+- `[hubbyNote]` for the cloud powder notebook.
 
 ## Current stable runtime
 
@@ -22,16 +23,22 @@ Updated: 2026-06-10
 - `/cloud-hotspot-test` remains available as a coordinate hotspot test line.
 - `/cloud-coords` remains available for coordinate marker debugging.
 - `/write` remains the normal phone-friendly publishing console.
+- The weather text area is now also a clickable weather advice hotspot.
+- The powder notebook has a cloud-backed current page and permanent archive.
 
 ## Verified behavior
 
 - `/write` publishes `[coffeeCorner]` lines into the bubble queue.
 - `/write` publishes `[windowWeather]` into `windowTemp` and `windowDesc`.
+- `/write` publishes `[hubbyNote]` into `hubbyNote` and appends older pages to `hubbyNoteArchive`.
 - `/cloud` shows the updated coffee-corner bubble.
 - Tapping the bubble hides it.
 - Tapping 19.8 shows the current bubble or advances the queue.
 - If there is only one bubble, tapping 19.8 re-shows that single bubble.
-- The 19.8 hotspot now uses the approved tight coordinate position on the base image.
+- The 19.8 hotspot uses the approved tight coordinate position on the base image.
+- Tapping the window weather area opens the weather advice popup.
+- Tapping the powder notebook entry opens the cloud notebook popup.
+- Old cached `/write` pages that accidentally send `[hubbyNote]` as a bubble are protected by `api/set-state.js`, which reroutes the write into the notebook fields instead of polluting the bubble queue.
 
 Approved 19.8 coordinate hotspot:
 
@@ -66,12 +73,24 @@ api/registry.js
 - Keep the coffee-corner bubble flow stable.
 - Keep the tight 19.8 coordinate hotspot stable.
 - Keep window weather working.
+- Keep weather advice popup working.
+- Keep powder notebook current note and permanent archive working.
 - Do not connect future rooms yet.
 - Do not add new `api/*.js` wrappers unless another function is removed or existing wrappers are consolidated.
 
-## Next architecture direction
+## Current cleanup mode
 
-- First document current behavior.
-- Then make coordinate/hotspot config more explicit.
-- Then continue front-end controller consolidation.
-- Do not add more visible rooms before the current coffeeCorner runtime is stable and documented.
+The project is stable but patch-layered.
+
+Next work should follow `docs/CODEX_CLEANUP_PLAN.md`:
+
+```text
+same behavior
+fewer owners
+no new API
+one line at a time
+```
+
+The first cleanup target is the weather line, because it currently has `weather-controller`, `weather-patch`, and `weather-advice-hotspot` cooperating.
+
+Do not add more visible rooms before this cleanup pass is under control.
