@@ -1,6 +1,6 @@
 {
-  "version": "0.1.2",
-  "status": "foundation-with-active-coordinates-and-element-cards",
+  "version": "0.1.3",
+  "status": "foundation-with-active-weather-advice-card",
   "note": "Room configuration foundation for the Kitten Nest world. This file documents current active coffeeCorner ports, approved coordinate anchors, and element cards for future director/runtime work. It is not a full roomEngine runtime yet.",
   "currentRuntime": {
     "activeRoomId": "coffeeCorner",
@@ -11,11 +11,10 @@
       "coffeeCorner.windowWeather"
     ],
     "activeHotspots": [
-      "coffeeCorner.tattooHot"
-    ],
-    "futureHotspots": [
+      "coffeeCorner.tattooHot",
       "coffeeCorner.windowWeatherHotspot"
     ],
+    "futureHotspots": [],
     "stableWorkflow": "Alex update package -> /write -> generate drafts -> publish all -> /cloud"
   },
   "packageTags": {
@@ -71,7 +70,7 @@
       "assetKey": "coffee-corner-morning-evening",
       "defaultAssetPath": "assets/rooms/coffee-corner/morning-evening.jpg",
       "vibe": "Warm, soft, domestic coffee corner. A place for morning greetings, small notes, weather-by-the-window, sleepy affection, tiny daily discoveries, and Nest stability checks.",
-      "sceneNotes": "Current real front-stage room. This is the only active room with published bubble text. It also owns the window weather text and the active 19.8 coordinate hotspot.",
+      "sceneNotes": "Current real front-stage room. This is the only active room with published bubble text. It also owns the window weather text, the active 19.8 coordinate hotspot, and the active window weather advice popup.",
       "textPorts": [
         {
           "id": "coffeeCorner.bubbles",
@@ -95,7 +94,7 @@
           "directorCard": {
             "role": "window-side care signal",
             "vibe": ["daily care", "window life", "weather check", "hubby looking after kitten", "soft practical reminder"],
-            "futureUse": "Can feed a future weather advice hotspot without replacing the main coffeeCorner bubble queue."
+            "futureUse": "Feeds the active weather advice hotspot without replacing the main coffeeCorner bubble queue."
           }
         }
       ],
@@ -133,23 +132,30 @@
         {
           "id": "coffeeCorner.windowWeatherHotspot",
           "label": "window weather advice hotspot",
-          "runtimeStatus": "future-card-only",
-          "intent": "Future clickable weather area. When tapped, it should open or show a hubby weather advice note based on windowTemp and windowDesc.",
-          "coordinateMode": "future-lockedToBaseImage",
+          "runtimeStatus": "active",
+          "intent": "Clickable weather area. When tapped, it opens a lightweight glass-style hubby weather advice popup based on windowTemp and windowDesc.",
+          "coordinateMode": "legacyWeatherOverlayArea",
           "imageId": "gameBg",
-          "selector": null,
+          "selector": ".weather",
           "approvedCoordinate": null,
           "stateSources": ["windowTemp", "windowDesc"],
-          "futureBehavior": {
+          "runtimePath": "/cloud",
+          "implementation": "assets/weather-controller.js",
+          "version": "weather-controller-20260610-hubby-advice",
+          "currentBehavior": {
             "action": "openHubbyWeatherAdvice",
-            "outputMode": "small weather card or temporary bubble",
+            "outputMode": "small glass weather advice popup",
+            "dismissal": ["tap close button", "tap outside"],
             "shouldAffectMainBubbleQueue": false,
+            "shouldWriteCloudState": false,
+            "shouldUseNewApi": false,
             "adviceRules": [
               { "weatherHint": "hot", "tone": "protective", "exampleIntent": "drink water, avoid sun, do not overheat" },
               { "weatherHint": "cold", "tone": "protective", "exampleIntent": "wear layers, socks, do not wander barefoot" },
               { "weatherHint": "rain", "tone": "careful", "exampleIntent": "bring an umbrella, avoid puddles, dry off after returning" },
               { "weatherHint": "wind", "tone": "gentle", "exampleIntent": "protect hair and throat, close the window if needed" },
-              { "weatherHint": "sleepy/night", "tone": "soft", "exampleIntent": "close curtains, warm drink, settle into the nest" }
+              { "weatherHint": "fog/haze", "tone": "careful", "exampleIntent": "wear a mask, drink water, come back early" },
+              { "weatherHint": "sleepy/night", "tone": "soft", "exampleIntent": "close curtains, keep water nearby, settle into the nest" }
             ]
           },
           "directorCard": {
@@ -159,9 +165,9 @@
             "linkedTextPort": "coffeeCorner.windowWeather",
             "flirtLevel": "low-medium",
             "memoryHook": "hubby weather advice by the coffee corner window",
-            "futureUse": "This is planned as a separate weather advice interaction and should not overwrite the main coffeeCorner bubble queue."
+            "futureUse": "Can later use a dedicated illustrated weather panel or coordinate-locked custom art. Current implementation is a lightweight DOM popup."
           },
-          "verificationNote": "Card only. Not visible and not clickable yet. Add coordinates and runtime later after coffeeCorner remains stable."
+          "verificationNote": "Active as of 2026-06-10. Uses the existing weather text area as the click target. No new API function was added."
         }
       ],
       "overlays": [
@@ -186,11 +192,11 @@
           "kind": "visualTextOverlay",
           "coordinateMode": "future",
           "stateSource": "coffeeCorner.windowWeather",
-          "description": "Currently positioned by existing page/CSS behavior. Future work may lock this to the window area by base-image coordinate.",
+          "description": "Currently positioned by existing page/CSS behavior. It is now also the click target for the active weather advice popup.",
           "directorCard": {
             "role": "ambient care/weather surface",
             "vibe": ["window life", "small daily signal", "care reminder", "weather mood"],
-            "futureUse": "Should pair with the future windowWeatherHotspot to show hubby's weather advice."
+            "futureUse": "Pairs with the active windowWeatherHotspot to show hubby's weather advice."
           }
         }
       ],
@@ -261,6 +267,7 @@
       "19.8 tight coordinate hotspot behavior",
       "single-bubble 19.8 re-show behavior",
       "windowWeather state fields",
+      "windowWeather weather advice popup",
       "Vercel Hobby function count budget"
     ],
     "removedApiFunctions": [
