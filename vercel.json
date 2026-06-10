@@ -1,7 +1,7 @@
 {
   "routes": [
     { "src": "^/$", "dest": "/api/app-assets" },
-    { "src": "^/cloud$", "dest": "/api/app-bubble" },
+    { "src": "^/cloud$", "dest": "/api/app-coords" },
     { "src": "^/cloud-weather$", "dest": "/api/app-weather" },
     { "src": "^/cloud-assets$", "dest": "/api/app-assetctl" },
     { "src": "^/cloud-bubble$", "dest": "/api/app-bubble" },
