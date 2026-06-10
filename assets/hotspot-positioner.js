@@ -1,12 +1,28 @@
 (function(){
-  var anchor = {
-    imageId: 'gameBg',
-    selector: '.tattooHot',
-    x: 0.73,
-    y: 0.345,
-    width: 0.15,
-    height: 0.08
+  var hotspotCards = {
+    'coffeeCorner.tattooHot': {
+      id: 'coffeeCorner.tattooHot',
+      label: '19.8 tattoo hotspot',
+      roomId: 'coffeeCorner',
+      imageId: 'gameBg',
+      selector: '.tattooHot',
+      coordinateMode: 'lockedToBaseImage',
+      coordinate: {
+        x: 0.73,
+        y: 0.345,
+        width: 0.15,
+        height: 0.08
+      },
+      behavior: 'bubble.showOrAdvance',
+      runtimeStatus: 'active'
+    }
   };
+
+  var defaultHotspotId = 'coffeeCorner.tattooHot';
+
+  function getCard(id){
+    return hotspotCards[id || defaultHotspotId] || null;
+  }
 
   function coverBox(img){
     if(!img) return null;
@@ -38,18 +54,20 @@
     };
   }
 
-  function apply(){
-    var img = document.getElementById(anchor.imageId);
-    var hot = document.querySelector(anchor.selector);
+  function applyCard(card){
+    if(!card || !card.coordinate) return false;
+    var img = document.getElementById(card.imageId);
+    var hot = document.querySelector(card.selector);
     var box = coverBox(img);
     if(!img || !hot || !box) return false;
 
+    var point = card.coordinate;
     var parent = hot.offsetParent || document.body;
     var parentRect = parent.getBoundingClientRect();
-    var w = box.width * anchor.width;
-    var h = box.height * anchor.height;
-    var cx = box.left + anchor.x * box.width;
-    var cy = box.top + anchor.y * box.height;
+    var w = box.width * point.width;
+    var h = box.height * point.height;
+    var cx = box.left + point.x * box.width;
+    var cy = box.top + point.y * box.height;
 
     hot.style.left = (cx - parentRect.left - w / 2) + 'px';
     hot.style.top = (cy - parentRect.top - h / 2) + 'px';
@@ -58,7 +76,9 @@
     hot.style.width = w + 'px';
     hot.style.height = h + 'px';
     hot.style.zIndex = '28';
-    hot.setAttribute('data-coordinate-hotspot', 'coffeeCorner.tattooHot');
+    hot.setAttribute('data-coordinate-hotspot', card.id);
+    hot.setAttribute('data-hotspot-label', card.label || card.id);
+    hot.setAttribute('data-hotspot-behavior', card.behavior || '');
 
     if(new URLSearchParams(location.search).get('debugHotspot') === '1'){
       hot.style.background = 'rgba(255,80,130,.18)';
@@ -69,23 +89,39 @@
     return true;
   }
 
+  function apply(id){
+    return applyCard(getCard(id));
+  }
+
+  function applyAll(){
+    var ok = false;
+    Object.keys(hotspotCards).forEach(function(id){
+      ok = apply(id) || ok;
+    });
+    return ok;
+  }
+
   function start(){
-    apply();
-    window.addEventListener('resize', apply);
-    window.addEventListener('orientationchange', apply);
-    window.addEventListener('pageshow', apply);
-    document.addEventListener('visibilitychange', function(){ if(!document.hidden) apply(); });
-    setTimeout(apply, 200);
-    setTimeout(apply, 700);
-    setTimeout(apply, 1500);
-    setTimeout(apply, 2600);
+    applyAll();
+    window.addEventListener('resize', applyAll);
+    window.addEventListener('orientationchange', applyAll);
+    window.addEventListener('pageshow', applyAll);
+    document.addEventListener('visibilitychange', function(){ if(!document.hidden) applyAll(); });
+    setTimeout(applyAll, 200);
+    setTimeout(applyAll, 700);
+    setTimeout(applyAll, 1500);
+    setTimeout(applyAll, 2600);
   }
 
   window.KittenNestHotspots = {
-    version: 'coordinate-hotspot-20260610-tight',
-    anchor: anchor,
+    version: 'coordinate-hotspot-card-20260610',
+    cards: hotspotCards,
+    defaultHotspotId: defaultHotspotId,
+    getCard: getCard,
     coverBox: coverBox,
     apply: apply,
+    applyCard: applyCard,
+    applyAll: applyAll,
     start: start
   };
 })();
