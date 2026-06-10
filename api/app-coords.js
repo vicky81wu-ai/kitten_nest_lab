@@ -1,10 +1,19 @@
 const appBubble = require('./app-bubble');
 
 const coordScript = '<script src="/assets/coordinate-controller.js?v=20260610-1"></script>';
+const hotspotScript = '<script src="/assets/hotspot-positioner.js?v=20260610-1"></script>';
 const coordBoot = `
 <script>
 (function(){
   function boot(){
+    var q = new URLSearchParams(location.search);
+    var hotspotMode = q.get('hotspot') === '1';
+    if(hotspotMode){
+      if(window.KittenNestHotspots && window.KittenNestHotspots.start){
+        window.KittenNestHotspots.start();
+      }
+      return;
+    }
     if(window.KittenNestCoords && window.KittenNestCoords.start){
       window.KittenNestCoords.start();
     }
@@ -17,7 +26,7 @@ const coordBoot = `
 </script>`;
 
 function injectCoords(html) {
-  return String(html).replace('</body>', `${coordScript}\n${coordBoot}\n</body>`);
+  return String(html).replace('</body>', `${coordScript}\n${hotspotScript}\n${coordBoot}\n</body>`);
 }
 
 module.exports = async function handler(req, res) {
