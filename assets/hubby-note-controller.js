@@ -3,7 +3,7 @@
   var attached = false;
 
   function text(value){ return String(value == null ? '' : value); }
-  function escapeHtml(value){ return text(value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+  function escapeHtml(value){ return text(value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;').replace(/'/g,'&#39;'); }
   function shortDate(raw){
     if(!raw) return '';
     try{
@@ -14,7 +14,7 @@
   }
   function id(){ return 'note_' + Date.now() + '_' + Math.random().toString(36).slice(2,8); }
   function token(){ return localStorage.getItem('kittenNestToken') || localStorage.getItem('nestToken') || ''; }
-  function saveToken(value){ if(text(value).trim()) localStorage.setItem('kittenNestToken', text(value).trim()); }
+  function saveToken(value){ var v = text(value).trim(); if(v) localStorage.setItem('kittenNestToken', v); }
   function noteArchive(state){
     if(Array.isArray(state && state.hubbyNoteArchive)) return state.hubbyNoteArchive;
     if(Array.isArray(state && state.hubbyNoteHistory)) return state.hubbyNoteHistory;
@@ -50,6 +50,8 @@
       '.hubbyNoteEditor{margin-top:12px;display:grid;gap:8px;}',
       '.hubbyNoteTextarea{width:100%;min-height:116px;resize:vertical;border:0;border-radius:18px;padding:12px;background:rgba(255,255,255,.7);box-shadow:inset 0 0 0 1px rgba(120,55,80,.1);color:#6f3d4e;font-size:14px;line-height:1.5;outline:none;}',
       '.hubbyNoteToken{width:100%;border:0;border-radius:14px;padding:10px;background:rgba(255,255,255,.62);box-shadow:inset 0 0 0 1px rgba(120,55,80,.09);color:#6f3d4e;font-size:13px;outline:none;}',
+      '.hubbyNoteAuthChip{border:0;border-radius:14px;padding:10px;background:rgba(255,255,255,.62);box-shadow:inset 0 0 0 1px rgba(120,55,80,.09);color:#7a4054;font-size:12px;font-weight:760;text-align:center;}',
+      '.hubbyNoteAuthChip:active{transform:scale(.99);}',
       '.hubbyNoteSave{border:0;border-radius:16px;padding:11px 12px;background:#7b4054;color:white;font-weight:820;font-size:14px;box-shadow:0 10px 24px rgba(123,64,84,.2);}',
       '.hubbyNoteSaveStatus{font-size:11px;opacity:.72;min-height:16px;text-align:center;}',
       '.hubbyNoteSection{margin-top:14px;font-size:12px;font-weight:820;opacity:.78;}',
@@ -71,7 +73,7 @@
     panel = document.createElement('div');
     panel.id = 'hubbyNotePanel';
     panel.className = 'hubbyNotePanel';
-    panel.innerHTML = '<div class="hubbyNoteCard" role="dialog" aria-label="hubby note notebook"><div class="hubbyNoteHead"><div class="hubbyNoteTitle">粉本本 · Hubby note</div><button class="hubbyNoteClose" type="button" aria-label="close">×</button></div><div class="hubbyNoteMeta" id="hubbyNoteMeta"></div><div class="hubbyNoteBody" id="hubbyNoteBody"></div><div class="hubbyNoteActions"><button class="hubbyNoteMiniBtn" id="hubbyNoteEdit" type="button">编辑</button><button class="hubbyNoteMiniBtn" id="hubbyNoteFavorite" type="button">收藏</button><button class="hubbyNoteMiniBtn danger" id="hubbyNoteDelete" type="button">删除</button></div><div class="hubbyNoteEditor"><textarea class="hubbyNoteTextarea" id="hubbyNoteEditor" placeholder="小猫在这里写今天的猫窝进展……"></textarea><input class="hubbyNoteToken" id="hubbyNoteToken" autocomplete="off" placeholder="Nest key：本机保存一次，以后直接保存"/><button class="hubbyNoteSave" id="hubbyNoteSave" type="button">保存到粉本本</button><div class="hubbyNoteSaveStatus" id="hubbyNoteSaveStatus"></div></div><div class="hubbyNoteSection" id="hubbyNoteArchiveTitle">永久档案 · 最近显示</div><div class="hubbyNoteHistory" id="hubbyNoteHistory"></div><div class="hubbyNoteHint">保存会更新当前页；旧当前页自动进永久档案。删除是软删除，先进 trash；以后换专用图只换入口热点。</div></div>';
+    panel.innerHTML = '<div class="hubbyNoteCard" role="dialog" aria-label="hubby note notebook"><div class="hubbyNoteHead"><div class="hubbyNoteTitle">粉本本 · Hubby note</div><button class="hubbyNoteClose" type="button" aria-label="close">×</button></div><div class="hubbyNoteMeta" id="hubbyNoteMeta"></div><div class="hubbyNoteBody" id="hubbyNoteBody"></div><div class="hubbyNoteActions"><button class="hubbyNoteMiniBtn" id="hubbyNoteEdit" type="button">编辑</button><button class="hubbyNoteMiniBtn" id="hubbyNoteFavorite" type="button">收藏</button><button class="hubbyNoteMiniBtn danger" id="hubbyNoteDelete" type="button">删除</button></div><div class="hubbyNoteEditor"><textarea class="hubbyNoteTextarea" id="hubbyNoteEditor" placeholder="小猫在这里写今天的猫窝进展……"></textarea><input class="hubbyNoteToken" id="hubbyNoteToken" autocomplete="off" placeholder="Nest key：本机保存一次，以后直接保存"/><button class="hubbyNoteAuthChip" id="hubbyNoteAuthChip" type="button">已授权 · 点这里换 key</button><button class="hubbyNoteSave" id="hubbyNoteSave" type="button">保存到粉本本</button><div class="hubbyNoteSaveStatus" id="hubbyNoteSaveStatus"></div></div><div class="hubbyNoteSection" id="hubbyNoteArchiveTitle">永久档案 · 最近显示</div><div class="hubbyNoteHistory" id="hubbyNoteHistory"></div><div class="hubbyNoteHint">保存会更新当前页；旧当前页自动进永久档案。删除是软删除，先进 trash；以后换专用图只换入口热点。</div></div>';
     document.body.appendChild(panel);
     panel.addEventListener('click', function(e){ if(e.target === panel) close(); });
     panel.querySelector('.hubbyNoteClose').addEventListener('click', close);
@@ -81,10 +83,37 @@
     panel.querySelector('#hubbyNoteDelete').addEventListener('click', deleteCurrent);
     panel.querySelector('#hubbyNoteHistory').addEventListener('click', archiveAction);
     var keyInput = panel.querySelector('#hubbyNoteToken');
-    keyInput.value = token();
-    keyInput.addEventListener('change', function(){ saveToken(keyInput.value); });
-    keyInput.addEventListener('blur', function(){ saveToken(keyInput.value); });
+    var chip = panel.querySelector('#hubbyNoteAuthChip');
+    keyInput.type = 'password';
+    keyInput.addEventListener('change', function(){ saveToken(keyInput.value); keyInput.dataset.editingKey = ''; renderAuth(); });
+    keyInput.addEventListener('blur', function(){ saveToken(keyInput.value); keyInput.dataset.editingKey = ''; renderAuth(); });
+    chip.addEventListener('click', function(e){
+      e.preventDefault();
+      keyInput.dataset.editingKey = '1';
+      keyInput.value = '';
+      keyInput.placeholder = '填新 Nest key，保存后会再次隐藏';
+      renderAuth();
+      keyInput.focus();
+    });
+    renderAuth();
     return panel;
+  }
+
+  function renderAuth(){
+    var panel = ensurePanel();
+    var keyInput = panel.querySelector('#hubbyNoteToken');
+    var chip = panel.querySelector('#hubbyNoteAuthChip');
+    if(!keyInput || !chip) return;
+    keyInput.type = 'password';
+    if(token() && keyInput.dataset.editingKey !== '1'){
+      keyInput.value = '';
+      keyInput.style.display = 'none';
+      chip.style.display = '';
+      chip.textContent = '已授权 · 点这里换 key';
+    }else{
+      keyInput.style.display = '';
+      chip.style.display = 'none';
+    }
   }
 
   function render(state){
@@ -94,17 +123,16 @@
     var history = panel.querySelector('#hubbyNoteHistory');
     var title = panel.querySelector('#hubbyNoteArchiveTitle');
     var editor = panel.querySelector('#hubbyNoteEditor');
-    var keyInput = panel.querySelector('#hubbyNoteToken');
     var favBtn = panel.querySelector('#hubbyNoteFavorite');
     var updated = text(state && (state.hubbyNoteUpdatedAt || state.updatedAt) || '').trim();
     var archive = noteArchive(state);
     var note = noteText(state);
     body.textContent = (state && state.hubbyNoteFavorite ? '★ ' : '') + note;
     if(editor && !editor.matches(':focus')) editor.value = text(state && state.hubbyNote || '').trim();
-    if(keyInput && !keyInput.matches(':focus')) keyInput.value = token();
     if(favBtn) favBtn.textContent = state && state.hubbyNoteFavorite ? '已收藏' : '收藏';
     meta.textContent = updated ? ('云端保存 · ' + shortDate(updated) + ' · 永久档案 ' + archive.length + ' 条') : ('云端保存 · 永久档案 ' + archive.length + ' 条');
     if(title) title.textContent = '永久档案 · 最近显示 ' + Math.min(archive.length, 6) + ' 条';
+    renderAuth();
     var items = archive.slice(0,6);
     if(!items.length){
       history.innerHTML = '<div class="hubbyNoteItem"><div class="hubbyNoteItemText">还没有历史档案。今天施工第一条，正等小猫写进去。</div></div>';
@@ -233,7 +261,7 @@
     attached = true; ensureButton(); client.subscribe(function(payload){ setState(payload && payload.state); }); if(client.get) setState(client.get()); return true;
   }
 
-  window.KittenNestHubbyNote = { version:'hubby-note-notebook-20260610-controls', attach:attach, open:open, close:close, render:render, setState:setState, saveCurrent:saveCurrent };
+  window.KittenNestHubbyNote = { version:'hubby-note-notebook-20260610-controls-auth-owned', attach:attach, open:open, close:close, render:render, setState:setState, saveCurrent:saveCurrent, renderAuth:renderAuth };
   window.addEventListener('load', ensureButton);
   setTimeout(ensureButton, 400);
   setTimeout(ensureButton, 1400);
