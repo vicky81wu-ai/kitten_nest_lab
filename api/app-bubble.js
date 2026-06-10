@@ -1,8 +1,7 @@
 const appAssetctl = require('./app-assetctl');
 
 const bubbleControllerScript = '<script src="/assets/bubble-controller.js?v=20260610-1"></script>';
-const hubbyNoteControllerScript = '<script src="/assets/hubby-note-controller.js?v=20260610-controls-1"></script>';
-const hubbyNoteAuthGuardScript = '<script src="/assets/hubby-note-auth-guard.js?v=20260610-auth-1"></script>';
+const hubbyNoteControllerScript = '<script src="/assets/hubby-note-controller.js?v=20260610-controls-auth-owned-1"></script>';
 const bubbleBootScript = `
 <script>
 (function(){
@@ -14,8 +13,8 @@ const bubbleBootScript = `
     if(window.KittenNestHubbyNote && !window.__kittenNestHubbyNoteAttached){
       window.__kittenNestHubbyNoteAttached = window.KittenNestHubbyNote.attach(window.KittenNestState);
     }
-    if(window.KittenNestHubbyNoteAuthGuard){
-      window.KittenNestHubbyNoteAuthGuard.guard();
+    if(window.KittenNestHubbyNote && window.KittenNestHubbyNote.renderAuth){
+      window.KittenNestHubbyNote.renderAuth();
     }
     window.KittenNestState.refresh('bubble').catch(function(){});
   }
@@ -28,7 +27,7 @@ const bubbleBootScript = `
 </script>`;
 
 function injectBubbleController(html) {
-  const bundle = `${bubbleControllerScript}\n${hubbyNoteControllerScript}\n${hubbyNoteAuthGuardScript}\n${bubbleBootScript}\n`;
+  const bundle = `${bubbleControllerScript}\n${hubbyNoteControllerScript}\n${bubbleBootScript}\n`;
   return String(html).replace('</body>', `${bundle}</body>`);
 }
 
