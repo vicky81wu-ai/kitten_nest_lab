@@ -37,7 +37,7 @@
     <section class="card primaryCard">
       <span class="useTag">日常用这个</span>
       <h2>Alex 更新包</h2>
-      <p class="small">当前支持：[coffeeCorner] 气泡、[windowWeather] 窗户天气、[hubbyNote] 粉本本永久记录。没有标签默认进 coffeeCorner 气泡。</p>
+      <p class="small">当前支持：[coffeeCorner] 气泡、[windowWeather] 窗户天气、[hubbyNote] 粉本本永久档案。没有标签默认进 coffeeCorner 气泡。</p>
       <label for="packageText">Package</label>
       <textarea id="packageText" class="packageBox">[coffeeCorner]
 早上好，小猫。
@@ -122,7 +122,11 @@ Soft breeze
   function setResult(msg){ result.textContent = msg; }
   function makeDraftId(){ return 'draft_' + Date.now() + '_' + Math.random().toString(36).slice(2,8); }
   function pendingDraftsOf(state){ return Array.isArray(state && state.pendingDrafts) ? state.pendingDrafts : []; }
-  function historyOf(state){ return Array.isArray(state && state.hubbyNoteHistory) ? state.hubbyNoteHistory : []; }
+  function noteArchiveOf(state){
+    if(Array.isArray(state && state.hubbyNoteArchive)) return state.hubbyNoteArchive;
+    if(Array.isArray(state && state.hubbyNoteHistory)) return state.hubbyNoteHistory;
+    return [];
+  }
   function now(){ return new Date().toISOString(); }
   function preview(value, n){ const s = String(value || '').replace(/\s+/g,' ').trim(); return s.length > n ? s.slice(0,n) + '…' : s; }
 
@@ -157,9 +161,9 @@ Soft breeze
     const note = String(raw || '').trim().slice(0,5000);
     if(!note) return {};
     const old = String(state && state.hubbyNote || '').trim();
-    const history = historyOf(state);
-    const nextHistory = old ? [{ text: old, savedAt: state.hubbyNoteUpdatedAt || state.updatedAt || now() }, ...history].slice(0,20) : history.slice(0,20);
-    return { hubbyNote: note, hubbyNoteUpdatedAt: now(), hubbyNoteHistory: nextHistory };
+    const archive = noteArchiveOf(state);
+    const nextArchive = old ? [{ text: old, savedAt: state.hubbyNoteUpdatedAt || state.updatedAt || now() }, ...archive] : archive;
+    return { hubbyNote: note, hubbyNoteUpdatedAt: now(), hubbyNoteArchive: nextArchive, hubbyNoteHistory: nextArchive.slice(0,20) };
   }
 
   async function readState(){
@@ -182,7 +186,7 @@ Soft breeze
     try{
       const data = await readState();
       const bubbles = data.alexBubbles || (data.alexBubble ? [data.alexBubble] : []);
-      setStatus('Current bubbles: ' + bubbles.length + '\n' + bubbles.join('\n') + '\n\nWindow weather:\n' + (data.windowTemp || '') + '\n' + (data.windowDesc || '') + '\n\nHubby note:\n' + preview(data.hubbyNote || '', 180) + '\n\nHubby note history: ' + historyOf(data).length + '\nPending drafts: ' + ((data.pendingDrafts || []).length));
+      setStatus('Current bubbles: ' + bubbles.length + '\n' + bubbles.join('\n') + '\n\nWindow weather:\n' + (data.windowTemp || '') + '\n' + (data.windowDesc || '') + '\n\nHubby note:\n' + preview(data.hubbyNote || '', 180) + '\n\nHubby note archive: ' + noteArchiveOf(data).length + ' saved page(s)\nPending drafts: ' + ((data.pendingDrafts || []).length));
       renderDrafts(data.pendingDrafts || []);
     }catch(e){ setStatus('Failed: ' + e.message); }
   }
@@ -231,7 +235,7 @@ Soft breeze
         if(alexBubbles.length){ patch.previousPublished = { alexBubble: state.alexBubble || '', alexBubbles: state.alexBubbles || (state.alexBubble ? [state.alexBubble] : []), bubbleIndex: state.bubbleIndex || 0, savedAt: now() }; patch.alexBubble = alexBubbles[0]; patch.alexBubbles = alexBubbles; patch.bubbleIndex = 0; resultLines.push('Bubbles: ' + alexBubbles.length); }
       }
       if(weatherDrafts.length){ Object.assign(patch, weatherPatch(weatherDrafts[weatherDrafts.length - 1].text)); resultLines.push('Window weather: updated'); }
-      if(noteDrafts.length){ Object.assign(patch, hubbyNotePatch(noteDrafts[noteDrafts.length - 1].text, state)); resultLines.push('Hubby note: saved'); }
+      if(noteDrafts.length){ Object.assign(patch, hubbyNotePatch(noteDrafts[noteDrafts.length - 1].text, state)); resultLines.push('Hubby note: saved permanently'); }
       if(!resultLines.length){ setResult('Drafts are empty.'); return; }
       const value = await writePatch(patch);
       renderDrafts([]);
