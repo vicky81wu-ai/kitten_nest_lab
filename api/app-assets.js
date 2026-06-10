@@ -146,6 +146,8 @@ const cloudTextPatchScript = `
 })();
 </script>`;
 
+const weatherPatchScript = '<script src="/assets/weather-patch.js?v=20260610-1"></script>';
+
 function injectDefaultAssets(html) {
   return String(html)
     .replace('<body>', '<body class="cloudDefaultAssets">')
@@ -155,7 +157,7 @@ function injectDefaultAssets(html) {
     .replace('<img id="homeOn" class="bg home-on">', `<img id="homeOn" class="bg home-on" src="${homeDay}">`)
     .replace('<img id="homeOff" class="bg home-off">', `<img id="homeOff" class="bg home-off" src="${homeNight}">`)
     .replace('<img id="gameBg" class="bg">', `<img id="gameBg" class="bg" src="${coffeeCorner}">`)
-    .replace('</body>', `${defaultAssetScript}\n${cloudTextPatchScript}\n</body>`);
+    .replace('</body>', `${defaultAssetScript}\n${cloudTextPatchScript}\n${weatherPatchScript}\n</body>`);
 }
 
 module.exports = async function handler(req, res) {
