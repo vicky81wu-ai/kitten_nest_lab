@@ -64,6 +64,21 @@ body.cloudDefaultAssets .bg{
   object-fit:cover;
 }
 
+@media (display-mode: browser){
+  html,
+  body{
+    height:100dvh;
+    min-height:100dvh;
+  }
+  body.cloudDefaultAssets #app,
+  body.cloudDefaultAssets .screen,
+  body.cloudDefaultAssets .room,
+  body.cloudDefaultAssets .bg{
+    height:100dvh;
+    min-height:100dvh;
+  }
+}
+
 body.cloudDefaultAssets #setup{
   z-index:95;
   max-height:88vh;
