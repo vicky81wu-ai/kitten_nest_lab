@@ -143,11 +143,11 @@ No identity, no binding.
 - `canonicalCurrent` means current official truth, while `mutableWithVersion` allows future versioned changes.
 - Short lesson kept as a specimen: a notebook entry once reused the game console selector and took over the game menu. The long-term fix is not a blacklist; it is identity, ownership, and exclusivity.
 
-### PWA bottom black edge investigation
+### PWA bottom black edge investigation and fix
 
-- Current symptom: screen-home PWA can show a persistent bottom black edge. The same bottom edge can appear with default assets and with a locally uploaded horizontal image.
-- This means the black edge is probably not caused by the default coffee-corner image path or by one specific image aspect ratio.
-- Failed patch paths already tried:
+- Symptom: screen-home PWA showed a persistent bottom black edge. The same bottom edge could appear with default assets and with a locally uploaded horizontal image.
+- This meant the black edge was probably not caused by the default coffee-corner image path or by one specific image aspect ratio.
+- Failed patch paths:
 
 ```text
 bottom overscan / extending the canvas downward
@@ -156,17 +156,16 @@ html/body background-image safe-area fallback
 ```
 
 - These approaches did not remove the visible black edge and should not be repeated as blind patches.
-- Next investigation should treat this as a canvas/PWA viewport issue:
+- Confirmed: `viewport-fit=cover` was already present in `index.html`.
+- Successful fix path: make the cloud canvas explicitly use viewport-height ownership with `100vh`, `100dvh`, and finally `100lvh` in `assets/canvas-fill.css`.
+- The successful PWA screen-home test was:
 
 ```text
-viewport meta / viewport-fit=cover
-PWA display mode and safe-area behavior
-actual drawable WebView height
-#app / .screen / .room / .bg height ownership
-whether local upload and default image use the same display layer
+https://kitten-nest-lab.vercel.app/cloud?v=0611-canvas-lvh-test
 ```
 
-- Do not tune clock/overlay coordinates until the canvas black-edge issue is understood or deliberately accepted.
+- Result: old screen-home PWA became full-screen and visually clean. Safari/web may still show a bottom browser-toolbar overlay artifact; the priority target is the screen-home PWA.
+- Future coordinate and clock work should use this `100lvh` canvas as the baseline. Do not tune clock/overlay coordinates against older black-edge canvas states.
 
 ### Current protected areas
 
@@ -180,6 +179,7 @@ whether local upload and default image use the same display layer
 - Keep game console / GAME MENU hotspot ownership stable.
 - Keep setup/materials panel manual access available.
 - Keep local image upload override pipeline available.
+- Keep the successful `100lvh` PWA canvas baseline stable.
 - Keep the old cached `/write` guard in `api/set-state.js` until cache issues are no longer a risk.
 - Keep the top-level handoff docs free of private keys or service credentials.
 - Keep deployment under the Vercel Hobby function limit.
@@ -193,9 +193,10 @@ whether local upload and default image use the same display layer
 - Continue cleanup one line at a time.
 - Cleanup should preserve visible behavior while reducing duplicated ownership.
 - Future pure UI polish for the notebook should wait for dedicated notebook art.
+- Re-tune clock/overlay coordinates only after the `100lvh` canvas baseline remains stable.
 
 ### New-window handoff rule
 
 - New construction windows should read `PROJECT_STATUS.md` first.
 - Then read `docs/CURRENT_STATUS.md`, `docs/ARCHITECTURE_NOTES.md`, `docs/CONSTRUCTION_LOG.md`, `docs/CONSTRUCTION_RULES.md`, `docs/CODEX_CLEANUP_PLAN.md`, `data/room-config.v1.json`, and `data/object-registry.v1.json`.
-- The nest is stable but still has wrapper-chain debt; protect `/write`, `/cloud`, coffeeCorner bubbles, windowWeather, weather advice, powder notebook, setup/local upload, Vercel function count, object identity, and 19.8 hotspot behavior before refactoring.
+- The nest is stable but still has wrapper-chain debt; protect `/write`, `/cloud`, coffeeCorner bubbles, windowWeather, weather advice, powder notebook, setup/local upload, successful `100lvh` canvas baseline, Vercel function count, object identity, and 19.8 hotspot behavior before refactoring.
