@@ -1,10 +1,11 @@
 {
-  "version": "0.1.2",
+  "version": "0.1.3",
   "status": "foundation-current-identities",
-  "note": "Static object and hotspot identity registry for Kitten Nest. This file is not wired into runtime yet. It exists to prevent selector reuse, hotspot ownership conflicts, and rough patching. Detailed director writing guidance lives in docs/DIRECTOR_GUIDE.md.",
+  "note": "Static object and hotspot identity registry for Kitten Nest. This file is not wired into runtime yet. It exists to prevent selector reuse, hotspot ownership conflicts, decorative overlay drift, and rough patching. Detailed director writing guidance lives in docs/DIRECTOR_GUIDE.md.",
   "principles": [
     "No identity, no binding.",
     "Every interactive object must have an id and owner.",
+    "Every decorative overlay that must align with room art must also have an id and coordinate owner.",
     "Every selector must have one primary owner.",
     "exclusive:true means the selector/action cannot be reused by another feature unless the identity card explicitly changes.",
     "Do not add per-feature blacklists; use ownership, exclusivity, and versioned change policy.",
@@ -30,6 +31,29 @@
       "stateFields": ["alexBubble", "alexBubbles", "bubbleIndex"],
       "directorRef": "director.textPorts.coffeeCornerBubble",
       "directorTags": ["immediate", "short", "rotating", "roomPresence"],
+      "protected": true
+    },
+    {
+      "id": "home.clockHandsOverlay",
+      "roomId": "home",
+      "kind": "decorativeOverlay",
+      "selector": ".clock",
+      "owner": "clockOverlay",
+      "role": "clockHandsOverlay",
+      "action": "alignClockHandsToPaintedClockFace",
+      "exclusive": true,
+      "runtimeStatus": "active",
+      "coordinateStatus": "approvedCurrentCssCoordinate",
+      "versionStatus": "canonicalCurrent",
+      "changePolicy": "mutableWithVersion",
+      "imageId": "homeOn",
+      "approvedCssCoordinate": { "left": "5.48%", "top": "26.35%", "width": "31.2%" },
+      "approvedBy": "Vicky visual inspection after micro-adjustment",
+      "implementationFile": "assets/canvas-fill.css",
+      "implementationSelector": "body.cloudDefaultAssets .clock",
+      "runtimeNote": "Current approved production position is a CSS coordinate override on the 100lvh /cloud canvas baseline. Future cleanup should convert this to base-image coordinates before removing the CSS override.",
+      "directorRef": "director.overlays.clockHands",
+      "directorTags": ["decorativeOverlay", "clock", "visualAlignment", "approvedPosition"],
       "protected": true
     },
     {
@@ -254,7 +278,8 @@
     "selectorUniqueness": "A selector should not be assigned to multiple active exclusive objects.",
     "ownershipCheck": "Before binding events, check id, selector, owner, role, action, exclusive, runtimeStatus, versionStatus, and changePolicy.",
     "protectedChainCheck": "If protected:true, do not modify without staged plan and rollback.",
-    "coordinateRule": "Current coordinates should use base-image coordinates, not device-specific CSS nudges.",
+    "coordinateRule": "Current coordinates should use base-image coordinates, not device-specific CSS nudges. Temporary approved CSS coordinates must be registered as canonicalCurrent and later converted explicitly.",
+    "overlayRule": "Decorative overlays are not hotspots, but they still need identity, owner, and coordinate records when they align with room art.",
     "versionRule": "canonicalCurrent is mutable only through explicit versioned change, not silent replacement.",
     "directorRule": "Use directorRef and directorTags here; put long director scripts and sample lines in docs/DIRECTOR_GUIDE.md."
   },
