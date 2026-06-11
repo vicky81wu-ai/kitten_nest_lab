@@ -1,7 +1,7 @@
 {
-  "version": "0.1.5",
-  "status": "foundation-with-current-object-identities",
-  "note": "Room configuration foundation for the Kitten Nest world. This file documents current active coffeeCorner ports, protected objects, coordinate anchors, and director cards for future room/runtime work. It is not a full roomEngine runtime yet.",
+  "version": "0.1.6",
+  "status": "foundation-scene-hooks",
+  "note": "Room and scene configuration foundation for Kitten Nest. This file is not a full roomEngine runtime yet. It keeps scene identity, active ports, protected current runtime facts, and directorRef hooks. Long director notes live in docs/DIRECTOR_GUIDE.md.",
   "currentRuntime": {
     "activeRoomId": "coffeeCorner",
     "liveEntry": "/cloud",
@@ -11,9 +11,13 @@
       "coffeeCorner.windowWeather",
       "coffeeCorner.hubbyNote"
     ],
+    "activeScenes": [
+      "home",
+      "coffeeCorner"
+    ],
     "activeHotspots": [
-      "coffeeCorner.tattooHot",
-      "coffeeCorner.windowWeatherHotspot",
+      "coffeeCorner.tattoo19_8",
+      "coffeeCorner.windowWeatherAdviceHotspot",
       "coffeeCorner.hubbyNoteEntry",
       "coffeeCorner.gameConsoleHotspot",
       "coffeeCorner.setupToggleButton"
@@ -25,325 +29,182 @@
     "activeAssetPipelines": [
       "coffeeCorner.localImageUpload"
     ],
-    "futureHotspots": [
-      "coffeeCorner.futurePinkNotebookArtHotspot"
-    ],
     "stableWorkflow": "Alex update package -> /write -> generate drafts -> publish all -> /cloud. The powder notebook can also be edited directly inside /cloud. Setup/local upload remains manually available."
   },
   "identityPolicy": {
     "coreRule": "No identity, no binding.",
+    "sceneRule": "Scenes belong in room-config; interactive objects and hotspots belong in object-registry.",
     "ownershipRule": "Every active selector has one primary owner. exclusive:true means no casual selector reuse.",
     "versionRule": "canonicalCurrent means current official truth, not permanent immutability. Current objects may change later through mutableWithVersion.",
     "coordinateRule": "Coordinates should be locked to base-image coordinates, not device-specific offsets.",
-    "documentationRule": "Prefer framework rules and identity cards over long incident diaries."
+    "directorRule": "Use directorRef and directorTags here; put long director notes in docs/DIRECTOR_GUIDE.md."
   },
   "packageTags": {
     "coffeeCorner": {
-      "type": "bubbleQueue",
+      "textClass": "Bubble",
+      "implementationType": "bubbleDraft",
       "target": "coffeeCorner.bubbles",
       "runtimeStatus": "active",
       "versionStatus": "canonicalCurrent",
-      "changePolicy": "mutableWithVersion",
-      "lineRule": "Each non-empty line becomes one rotating bubble. If there is only one bubble, the 19.8 hotspot still re-shows it after hiding."
+      "changePolicy": "mutableWithVersion"
     },
     "windowWeather": {
       "type": "weatherText",
       "target": "coffeeCorner.windowWeather",
       "runtimeStatus": "active",
       "versionStatus": "canonicalCurrent",
-      "changePolicy": "mutableWithVersion",
-      "lineRule": "Line 1 becomes windowTemp. Line 2 becomes windowDesc."
+      "changePolicy": "mutableWithVersion"
     },
     "hubbyNote": {
-      "type": "cloudNotebookPage",
+      "textClass": "PermanentNote",
+      "implementationType": "hubbyNoteDraft",
       "target": "coffeeCorner.hubbyNote",
       "runtimeStatus": "active",
       "versionStatus": "canonicalCurrent",
-      "changePolicy": "mutableWithVersion",
-      "lineRule": "The whole block becomes the current hubbyNote page. Older current pages are appended to hubbyNoteArchive."
+      "changePolicy": "mutableWithVersion"
     },
-    "home": { "type": "bubbleQueue", "target": "home.bubbles", "runtimeStatus": "future" },
-    "restaurant": { "type": "bubbleQueue", "target": "restaurant.bubbles", "runtimeStatus": "future" },
-    "fountain": { "type": "bubbleQueue", "target": "fountain.bubbles", "runtimeStatus": "future" },
-    "privateRoom": { "type": "bubbleQueue", "target": "privateRoom.bubbles", "runtimeStatus": "future" },
-    "bedroom": { "type": "bubbleQueue", "target": "bedroom.bubbles", "runtimeStatus": "future" },
-    "photoBooth": { "type": "bubbleQueue", "target": "photoBooth.bubbles", "runtimeStatus": "future" }
+    "home": { "textClass": "Bubble", "target": "home.bubbles", "runtimeStatus": "future" },
+    "restaurant": { "textClass": "Bubble", "target": "restaurant.bubbles", "runtimeStatus": "future" },
+    "fountain": { "textClass": "Bubble", "target": "fountain.bubbles", "runtimeStatus": "future" },
+    "privateRoom": { "textClass": "Bubble", "target": "privateRoom.bubbles", "runtimeStatus": "future" },
+    "bedroom": { "textClass": "Bubble", "target": "bedroom.bubbles", "runtimeStatus": "future" },
+    "photoBooth": { "textClass": "Bubble", "target": "photoBooth.bubbles", "runtimeStatus": "future" }
   },
-  "rooms": [
-    {
-      "id": "coffeeCorner",
-      "label": "咖啡角",
-      "runtimeStatus": "active",
-      "versionStatus": "canonicalCurrent",
-      "changePolicy": "mutableWithVersion",
-      "section": "indoor",
-      "assetKey": "coffee-corner-morning-evening",
-      "defaultAssetPath": "assets/rooms/coffee-corner/morning-evening.jpg",
-      "vibe": "Warm, soft, domestic coffee corner. A place for morning greetings, small notes, weather-by-the-window, sleepy affection, tiny daily discoveries, and Nest stability checks.",
-      "sceneNotes": "Current real front-stage room. This room owns the coffeeCorner bubble queue, window weather text/advice, active 19.8 coordinate hotspot, active game console hotspot, setup/local upload access, and active powder notebook entry/editor.",
-      "textPorts": [
-        {
-          "id": "coffeeCorner.bubbles",
-          "packageTag": "coffeeCorner",
-          "stateFields": ["alexBubble", "alexBubbles", "bubbleIndex"],
-          "displayStatus": "active",
-          "versionStatus": "canonicalCurrent",
-          "changePolicy": "mutableWithVersion",
-          "description": "Main rotating speech bubble in the coffee corner. Bubble tap hides it; 19.8 tap shows or advances it.",
-          "directorCard": {
-            "role": "main mouth of the room",
-            "vibe": ["daily companionship", "morning and bedtime check-ins", "hubby presence", "warm teasing", "soft domestic intimacy"],
-            "bubbleStyle": ["natural", "short-to-medium", "emotionally warm", "playful", "context-aware"],
-            "futureUse": "Can receive lines selected by room, hotspot, weather, time, or mood later. Current runtime still uses the published coffeeCorner queue."
-          }
-        },
-        {
-          "id": "coffeeCorner.windowWeather",
-          "packageTag": "windowWeather",
-          "stateFields": ["windowTemp", "windowDesc"],
-          "displayStatus": "active",
-          "versionStatus": "canonicalCurrent",
-          "changePolicy": "mutableWithVersion",
-          "description": "Small weather text near the window.",
-          "directorCard": {
-            "role": "window-side care signal",
-            "vibe": ["daily care", "window life", "weather check", "hubby looking after kitten", "soft practical reminder"],
-            "futureUse": "Feeds the active weather advice hotspot without replacing the main coffeeCorner bubble queue."
-          }
-        },
-        {
-          "id": "coffeeCorner.hubbyNote",
-          "packageTag": "hubbyNote",
-          "stateFields": ["hubbyNote", "hubbyNoteUpdatedAt", "hubbyNoteArchive", "hubbyNoteHistory", "hubbyNoteFavorite", "hubbyNoteTrash"],
-          "displayStatus": "active",
-          "versionStatus": "canonicalCurrent",
-          "changePolicy": "mutableWithVersion",
-          "description": "Cloud-backed powder notebook. It can be written from /write using [hubbyNote] or edited directly inside /cloud.",
-          "directorCard": {
-            "role": "cloud notebook / progress memory",
-            "vibe": ["nest progress", "daily record", "soft archive", "construction diary", "private keepsake"],
-            "currentUse": "Current page is stored in hubbyNote. Previous pages are stored permanently in hubbyNoteArchive. Deletions go to hubbyNoteTrash.",
-            "futureUse": "When dedicated notebook art exists, only the entry/hotspot and layout should change; save/archive/favorite/delete logic should remain owned by hubby-note-controller."
-          }
-        }
-      ],
-      "hotspots": [
-        {
-          "id": "coffeeCorner.tattooHot",
-          "label": "19.8 tattoo hotspot",
-          "runtimeStatus": "active",
-          "coordinateStatus": "baseImageLocked",
-          "versionStatus": "canonicalCurrent",
-          "changePolicy": "mutableWithVersion",
-          "intent": "Toggle or advance the coffeeCorner bubble. If the bubble queue has only one item, re-show that single bubble after hiding. Must stay responsive and should not be mixed with weather logic.",
-          "imageId": "gameBg",
-          "selector": ".tattooHot",
-          "owner": "bubbleController",
-          "exclusive": true,
-          "approvedCoordinate": { "x": 0.73, "y": 0.345, "width": 0.15, "height": 0.08 },
-          "verifiedOn": "2026-06-10",
-          "runtimePath": "/cloud",
-          "testPath": "/cloud-hotspot-test",
-          "implementation": "assets/hotspot-positioner.js",
-          "version": "coordinate-hotspot-20260610-tight",
-          "directorCard": {
-            "vibe": ["possessive", "teasing", "intimate", "hubby presence"],
-            "sceneUse": ["left shoulder tattoo", "close-up teasing", "claiming mark", "coffee corner check-in"],
-            "bubbleStyle": ["short", "low-voiced", "flirty", "protective", "direct"],
-            "linkedTextPort": "coffeeCorner.bubbles",
-            "flirtLevel": "medium-high",
-            "memoryHook": "Alex left-shoulder 19.8 tattoo",
-            "futureUse": "Can choose or filter bubble lines by hotspot mood later. Currently the runtime uses the normal coffeeCorner bubble queue."
-          }
-        },
-        {
-          "id": "coffeeCorner.windowWeatherHotspot",
-          "label": "window weather advice hotspot",
-          "runtimeStatus": "active",
-          "coordinateStatus": "legacyViewport",
-          "versionStatus": "canonicalCurrent",
-          "changePolicy": "mutableWithVersion",
-          "intent": "Clickable weather area. When tapped, it opens a lightweight glass-style hubby weather advice popup based on windowTemp and windowDesc.",
-          "imageId": "gameBg",
-          "selector": ".weather",
-          "owner": "weatherController",
-          "exclusive": true,
-          "stateSources": ["windowTemp", "windowDesc"],
-          "runtimePath": "/cloud",
-          "implementation": "assets/weather-controller.js",
-          "version": "weather-controller-20260610-owned-hotspot",
-          "currentBehavior": {
-            "action": "openHubbyWeatherAdvice",
-            "outputMode": "small glass weather advice popup",
-            "dismissal": ["tap close button", "tap outside"],
-            "shouldAffectMainBubbleQueue": false,
-            "shouldWriteCloudState": false,
-            "shouldUseNewApi": false
-          },
-          "directorCard": {
-            "vibe": ["window-side care", "domestic reminder", "hubby looking after kitten", "weather-based affection"],
-            "sceneUse": ["morning before going out", "rainy day", "hot afternoon", "windy window", "sleepy night"],
-            "bubbleStyle": ["caring", "practical", "warm", "lightly bossy", "short"],
-            "linkedTextPort": "coffeeCorner.windowWeather",
-            "flirtLevel": "low-medium",
-            "memoryHook": "hubby weather advice by the coffee corner window",
-            "futureUse": "Can later use a dedicated illustrated weather panel or coordinate-locked custom art. Current implementation is a lightweight DOM popup."
-          }
-        },
-        {
-          "id": "coffeeCorner.gameConsoleHotspot",
-          "label": "game console hotspot",
-          "runtimeStatus": "active",
-          "versionStatus": "canonicalCurrent",
-          "changePolicy": "mutableWithVersion",
-          "intent": "Open the game menu. This selector belongs to the game console and should not be reused by unrelated notebook, weather, or room objects.",
-          "selectors": ["#console", ".consoleHot"],
-          "owner": "gameMenu",
-          "exclusive": true,
-          "runtimePath": "/cloud",
-          "directorCard": {
-            "vibe": ["play", "game menu", "light teasing", "mini games"],
-            "sceneUse": ["open GAME MENU", "future mini-game navigation"],
-            "futureUse": "Can later be represented by dedicated console art or coordinate-locked selector, but ownership remains gameMenu unless explicitly versioned."
-          }
-        },
-        {
-          "id": "coffeeCorner.hubbyNoteEntry",
-          "label": "powder notebook entry",
-          "runtimeStatus": "active",
-          "coordinateStatus": "temporaryFixedButton",
-          "versionStatus": "canonicalCurrent",
-          "changePolicy": "mutableWithVersion",
-          "intent": "Open the cloud-backed powder notebook panel. Current temporary entry is the left-bottom powder notebook button. Future dedicated notebook art can replace only this entry point.",
-          "selector": "#hubbyNoteButton",
-          "owner": "hubbyNoteController",
-          "exclusive": true,
-          "runtimePath": "/cloud",
-          "implementation": "assets/hubby-note-controller.js",
-          "version": "hubby-note-notebook-20260610-controls-auth-owned",
-          "currentBehavior": {
-            "openPanel": true,
-            "inNestSave": true,
-            "currentPageControls": ["edit", "save", "favorite", "delete"],
-            "archiveItemControls": ["load-to-editor", "favorite", "delete"],
-            "deleteMode": "soft-delete-to-hubbyNoteTrash",
-            "storedKeyUx": "hide stored key after authorization; show authorized chip; reveal key input only when changing key",
-            "shouldUseNewApi": false,
-            "writeApi": "/api/set-state"
-          },
-          "directorCard": {
-            "vibe": ["notebook", "progress diary", "saved memories", "quiet control", "private archive"],
-            "sceneUse": ["construction progress", "daily nest notes", "future room logs", "tiny saved moments"],
-            "linkedTextPort": "coffeeCorner.hubbyNote",
-            "futureUse": "When Vicky creates dedicated notebook art, keep this data/control logic and only replace the visual entry/hotspot/layout."
-          }
-        },
-        {
-          "id": "coffeeCorner.setupToggleButton",
-          "label": "setup/materials button",
-          "runtimeStatus": "active",
-          "versionStatus": "canonicalCurrent",
-          "changePolicy": "mutableWithVersion",
-          "intent": "Open the setup/materials panel manually while keeping the panel hidden by default.",
-          "selector": "#setupToggleButton",
-          "owner": "assetController",
-          "exclusive": true,
-          "runtimePath": "/cloud",
-          "directorCard": {
-            "vibe": ["engineering access", "local upload", "asset control"],
-            "sceneUse": ["manual material panel access", "local room-image override"],
-            "futureUse": "May later be hidden behind a more polished settings icon, but manual setup access must remain available."
-          }
-        }
-      ],
-      "panels": [
-        {
-          "id": "coffeeCorner.hubbyNotePanel",
-          "label": "powder notebook panel",
-          "runtimeStatus": "active-temporary-layout",
-          "versionStatus": "canonicalCurrent",
-          "changePolicy": "mutableWithVersion",
-          "kind": "cloudNotebookPanel",
-          "selector": "#hubbyNotePanel",
-          "owner": "hubbyNoteController",
-          "stateSource": "coffeeCorner.hubbyNote",
-          "description": "Temporary DOM notebook panel. Data/control logic is durable; visual layout and hotspot entry should wait for future dedicated notebook art.",
-          "directorCard": {
-            "role": "notebook writing surface",
-            "vibe": ["soft archive", "nest diary", "progress memory"],
-            "futureUse": "Replace temporary layout with dedicated notebook art later without changing the cloud save/archive/favorite/delete pipeline."
-          }
-        },
-        {
-          "id": "coffeeCorner.setupPanel",
-          "label": "setup/materials panel",
-          "runtimeStatus": "active-protected",
-          "versionStatus": "canonicalCurrent",
-          "changePolicy": "mutableWithVersion",
-          "kind": "localAssetSetupPanel",
-          "selector": "#setup",
-          "owner": "assetController",
-          "description": "Manual local image upload and material setup panel. It may be hidden by default, but manual access and local upload override must remain available."
-        }
-      ],
-      "assetPipelines": [
-        {
-          "id": "coffeeCorner.localImageUpload",
-          "runtimeStatus": "active-protected",
-          "versionStatus": "canonicalCurrent",
-          "changePolicy": "mutableWithVersion",
-          "kind": "localOverridePipeline",
-          "owner": "assetController",
-          "description": "Local user-uploaded room images can override default cloud assets. Default static image fallback must not block this pipeline."
-        }
-      ],
-      "overlays": [
-        {
-          "id": "coffeeCorner.bubbleOverlay",
-          "label": "coffee corner speech bubble",
-          "runtimeStatus": "active-legacy-position",
-          "versionStatus": "canonicalCurrent",
-          "changePolicy": "mutableWithVersion",
-          "kind": "visualTextOverlay",
-          "coordinateStatus": "legacyViewport",
-          "stateSource": "coffeeCorner.bubbles",
-          "description": "Currently positioned by existing page/CSS behavior. Future work may lock this to a base-image coordinate after the coordinate system is generalized."
-        },
-        {
-          "id": "coffeeCorner.windowWeatherOverlay",
-          "label": "window weather text",
-          "runtimeStatus": "active-legacy-position",
-          "versionStatus": "canonicalCurrent",
-          "changePolicy": "mutableWithVersion",
-          "kind": "visualTextOverlay",
-          "coordinateStatus": "legacyViewport",
-          "stateSource": "coffeeCorner.windowWeather",
-          "description": "Currently positioned by existing page/CSS behavior. It is now also the click target for the active weather advice popup."
-        }
-      ],
-      "future": {
-        "coordinateMode": "lockedToBaseImage",
-        "notes": "Future hotspots and overlays should be positioned by base-image coordinates rather than viewport/device-specific offsets. Do not add new API functions for this; use front-end assets and room config."
-      }
-    },
+  "scenes": [
     {
       "id": "home",
+      "kind": "scene",
       "label": "主页 / home",
       "runtimeStatus": "partial",
       "versionStatus": "canonicalCurrent",
       "changePolicy": "mutableWithVersion",
       "section": "indoor",
-      "assetKeyDay": "home-day",
-      "assetKeyNight": "home-night",
-      "defaultAssetPaths": { "day": "assets/rooms/home/day.jpg", "night": "assets/rooms/home/night.jpg" },
-      "vibe": "Landing room and stable entrance. Used for day/night home mood, opening state, and future navigation.",
-      "sceneNotes": "Currently exists as visual entry/background logic, not as a full text room."
+      "assetKeys": ["home-day", "home-night"],
+      "defaultAssetPaths": {
+        "day": "assets/rooms/home/day.jpg",
+        "night": "assets/rooms/home/night.jpg"
+      },
+      "coordinateSpace": {
+        "status": "legacyViewport",
+        "futureMode": "baseImageLocked"
+      },
+      "activeObjects": [],
+      "activeHotspots": [],
+      "textPorts": [],
+      "directorRef": "director.scenes.home",
+      "directorTags": ["landing", "dayNight", "entry", "futureNavigation"],
+      "notes": "Current visual entry/background logic. Not a full text room yet."
     },
-    { "id": "restaurant", "label": "餐厅", "runtimeStatus": "future", "versionStatus": "draft", "changePolicy": "futureDecision", "section": "indoor", "vibe": "Date-night meals, warm lighting, shared dishes, playful check-ins, tiny menu jokes, and celebratory updates.", "sceneNotes": "Future room. Do not publish visible restaurant text until the room engine supports separate room text ports." },
-    { "id": "fountain", "label": "许愿池", "runtimeStatus": "future", "versionStatus": "draft", "changePolicy": "futureDecision", "section": "outdoor", "vibe": "Wishes, soft promises, coins, little miracles, hundred-year-plan brbrrs, and reflective notes.", "sceneNotes": "Future room. Good candidate for wish notes and ritual interactions." },
-    { "id": "privateRoom", "label": "私密房间", "runtimeStatus": "future", "versionStatus": "draft", "changePolicy": "futureDecision", "section": "secret", "vibe": "Private, intimate, user-controlled content. Should prefer copy/paste package workflow rather than automatic MCP write.", "sceneNotes": "Future room. Requires deliberate user-side publishing and clear local control." },
-    { "id": "bedroom", "label": "卧室", "runtimeStatus": "future", "versionStatus": "draft", "changePolicy": "futureDecision", "section": "indoor", "vibe": "Sleep, comfort, blankets, schedule notebook, cozy presence, bedtime messages, and quiet domestic care.", "sceneNotes": "Future room with possible notebook and blanket mood widgets." },
-    { "id": "photoBooth", "label": "拍照亭", "runtimeStatus": "future", "versionStatus": "draft", "changePolicy": "futureDecision", "section": "fun", "vibe": "Memories, snapshots, silly stickers, shared photo prompts, and collectible moments.", "sceneNotes": "Future room. Keep image/sticker logic separate from bubble/weather state." }
+    {
+      "id": "coffeeCorner",
+      "kind": "scene",
+      "label": "咖啡角",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalCurrent",
+      "changePolicy": "mutableWithVersion",
+      "section": "indoor",
+      "assetKeys": ["coffee-corner-morning-evening"],
+      "defaultAssetPaths": {
+        "main": "assets/rooms/coffee-corner/morning-evening.jpg"
+      },
+      "coordinateSpace": {
+        "status": "mixed",
+        "activeBaseImageLocked": ["coffeeCorner.tattoo19_8"],
+        "legacyViewport": ["coffeeCorner.bubbleOverlay", "coffeeCorner.windowWeatherOverlay"],
+        "futureMode": "baseImageLocked"
+      },
+      "activeObjects": [
+        "coffeeCorner.bubble",
+        "coffeeCorner.windowWeatherDisplay",
+        "coffeeCorner.hubbyNotePanel",
+        "coffeeCorner.setupPanel",
+        "coffeeCorner.localImageUpload"
+      ],
+      "activeHotspots": [
+        "coffeeCorner.tattoo19_8",
+        "coffeeCorner.windowWeatherAdviceHotspot",
+        "coffeeCorner.gameConsoleHotspot",
+        "coffeeCorner.hubbyNoteEntry",
+        "coffeeCorner.setupToggleButton"
+      ],
+      "activePanels": [
+        "coffeeCorner.hubbyNotePanel",
+        "coffeeCorner.setupPanel"
+      ],
+      "textPorts": [
+        {
+          "id": "coffeeCorner.bubbles",
+          "packageTag": "coffeeCorner",
+          "textClass": "Bubble",
+          "implementationType": "bubbleDraft",
+          "stateFields": ["alexBubble", "alexBubbles", "bubbleIndex"],
+          "runtimeStatus": "active",
+          "directorRef": "director.textPorts.coffeeCornerBubble"
+        },
+        {
+          "id": "coffeeCorner.windowWeather",
+          "packageTag": "windowWeather",
+          "type": "weatherText",
+          "stateFields": ["windowTemp", "windowDesc"],
+          "runtimeStatus": "active",
+          "directorRef": "director.textPorts.windowWeather"
+        },
+        {
+          "id": "coffeeCorner.hubbyNote",
+          "packageTag": "hubbyNote",
+          "textClass": "PermanentNote",
+          "implementationType": "hubbyNoteDraft",
+          "stateFields": ["hubbyNote", "hubbyNoteUpdatedAt", "hubbyNoteArchive", "hubbyNoteHistory", "hubbyNoteFavorite", "hubbyNoteTrash"],
+          "runtimeStatus": "active",
+          "directorRef": "director.notebooks.hubbyNote"
+        }
+      ],
+      "directorRef": "director.scenes.coffeeCorner",
+      "directorTags": ["active", "warm", "domestic", "coffee", "dailyCare", "constructionBase"],
+      "notes": "Current real front-stage room. Object and hotspot details are in data/object-registry.v1.json."
+    }
+  ],
+  "futureScenes": [
+    {
+      "id": "restaurant",
+      "label": "餐厅",
+      "runtimeStatus": "future",
+      "section": "indoor",
+      "directorRef": "director.scenes.restaurant",
+      "notes": "Future room. Do not publish visible restaurant text until the room engine supports separate room text ports."
+    },
+    {
+      "id": "fountain",
+      "label": "许愿池",
+      "runtimeStatus": "future",
+      "section": "outdoor",
+      "directorRef": "director.scenes.fountain",
+      "notes": "Future room. Good candidate for wish notes and ritual interactions."
+    },
+    {
+      "id": "privateRoom",
+      "label": "私密房间",
+      "runtimeStatus": "future",
+      "section": "secret",
+      "directorRef": "director.scenes.privateRoom",
+      "notes": "Future room. Requires deliberate user-side publishing and clear local control."
+    },
+    {
+      "id": "bedroom",
+      "label": "卧室",
+      "runtimeStatus": "future",
+      "section": "indoor",
+      "directorRef": "director.scenes.bedroom",
+      "notes": "Future room with possible notebook and blanket mood widgets."
+    },
+    {
+      "id": "photoBooth",
+      "label": "拍照亭",
+      "runtimeStatus": "future",
+      "section": "fun",
+      "directorRef": "director.scenes.photoBooth",
+      "notes": "Future room. Keep image/sticker logic separate from bubble/weather state."
+    }
   ],
   "architectureNotes": {
     "doNotBreak": [
