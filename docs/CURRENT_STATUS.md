@@ -1,6 +1,6 @@
 # Current Status
 
-Updated: 2026-06-10
+Updated: 2026-06-11
 
 ## Stable workflow
 
@@ -28,6 +28,7 @@ Updated: 2026-06-10
 - The game console hotspot remains the GAME MENU entry.
 - The setup/materials panel is hidden by default but has a manual entry button and must remain available.
 - Local image upload remains an active protected override pipeline.
+- The screen-home PWA canvas black-edge issue is fixed by the `100lvh` canvas baseline in `assets/canvas-fill.css`.
 
 ## Verified behavior
 
@@ -48,6 +49,8 @@ Updated: 2026-06-10
 - Notebook deletion is soft-delete into `hubbyNoteTrash`, not permanent destruction.
 - Stored Nest key is hidden in the notebook panel after authorization; the panel shows an authorized chip and only reveals key input when changing key.
 - The setup/materials panel can be opened manually and closed; default hiding must not seal local upload.
+- The old screen-home PWA now renders the coffee-corner canvas full-screen with the `100lvh` canvas test path.
+- Safari/web may still show browser-toolbar overlay artifacts near the bottom; the primary target is the screen-home PWA.
 - Old cached `/write` pages that accidentally send `[hubbyNote]` as a bubble are protected by `api/set-state.js`, which reroutes the write into the notebook fields instead of polluting the bubble queue.
 
 Approved 19.8 coordinate hotspot:
@@ -66,6 +69,25 @@ coordinateStatus: baseImageLocked
 versionStatus: canonicalCurrent
 changePolicy: mutableWithVersion
 ```
+
+## Canvas baseline
+
+The current screen-home PWA canvas baseline is:
+
+```text
+assets/canvas-fill.css
+height: 100vh
+height: 100dvh
+height: 100lvh
+```
+
+Successful test path:
+
+```text
+https://kitten-nest-lab.vercel.app/cloud?v=0611-canvas-lvh-test
+```
+
+Do not tune clock/overlay coordinates against older black-edge canvas states. Future coordinate work should use the `100lvh` baseline.
 
 ## Vercel Hobby function limit
 
@@ -90,6 +112,7 @@ api/registry.js
 - Keep `/cloud` deployable under the Vercel Hobby function limit.
 - Keep the coffee-corner bubble flow stable.
 - Keep the tight 19.8 coordinate hotspot stable.
+- Keep the successful `100lvh` PWA canvas baseline stable.
 - Keep window weather working.
 - Keep weather advice popup working.
 - Keep powder notebook current note, permanent archive, in-nest editor, favorite/delete controls, trash, and key hiding working.
