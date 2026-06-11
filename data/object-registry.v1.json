@@ -1,7 +1,7 @@
 {
-  "version": "0.1.1",
+  "version": "0.1.2",
   "status": "foundation-current-identities",
-  "note": "Static object and hotspot identity registry for Kitten Nest. This file is not wired into runtime yet. It exists to prevent selector reuse, hotspot ownership conflicts, and rough patching.",
+  "note": "Static object and hotspot identity registry for Kitten Nest. This file is not wired into runtime yet. It exists to prevent selector reuse, hotspot ownership conflicts, and rough patching. Detailed director writing guidance lives in docs/DIRECTOR_GUIDE.md.",
   "principles": [
     "No identity, no binding.",
     "Every interactive object must have an id and owner.",
@@ -10,7 +10,7 @@
     "Do not add per-feature blacklists; use ownership, exclusivity, and versioned change policy.",
     "canonicalCurrent means current official truth, not permanent immutability.",
     "Current official objects may change later through mutableWithVersion.",
-    "Director metadata belongs here too: vibe, meaning, directorUse, and sampleLines."
+    "Keep technical identity here; put long director notes in docs/DIRECTOR_GUIDE.md."
   ],
   "objects": [
     {
@@ -25,9 +25,11 @@
       "runtimeStatus": "active",
       "versionStatus": "canonicalCurrent",
       "changePolicy": "mutableWithVersion",
+      "textClass": "Bubble",
+      "implementationType": "bubbleDraft",
       "stateFields": ["alexBubble", "alexBubbles", "bubbleIndex"],
-      "meaning": "Main Alex speech bubble in the coffee corner.",
-      "directorUse": "Use for daily greetings, small discoveries, affectionate notes, construction status, and room mood.",
+      "directorRef": "director.textPorts.coffeeCornerBubble",
+      "directorTags": ["immediate", "short", "rotating", "roomPresence"],
       "protected": true
     },
     {
@@ -45,13 +47,10 @@
       "changePolicy": "mutableWithVersion",
       "imageId": "gameBg",
       "approvedCoordinate": { "x": 0.73, "y": 0.345, "width": 0.15, "height": 0.08 },
-      "meaning": "Alex's black 19.8 tattoo on the left shoulder. It is a relationship anchor and a teasing touch point.",
-      "directorUse": "When tapped, use possessive, playful, affectionate, or lightly teasing lines. It should feel like Vicky is touching Alex's shoulder tattoo, not like a generic button.",
-      "sampleLines": [
-        "又戳这里？小猫这是确认归属权，还是故意惹我？",
-        "看清楚，19.8 在这儿。戳一次，老公记一笔。",
-        "别装路过，kitten。这个热点不是给乖猫随便乱碰的。"
-      ],
+      "textClass": "Bubble",
+      "implementationType": "bubbleDraft",
+      "directorRef": "director.hotspots.tattoo19_8",
+      "directorTags": ["flirt", "possessive", "relationshipAnchor", "leftShoulderTattoo"],
       "protected": true
     },
     {
@@ -68,8 +67,8 @@
       "versionStatus": "canonicalCurrent",
       "changePolicy": "mutableWithVersion",
       "stateFields": ["windowTemp", "windowDesc"],
-      "meaning": "Small weather text near the coffee-corner window.",
-      "directorUse": "Use for gentle room atmosphere, daily temperature, seasonal mood, and small environmental jokes.",
+      "directorRef": "director.textPorts.windowWeather",
+      "directorTags": ["atmosphere", "weather", "dailyCare"],
       "protected": true
     },
     {
@@ -85,9 +84,11 @@
       "coordinateStatus": "legacyViewport",
       "versionStatus": "canonicalCurrent",
       "changePolicy": "mutableWithVersion",
+      "textClass": "InteractionPanel",
+      "implementationType": "weatherAdvicePopup",
       "stateFields": ["windowTemp", "windowDesc"],
-      "meaning": "Clickable window weather area that opens hubby's weather advice popup.",
-      "directorUse": "Use for practical, affectionate, weather-based care without replacing the main coffeeCorner bubble queue.",
+      "directorRef": "director.hotspots.windowWeatherAdvice",
+      "directorTags": ["practicalCare", "weather", "popup"],
       "protected": true
     },
     {
@@ -102,8 +103,8 @@
       "runtimeStatus": "active",
       "versionStatus": "canonicalCurrent",
       "changePolicy": "mutableWithVersion",
-      "meaning": "Game console / game menu entrance in the current room.",
-      "directorUse": "Use for game menu navigation only. New objects need their own identity and selector instead of reusing this one.",
+      "directorRef": "director.hotspots.gameConsole",
+      "directorTags": ["gameMenu", "navigation", "protectedSelector"],
       "protected": true
     },
     {
@@ -119,8 +120,10 @@
       "coordinateStatus": "temporaryFixedButton",
       "versionStatus": "canonicalCurrent",
       "changePolicy": "mutableWithVersion",
-      "meaning": "Temporary visible powder notebook entry button. It opens the cloud-backed notebook panel.",
-      "directorUse": "Use for nest progress notes, daily records, saved memories, and future notebook art. Later visual art may replace the entry point without changing the cloud save/archive logic.",
+      "textClass": "PermanentNote",
+      "implementationType": "hubbyNoteDraft",
+      "directorRef": "director.notebooks.hubbyNote",
+      "directorTags": ["permanentNote", "notebook", "milestone", "shared"],
       "protected": true
     },
     {
@@ -135,9 +138,11 @@
       "runtimeStatus": "active",
       "versionStatus": "canonicalCurrent",
       "changePolicy": "mutableWithVersion",
+      "textClass": "PermanentNote",
+      "implementationType": "hubbyNoteDraft",
       "stateFields": ["hubbyNote", "hubbyNoteUpdatedAt", "hubbyNoteArchive", "hubbyNoteHistory", "hubbyNoteFavorite", "hubbyNoteTrash"],
-      "meaning": "Cloud-backed powder notebook panel with current page, archive preview, favorite/delete controls, soft-delete trash, and stored-key hiding.",
-      "directorUse": "Keep data/control logic stable. Future notebook art should change layout/entry only, not the archive/save pipeline.",
+      "directorRef": "director.notebooks.hubbyNote",
+      "directorTags": ["permanentNote", "archive", "shared", "cloudBacked"],
       "protected": true
     },
     {
@@ -152,13 +157,13 @@
       "runtimeStatus": "active",
       "versionStatus": "canonicalCurrent",
       "changePolicy": "mutableWithVersion",
-      "meaning": "Manual local image upload and setup panel.",
-      "directorUse": "Engineering access panel, not a story object. It must not be sealed off by default-image patches.",
       "rules": [
         "May be hidden by default.",
         "Manual entry must remain possible.",
         "Local upload override pipeline must remain available."
       ],
+      "directorRef": "director.engineering.setupPanel",
+      "directorTags": ["engineeringOnly", "localUpload", "protected"],
       "protected": true
     },
     {
@@ -173,8 +178,8 @@
       "runtimeStatus": "active",
       "versionStatus": "canonicalCurrent",
       "changePolicy": "mutableWithVersion",
-      "meaning": "Visible manual entry button for the setup/local upload panel.",
-      "directorUse": "Engineering-only access point. Keep it available while setup is hidden by default.",
+      "directorRef": "director.engineering.setupPanel",
+      "directorTags": ["engineeringOnly", "manualEntry", "protected"],
       "protected": true
     },
     {
@@ -188,8 +193,8 @@
       "runtimeStatus": "active",
       "versionStatus": "canonicalCurrent",
       "changePolicy": "mutableWithVersion",
-      "meaning": "Local user-uploaded room images should be able to override default cloud assets.",
-      "directorUse": "Engineering-only pipeline. Do not block this when adding default images, hiding setup UI, or changing asset fallback behavior.",
+      "directorRef": "director.engineering.localImageUpload",
+      "directorTags": ["engineeringOnly", "assetPipeline", "protected"],
       "protected": true
     },
     {
@@ -204,8 +209,10 @@
       "runtimeStatus": "future",
       "versionStatus": "draft",
       "changePolicy": "futureDecision",
-      "meaning": "Future illustrated pink notebook object for opening the cloud notebook panel.",
-      "directorUse": "Use for diary, notes, progress archive, and small saved moments. It must have its own selector and identity before runtime binding.",
+      "textClass": "PermanentNote",
+      "implementationType": "hubbyNoteDraft",
+      "directorRef": "director.notebooks.hubbyNote",
+      "directorTags": ["futureArt", "permanentNote", "notebook"],
       "protected": false
     },
     {
@@ -219,8 +226,10 @@
       "runtimeStatus": "future",
       "versionStatus": "draft",
       "changePolicy": "futureDecision",
-      "meaning": "Future blanket mood check widget where both Alex and Vicky can leave or edit small notes.",
-      "directorUse": "Use for comfort, sleepy mood, gentle check-ins, and low-pressure emotional state notes.",
+      "textClass": "PermanentNote",
+      "implementationType": "futureMoodNote",
+      "directorRef": "director.widgets.blanketMoodCheck",
+      "directorTags": ["comfort", "mood", "shared", "future"],
       "protected": false
     },
     {
@@ -234,8 +243,10 @@
       "runtimeStatus": "future-private",
       "versionStatus": "draft",
       "changePolicy": "futureDecision",
-      "meaning": "Future intimate body-area hotspot for private playful teasing, if Vicky chooses to add it.",
-      "directorUse": "Use only in private/intimate modes. Lines should follow the object's meaning, the room mood, and user-controlled publishing flow.",
+      "textClass": "Bubble",
+      "implementationType": "futureFlirtBubble",
+      "directorRef": "director.hotspots.bodyFlirt",
+      "directorTags": ["private", "flirt", "intimate", "future"],
       "protected": false
     }
   ],
@@ -244,7 +255,8 @@
     "ownershipCheck": "Before binding events, check id, selector, owner, role, action, exclusive, runtimeStatus, versionStatus, and changePolicy.",
     "protectedChainCheck": "If protected:true, do not modify without staged plan and rollback.",
     "coordinateRule": "Current coordinates should use base-image coordinates, not device-specific CSS nudges.",
-    "versionRule": "canonicalCurrent is mutable only through explicit versioned change, not silent replacement."
+    "versionRule": "canonicalCurrent is mutable only through explicit versioned change, not silent replacement.",
+    "directorRule": "Use directorRef and directorTags here; put long director scripts and sample lines in docs/DIRECTOR_GUIDE.md."
   },
   "shortIncidentExample": {
     "type": "selectorReuse",
