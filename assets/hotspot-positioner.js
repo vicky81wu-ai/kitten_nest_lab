@@ -27,10 +27,38 @@
     }
   };
 
+  var overlayCards = {
+    'home.clockHandsOverlay': {
+      id: 'home.clockHandsOverlay',
+      label: 'clock hands overlay',
+      roomId: 'home',
+      imageId: 'homeOn',
+      selector: '.clock',
+      coordinateMode: 'lockedToBaseImage',
+      coordinate: {
+        x: 0.2108,
+        y: 0.3353,
+        width: 0.312,
+        aspectRatio: 1
+      },
+      runtimeStatus: 'active',
+      directorNotes: {
+        type: 'decorative overlay, not hotspot',
+        alignmentTarget: 'painted clock face center on home background',
+        approvedFrom: 'Vicky visual inspection after micro-adjustment'
+      }
+    }
+  };
+
   var defaultHotspotId = 'coffeeCorner.tattooHot';
+  var defaultOverlayId = 'home.clockHandsOverlay';
 
   function getCard(id){
     return hotspotCards[id || defaultHotspotId] || null;
+  }
+
+  function getOverlayCard(id){
+    return overlayCards[id || defaultOverlayId] || null;
   }
 
   function coverBox(img){
@@ -98,14 +126,54 @@
     return true;
   }
 
+  function applyOverlayCard(card){
+    if(!card || !card.coordinate) return false;
+    var img = document.getElementById(card.imageId);
+    var overlay = document.querySelector(card.selector);
+    var box = coverBox(img);
+    if(!img || !overlay || !box) return false;
+
+    var point = card.coordinate;
+    var parent = overlay.offsetParent || document.body;
+    var parentRect = parent.getBoundingClientRect();
+    var w = box.width * point.width;
+    var ratio = point.aspectRatio || 1;
+    var h = w / ratio;
+    var cx = box.left + point.x * box.width;
+    var cy = box.top + point.y * box.height;
+
+    overlay.style.left = (cx - parentRect.left - w / 2) + 'px';
+    overlay.style.top = (cy - parentRect.top - h / 2) + 'px';
+    overlay.style.right = 'auto';
+    overlay.style.bottom = 'auto';
+    overlay.style.width = w + 'px';
+    overlay.style.height = h + 'px';
+    overlay.setAttribute('data-coordinate-overlay', card.id);
+    overlay.setAttribute('data-overlay-label', card.label || card.id);
+
+    if(new URLSearchParams(location.search).get('debugOverlay') === '1'){
+      overlay.style.outline = '2px solid rgba(80,160,255,.85)';
+      overlay.style.background = 'rgba(80,160,255,.10)';
+    }
+
+    return true;
+  }
+
   function apply(id){
     return applyCard(getCard(id));
+  }
+
+  function applyOverlay(id){
+    return applyOverlayCard(getOverlayCard(id));
   }
 
   function applyAll(){
     var ok = false;
     Object.keys(hotspotCards).forEach(function(id){
-      ok = apply(id) || ok;
+      ok = applyCard(hotspotCards[id]) || ok;
+    });
+    Object.keys(overlayCards).forEach(function(id){
+      ok = applyOverlayCard(overlayCards[id]) || ok;
     });
     return ok;
   }
@@ -123,13 +191,18 @@
   }
 
   window.KittenNestHotspots = {
-    version: 'coordinate-hotspot-card-20260610-vibe-metadata',
+    version: 'coordinate-hotspot-overlay-card-20260611-clock-base-image-1',
     cards: hotspotCards,
+    overlayCards: overlayCards,
     defaultHotspotId: defaultHotspotId,
+    defaultOverlayId: defaultOverlayId,
     getCard: getCard,
+    getOverlayCard: getOverlayCard,
     coverBox: coverBox,
     apply: apply,
+    applyOverlay: applyOverlay,
     applyCard: applyCard,
+    applyOverlayCard: applyOverlayCard,
     applyAll: applyAll,
     start: start
   };
