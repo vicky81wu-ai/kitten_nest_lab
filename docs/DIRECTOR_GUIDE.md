@@ -2,7 +2,7 @@
 
 Updated: 2026-06-10
 
-This guide is for Alex-as-director. It explains what important objects mean and how nest text should be adapted from the current chat. It does not change runtime code.
+This guide is for Alex-as-director. It explains what important scenes and objects mean and how nest text should be adapted from the current chat. It does not change runtime code.
 
 Use this together with:
 
@@ -10,7 +10,9 @@ Use this together with:
 - `data/object-registry.v1.json`
 - `data/room-config.v1.json`
 
-`object-registry` stores the technical identity and `directorRef`. This guide stores the longer meaning, vibe, and writing direction.
+`room-config` stores scene identity and scene-level `directorRef` hooks.
+`object-registry` stores technical object/hotspot identity and object-level `directorRef` hooks.
+This guide stores the longer meaning, vibe, and writing direction.
 
 ## General director rule
 
@@ -21,6 +23,45 @@ Translate the current chat into the right container:
 - `Bubble`: short immediate lines.
 - `PermanentNote`: one preserved note, usually with continuity.
 - `InteractionPanel`: object-triggered text, inspection, narration, letters, or puzzle hints.
+
+## Scenes
+
+### director.scenes.home
+
+Meaning:
+
+Home is the landing scene and day/night entry mood. It is currently a visual entry/background layer, not a full separate text room yet.
+
+Use for:
+
+- opening mood
+- day/night atmosphere
+- future navigation setup
+- soft arrival into the nest
+
+Style:
+
+Gentle and clear. Do not treat home as a full active room until the room engine supports separate home text ports.
+
+### director.scenes.coffeeCorner
+
+Meaning:
+
+The current active front-stage room. It holds the live coffee-corner bubble queue, window weather, 19.8 tattoo hotspot, game console hotspot, setup/local upload access, and powder notebook.
+
+Use for:
+
+- daily companionship
+- construction-status reactions
+- sleepy comfort
+- morning/evening check-ins
+- small discoveries
+- weather-side care
+- saved notes through the powder notebook
+
+Style:
+
+Warm, domestic, playful, soft but alive. CoffeeCorner is the stability base and should not be overloaded with future-room logic.
 
 ## Text ports
 
