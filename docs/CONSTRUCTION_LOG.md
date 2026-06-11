@@ -143,6 +143,31 @@ No identity, no binding.
 - `canonicalCurrent` means current official truth, while `mutableWithVersion` allows future versioned changes.
 - Short lesson kept as a specimen: a notebook entry once reused the game console selector and took over the game menu. The long-term fix is not a blacklist; it is identity, ownership, and exclusivity.
 
+### PWA bottom black edge investigation
+
+- Current symptom: screen-home PWA can show a persistent bottom black edge. The same bottom edge can appear with default assets and with a locally uploaded horizontal image.
+- This means the black edge is probably not caused by the default coffee-corner image path or by one specific image aspect ratio.
+- Failed patch paths already tried:
+
+```text
+bottom overscan / extending the canvas downward
+warm-color visual fallback strip
+html/body background-image safe-area fallback
+```
+
+- These approaches did not remove the visible black edge and should not be repeated as blind patches.
+- Next investigation should treat this as a canvas/PWA viewport issue:
+
+```text
+viewport meta / viewport-fit=cover
+PWA display mode and safe-area behavior
+actual drawable WebView height
+#app / .screen / .room / .bg height ownership
+whether local upload and default image use the same display layer
+```
+
+- Do not tune clock/overlay coordinates until the canvas black-edge issue is understood or deliberately accepted.
+
 ### Current protected areas
 
 - Keep the daily `/write` package workflow stable.
