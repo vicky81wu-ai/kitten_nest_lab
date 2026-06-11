@@ -70,3 +70,8 @@ body.cloudDefaultAssets #setup{
   overflow:auto;
   -webkit-overflow-scrolling:touch;
 }
+
+body.cloudDefaultAssets .clock{
+  left:2.95%!important;
+  top:27.25%!important;
+}
