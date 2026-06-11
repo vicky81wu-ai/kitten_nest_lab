@@ -1,53 +1,29 @@
 # Construction Log
 
-## 2026-06-10
+## 2026-06-10 / 2026-06-11 core construction record
 
-### Stable work completed
+This log is not a full incident diary. It keeps the important construction path, failed paths that should not be repeated, and the current protected baseline.
 
-- `/write` now has a clearer daily package workflow.
-- The main daily box is labeled as the normal entry.
-- Debug and emergency direct-write areas are visually weaker.
-- `[coffeeCorner]` package lines publish to the rotating bubble list.
-- `[windowWeather]` package lines publish to the weather display fields.
-- `[hubbyNote]` package blocks publish to the cloud powder notebook.
-- Coffee-corner bubble publishing has been manually verified.
-- Window weather has been manually verified.
-- Powder notebook display has been manually verified.
-- `data/room-config.v1.json` was added as a foundation-only room map.
-- `PROJECT_STATUS.md` was added as the top-level project handoff summary for new construction windows.
-- `docs/CODEX_CLEANUP_PLAN.md` was added as the cleanup brake before future feature work.
+## Stable foundation
 
-### Controller collection completed before the deploy incident
-
-- `assets/state-client.js` exists as a shared front-end state reader.
-- `assets/weather-controller.js` exists for window weather and weather advice popup behavior.
-- `assets/asset-controller.js` exists for default assets and setup hiding.
-- `assets/bubble-controller.js` exists for bubble show/hide/next logic.
-- `assets/hubby-note-controller.js` exists for the cloud powder notebook popup.
-- These controllers have been tested in layers. Current cleanup mode is to make each line own its behavior clearly and remove extra guard scripts only after verification.
-
-### Coordinate hotspot work
-
-- `assets/coordinate-controller.js` was added for coordinate marker debugging.
-- `assets/hotspot-positioner.js` was added for base-image coordinate hotspot positioning.
-- Vicky approved the tight 19.8 hotspot:
+- `/write` remains the phone-friendly publishing console.
+- Active update tags:
 
 ```text
-x = 0.73
-y = 0.345
-width = 0.15
-height = 0.08
+[coffeeCorner]  -> rotating bubble queue
+[windowWeather] -> windowTemp / windowDesc
+[hubbyNote]     -> cloud powder notebook current page + archive
 ```
 
-- `/cloud` now routes through `api/app-coords.js`.
-- The tight 19.8 coordinate hotspot is active on `/cloud`.
-- `/cloud-hotspot-test` remains available as the test line.
-- `/cloud-coords` remains available as the marker/debug line.
-- The 19.8 coordinate is now treated as `canonicalCurrent` and `mutableWithVersion`: current official truth, not permanent immutability.
+- `/cloud` is the official live nest entry.
+- `/cloud-hotspot-test` remains available for hotspot testing.
+- `/cloud-coords` remains available for coordinate marker debugging.
+- `PROJECT_STATUS.md` is the read-first handoff file for new construction windows.
+- `docs/CODEX_CLEANUP_PLAN.md` is the brake before future feature expansion.
 
-### Vercel Hobby function-limit incident
+## Vercel Hobby function-limit incident
 
-Vercel failed deployments with:
+Vercel failed with:
 
 ```text
 No more than 12 Serverless Functions can be added to a Deployment on the Hobby plan.
@@ -62,13 +38,67 @@ Do not keep adding api/*.js wrappers.
 Actions taken:
 
 - Removed `api/room-asset.js`.
-- Updated `api/app-assets.js` to use static `/assets/rooms/...` image paths directly.
-- Removed `api/registry.js` because it was not required for current `/cloud`, `/write`, coffeeCorner bubbles, windowWeather, or 19.8 behavior.
-- Deployment returned to Vercel success after these removals.
+- Replaced the static image proxy with direct `/assets/rooms/...` paths.
+- Removed `api/registry.js` because runtime did not need it.
 
-### Single-bubble hotspot fix
+Current direction:
 
-After `/write` published a one-line `[coffeeCorner]` package, the bubble updated but the 19.8 hotspot did not re-show it after hiding.
+```text
+static assets + front-end controllers + JSON config + few shared APIs
+```
+
+## Controller collection state
+
+Current controller foundation:
+
+```text
+assets/state-client.js
+assets/weather-controller.js
+assets/asset-controller.js
+assets/bubble-controller.js
+assets/hubby-note-controller.js
+```
+
+Cleanup principle:
+
+```text
+same behavior
+fewer owners
+no new API
+one line at a time
+```
+
+## 19.8 coordinate hotspot
+
+Approved tight 19.8 hotspot:
+
+```text
+x = 0.73
+y = 0.345
+width = 0.15
+height = 0.08
+```
+
+Status:
+
+```text
+runtimeStatus: active
+coordinateStatus: baseImageLocked
+versionStatus: canonicalCurrent
+changePolicy: mutableWithVersion
+```
+
+Meaning: this is the current official version, but it can be adjusted later through an explicit versioned change.
+
+Important: future clock/overlay/hotspot coordinate tuning must use the successful `100lvh` canvas baseline, not older black-edge states.
+
+## Single-bubble 19.8 fix
+
+Problem:
+
+```text
+After a one-line [coffeeCorner] package, tapping 19.8 did not re-show the hidden bubble.
+```
 
 Cause:
 
@@ -79,75 +109,79 @@ api/app-q.js showNext() returned false when q.length <= 1.
 Fix:
 
 ```text
-If q.length === 1, 19.8 now re-shows the current single bubble.
-If q.length > 1, 19.8 advances the queue.
+if one bubble: re-show current bubble
+if multiple bubbles: advance queue
 ```
 
-This was deployed successfully and manually verified.
+Status: working and protected.
 
-### Weather advice hotspot and cleanup
+## Weather line
 
-- The weather text area became a clickable hotspot.
+Current state:
+
+- Window weather displays from `windowTemp` / `windowDesc`.
+- Weather area is clickable.
 - Tapping it opens a small weather advice popup.
-- It uses `windowTemp` and `windowDesc` as context.
-- The popup does not write cloud state and does not alter the main bubble queue.
-- `assets/weather-controller.js` is now the active runtime owner for window weather display, hotspot binding, and the weather advice popup.
-- `assets/weather-patch.js` is retained in the repo as a legacy fallback file but is no longer loaded by `/cloud`.
-- `assets/weather-advice-hotspot.js` is retained in the repo as a legacy guard file but is no longer loaded by `/cloud`.
+- Weather advice does not write cloud state and does not alter the main bubble queue.
+- `assets/weather-controller.js` is the active owner.
+- Legacy `assets/weather-patch.js` and `assets/weather-advice-hotspot.js` are retained in repo but not loaded by `/cloud` after cleanup.
 
-Status:
+Status: working; keep behavior stable.
 
-```text
-working after cleanup; weather line has fewer active owners
-```
+## Powder notebook / hubbyNote
 
-### Powder notebook / hubbyNote
+Current state:
 
-- `[hubbyNote]` was added to `/write`.
-- `hubbyNote` is the current notebook page.
+- `[hubbyNote]` writes the current powder notebook page.
 - `hubbyNoteArchive` is the permanent archive and should not be auto-trimmed.
-- `hubbyNoteHistory` remains only a compatibility/recent-summary field.
-- `hubbyNoteTrash` is the soft-delete trash bucket.
-- `hubbyNoteFavorite` marks the current page as favorited.
-- `assets/hubby-note-controller.js` displays the notebook popup.
-- `/cloud` notebook panel can directly edit and save the current page through existing `/api/set-state`.
-- Current page supports edit, save, favorite, and delete.
-- Archive preview items support load-to-editor, favorite, and delete.
-- Deletion is soft-delete into `hubbyNoteTrash`, not permanent destruction.
-- Stored Nest key is hidden in the notebook panel after authorization and only reappears when changing key.
-- `api/set-state.js` guards against old cached `/write` pages accidentally sending `[hubbyNote]` as a bubble and reroutes that write into notebook fields.
-- Standalone `assets/hubby-note-auth-guard.js` was removed after key hiding was folded into `assets/hubby-note-controller.js`.
+- `hubbyNoteTrash` is soft-delete trash.
+- Current page supports edit/save/favorite/delete inside `/cloud`.
+- Archive items support load-to-editor/favorite/delete.
+- Stored Nest key is hidden after authorization and only reappears when changing key.
+- `api/set-state.js` guards against old cached `/write` pages accidentally sending `[hubbyNote]` as a bubble.
+- Standalone `assets/hubby-note-auth-guard.js` was removed after key hiding moved into `hubby-note-controller`.
 
-Status:
+Status: working; future notebook visual polish should wait for dedicated notebook art.
 
-```text
-current note, permanent archive, in-nest editor, favorite/delete, soft-delete trash, and key hiding are working; visual polish should wait for dedicated notebook art
-```
+## Object identity rule
 
-### Object identity rule added
-
-- Added/updated the static object identity layer:
+Static identity layer:
 
 ```text
 data/object-registry.v1.json
 data/room-config.v1.json
 ```
 
-- Long-term rule:
+Long-term rule:
 
 ```text
 No identity, no binding.
 ```
 
-- Selectors should be governed by owner/exclusive policy, not by one-off blacklists.
-- `canonicalCurrent` means current official truth, while `mutableWithVersion` allows future versioned changes.
-- Short lesson kept as a specimen: a notebook entry once reused the game console selector and took over the game menu. The long-term fix is not a blacklist; it is identity, ownership, and exclusivity.
+Do not build blacklists like "X cannot steal Y". Use:
 
-### PWA bottom black edge investigation and fix
+```text
+id
+selector
+owner
+exclusive
+runtimeStatus
+versionStatus
+changePolicy
+```
 
-- Symptom: screen-home PWA showed a persistent bottom black edge. The same bottom edge could appear with default assets and with a locally uploaded horizontal image.
-- This meant the black edge was probably not caused by the default coffee-corner image path or by one specific image aspect ratio.
-- Failed patch paths:
+Short specimen: a notebook entry once reused the game console selector and took over the game menu. The long-term fix is selector ownership and `exclusive:true`, not a growing casebook.
+
+## PWA black-edge fix
+
+Symptom:
+
+```text
+Screen-home PWA showed a persistent bottom black edge.
+It happened with default assets and locally uploaded horizontal images.
+```
+
+Failed paths that should not be repeated blindly:
 
 ```text
 bottom overscan / extending the canvas downward
@@ -155,48 +189,113 @@ warm-color visual fallback strip
 html/body background-image safe-area fallback
 ```
 
-- These approaches did not remove the visible black edge and should not be repeated as blind patches.
-- Confirmed: `viewport-fit=cover` was already present in `index.html`.
-- Successful fix path: make the cloud canvas explicitly use viewport-height ownership with `100vh`, `100dvh`, and finally `100lvh` in `assets/canvas-fill.css`.
-- The successful PWA screen-home test was:
+Confirmed:
+
+```text
+viewport-fit=cover was already present in index.html
+```
+
+Successful path:
+
+```text
+assets/canvas-fill.css uses viewport-height ownership:
+height: 100vh
+height: 100dvh
+height: 100lvh
+```
+
+Successful test:
 
 ```text
 https://kitten-nest-lab.vercel.app/cloud?v=0611-canvas-lvh-test
 ```
 
-- Result: old screen-home PWA became full-screen and visually clean. Safari/web may still show a bottom browser-toolbar overlay artifact; the priority target is the screen-home PWA.
-- Future coordinate and clock work should use this `100lvh` canvas as the baseline. Do not tune clock/overlay coordinates against older black-edge canvas states.
+Result:
 
-### Current protected areas
+```text
+Old screen-home PWA became full-screen and visually clean.
+```
 
-- Keep the daily `/write` package workflow stable.
-- Keep the coffee-corner bubble chain stable.
-- Keep the tight 19.8 coordinate hotspot stable.
-- Keep single-bubble 19.8 re-show behavior stable.
-- Keep window weather working.
-- Keep weather advice popup working.
-- Keep powder notebook current note, archive, in-nest editor, favorite/delete, soft-delete trash, and key hiding working.
-- Keep game console / GAME MENU hotspot ownership stable.
-- Keep setup/materials panel manual access available.
-- Keep local image upload override pipeline available.
-- Keep the successful `100lvh` PWA canvas baseline stable.
-- Keep the old cached `/write` guard in `api/set-state.js` until cache issues are no longer a risk.
-- Keep the top-level handoff docs free of private keys or service credentials.
-- Keep deployment under the Vercel Hobby function limit.
-- Do not connect future rooms yet.
+Current protected baseline:
 
-### Next recommended work
+```text
+PWA / screen-home /cloud uses 100lvh canvas baseline.
+Do not break this for Safari-web polish.
+```
+
+## Safari/web canvas attempt
+
+Observation:
+
+```text
+Safari web may show a bottom browser-toolbar / address-bar artifact while the PWA is clean.
+```
+
+Likely reason:
+
+```text
+Safari browser UI participates in dynamic viewport calculation and can overlay the bottom of the page.
+```
+
+Attempted fix:
+
+```text
+Use browser-only 100dvh split while keeping PWA at 100lvh.
+```
+
+Result:
+
+```text
+Failed. It brought back a black bottom edge in the screen-home PWA and only changed the Safari artifact into a black edge.
+```
+
+Decision:
+
+```text
+Restore pure 100lvh PWA baseline.
+Do not keep experimenting on the main /cloud canvas for Safari-web polish.
+If Safari-web needs perfection later, create a separate route such as /cloud-web with its own canvas rules.
+```
+
+## Current protected areas
+
+Protect these before refactoring:
+
+```text
+/write publishing workflow
+/cloud deployability under Vercel Hobby limit
+coffeeCorner bubble queue
+single-bubble 19.8 re-show behavior
+19.8 tight coordinate hotspot
+successful 100lvh PWA canvas baseline
+windowWeather display
+weather advice popup
+powder notebook current page/archive/favorite/delete/trash/key hiding
+game console / GAME MENU hotspot ownership
+setup/materials panel manual access
+local image upload override pipeline
+object identity registry
+```
+
+## Next recommended work
 
 - Do not add new rooms yet.
 - Do not add new `api/*.js` wrappers.
-- Follow `docs/CODEX_CLEANUP_PLAN.md` and `docs/CONSTRUCTION_RULES.md`.
-- Continue cleanup one line at a time.
-- Cleanup should preserve visible behavior while reducing duplicated ownership.
-- Future pure UI polish for the notebook should wait for dedicated notebook art.
-- Re-tune clock/overlay coordinates only after the `100lvh` canvas baseline remains stable.
+- Do not tune clock/overlay coordinates until the `100lvh` baseline remains stable.
+- If Safari-web canvas polish is needed, use a separate route instead of touching the main `/cloud` PWA canvas.
+- Continue cleanup one line at a time, preserving visible behavior.
 
-### New-window handoff rule
+## New-window handoff rule
 
-- New construction windows should read `PROJECT_STATUS.md` first.
-- Then read `docs/CURRENT_STATUS.md`, `docs/ARCHITECTURE_NOTES.md`, `docs/CONSTRUCTION_LOG.md`, `docs/CONSTRUCTION_RULES.md`, `docs/CODEX_CLEANUP_PLAN.md`, `data/room-config.v1.json`, and `data/object-registry.v1.json`.
-- The nest is stable but still has wrapper-chain debt; protect `/write`, `/cloud`, coffeeCorner bubbles, windowWeather, weather advice, powder notebook, setup/local upload, successful `100lvh` canvas baseline, Vercel function count, object identity, and 19.8 hotspot behavior before refactoring.
+New construction windows should read:
+
+```text
+PROJECT_STATUS.md
+docs/CURRENT_STATUS.md
+docs/ARCHITECTURE_NOTES.md
+docs/CONSTRUCTION_LOG.md
+docs/CONSTRUCTION_RULES.md
+docs/CODEX_CLEANUP_PLAN.md
+data/room-config.v1.json
+data/object-registry.v1.json
+```
