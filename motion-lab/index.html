@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#130f18" />
+  <title>nest-motion-lab</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <main class="appShell">
+    <section class="stageColumn" aria-label="动态实验舞台">
+      <header class="topBar">
+        <div>
+          <p class="eyebrow">kitten dynamic lab</p>
+          <h1>nest-motion-lab</h1>
+        </div>
+        <button id="debugToggle" class="ghostBtn" type="button">Debug</button>
+      </header>
+
+      <div id="stageWrap" class="stageWrap ratio-707-1536">
+        <div id="stage" class="stage" aria-live="polite">
+          <div id="sceneA" class="sceneLayer active"></div>
+          <div id="sceneB" class="sceneLayer"></div>
+
+          <div id="effectSteam" class="effect steamEffect" aria-hidden="true">
+            <i></i><i></i><i></i><i></i><i></i>
+          </div>
+          <div id="effectSparkles" class="effect sparklesEffect" aria-hidden="true"></div>
+          <div id="effectWarm" class="effect warmLightEffect" aria-hidden="true"></div>
+          <div id="effectRainFog" class="effect rainFogEffect" aria-hidden="true">
+            <span class="fogPane"></span>
+            <span class="rainPane"></span>
+          </div>
+          <div id="transitionMask" class="transitionMask" aria-hidden="true"></div>
+          <div id="dragBadge" class="dragBadge">static</div>
+        </div>
+      </div>
+
+      <div class="quickControls">
+        <button id="prevScene" type="button">上一张</button>
+        <button id="coffeeWalkIn" type="button" class="primaryBtn">咖啡角走近转场</button>
+        <button id="nextScene" type="button">下一张</button>
+      </div>
+    </section>
+
+    <aside class="controlPanel" aria-label="实验配置面板">
+      <section class="panelCard">
+        <div class="sectionHead">
+          <h2>场景</h2>
+          <span id="sceneCount" class="pill"></span>
+        </div>
+        <div id="sceneList" class="sceneList"></div>
+      </section>
+
+      <section class="panelCard">
+        <h2>当前图配置</h2>
+        <label class="field">
+          <span>图片 ID</span>
+          <input id="sceneIdInput" type="text" spellcheck="false" />
+        </label>
+        <label class="field">
+          <span>拖动规则</span>
+          <select id="panModeSelect">
+            <option value="static">static</option>
+            <option value="pan-x">pan-x</option>
+            <option value="pan-y">pan-y</option>
+            <option value="pan-xy">pan-xy</option>
+          </select>
+        </label>
+        <div class="twoCols">
+          <label class="field">
+            <span>最大 X</span>
+            <input id="maxXInput" type="number" min="0" step="10" />
+          </label>
+          <label class="field">
+            <span>最大 Y</span>
+            <input id="maxYInput" type="number" min="0" step="10" />
+          </label>
+        </div>
+        <label class="field">
+          <span>默认转场</span>
+          <select id="transitionSelect">
+            <option value="soft-fade">soft fade</option>
+            <option value="zoom-blur">zoom + blur dissolve</option>
+            <option value="warm-mask">warm mask dissolve</option>
+            <option value="light-sweep">light sweep</option>
+            <option value="dark-fade">dark fade</option>
+            <option value="dream-ripple">dream ripple</option>
+          </select>
+        </label>
+        <div class="buttonRow">
+          <button id="applyConfig" type="button">应用配置</button>
+          <button id="resetPan" type="button">归位</button>
+        </div>
+      </section>
+
+      <section class="panelCard">
+        <h2>叠层效果</h2>
+        <div class="toggleGrid">
+          <label><input type="checkbox" value="steam" />咖啡热气</label>
+          <label><input type="checkbox" value="sparkles" />星光/光粒</label>
+          <label><input type="checkbox" value="warm-light" />暖光闪烁</label>
+          <label><input type="checkbox" value="rain-fog" />雨/雾/玻璃感</label>
+        </div>
+      </section>
+
+      <section class="panelCard">
+        <h2>舞台比例</h2>
+        <div class="buttonGrid">
+          <button class="ratioBtn" type="button" data-ratio="ratio-707-1536">707 × 1536</button>
+          <button class="ratioBtn" type="button" data-ratio="ratio-9-16">9 : 16</button>
+          <button class="ratioBtn" type="button" data-ratio="ratio-3-4">3 : 4</button>
+          <button class="ratioBtn" type="button" data-ratio="ratio-16-9">16 : 9</button>
+        </div>
+      </section>
+
+      <section class="panelCard">
+        <h2>导入本地底图</h2>
+        <p class="note">只在当前浏览器里临时测试，不上传、不写服务器。适合小猫直接拖横图/竖图进来试 pan 规则。</p>
+        <label class="uploadBox">
+          <input id="imageUpload" type="file" accept="image/*" />
+          <span>选择图片加入实验台</span>
+        </label>
+      </section>
+
+      <section class="panelCard codeCard">
+        <div class="sectionHead">
+          <h2>当前配置 JSON</h2>
+          <button id="copyConfig" class="ghostBtn" type="button">复制</button>
+        </div>
+        <pre id="configOutput"></pre>
+      </section>
+    </aside>
+  </main>
+
+  <script src="./app.js"></script>
+</body>
+</html>
