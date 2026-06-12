@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Kitten Nest Asset Upload Test</title>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Arial,sans-serif;background:linear-gradient(180deg,#fff8f5 0%,#ffeef4 48%,#f7edf7 100%);color:#684054}
+  body:before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(circle at 15% 8%,rgba(255,212,225,.72),transparent 28%),radial-gradient(circle at 86% 16%,rgba(255,238,198,.68),transparent 24%);z-index:-1}
+  main{max-width:820px;margin:0 auto;padding:26px 18px 44px}.hero,.card{border-radius:30px;padding:18px;background:rgba(255,255,255,.76);border:1px solid rgba(255,255,255,.92);box-shadow:0 18px 48px rgba(121,68,88,.14),inset 0 0 0 1px rgba(255,225,235,.55);backdrop-filter:blur(16px);margin-bottom:14px}
+  h1{margin:0 0 8px;font-size:28px;line-height:1.15;color:#63364a}p{color:#8b6474;line-height:1.55;margin:8px 0 14px}.note{border-radius:18px;background:rgba(255,255,255,.58);border:1px solid rgba(255,255,255,.78);padding:12px 13px;margin:14px 0;color:#7b5260;font-size:13px;line-height:1.55}
+  label{display:block;font-size:12px;font-weight:800;color:#704456;margin:12px 0 5px}input,select,textarea{width:100%;border:0;border-radius:15px;padding:12px 13px;background:#fff;color:#63364a;box-shadow:inset 0 0 0 1px rgba(105,57,74,.13);font-size:15px}textarea{min-height:76px;resize:vertical}input:focus,select:focus,textarea:focus{outline:2px solid rgba(255,166,195,.45)}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:620px){.two{grid-template-columns:1fr}}
+  .bar{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}button,a.btn{border:0;text-decoration:none;border-radius:14px;padding:10px 12px;background:#fff;color:#69394a;box-shadow:inset 0 0 0 1px rgba(105,57,74,.14),0 6px 16px rgba(121,68,88,.1);font-weight:800;font-size:14px}.primary{background:#eafff1;color:#215c37}.warn{background:#fff8df;color:#6d4a10}.danger{background:#ffe5eb;color:#92223b}button:disabled{opacity:.58}.result{margin-top:14px;padding:12px;border-radius:16px;background:rgba(255,255,255,.54);color:#704456;font-size:13px;line-height:1.5;white-space:pre-wrap;border:1px solid rgba(255,255,255,.72);word-break:break-all}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}.preview{width:100%;max-height:420px;object-fit:contain;border-radius:18px;background:#fff0f4;margin-top:12px;display:none}
+</style>
+</head>
+<body>
+<main>
+  <section class="hero">
+    <h1>素材上传测试</h1>
+    <p>独立 admin 测试入口：上传图片到 Supabase Storage，并登记一条素材户口本记录。这里不修改当前房间绑定，不会影响 /cloud 正在使用的图。</p>
+    <div class="note">先在“Supabase 管理员登录测试”页登录。这个页面只读取本地保存的 Supabase session。</div>
+    <div class="bar">
+      <a class="btn" href="/assets-auth-test/">管理员登录测试</a>
+      <a class="btn" href="/assets-admin/">素材库后台</a>
+      <a class="btn primary" href="/cloud?v=upload-test-back-cloud">回 /cloud</a>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="two">
+      <div><label>房间</label><select id="room"><option value="coffeeCorner">coffeeCorner</option><option value="home">home</option></select></div>
+      <div><label>素材类型</label><select id="assetType"><option value="roomBackground">roomBackground</option></select></div>
+    </div>
+    <div class="two">
+      <div><label>slot 备注</label><select id="slot"><option value="background.main">background.main</option><option value="background.day">background.day</option><option value="background.night">background.night</option></select></div>
+      <div><label>状态</label><select id="status"><option value="draft">draft（只登记，不给 /cloud 用）</option><option value="published">published（可被后台看到）</option></select></div>
+    </div>
+    <label>asset_id</label><input id="assetId" placeholder="自动生成，也可手改" />
+    <label>storage_path</label><input id="storagePath" placeholder="自动生成，也可手改" />
+    <label>图片文件</label><input id="file" type="file" accept="image/*" />
+    <img id="preview" class="preview" alt="preview" />
+    <label>备注</label><textarea id="note" placeholder="比如：咖啡角测试上传，不绑定主图"></textarea>
+    <div class="bar"><button class="primary" id="upload">上传并登记素材</button><button id="refreshNames">刷新自动命名</button></div>
+    <div class="result mono" id="result">ready.</div>
+  </section>
+</main>
+<script>
+const SUPABASE_URL = 'https://pmkxzmogolxllijzqnfr.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_a_E9X0r3m6i641s0KluUrg_squa6uc_';
+const TOKEN_KEY = 'kittenNestSupabaseSession';
+const BUCKET = 'nest-public-assets';
+const result = document.getElementById('result');
+function out(x){ result.textContent = typeof x === 'string' ? x : JSON.stringify(x, null, 2); }
+function session(){ try{return JSON.parse(localStorage.getItem(TOKEN_KEY)||'null')}catch(e){return null} }
+function token(){ const s=session(); return s && s.access_token; }
+function slug(s){ return String(s||'').trim().replace(/[^a-zA-Z0-9._-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,80); }
+function extFromFile(file){ const name=file?.name||''; const m=name.match(/\.([a-zA-Z0-9]+)$/); return (m?m[1]:'jpg').toLowerCase().replace('jpeg','jpg'); }
+function autoNames(){
+  const room=document.getElementById('room').value;
+  const slot=document.getElementById('slot').value;
+  const now=new Date();
+  const stamp=now.toISOString().replace(/[-:]/g,'').replace(/\..+$/,'Z');
+  const file=document.getElementById('file').files[0];
+  const ext=extFromFile(file);
+  const safeSlot=slug(slot.replace(/\./g,'-'));
+  document.getElementById('assetId').value = `room.${room}.${safeSlot}.${stamp}`;
+  document.getElementById('storagePath').value = `assets/rooms/${room}/uploads/${safeSlot}-${stamp}.${ext}`;
+}
+document.getElementById('refreshNames').onclick = autoNames;
+document.getElementById('room').onchange = autoNames;
+document.getElementById('slot').onchange = autoNames;
+document.getElementById('file').onchange = e => {
+  autoNames();
+  const file=e.target.files[0];
+  const img=document.getElementById('preview');
+  if(file){ img.src=URL.createObjectURL(file); img.style.display='block'; }
+  else{ img.style.display='none'; }
+};
+autoNames();
+async function storageUpload(path, file){
+  const access = token();
+  if(!access) throw new Error('未登录：先打开管理员登录测试页登录。');
+  const res = await fetch(`${SUPABASE_URL}/storage/v1/object/${BUCKET}/${path}`, {
+    method:'POST',
+    headers:{ apikey: SUPABASE_PUBLISHABLE_KEY, Authorization:`Bearer ${access}`, 'Content-Type': file.type || 'application/octet-stream', 'x-upsert':'true' },
+    body:file
+  });
+  const text = await res.text();
+  if(!res.ok) throw new Error(`Storage upload failed: ${res.status} ${text}`);
+  return text;
+}
+async function insertAsset(record){
+  const access = token();
+  if(!access) throw new Error('未登录：先打开管理员登录测试页登录。');
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/nest_assets`, {
+    method:'POST',
+    headers:{ apikey: SUPABASE_PUBLISHABLE_KEY, Authorization:`Bearer ${access}`, 'Content-Type':'application/json', Prefer:'resolution=merge-duplicates,return=representation' },
+    body: JSON.stringify(record)
+  });
+  const data = await res.json().catch(()=>({}));
+  if(!res.ok) throw new Error(`Registry insert failed: ${res.status} ${JSON.stringify(data)}`);
+  return data;
+}
+document.getElementById('upload').onclick = async e => {
+  e.currentTarget.disabled = true;
+  try{
+    const file=document.getElementById('file').files[0];
+    if(!file) throw new Error('先选择图片文件。');
+    const room_id=document.getElementById('room').value;
+    const asset_type=document.getElementById('assetType').value;
+    const storage_path=document.getElementById('storagePath').value.trim();
+    const public_url=`${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${storage_path}`;
+    out('uploading storage object…');
+    await storageUpload(storage_path, file);
+    out('storage uploaded. registering asset…');
+    const record={
+      asset_id: document.getElementById('assetId').value.trim(),
+      room_id, asset_type,
+      bucket: BUCKET,
+      storage_path,
+      public_url,
+      status: document.getElementById('status').value,
+      note: document.getElementById('note').value.trim() || null
+    };
+    const saved=await insertAsset(record);
+    out({status:'uploaded_and_registered', record:saved, next:'去素材库后台刷新，看新 asset 是否出现。尚未绑定到 /cloud。'});
+  }catch(err){ out('ERROR: '+err.message); }
+  finally{ e.currentTarget.disabled=false; }
+};
+</script>
+</body>
+</html>
