@@ -33,6 +33,7 @@
       <button class="warn" id="signIn">登录</button>
       <button class="danger" id="signOut">退出登录</button>
       <a class="btn" href="/assets-admin/?v=auth-test-back">回素材库后台</a>
+      <a class="btn primary" href="/assets-upload-edge/?v=from-auth-test">去 Edge 上传测试</a>
     </div>
     <div class="result mono" id="result">ready.</div>
   </section>
@@ -67,7 +68,7 @@ async function getUser(){
   });
   const data = await res.json().catch(()=>({}));
   if(!res.ok) throw new Error(JSON.stringify(data));
-  out({status:'logged_in', user_id:data.id, email:data.email, note:'已登录。现在可以去 assets-upload-test 上传测试图。'});
+  out({status:'logged_in', user_id:data.id, email:data.email, note:'已登录。现在可以去 assets-upload-edge 上传测试图。'});
 }
 document.getElementById('signUp').onclick = async e => {
   e.currentTarget.disabled = true;
