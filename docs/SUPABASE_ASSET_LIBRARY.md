@@ -122,6 +122,40 @@ local upload override
 -> GitHub static fallback
 ```
 
+## Local image reset test entry
+
+Standalone test entry:
+
+```text
+/local-reset
+```
+
+Purpose:
+
+```text
+Clear current-device IndexedDB local image overrides without touching /cloud runtime code.
+```
+
+Validated behavior:
+
+```text
+In normal Safari or screen-home/PWA, /local-reset can clear the coffee-corner local override and return to /cloud so the Supabase default coffee-corner image appears.
+```
+
+Important testing rule:
+
+```text
+Do not use private/incognito browsing to judge local image upload or local reset behavior.
+Private browsing has separate/temporary storage and is only useful for checking cloud defaults as a clean-browser simulation.
+```
+
+Current merge status:
+
+```text
+Keep local reset as a standalone test/utility entry for now.
+Do not merge reset controls into the main /cloud setup panel until deliberately requested and re-tested.
+```
+
 ## Migration principle
 
 ```text
