@@ -1,6 +1,7 @@
 const appQ = require('./app-q');
 
-const ASSET_VERSION = 'room-assets-20260609-12';
+const ASSET_VERSION = 'supa-assets-20260612-1';
+const SUPABASE_PUBLIC_BASE = 'https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets';
 
 const STATIC_ASSETS = {
   'home-day': '/assets/rooms/home/day.jpg',
@@ -8,8 +9,14 @@ const STATIC_ASSETS = {
   'coffee-corner-morning-evening': '/assets/rooms/coffee-corner/morning-evening.jpg'
 };
 
+const SUPABASE_ASSETS = {
+  'home-day': `${SUPABASE_PUBLIC_BASE}/assets/rooms/home/day.jpg`,
+  'home-night': `${SUPABASE_PUBLIC_BASE}/assets/rooms/home/night.jpg`,
+  'coffee-corner-morning-evening': `${SUPABASE_PUBLIC_BASE}/assets/rooms/coffee-corner/morning-evening.jpg`
+};
+
 function asset(key) {
-  return `${STATIC_ASSETS[key]}?v=${ASSET_VERSION}`;
+  return `${SUPABASE_ASSETS[key]}?v=${ASSET_VERSION}`;
 }
 
 function staticAsset(key) {
