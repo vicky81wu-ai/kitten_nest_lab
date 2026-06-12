@@ -1,5 +1,5 @@
 {
-  "version": "0.1.6",
+  "version": "0.1.7",
   "status": "foundation-scene-hooks",
   "note": "Room and scene configuration foundation for Kitten Nest. This file is not a full roomEngine runtime yet. It keeps scene identity, active ports, protected current runtime facts, and directorRef hooks. Long director notes live in docs/DIRECTOR_GUIDE.md.",
   "currentRuntime": {
@@ -17,6 +17,7 @@
     ],
     "activeHotspots": [
       "coffeeCorner.tattoo19_8",
+      "coffeeCorner.photoWallHot",
       "coffeeCorner.windowWeatherAdviceHotspot",
       "coffeeCorner.hubbyNoteEntry",
       "coffeeCorner.gameConsoleHotspot",
@@ -37,6 +38,7 @@
     "ownershipRule": "Every active selector has one primary owner. exclusive:true means no casual selector reuse.",
     "versionRule": "canonicalCurrent means current official truth, not permanent immutability. Current objects may change later through mutableWithVersion.",
     "coordinateRule": "Coordinates should be locked to base-image coordinates, not device-specific offsets.",
+    "roomGateRule": "Hotspots and overlays must be gated to their active room element so home and coffeeCorner controls do not leak into each other.",
     "directorRule": "Use directorRef and directorTags here; put long director notes in docs/DIRECTOR_GUIDE.md."
   },
   "packageTags": {
@@ -85,15 +87,16 @@
         "night": "assets/rooms/home/night.jpg"
       },
       "coordinateSpace": {
-        "status": "legacyViewport",
+        "status": "mixed",
+        "activeBaseImageLocked": ["home.clockHandsOverlay", "home.hubbyNoteHot"],
         "futureMode": "baseImageLocked"
       },
-      "activeObjects": [],
-      "activeHotspots": [],
+      "activeObjects": ["home.clockHandsOverlay"],
+      "activeHotspots": ["home.hubbyNoteHot"],
       "textPorts": [],
       "directorRef": "director.scenes.home",
       "directorTags": ["landing", "dayNight", "entry", "futureNavigation"],
-      "notes": "Current visual entry/background logic. Not a full text room yet."
+      "notes": "Current visual entry/background logic. Not a full text room yet. Home-only hotspots must be gated to home.active."
     },
     {
       "id": "coffeeCorner",
@@ -109,7 +112,7 @@
       },
       "coordinateSpace": {
         "status": "mixed",
-        "activeBaseImageLocked": ["coffeeCorner.tattoo19_8"],
+        "activeBaseImageLocked": ["coffeeCorner.tattoo19_8", "coffeeCorner.photoWallHot"],
         "legacyViewport": ["coffeeCorner.bubbleOverlay", "coffeeCorner.windowWeatherOverlay"],
         "futureMode": "baseImageLocked"
       },
@@ -122,6 +125,7 @@
       ],
       "activeHotspots": [
         "coffeeCorner.tattoo19_8",
+        "coffeeCorner.photoWallHot",
         "coffeeCorner.windowWeatherAdviceHotspot",
         "coffeeCorner.gameConsoleHotspot",
         "coffeeCorner.hubbyNoteEntry",
@@ -161,7 +165,7 @@
       ],
       "directorRef": "director.scenes.coffeeCorner",
       "directorTags": ["active", "warm", "domestic", "coffee", "dailyCare", "constructionBase"],
-      "notes": "Current real front-stage room. Object and hotspot details are in data/object-registry.v1.json."
+      "notes": "Current real front-stage room. Object and hotspot details are in data/object-registry.v1.json. CoffeeCorner hotspots must be gated to gameRoom.active."
     }
   ],
   "futureScenes": [
@@ -211,6 +215,7 @@
       "/write Alex update package workflow",
       "coffeeCorner bubble publishing",
       "19.8 tight coordinate hotspot behavior",
+      "photo wall memories hotspot room-gated base-image coordinate behavior",
       "single-bubble 19.8 re-show behavior",
       "windowWeather state fields and weather advice popup",
       "hubbyNote in-nest editor and permanent archive",
