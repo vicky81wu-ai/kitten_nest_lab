@@ -37,7 +37,7 @@
         y: 0.605,
         width: 0.22,
         height: 0.18,
-        rotation: 6,
+        rotation: 6.9,
         transformOrigin: '0 0'
       },
       behavior: 'hubbyNote.open',
@@ -240,7 +240,7 @@
   }
 
   window.KittenNestHotspots = {
-    version: 'coordinate-hotspot-overlay-card-20260612-note-hot-rotate-2',
+    version: 'coordinate-hotspot-overlay-card-20260612-note-hot-rotate-3',
     cards: hotspotCards,
     overlayCards: overlayCards,
     defaultHotspotId: defaultHotspotId,
