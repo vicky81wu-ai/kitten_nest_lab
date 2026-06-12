@@ -1,5 +1,5 @@
 {
-  "version": "0.1.4",
+  "version": "0.1.5",
   "status": "foundation-current-identities",
   "note": "Static object and hotspot identity registry for Kitten Nest. This file is not wired into runtime yet. It exists to prevent selector reuse, hotspot ownership conflicts, decorative overlay drift, and rough patching. Detailed director writing guidance lives in docs/DIRECTOR_GUIDE.md.",
   "principles": [
@@ -11,7 +11,8 @@
     "Do not add per-feature blacklists; use ownership, exclusivity, and versioned change policy.",
     "canonicalCurrent means current official truth, not permanent immutability.",
     "Current official objects may change later through mutableWithVersion.",
-    "Keep technical identity here; put long director notes in docs/DIRECTOR_GUIDE.md."
+    "Keep technical identity here; put long director notes in docs/DIRECTOR_GUIDE.md.",
+    "Active base-image hotspots must be gated by their active room so home and coffeeCorner hotspots do not leak into each other."
   ],
   "objects": [
     {
@@ -47,6 +48,7 @@
       "versionStatus": "canonicalCurrent",
       "changePolicy": "mutableWithVersion",
       "imageId": "homeOn",
+      "roomElementId": "home",
       "approvedCoordinate": { "x": 0.2108, "y": 0.3353, "width": 0.312, "aspectRatio": 1 },
       "approvedBy": "Vicky visual inspection after micro-adjustment",
       "implementationFile": "assets/hotspot-positioner.js",
@@ -70,11 +72,38 @@
       "versionStatus": "canonicalCurrent",
       "changePolicy": "mutableWithVersion",
       "imageId": "gameBg",
+      "roomElementId": "gameRoom",
       "approvedCoordinate": { "x": 0.73, "y": 0.345, "width": 0.15, "height": 0.08 },
       "textClass": "Bubble",
       "implementationType": "bubbleDraft",
+      "implementationFile": "assets/hotspot-positioner.js",
       "directorRef": "director.hotspots.tattoo19_8",
       "directorTags": ["flirt", "possessive", "relationshipAnchor", "leftShoulderTattoo"],
+      "protected": true
+    },
+    {
+      "id": "coffeeCorner.photoWallHot",
+      "roomId": "coffeeCorner",
+      "kind": "hotspot",
+      "selector": ".photoHot",
+      "owner": "memoriesController",
+      "role": "memoriesPhotoWallHotspot",
+      "action": "openMemoriesPanel",
+      "exclusive": true,
+      "runtimeStatus": "active",
+      "coordinateStatus": "baseImageLocked",
+      "versionStatus": "canonicalCurrent",
+      "changePolicy": "mutableWithVersion",
+      "imageId": "gameBg",
+      "roomElementId": "gameRoom",
+      "approvedCoordinate": { "x": 0.25, "y": 0.215, "width": 0.34, "height": 0.2 },
+      "approvedBy": "Vicky visual inspection: covers about two thirds of the photo wall and no longer reaches Alex body/sofa area.",
+      "implementationFile": "assets/hotspot-positioner.js",
+      "runtimeNote": "Replaces old legacy CSS hotspot .photoHot left:0 top:13 width:56 height:34, which caused belly mis-taps and crowding with top-left controls. Must stay gated to gameRoom.active.",
+      "textClass": "InteractionPanel",
+      "implementationType": "memoriesPanel",
+      "directorRef": "director.hotspots.photoWallMemories",
+      "directorTags": ["memories", "photoWall", "gallery", "interactionPanel", "baseImageCoordinate"],
       "protected": true
     },
     {
@@ -148,6 +177,31 @@
       "implementationType": "hubbyNoteDraft",
       "directorRef": "director.notebooks.hubbyNote",
       "directorTags": ["permanentNote", "notebook", "milestone", "shared"],
+      "protected": true
+    },
+    {
+      "id": "home.hubbyNoteHot",
+      "roomId": "home",
+      "kind": "hotspot",
+      "selector": ".hubbyNoteButton",
+      "owner": "hubbyNoteController",
+      "role": "homePinkNotebookArtHotspot",
+      "action": "openHubbyNotePanel",
+      "exclusive": true,
+      "runtimeStatus": "active",
+      "coordinateStatus": "baseImageLocked",
+      "versionStatus": "canonicalCurrent",
+      "changePolicy": "mutableWithVersion",
+      "imageId": "homeOn",
+      "roomElementId": "home",
+      "approvedCoordinate": { "x": 0.8, "y": 0.605, "width": 0.22, "height": 0.18, "rotation": 7.1, "transformOrigin": "0 0" },
+      "approvedBy": "Vicky visual inspection after angle micro-adjustment.",
+      "implementationFile": "assets/hotspot-positioner.js",
+      "runtimeNote": "This home-only art hotspot must not leak into coffeeCorner. Runtime gates it to home.active.",
+      "textClass": "PermanentNote",
+      "implementationType": "hubbyNoteDraft",
+      "directorRef": "director.notebooks.hubbyNote",
+      "directorTags": ["permanentNote", "notebook", "home", "baseImageCoordinate", "rotatedHotspot"],
       "protected": true
     },
     {
@@ -275,16 +329,17 @@
     }
   ],
   "validationRules": {
-    "selectorUniqueness": "A selector should not be assigned to multiple active exclusive objects.",
+    "selectorUniqueness": "A selector should not be assigned to multiple active exclusive objects unless a room-gated runtime card explicitly owns the exception.",
     "ownershipCheck": "Before binding events, check id, selector, owner, role, action, exclusive, runtimeStatus, versionStatus, and changePolicy.",
     "protectedChainCheck": "If protected:true, do not modify without staged plan and rollback.",
     "coordinateRule": "Current coordinates should use base-image coordinates, not device-specific CSS nudges.",
+    "roomGateRule": "Hotspots that belong to different rooms must be gated by active room element, e.g. gameRoom.active vs home.active, so they do not leak across scenes.",
     "overlayRule": "Decorative overlays are not hotspots, but they still need identity, owner, and base-image coordinate records when they align with room art.",
     "versionRule": "canonicalCurrent is mutable only through explicit versioned change, not silent replacement.",
     "directorRule": "Use directorRef and directorTags here; put long director scripts and sample lines in docs/DIRECTOR_GUIDE.md."
   },
   "shortIncidentExample": {
     "type": "selectorReuse",
-    "lesson": "A notebook entry once reused the game console selector and took over the game menu. The long-term rule is not a blacklist; it is selector ownership plus exclusive:true."
+    "lesson": "A notebook entry once reused the game console selector and took over the game menu. The long-term rule is not a blacklist; it is selector ownership plus exclusive:true. A later room-leak incident showed active room gating is also required for shared/global selectors."
   }
 }
