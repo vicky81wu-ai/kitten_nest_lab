@@ -63,6 +63,61 @@ public.room_asset_slots
 
 `room_asset_slots` stores which room slot currently uses which asset.
 
+## Scene-group-ready asset metadata
+
+`nest_assets` has been extended beyond room-only metadata so the library is not locked into a simple room structure.
+
+New optional/metadata fields:
+
+```text
+scene_group
+scene_key
+sort_order
+visibility
+lock_state
+```
+
+Meaning:
+
+```text
+scene_group: upper-level grouping, such as an arc, collection, chapter, or scene pack
+scene_key: specific scene/key inside that group
+sort_order: optional order for story progression or carousel sequencing
+visibility: app-level visibility marker for future owner/friends/public filtering
+lock_state: app-level lock marker for future locked scenes/items
+```
+
+Current default backfill:
+
+```text
+scene_group: default-room-backgrounds
+scene_key: <room_id>.<asset_type>
+visibility: private
+lock_state: unlocked
+```
+
+Important compatibility rule:
+
+```text
+room_id and room_asset_slots stay in place.
+scene_group is an upper metadata layer, not a replacement for current room binding.
+Git may not yet have scene_group folders or code, and that is okay.
+Supabase metadata may lead Git as long as runtime code keeps a compatibility layer.
+```
+
+Future scene shape example:
+
+```text
+scene_group: coffee-date-arc
+scene_key: morning-cuddle-01
+room_id: coffeeCorner
+slot: background.main
+asset_id: room.coffeeCorner.coffee-date-arc.morning-cuddle-01.bg
+sort_order: 1
+visibility: private
+lock_state: unlocked
+```
+
 ## Current registered assets
 
 ```text
@@ -216,7 +271,37 @@ Current orphan prevention:
 nest-asset-upload-form v2 attempts to delete the just-uploaded Storage object if the registry insert fails.
 ```
 
-Do not wire this upload test into /cloud runtime until the publish/bind flow is separately tested.
+## Publish / bind validation
+
+Validated publish/bind flow:
+
+```text
+/assets-bind-latest-test
+```
+
+Result:
+
+```text
+room.coffeeCorner.background-main.20260612T090613Z
+-> status: published
+coffeeCorner / background.main
+-> asset_id: room.coffeeCorner.background-main.20260612T090613Z
+```
+
+Validated runtime read test:
+
+```text
+/asset-runtime-test
+```
+
+Result:
+
+```text
+runtime binding read succeeded
+room_asset_slots -> nest_assets -> public_url -> image load
+```
+
+Do not wire dynamic binding into /cloud runtime until the runtime compatibility layer is deliberately added and tested.
 
 ## Migration principle
 
