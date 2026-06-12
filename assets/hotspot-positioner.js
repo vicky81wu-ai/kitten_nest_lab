@@ -36,14 +36,16 @@
         x: 0.800,
         y: 0.605,
         width: 0.22,
-        height: 0.18
+        height: 0.18,
+        rotation: -4,
+        transformOrigin: '0 0'
       },
       behavior: 'hubbyNote.open',
       visual: 'transparent',
       runtimeStatus: 'active',
       directorNotes: {
         type: 'transparent hotspot over the physical pink notebook on the home background',
-        alignmentTarget: 'center of the pink notebook object, not the old lower-left floating button',
+        alignmentTarget: 'top-left corner is the visual anchor; rotate slightly counter-clockwise to follow notebook angle',
         futureUse: 'When the notebook UI becomes a drawn scene asset, keep this hotspot anchored to the same object coordinate instead of the temporary panel design.'
       }
     }
@@ -126,6 +128,13 @@
     hot.style.borderRadius = '18px';
   }
 
+  function applyRotation(hot, point){
+    var rotation = Number(point.rotation || 0);
+    var origin = point.transformOrigin || '50% 50%';
+    hot.style.transformOrigin = origin;
+    hot.style.transform = rotation ? ('rotate(' + rotation + 'deg)') : '';
+  }
+
   function applyCard(card){
     if(!card || !card.coordinate) return false;
     var img = document.getElementById(card.imageId);
@@ -153,6 +162,7 @@
     hot.setAttribute('data-hotspot-behavior', card.behavior || '');
 
     if(card.visual === 'transparent') applyTransparentVisual(hot);
+    applyRotation(hot, point);
 
     if(new URLSearchParams(location.search).get('debugHotspot') === '1'){
       hot.style.background = 'rgba(255,80,130,.18)';
@@ -230,7 +240,7 @@
   }
 
   window.KittenNestHotspots = {
-    version: 'coordinate-hotspot-overlay-card-20260612-note-hot-2',
+    version: 'coordinate-hotspot-overlay-card-20260612-note-hot-rotate-1',
     cards: hotspotCards,
     overlayCards: overlayCards,
     defaultHotspotId: defaultHotspotId,
