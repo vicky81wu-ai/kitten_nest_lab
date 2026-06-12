@@ -1,6 +1,6 @@
 # Kitten Nest Construction Rules
 
-Updated: 2026-06-10
+Updated: 2026-06-12
 
 These rules exist to prevent rough patching as the nest grows from a small page into a larger interactive world.
 
@@ -9,6 +9,37 @@ These rules exist to prevent rough patching as the nest grows from a small page 
 No identity, no binding.
 
 Before adding or changing any event binding, hotspot, overlay, panel, text port, asset path, or room object, check the room config and object registry first.
+
+## Stable /cloud gate rule
+
+The main `/cloud` route is the stable nest, not an experiment area.
+
+Any unverified feature, visual patch, asset cleanup button, hotspot change, panel change, upload-flow change, or runtime experiment must not be installed directly into `/cloud`.
+
+Required flow:
+
+```text
+independent test route or test branch
+-> Vicky verifies it
+-> merge into main /cloud only after acceptance
+-> if it fails, discard or roll back without polluting /cloud
+```
+
+This rule protects:
+
+- Supabase/default image loading
+- GitHub/static fallback image loading
+- local upload and setup panel access
+- coffeeCorner bubbles
+- windowWeather and weather advice
+- 19.8 tattoo hotspot
+- game console hotspot
+- powder notebook
+- PWA/screen-nest stability
+
+If a change has not been verified, keep it out of `/cloud`. Use a test entry such as `/cloud-hotspot-test`, `/cloud-assets-test`, or a separate branch/preview deployment.
+
+No future construction window should ask Vicky to guard the stable route manually. The construction agent must guard it.
 
 ## Object identity card
 
@@ -47,17 +78,20 @@ A current official object can still change later if the change is explicit, vers
 
 Before changing runtime code, answer these questions:
 
-1. Which room is affected?
-2. Which object, hotspot, overlay, panel, text port, or asset pipeline is affected?
-3. Does it already have an identity card in `data/object-registry.v1.json` or `data/room-config.v1.json`?
-4. Does the selector already have a primary owner?
-5. Is the existing item `exclusive: true`?
-6. Is the current object `canonicalCurrent` and `mutableWithVersion`?
-7. What stable chain could this affect?
-8. Is this a bug fix, a feature, architecture collection, or pure visual polish?
-9. What is the rollback plan?
+1. Which route is affected? If it is `/cloud`, has the change already passed an independent test route or preview?
+2. Which room is affected?
+3. Which object, hotspot, overlay, panel, text port, or asset pipeline is affected?
+4. Does it already have an identity card in `data/object-registry.v1.json` or `data/room-config.v1.json`?
+5. Does the selector already have a primary owner?
+6. Is the existing item `exclusive: true`?
+7. Is the current object `canonicalCurrent` and `mutableWithVersion`?
+8. What stable chain could this affect?
+9. Is this a bug fix, a feature, architecture collection, or pure visual polish?
+10. What is the rollback plan?
 
 If the object has no identity card, create or update the registry entry first. Do not bind code by guessing.
+
+If the change is not verified, do not put it on `/cloud`.
 
 ## Ownership rules
 
@@ -73,6 +107,7 @@ If the object has no identity card, create or update the registry entry first. D
 
 Do not casually change these without a staged plan:
 
+- `/cloud` stable route itself
 - `/write` update package workflow
 - coffee-corner bubble publishing
 - 19.8 tattoo hotspot behavior
