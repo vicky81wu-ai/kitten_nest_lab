@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Kitten Nest Supabase Asset Test</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Arial,sans-serif;background:#160d13;color:#5f3444}
+  main{max-width:980px;margin:0 auto;padding:24px 16px 48px}
+  h1{margin:0 0 8px;color:#ffeef2;font-size:26px;letter-spacing:.02em}
+  .sub{margin:0 0 18px;color:rgba(255,238,242,.72);line-height:1.55}
+  .status{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 20px}
+  .pill{border-radius:999px;padding:8px 12px;background:rgba(255,244,247,.9);box-shadow:0 8px 24px rgba(0,0,0,.18);font-size:13px}
+  .pill.good{background:#eafff1;color:#215c37}.pill.bad{background:#ffe8ec;color:#8b1e34}.pill.wait{background:#fff5d8;color:#6d4a10}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+  .card{border-radius:24px;background:linear-gradient(180deg,rgba(255,244,247,.96),rgba(255,236,241,.92));box-shadow:0 16px 42px rgba(0,0,0,.24);overflow:hidden;border:1px solid rgba(255,255,255,.5)}
+  .thumb{width:100%;aspect-ratio:9/16;background:#2a1720;display:block;object-fit:cover}
+  .body{padding:14px}
+  .title{font-weight:800;color:#653848;margin-bottom:6px}
+  .meta{font-size:12px;line-height:1.5;color:#7c5360;word-break:break-all;margin:4px 0}
+  .check{margin-top:8px;font-size:13px;font-weight:700}
+  .ok{color:#1d7a43}.fail{color:#a51f37}.loading{color:#8a6514}
+  code{background:rgba(255,255,255,.6);border-radius:8px;padding:2px 5px}
+  .log{margin-top:18px;padding:14px;border-radius:18px;background:rgba(255,244,247,.1);color:rgba(255,238,242,.78);font-size:13px;line-height:1.55;white-space:pre-wrap}
+</style>
+</head>
+<body>
+<main>
+  <h1>Kitten Nest Supabase Asset Test</h1>
+  <p class="sub">只读测试页：读取 Supabase 素材户口本，按 <code>room_asset_slots</code> 当前绑定显示已发布图片。它不改 /cloud，不改气泡，不改天气，不新增 Vercel API。</p>
+  <div class="status" id="status">
+    <span class="pill wait">等待读取 Supabase 户口本…</span>
+  </div>
+  <div class="grid" id="grid"></div>
+  <div class="log" id="log">booting asset test…</div>
+</main>
+<script>
+const SUPABASE_URL = 'https://pmkxzmogolxllijzqnfr.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_a_E9X0r3m6i641s0KluUrg_squa6uc_';
+
+const expectedOrder = [
+  ['coffeeCorner', 'background.main'],
+  ['home', 'background.day'],
+  ['home', 'background.night']
+];
+
+function log(line){
+  const el = document.getElementById('log');
+  el.textContent += '\n' + line;
+}
+
+function setStatus(items){
+  document.getElementById('status').innerHTML = items.map(item => `<span class="pill ${item.type}">${item.text}</span>`).join('');
+}
+
+async function supabaseGet(path){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    headers: {
+      apikey: SUPABASE_PUBLISHABLE_KEY,
+      Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
+      Accept: 'application/json'
+    }
+  });
+  if(!res.ok){
+    const text = await res.text();
+    throw new Error(`${res.status} ${res.statusText}: ${text}`);
+  }
+  return res.json();
+}
+
+function card(slot, asset){
+  const label = `${slot.room_id} / ${slot.slot}`;
+  const assetId = slot.asset_id;
+  const url = asset?.public_url || '';
+  const storagePath = asset?.storage_path || '(missing asset record)';
+  const div = document.createElement('article');
+  div.className = 'card';
+  div.innerHTML = `
+    <img class="thumb" alt="${label}" src="${url}" />
+    <div class="body">
+      <div class="title">${label}</div>
+      <div class="meta"><b>asset_id:</b> ${assetId}</div>
+      <div class="meta"><b>storage_path:</b> ${storagePath}</div>
+      <div class="meta"><b>status:</b> slot=${slot.status}; asset=${asset?.status || 'missing'}</div>
+      <div class="check loading">图片加载中…</div>
+    </div>`;
+  const img = div.querySelector('img');
+  const check = div.querySelector('.check');
+  img.addEventListener('load', () => {
+    check.className = 'check ok';
+    check.textContent = `图片加载成功：${img.naturalWidth} × ${img.naturalHeight}`;
+  });
+  img.addEventListener('error', () => {
+    check.className = 'check fail';
+    check.textContent = '图片加载失败';
+  });
+  return div;
+}
+
+async function main(){
+  try{
+    log('reading room_asset_slots…');
+    const slots = await supabaseGet('room_asset_slots?select=room_id,slot,asset_id,status&status=eq.active&order=room_id.asc&order=slot.asc');
+    log(`room_asset_slots rows: ${slots.length}`);
+
+    log('reading nest_assets…');
+    const assets = await supabaseGet('nest_assets?select=asset_id,room_id,asset_type,storage_path,public_url,status&status=eq.published&order=asset_id.asc');
+    log(`nest_assets rows: ${assets.length}`);
+
+    const assetMap = new Map(assets.map(a => [a.asset_id, a]));
+    const slotMap = new Map(slots.map(s => [`${s.room_id}/${s.slot}`, s]));
+    const orderedSlots = expectedOrder.map(([room, slot]) => slotMap.get(`${room}/${slot}`)).filter(Boolean);
+    const extras = slots.filter(s => !expectedOrder.some(([room, slot]) => room === s.room_id && slot === s.slot));
+    const finalSlots = [...orderedSlots, ...extras];
+
+    const grid = document.getElementById('grid');
+    grid.innerHTML = '';
+    finalSlots.forEach(s => grid.appendChild(card(s, assetMap.get(s.asset_id))));
+
+    const missing = expectedOrder.filter(([room, slot]) => !slotMap.has(`${room}/${slot}`));
+    const missingAssets = finalSlots.filter(s => !assetMap.has(s.asset_id));
+    setStatus([
+      { type: missing.length ? 'bad' : 'good', text: missing.length ? `缺少槽位：${missing.map(x=>x.join('/')).join(', ')}` : '3 个目标槽位存在' },
+      { type: missingAssets.length ? 'bad' : 'good', text: missingAssets.length ? `缺少资产记录：${missingAssets.map(s=>s.asset_id).join(', ')}` : '槽位都能找到 published asset' },
+      { type: 'good', text: 'Storage public URL 正在加载图片' }
+    ]);
+    log('asset registry test finished.');
+  }catch(err){
+    console.error(err);
+    setStatus([{ type:'bad', text:'Supabase 户口本读取失败' }]);
+    log('ERROR: ' + err.message);
+  }
+}
+
+main();
+</script>
+</body>
+</html>
