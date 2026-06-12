@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Kitten Nest Assets Admin</title>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Arial,sans-serif;background:#160d13;color:#ffeef2}
+  main{max-width:1120px;margin:0 auto;padding:24px 16px 46px}
+  h1{margin:0 0 8px;font-size:28px;letter-spacing:.01em}.sub{margin:0 0 16px;color:rgba(255,238,242,.74);line-height:1.55}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 18px}.btn{border:0;text-decoration:none;border-radius:999px;padding:9px 13px;background:rgba(255,244,247,.92);color:#69394a;box-shadow:0 8px 22px rgba(0,0,0,.18);font-weight:750;font-size:13px}.btn.primary{background:#eafff1;color:#215c37}.btn.warn{background:#fff5d8;color:#6d4a10}
+  .status{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 18px}.pill{border-radius:999px;padding:8px 12px;background:rgba(255,244,247,.92);box-shadow:0 8px 24px rgba(0,0,0,.18);font-size:13px}.good{background:#eafff1;color:#215c37}.bad{background:#ffe8ec;color:#8b1e34}.wait{background:#fff5d8;color:#6d4a10}
+  .section{margin-top:22px}.section h2{margin:0 0 10px;font-size:19px;color:#ffeef2}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}.card{border-radius:24px;background:linear-gradient(180deg,rgba(255,244,247,.97),rgba(255,236,241,.93));box-shadow:0 16px 42px rgba(0,0,0,.25);overflow:hidden;border:1px solid rgba(255,255,255,.5);color:#663849}.thumb{width:100%;aspect-ratio:9/16;background:#2a1720;object-fit:cover;display:block}.body{padding:13px}.title{font-weight:900;margin-bottom:7px;color:#633747}.meta{font-size:12px;line-height:1.5;margin:4px 0;color:#7b5260;word-break:break-all}.tag{display:inline-block;border-radius:999px;padding:3px 8px;background:rgba(255,255,255,.65);margin:2px 4px 2px 0;font-size:11px}.slotList{display:grid;gap:10px}.slot{border-radius:18px;background:rgba(255,244,247,.92);color:#69394a;padding:12px 13px;box-shadow:0 10px 26px rgba(0,0,0,.18)}.slot b{display:block;margin-bottom:4px}.log{margin-top:18px;padding:14px;border-radius:18px;background:rgba(255,244,247,.1);color:rgba(255,238,242,.78);font-size:13px;line-height:1.55;white-space:pre-wrap}
+</style>
+</head>
+<body>
+<main>
+  <h1>Kitten Nest 素材库后台</h1>
+  <p class="sub">独立只读入口：查看 Supabase 素材户口本、当前房间绑定和图片加载状态。这里不上传、不删除、不发布，不碰主 /cloud。</p>
+  <div class="toolbar">
+    <a class="btn primary" href="/cloud?v=assets-admin-back-cloud">打开 /cloud</a>
+    <a class="btn" href="/asset-test/?v=assets-admin-link">打开 /asset-test</a>
+    <a class="btn warn" href="/local-reset/?v=assets-admin-link">打开 /local-reset</a>
+  </div>
+  <div class="status" id="status"><span class="pill wait">读取素材户口本中…</span></div>
+
+  <section class="section">
+    <h2>当前房间绑定</h2>
+    <div class="slotList" id="slots"></div>
+  </section>
+
+  <section class="section">
+    <h2>Published assets</h2>
+    <div class="grid" id="assets"></div>
+  </section>
+
+  <div class="log" id="log">booting assets-admin…</div>
+</main>
+<script>
+const SUPABASE_URL = 'https://pmkxzmogolxllijzqnfr.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_a_E9X0r3m6i641s0KluUrg_squa6uc_';
+
+function log(line){ document.getElementById('log').textContent += '\n' + line; }
+function setStatus(items){ document.getElementById('status').innerHTML = items.map(i => `<span class="pill ${i.type}">${i.text}</span>`).join(''); }
+
+async function supabaseGet(path){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    headers: {
+      apikey: SUPABASE_PUBLISHABLE_KEY,
+      Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
+      Accept: 'application/json'
+    }
+  });
+  if(!res.ok){
+    const text = await res.text();
+    throw new Error(`${res.status} ${res.statusText}: ${text}`);
+  }
+  return res.json();
+}
+
+function renderSlot(slot, asset){
+  const div = document.createElement('div');
+  div.className = 'slot';
+  div.innerHTML = `
+    <b>${slot.room_id} / ${slot.slot}</b>
+    <div class="meta"><b>asset_id:</b> ${slot.asset_id}</div>
+    <div class="meta"><b>storage_path:</b> ${asset?.storage_path || 'missing asset'}</div>
+    <div class="meta"><b>status:</b> slot=${slot.status}; asset=${asset?.status || 'missing'}</div>`;
+  return div;
+}
+
+function renderAsset(asset){
+  const article = document.createElement('article');
+  article.className = 'card';
+  article.innerHTML = `
+    <img class="thumb" alt="${asset.asset_id}" src="${asset.public_url}" />
+    <div class="body">
+      <div class="title">${asset.asset_id}</div>
+      <span class="tag">${asset.room_id || 'no-room'}</span><span class="tag">${asset.asset_type}</span><span class="tag">${asset.status}</span>
+      <div class="meta"><b>storage_path:</b> ${asset.storage_path}</div>
+      <div class="meta"><b>bucket:</b> ${asset.bucket}</div>
+      <div class="meta"><b>public_url:</b> ${asset.public_url}</div>
+      <div class="meta" data-check>图片加载中…</div>
+    </div>`;
+  const img = article.querySelector('img');
+  const check = article.querySelector('[data-check]');
+  img.addEventListener('load', () => { check.textContent = `图片加载成功：${img.naturalWidth} × ${img.naturalHeight}`; });
+  img.addEventListener('error', () => { check.textContent = '图片加载失败'; });
+  return article;
+}
+
+async function main(){
+  try{
+    log('reading nest_assets…');
+    const assets = await supabaseGet('nest_assets?select=asset_id,room_id,asset_type,bucket,storage_path,public_url,status,version,note&order=asset_id.asc');
+    log(`nest_assets rows: ${assets.length}`);
+    log('reading room_asset_slots…');
+    const slots = await supabaseGet('room_asset_slots?select=room_id,slot,asset_id,status,note&order=room_id.asc&order=slot.asc');
+    log(`room_asset_slots rows: ${slots.length}`);
+
+    const assetMap = new Map(assets.map(a => [a.asset_id, a]));
+    const slotsEl = document.getElementById('slots');
+    slotsEl.innerHTML = '';
+    slots.forEach(s => slotsEl.appendChild(renderSlot(s, assetMap.get(s.asset_id))));
+
+    const assetsEl = document.getElementById('assets');
+    assetsEl.innerHTML = '';
+    assets.forEach(a => assetsEl.appendChild(renderAsset(a)));
+
+    const missingAssets = slots.filter(s => !assetMap.has(s.asset_id));
+    setStatus([
+      { type: assets.length ? 'good' : 'bad', text: `${assets.length} 个 asset 记录` },
+      { type: slots.length ? 'good' : 'bad', text: `${slots.length} 个房间槽位` },
+      { type: missingAssets.length ? 'bad' : 'good', text: missingAssets.length ? `缺少资产：${missingAssets.map(s=>s.asset_id).join(', ')}` : '槽位资产全部可对应' },
+      { type: 'good', text: '只读模式' }
+    ]);
+    log('assets-admin loaded.');
+  }catch(err){
+    console.error(err);
+    setStatus([{type:'bad', text:'素材库读取失败'}]);
+    log('ERROR: ' + err.message);
+  }
+}
+main();
+</script>
+</body>
+</html>
