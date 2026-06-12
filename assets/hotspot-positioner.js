@@ -37,7 +37,7 @@
         y: 0.605,
         width: 0.22,
         height: 0.18,
-        rotation: -4,
+        rotation: 6,
         transformOrigin: '0 0'
       },
       behavior: 'hubbyNote.open',
@@ -45,7 +45,7 @@
       runtimeStatus: 'active',
       directorNotes: {
         type: 'transparent hotspot over the physical pink notebook on the home background',
-        alignmentTarget: 'top-left corner is the visual anchor; rotate slightly counter-clockwise to follow notebook angle',
+        alignmentTarget: 'top-left corner is the visual anchor; rotate clockwise to follow notebook angle',
         futureUse: 'When the notebook UI becomes a drawn scene asset, keep this hotspot anchored to the same object coordinate instead of the temporary panel design.'
       }
     }
@@ -240,7 +240,7 @@
   }
 
   window.KittenNestHotspots = {
-    version: 'coordinate-hotspot-overlay-card-20260612-note-hot-rotate-1',
+    version: 'coordinate-hotspot-overlay-card-20260612-note-hot-rotate-2',
     cards: hotspotCards,
     overlayCards: overlayCards,
     defaultHotspotId: defaultHotspotId,
