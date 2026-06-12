@@ -1,7 +1,7 @@
 const appBubble = require('./app-bubble');
 
 const coordScript = '<script src="/assets/coordinate-controller.js?v=20260610-1"></script>';
-const hotspotScript = '<script src="/assets/hotspot-positioner.js?v=20260611-clock-base-image-1"></script>';
+const hotspotScript = '<script src="/assets/hotspot-positioner.js?v=20260612-note-hot-1"></script>';
 const coordBoot = `
 <script>
 (function(){
