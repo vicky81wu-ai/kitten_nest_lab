@@ -4,6 +4,7 @@
       id: 'coffeeCorner.tattooHot',
       label: '19.8 tattoo hotspot',
       roomId: 'coffeeCorner',
+      roomElementId: 'gameRoom',
       imageId: 'gameBg',
       selector: '.tattooHot',
       coordinateMode: 'lockedToBaseImage',
@@ -29,6 +30,7 @@
       id: 'coffeeCorner.photoWallHot',
       label: 'photo wall memories hotspot',
       roomId: 'coffeeCorner',
+      roomElementId: 'gameRoom',
       imageId: 'gameBg',
       selector: '.photoHot',
       coordinateMode: 'lockedToBaseImage',
@@ -51,6 +53,7 @@
       id: 'home.hubbyNoteHot',
       label: 'pink notebook hubby note hotspot',
       roomId: 'home',
+      roomElementId: 'home',
       imageId: 'homeOn',
       selector: '.hubbyNoteButton',
       coordinateMode: 'lockedToBaseImage',
@@ -78,6 +81,7 @@
       id: 'home.clockHandsOverlay',
       label: 'clock hands overlay',
       roomId: 'home',
+      roomElementId: 'home',
       imageId: 'homeOn',
       selector: '.clock',
       coordinateMode: 'lockedToBaseImage',
@@ -137,6 +141,28 @@
     };
   }
 
+  function isCardRoomActive(card){
+    if(!card || !card.roomElementId) return true;
+    var room = document.getElementById(card.roomElementId);
+    return !!(room && room.classList.contains('active'));
+  }
+
+  function hideInactiveTarget(target, card){
+    if(!target || !card) return;
+    if(target.getAttribute('data-coordinate-hotspot') === card.id || target.getAttribute('data-coordinate-overlay') === card.id){
+      target.style.pointerEvents = 'none';
+      target.style.opacity = '0';
+      target.setAttribute('data-coordinate-inactive', '1');
+    }
+  }
+
+  function showActiveTarget(target){
+    if(!target) return;
+    target.style.pointerEvents = '';
+    target.style.opacity = '';
+    target.removeAttribute('data-coordinate-inactive');
+  }
+
   function applyTransparentVisual(hot){
     hot.style.padding = '0';
     hot.style.border = '0';
@@ -159,11 +185,18 @@
 
   function applyCard(card){
     if(!card || !card.coordinate) return false;
-    var img = document.getElementById(card.imageId);
     var hot = document.querySelector(card.selector);
-    var box = coverBox(img);
-    if(!img || !hot || !box) return false;
+    if(!hot) return false;
+    if(!isCardRoomActive(card)){
+      hideInactiveTarget(hot, card);
+      return false;
+    }
 
+    var img = document.getElementById(card.imageId);
+    var box = coverBox(img);
+    if(!img || !box) return false;
+
+    showActiveTarget(hot);
     var point = card.coordinate;
     var parent = hot.offsetParent || document.body;
     var parentRect = parent.getBoundingClientRect();
@@ -199,11 +232,18 @@
 
   function applyOverlayCard(card){
     if(!card || !card.coordinate) return false;
-    var img = document.getElementById(card.imageId);
     var overlay = document.querySelector(card.selector);
-    var box = coverBox(img);
-    if(!img || !overlay || !box) return false;
+    if(!overlay) return false;
+    if(!isCardRoomActive(card)){
+      hideInactiveTarget(overlay, card);
+      return false;
+    }
 
+    var img = document.getElementById(card.imageId);
+    var box = coverBox(img);
+    if(!img || !box) return false;
+
+    showActiveTarget(overlay);
     var point = card.coordinate;
     var parent = overlay.offsetParent || document.body;
     var parentRect = parent.getBoundingClientRect();
@@ -255,6 +295,7 @@
     window.addEventListener('orientationchange', applyAll);
     window.addEventListener('pageshow', applyAll);
     document.addEventListener('visibilitychange', function(){ if(!document.hidden) applyAll(); });
+    document.addEventListener('click', function(){ setTimeout(applyAll, 80); }, true);
     setTimeout(applyAll, 200);
     setTimeout(applyAll, 700);
     setTimeout(applyAll, 1500);
@@ -262,7 +303,7 @@
   }
 
   window.KittenNestHotspots = {
-    version: 'coordinate-hotspot-overlay-card-20260612-photo-wall-1',
+    version: 'coordinate-hotspot-overlay-card-20260612-room-gate-1',
     cards: hotspotCards,
     overlayCards: overlayCards,
     defaultHotspotId: defaultHotspotId,
