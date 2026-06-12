@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="theme-color" content="#120b12" />
+<title>Cloud Dynamic Test</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body,#app{margin:0;width:100%;height:100%;overflow:hidden;background:#120b12;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Arial,sans-serif;color:#6e404d}
+body{position:fixed;inset:0}.screen{position:fixed;inset:0;width:100vw;height:100dvh;overflow:hidden;background:#120b12}.room{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity .45s ease}.room.active{opacity:1;pointer-events:auto}.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:opacity .75s ease,filter .75s ease}.home-off{opacity:0}.homeDim .home-on{filter:brightness(.46) saturate(.82) hue-rotate(12deg)}.homeDim .home-off{opacity:1}.homeDim .home-on{opacity:0}.fallback{position:absolute;inset:0;background:radial-gradient(circle at 42% 37%,rgba(255,255,255,.55),transparent 22%),radial-gradient(circle at 72% 31%,rgba(100,170,255,.45),transparent 13%),linear-gradient(180deg,#ffd0bf,#c58da9)}.hot{position:absolute;border:0;background:transparent;z-index:20}.toGameHot{right:0;bottom:0;width:28%;height:20%}.toHomeHot{left:0;top:0;width:22%;height:14%}.moonHot{left:79.5%;top:29.8%;width:15.5%;height:15%}.bubble{position:absolute;right:5%;top:20%;max-width:45%;min-width:120px;padding:12px 14px;border-radius:20px;background:rgba(255,248,245,.86);border:1.4px solid rgba(255,255,255,.92);backdrop-filter:blur(3px);box-shadow:0 10px 28px rgba(83,38,51,.18),inset 0 0 0 1px rgba(120,50,70,.1);font-size:clamp(14px,3.5vw,20px);line-height:1.28;color:#733447;font-weight:540;text-shadow:0 1px rgba(255,255,255,.72);z-index:22}.hud{position:absolute;left:12px;right:12px;bottom:max(12px,env(safe-area-inset-bottom));z-index:80;border-radius:22px;padding:12px;background:rgba(255,245,247,.88);backdrop-filter:blur(14px);box-shadow:0 12px 40px rgba(58,19,38,.28);font-size:12px;line-height:1.35;color:#69394a}.hud b{font-size:14px}.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.pill{border-radius:999px;padding:6px 9px;background:#fff;color:#704456;font-weight:800}.pill.on{background:#eafff1;color:#215c37}.pill.warn{background:#fff8df;color:#7a5417}.btn{border:0;border-radius:12px;padding:8px 10px;background:#fff;color:#69394a;font-weight:800;box-shadow:inset 0 0 0 1px rgba(105,57,74,.14)}.btn.primary{background:#eafff1;color:#215c37}.btn.danger{background:#ffe5eb;color:#92223b}.tiny{opacity:.72;margin-top:7px;word-break:break-all}.toast{position:absolute;left:50%;top:max(16px,env(safe-area-inset-top));transform:translateX(-50%);z-index:100;background:rgba(255,247,244,.92);border-radius:999px;padding:8px 14px;box-shadow:0 8px 24px rgba(0,0,0,.18);opacity:0;transition:.25s}.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div id="app" class="screen">
+  <section id="home" class="room active">
+    <div class="fallback"></div>
+    <img id="homeOn" class="bg home-on" alt="home day">
+    <img id="homeOff" class="bg home-off" alt="home night">
+    <button id="moon" class="hot moonHot"></button>
+    <button id="toGame" class="hot toGameHot"></button>
+  </section>
+  <section id="gameRoom" class="room">
+    <img id="gameBg" class="bg" alt="coffee corner">
+    <button id="toHome" class="hot toHomeHot"></button>
+    <div id="bubble" class="bubble">come here, kitten.</div>
+  </section>
+  <div class="hud">
+    <b>Cloud Dynamic Test</b>
+    <div class="tiny">接近主窝画面，但只测图片来源；调用 /api/asset-resolver.js，不改正式 /cloud。</div>
+    <div class="row" id="sources"></div>
+    <div class="row">
+      <button class="btn primary" id="reload">重新解析三张图</button>
+      <button class="btn" id="goHome">主页</button>
+      <button class="btn" id="goCoffee">咖啡角</button>
+      <button class="btn" id="toggleNight">切日夜</button>
+      <button class="btn danger" id="clearCoffee">撤下本测试容器咖啡角本地图</button>
+      <a class="btn" href="/cloud">回正式 /cloud</a>
+    </div>
+    <div class="tiny" id="log">booting...</div>
+  </div>
+  <div id="toast" class="toast">saved</div>
+</div>
+<script src="/api/asset-resolver.js?v=shared-1"></script>
+<script>
+const $=id=>document.getElementById(id);
+let homeDim=false;
+const slots=[
+  {room:'home',slot:'background.day',img:$('homeOn'),label:'主页亮图'},
+  {room:'home',slot:'background.night',img:$('homeOff'),label:'主页暗图'},
+  {room:'coffeeCorner',slot:'background.main',img:$('gameBg'),label:'咖啡角'}
+];
+const state={};
+function flash(t){const toast=$('toast');toast.textContent=t;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),1400)}
+function setRoom(r){$('home').classList.toggle('active',r==='home');$('gameRoom').classList.toggle('active',r==='coffee');}
+function renderSources(){
+  $('sources').innerHTML=slots.map(s=>{
+    const k=s.room+'|'+s.slot,src=state[k]?.source||'pending';
+    const cls=src==='indexeddb-local-override'?'on':(src==='git-fallback'?'warn':'');
+    return `<span class="pill ${cls}">${s.label}: ${src}</span>`;
+  }).join('');
+}
+function imageUrl(result){
+  if(!result.url) return '';
+  if(result.url.startsWith('blob:')) return result.url;
+  return result.url+(result.url.includes('?')?'&':'?')+'v='+Date.now();
+}
+async function resolveOne(s){
+  const result=await window.KittenNestAssetResolver.resolveAsset(s.room,s.slot);
+  state[s.room+'|'+s.slot]=result;
+  s.img.src=imageUrl(result);
+  return result;
+}
+async function resolveAll(){
+  try{
+    if(!window.KittenNestAssetResolver)throw new Error('shared resolver module not loaded');
+    $('log').textContent='resolving...';
+    for(const s of slots) await resolveOne(s);
+    renderSources();
+    $('log').textContent=JSON.stringify(state,null,2);
+    flash('三张图已解析');
+  }catch(e){$('log').textContent='ERROR: '+e.message;}
+}
+$('reload').onclick=resolveAll;
+$('goHome').onclick=()=>setRoom('home');
+$('goCoffee').onclick=()=>setRoom('coffee');
+$('toGame').onclick=()=>setRoom('coffee');
+$('toHome').onclick=()=>setRoom('home');
+$('moon').onclick=$('toggleNight').onclick=()=>{homeDim=!homeDim;document.body.classList.toggle('homeDim',homeDim)};
+$('clearCoffee').onclick=async()=>{await window.KittenNestAssetResolver.deleteLocalBlob('coffeeCorner','background.main');flash('已撤下本测试容器咖啡角本地图');await resolveAll();};
+resolveAll();
+</script>
+</body>
+</html>
