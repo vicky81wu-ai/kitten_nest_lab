@@ -202,6 +202,8 @@ Important testing rule:
 ```text
 Do not use private/incognito browsing to judge local image upload or local reset behavior.
 Private browsing has separate/temporary storage and is only useful for checking cloud defaults as a clean-browser simulation.
+Safari and iOS home-screen PWA may keep separate IndexedDB containers.
+To clear a PWA local override, run the clear action from inside that PWA/container.
 ```
 
 Current merge status:
@@ -271,6 +273,14 @@ Current orphan prevention:
 nest-asset-upload-form v2 attempts to delete the just-uploaded Storage object if the registry insert fails.
 ```
 
+Cleanup status:
+
+```text
+The temporary upload test objects under assets/rooms/coffeeCorner/uploads/ were manually removed from Supabase Storage.
+The test asset record room.coffeeCorner.background-main.20260612T090613Z was archived.
+coffeeCorner / background.main was restored to room.coffeeCorner.background.main.
+```
+
 ## Publish / bind validation
 
 Validated publish/bind flow:
@@ -279,13 +289,20 @@ Validated publish/bind flow:
 /assets-bind-latest-test
 ```
 
-Result:
+Result during test:
 
 ```text
 room.coffeeCorner.background-main.20260612T090613Z
 -> status: published
 coffeeCorner / background.main
 -> asset_id: room.coffeeCorner.background-main.20260612T090613Z
+```
+
+Final restored state after cleanup:
+
+```text
+coffeeCorner / background.main
+-> asset_id: room.coffeeCorner.background.main
 ```
 
 Validated runtime read test:
@@ -301,7 +318,86 @@ runtime binding read succeeded
 room_asset_slots -> nest_assets -> public_url -> image load
 ```
 
-Do not wire dynamic binding into /cloud runtime until the runtime compatibility layer is deliberately added and tested.
+## Shared resolver module
+
+Reusable resolver module:
+
+```text
+/api/asset-resolver.js
+```
+
+Purpose:
+
+```text
+Keep future /cloud runtime integration from copying temporary test-page code.
+```
+
+Priority order:
+
+```text
+1. Real local image override in IndexedDB kittenNestLabDB / images
+2. Supabase active room_asset_slots -> published nest_assets -> public_url
+3. GitHub/static fallback path
+```
+
+Current local key compatibility mapping:
+
+```text
+coffeeCorner / background.main -> gameRoom
+home / background.day -> homeOn
+home / background.night -> homeOff
+```
+
+Validated resolver preflight:
+
+```text
+/asset-resolver-test
+```
+
+Result:
+
+```text
+The page can visibly report which source is being used:
+- indexeddb-local-override
+- supabase-slot-binding
+- git-fallback
+```
+
+## Dynamic cloud integration test
+
+Standalone near-runtime test entry:
+
+```text
+/cloud-dynamic-test
+```
+
+Purpose:
+
+```text
+Use the shared resolver module in a near-/cloud visual runtime without touching the official /cloud entry.
+```
+
+What it validates:
+
+```text
+home / background.day
+home / background.night
+coffeeCorner / background.main
+```
+
+Expected source priority:
+
+```text
+IndexedDB local override
+-> Supabase published slot binding
+-> GitHub static fallback
+```
+
+Merge rule:
+
+```text
+Do not merge shared resolver into the official /cloud entry until /cloud-dynamic-test is user-validated.
+```
 
 ## Migration principle
 
