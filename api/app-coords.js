@@ -1,7 +1,7 @@
 const appBubble = require('./app-bubble');
 
 const coordScript = '<script src="/assets/coordinate-controller.js?v=20260610-1"></script>';
-const hotspotScript = '<script src="/assets/hotspot-positioner.js?v=20260612-photo-wall-1"></script>';
+const hotspotScript = '<script src="/assets/hotspot-positioner.js?v=20260612-room-gate-1"></script>';
 const photoHotPatch = `
 <style id="photoHotPatch20260612">
 body.cloudDefaultAssets .photoHot{
