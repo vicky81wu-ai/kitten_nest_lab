@@ -3,30 +3,35 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>Kitten Nest Local Image Reset</title>
+<title>Kitten Nest Local Image Reset Test</title>
 <style>
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   body{margin:0;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Arial,sans-serif;background:#160d13;color:#ffeef2}
-  main{max-width:720px;margin:0 auto;padding:26px 18px 44px}
+  main{max-width:760px;margin:0 auto;padding:26px 18px 44px}
   h1{margin:0 0 8px;font-size:27px;line-height:1.15}
-  p{color:rgba(255,238,242,.74);line-height:1.55;margin:8px 0 18px}
+  p{color:rgba(255,238,242,.74);line-height:1.55;margin:8px 0 14px}
+  .note{border-radius:18px;background:rgba(255,244,247,.12);border:1px solid rgba(255,255,255,.16);padding:12px 13px;margin:14px 0;color:rgba(255,238,242,.82);font-size:13px;line-height:1.55}
   .card{border-radius:24px;background:rgba(255,244,247,.92);color:#69394a;box-shadow:0 18px 46px rgba(0,0,0,.28);padding:16px;margin:14px 0;border:1px solid rgba(255,255,255,.48)}
   .row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid rgba(105,57,74,.12)}
   .row:last-child{border-bottom:0}
   .name{font-weight:800}.state{display:block;margin-top:4px;font-size:12px;opacity:.72;word-break:break-all}
   button,a.btn{border:0;text-decoration:none;border-radius:14px;padding:10px 12px;background:#fff;color:#69394a;box-shadow:inset 0 0 0 1px rgba(105,57,74,.14),0 6px 16px rgba(0,0,0,.08);font-weight:700;font-size:14px}
-  .danger{background:#ffe5eb;color:#92223b}.primary{background:#eafff1;color:#215c37}.bar{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+  button:disabled{opacity:.58}.danger{background:#ffe5eb;color:#92223b}.primary{background:#eafff1;color:#215c37}.soft{background:#fff8df;color:#6d4a10}.bar{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
   .log{margin-top:14px;padding:12px;border-radius:16px;background:rgba(255,244,247,.1);color:rgba(255,238,242,.76);font-size:13px;line-height:1.5;white-space:pre-wrap}
 </style>
 </head>
 <body>
 <main>
-  <h1>Kitten Nest 本地图清理</h1>
-  <p>这个页面只清除当前设备浏览器里的本地图 override。不会删除 Supabase 云端图片，也不会删除 GitHub fallback。</p>
+  <h1>Kitten Nest 本地图清理测试</h1>
+  <p>独立测试入口：只清除当前浏览器/当前容器里的本地图 override。不会删除 Supabase 云端图片，也不会删除 GitHub fallback。</p>
+  <div class="note">
+    测本地图请用普通 Safari 或屏幕窝/PWA，不要用无痕浏览。无痕适合测云端默认图，不适合判断本地图上传/清除。
+  </div>
   <section class="card" id="card"></section>
   <div class="bar">
+    <button class="soft" id="clearCoffeeGo">清除咖啡角本地图并回 /cloud</button>
     <button class="danger" id="clearAll">清除三张主图本地 override</button>
-    <a class="btn primary" href="/cloud?v=after-local-reset-1">回到 /cloud</a>
+    <a class="btn primary" href="/cloud?v=after-local-reset-test-2">只回到 /cloud</a>
   </div>
   <div class="log" id="log">ready.</div>
 </main>
@@ -40,6 +45,7 @@ const ITEMS = [
 ];
 
 function log(text){ document.getElementById('log').textContent += '\n' + text; }
+function goCloud(){ location.href = '/cloud?v=after-local-reset-test-2-' + Date.now(); }
 
 function openDB(){
   return new Promise((resolve, reject) => {
@@ -96,12 +102,22 @@ document.addEventListener('click', async e => {
   btn.disabled = false;
 });
 
-document.getElementById('clearAll').onclick = async () => {
+document.getElementById('clearCoffeeGo').onclick = async e => {
+  e.currentTarget.disabled = true;
+  await deleteItem('gameRoom');
+  log('deleted local override: gameRoom');
+  await render();
+  goCloud();
+};
+
+document.getElementById('clearAll').onclick = async e => {
+  e.currentTarget.disabled = true;
   for(const [key] of ITEMS){
     await deleteItem(key);
     log('deleted local override: ' + key);
   }
   await render();
+  e.currentTarget.disabled = false;
 };
 
 render().catch(err => log('ERROR: ' + err.message));
