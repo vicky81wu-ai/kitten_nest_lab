@@ -25,6 +25,28 @@
         futureUse: 'Can choose or filter bubble lines by hotspot mood later. Currently metadata only; it does not change runtime behavior.'
       }
     },
+    'coffeeCorner.photoWallHot': {
+      id: 'coffeeCorner.photoWallHot',
+      label: 'photo wall memories hotspot',
+      roomId: 'coffeeCorner',
+      imageId: 'gameBg',
+      selector: '.photoHot',
+      coordinateMode: 'lockedToBaseImage',
+      coordinate: {
+        x: 0.250,
+        y: 0.215,
+        width: 0.340,
+        height: 0.200
+      },
+      behavior: 'memories.open',
+      visual: 'transparent',
+      runtimeStatus: 'active',
+      directorNotes: {
+        type: 'transparent hotspot centered on the physical photo wall',
+        alignmentTarget: 'center of the photo wall; covers roughly two thirds of the photo wall, not the sofa/body area',
+        reason: 'Old CSS hotspot was left:0 top:13 width:56 height:34 and caused belly mis-taps plus crowding near top-left controls.'
+      }
+    },
     'home.hubbyNoteHot': {
       id: 'home.hubbyNoteHot',
       label: 'pink notebook hubby note hotspot',
@@ -240,7 +262,7 @@
   }
 
   window.KittenNestHotspots = {
-    version: 'coordinate-hotspot-overlay-card-20260612-note-hot-rotate-4',
+    version: 'coordinate-hotspot-overlay-card-20260612-photo-wall-1',
     cards: hotspotCards,
     overlayCards: overlayCards,
     defaultHotspotId: defaultHotspotId,
