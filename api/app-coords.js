@@ -2,6 +2,21 @@ const appBubble = require('./app-bubble');
 
 const coordScript = '<script src="/assets/coordinate-controller.js?v=20260610-1"></script>';
 const hotspotScript = '<script src="/assets/hotspot-positioner.js?v=20260612-note-hot-rotate-4"></script>';
+const photoHotPatch = `
+<style id="photoHotPatch20260612">
+body.cloudDefaultAssets .photoHot{
+  left:10.5%!important;
+  top:13.2%!important;
+  width:34%!important;
+  height:18%!important;
+}
+body.debug .photoHot,
+body.cloudDefaultAssets.debug .photoHot{
+  background:rgba(255,80,130,.18)!important;
+  outline:2px solid rgba(255,80,130,.75)!important;
+  border-radius:18px!important;
+}
+</style>`;
 const coordBoot = `
 <script>
 (function(){
@@ -27,7 +42,7 @@ const coordBoot = `
 </script>`;
 
 function injectCoords(html) {
-  return String(html).replace('</body>', `${coordScript}\n${hotspotScript}\n${coordBoot}\n</body>`);
+  return String(html).replace('</body>', `${photoHotPatch}\n${coordScript}\n${hotspotScript}\n${coordBoot}\n</body>`);
 }
 
 module.exports = async function handler(req, res) {
