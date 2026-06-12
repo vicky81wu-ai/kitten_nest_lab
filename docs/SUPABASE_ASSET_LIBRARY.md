@@ -96,6 +96,32 @@ home / background.night -> room.home.background.night
 coffeeCorner / background.main -> room.coffeeCorner.background.main
 ```
 
+## Current /cloud integration status
+
+`api/app-assets.js` now uses Supabase public asset URLs as the first default image source.
+
+GitHub static `/assets/rooms/...` images remain the direct fallback source.
+
+No new Vercel API was added.
+
+The 100lvh canvas baseline, `.bg` image class, `object-fit: cover` behavior, hotspot coordinate code, bubble code, weather code, and `/write` workflow were not changed for this integration.
+
+Current runtime image order:
+
+```text
+Supabase public asset
+-> GitHub static fallback
+-> fallbackPaint
+```
+
+User-facing intended asset priority still remains:
+
+```text
+local upload override
+-> Supabase public default asset
+-> GitHub static fallback
+```
+
 ## Migration principle
 
 ```text
@@ -117,3 +143,5 @@ local upload override
 ## Protected rule
 
 Do not change the Supabase path convention casually. For migrated default assets, keep the Supabase storage path aligned with the GitHub static asset path.
+
+Do not touch canvas-fill.css, 100lvh, `.bg`, object-fit cover, or hotspot coordinate math when changing asset sources.
