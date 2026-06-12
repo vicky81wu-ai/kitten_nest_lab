@@ -40,6 +40,8 @@ body.cloudDefaultAssets #home{background-image:url('${homeDay}'),url('${homeDayS
 body.cloudDefaultAssets #home .fallback{background-image:url('${homeDay}'),url('${homeDayStatic}'),${fallbackPaint}!important;background-position:center,center,center!important;background-size:cover,cover,auto!important;background-repeat:no-repeat,no-repeat,no-repeat!important;}
 body.cloudDefaultAssets.homeDim #home .fallback{background-image:url('${homeNight}'),url('${homeNightStatic}'),${fallbackPaint}!important;background-position:center,center,center!important;background-size:cover,cover,auto!important;background-repeat:no-repeat,no-repeat,no-repeat!important;}
 body.cloudDefaultAssets #gameRoom{background-image:url('${coffeeCorner}'),url('${coffeeCornerStatic}'),${fallbackPaint};background-position:center,center,center;background-size:cover,cover,auto;background-repeat:no-repeat,no-repeat,no-repeat;background-color:#120b12;}
+.assetAdminLink{display:block;text-align:center;margin-top:10px;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.78);box-shadow:inset 0 0 0 1px rgba(151,83,103,.14);color:#6b3d49;text-decoration:none;font-size:12px;font-weight:800;}
+.assetAdminLink:active{transform:scale(.98)}
 </style>`;
 
 const defaultAssetScript = `
@@ -159,6 +161,7 @@ function injectDefaultAssets(html) {
     .replace('<body>', '<body class="cloudDefaultAssets">')
     .replace('</head>', `${canvasFillCss}\n${setupPatchStyle}\n</head>`)
     .replace('<div id="setup" class="setup">', '<div id="setup" class="setup hidden">')
+    .replace('<div id="miscPage" class="setupPage"><div class="tiny">', '<div id="miscPage" class="setupPage"><a class="assetAdminLink" href="/assets-admin/?v=from-cloud-setup">素材库后台</a><div class="tiny">')
     .replace("function say(t){$('bubble').textContent=t}", "function say(t){bubbleOn=true;$('bubble').textContent=t;syncBubble()}")
     .replace('<img id="homeOn" class="bg home-on">', `<img id="homeOn" class="bg home-on" src="${homeDay}">`)
     .replace('<img id="homeOff" class="bg home-off">', `<img id="homeOff" class="bg home-off" src="${homeNight}">`)
