@@ -111,6 +111,7 @@ Do not casually change these without a staged plan:
 - `/write` update package workflow
 - coffee-corner bubble publishing
 - 19.8 tattoo hotspot behavior
+- photo wall memories hotspot behavior
 - window weather display and weather advice popup
 - powder notebook current page, archive, favorite/delete, and key hiding
 - game console / game menu hotspot
@@ -175,6 +176,32 @@ one short example only if it teaches the rule
 ```
 
 Incident details belong in temporary handoff notes or a short construction-log note, not in a sprawling permanent casebook.
+
+## Closeout checklist
+
+A construction task is not truly finished just because runtime code works.
+
+Before saying a task is done, the construction agent must complete this closeout checklist:
+
+```text
+1. Runtime code changed and deployed or intentionally kept static-only.
+2. Vicky verified the visible behavior, or the task is clearly marked as unverified.
+3. Approved coordinates / selectors / bindings are pinned in the runtime source of truth.
+4. data/object-registry.v1.json is updated for any object, hotspot, overlay, panel, text port, or pipeline identity change.
+5. data/room-config.v1.json is updated for any room, scene, active hotspot, active object, text port, or coordinate-space change.
+6. docs/DIRECTOR_GUIDE.md or docs/TEXT_RULES.md is updated if the change affects writing behavior, directorRef, text container rules, or scene meaning.
+7. Supabase nest_assets is updated only when the change affects image assets, current slot bindings, public URLs, scene_group / scene_key, director_ref, or mood_tags.
+8. Vercel status is checked when a deploy is expected.
+9. Any temporary test route, debug flag, or experimental patch is either removed, documented, or clearly marked as temporary.
+```
+
+Short rule:
+
+```text
+Code first, verify, then write the registry and room card before calling it done.
+```
+
+Do not make Vicky remind the construction agent to write the registry after every approved hotspot or coordinate change.
 
 ## Patch rule
 
