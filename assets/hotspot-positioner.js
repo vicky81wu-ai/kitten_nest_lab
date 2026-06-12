@@ -24,6 +24,28 @@
         memoryHook: 'Alex left-shoulder 19.8 tattoo',
         futureUse: 'Can choose or filter bubble lines by hotspot mood later. Currently metadata only; it does not change runtime behavior.'
       }
+    },
+    'home.hubbyNoteHot': {
+      id: 'home.hubbyNoteHot',
+      label: 'pink notebook hubby note hotspot',
+      roomId: 'home',
+      imageId: 'homeOn',
+      selector: '.hubbyNoteButton',
+      coordinateMode: 'lockedToBaseImage',
+      coordinate: {
+        x: 0.815,
+        y: 0.59,
+        width: 0.22,
+        height: 0.18
+      },
+      behavior: 'hubbyNote.open',
+      visual: 'transparent',
+      runtimeStatus: 'active',
+      directorNotes: {
+        type: 'transparent hotspot over the physical pink notebook on the home background',
+        alignmentTarget: 'center of the pink notebook object, not the old lower-left floating button',
+        futureUse: 'When the notebook UI becomes a drawn scene asset, keep this hotspot anchored to the same object coordinate instead of the temporary panel design.'
+      }
     }
   };
 
@@ -91,6 +113,19 @@
     };
   }
 
+  function applyTransparentVisual(hot){
+    hot.style.padding = '0';
+    hot.style.border = '0';
+    hot.style.background = 'transparent';
+    hot.style.boxShadow = 'none';
+    hot.style.backdropFilter = 'none';
+    hot.style.webkitBackdropFilter = 'none';
+    hot.style.color = 'transparent';
+    hot.style.fontSize = '0';
+    hot.style.textShadow = 'none';
+    hot.style.borderRadius = '18px';
+  }
+
   function applyCard(card){
     if(!card || !card.coordinate) return false;
     var img = document.getElementById(card.imageId);
@@ -117,10 +152,14 @@
     hot.setAttribute('data-hotspot-label', card.label || card.id);
     hot.setAttribute('data-hotspot-behavior', card.behavior || '');
 
+    if(card.visual === 'transparent') applyTransparentVisual(hot);
+
     if(new URLSearchParams(location.search).get('debugHotspot') === '1'){
       hot.style.background = 'rgba(255,80,130,.18)';
       hot.style.outline = '2px solid rgba(255,80,130,.85)';
       hot.style.borderRadius = '18px';
+      hot.style.color = 'rgba(122,64,84,.95)';
+      hot.style.fontSize = '12px';
     }
 
     return true;
@@ -191,7 +230,7 @@
   }
 
   window.KittenNestHotspots = {
-    version: 'coordinate-hotspot-overlay-card-20260611-clock-base-image-1',
+    version: 'coordinate-hotspot-overlay-card-20260612-note-hot-1',
     cards: hotspotCards,
     overlayCards: overlayCards,
     defaultHotspotId: defaultHotspotId,
