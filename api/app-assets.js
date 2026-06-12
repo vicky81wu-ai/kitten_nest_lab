@@ -1,6 +1,6 @@
 const appQ = require('./app-q');
 
-const ASSET_VERSION = 'supa-assets-20260612-3';
+const ASSET_VERSION = 'supa-assets-20260612-1';
 const SUPABASE_PUBLIC_BASE = 'https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets';
 
 const STATIC_ASSETS = {
