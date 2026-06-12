@@ -20,7 +20,7 @@
   <section class="hero">
     <h1>Supabase 管理员登录测试</h1>
     <p>这一步只创建/登录 Supabase Auth 账号并显示 UID。它不上传图片、不写素材户口本、不改 /cloud。</p>
-    <div class="note">建议用小猫自己的邮箱。密码只会发给 Supabase Auth；这个页面不会保存密码。</div>
+    <div class="note">建议用小猫自己的邮箱。密码只会发给 Supabase Auth；这个页面不会保存密码。确认邮件如果打开后跳错页面，也不影响已确认账号。</div>
   </section>
 
   <section class="card">
@@ -41,13 +41,16 @@
 const SUPABASE_URL = 'https://pmkxzmogolxllijzqnfr.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_a_E9X0r3m6i641s0KluUrg_squa6uc_';
 const TOKEN_KEY = 'kittenNestSupabaseSession';
+const AUTH_REDIRECT_TO = 'https://kitten-nest-lab.vercel.app/assets-auth-test/';
 const result = document.getElementById('result');
 function out(x){ result.textContent = typeof x === 'string' ? x : JSON.stringify(x, null, 2); }
 function creds(){ return { email: document.getElementById('email').value.trim(), password: document.getElementById('password').value }; }
 function saveSession(data){ if(data && data.access_token) localStorage.setItem(TOKEN_KEY, JSON.stringify(data)); }
 function getSession(){ try{return JSON.parse(localStorage.getItem(TOKEN_KEY)||'null')}catch(e){return null} }
 async function authFetch(path, body){
-  const res = await fetch(`${SUPABASE_URL}/auth/v1/${path}`, {
+  const sep = path.includes('?') ? '&' : '?';
+  const fullPath = `${path}${sep}redirect_to=${encodeURIComponent(AUTH_REDIRECT_TO)}`;
+  const res = await fetch(`${SUPABASE_URL}/auth/v1/${fullPath}`, {
     method:'POST',
     headers:{ apikey: SUPABASE_PUBLISHABLE_KEY, 'Content-Type':'application/json' },
     body: JSON.stringify(body)
@@ -64,11 +67,11 @@ async function getUser(){
   });
   const data = await res.json().catch(()=>({}));
   if(!res.ok) throw new Error(JSON.stringify(data));
-  out({status:'logged_in', user_id:data.id, email:data.email, note:'把这个 user_id 给 hubby，下一步登记为 nest_admin。'});
+  out({status:'logged_in', user_id:data.id, email:data.email, note:'已登录。现在可以去 assets-upload-test 上传测试图。'});
 }
 document.getElementById('signUp').onclick = async e => {
   e.currentTarget.disabled = true;
-  try{ const data = await authFetch('signup', creds()); saveSession(data); out(data.user ? {status:'signed_up', user_id:data.user.id, email:data.user.email, note:'如果需要邮箱确认，请先确认邮件；如果已经有 session，会直接显示 user_id。'} : data); }
+  try{ const data = await authFetch('signup', creds()); saveSession(data); out(data.user ? {status:'signed_up', user_id:data.user.id, email:data.user.email, note:'如果需要邮箱确认，请先确认邮件；确认后回本页登录。'} : data); }
   catch(err){ out('ERROR: ' + err.message); }
   finally{ e.currentTarget.disabled = false; }
 };
