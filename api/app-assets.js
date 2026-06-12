@@ -1,6 +1,6 @@
 const appQ = require('./app-q');
 
-const ASSET_VERSION = 'supa-assets-20260612-1';
+const ASSET_VERSION = 'supa-assets-20260612-2';
 const SUPABASE_PUBLIC_BASE = 'https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets';
 
 const STATIC_ASSETS = {
@@ -32,6 +32,7 @@ const coffeeCornerStatic = staticAsset('coffee-corner-morning-evening');
 
 const fallbackPaint = `radial-gradient(circle at 42% 37%,rgba(255,255,255,.55),transparent 22%),radial-gradient(circle at 72% 31%,rgba(100,170,255,.45),transparent 13%),linear-gradient(180deg,#ffd0bf,#c58da9)`;
 const canvasFillCss = '<link rel="stylesheet" href="/assets/canvas-fill.css?v=20260610-1">';
+const assetResolverLibScript = '<script src="/lib/asset-resolver.js?v=static-20260612-1"></script>';
 
 const setupPatchStyle = `
 <style id="cloudDefaultAssetsSetupPatch">
@@ -112,6 +113,78 @@ const defaultAssetScript = `
 })();
 </script>`;
 
+const dynamicAssetResolverScript = `
+<script>
+(function(){
+  window.__kittenNestDynamicAssets = 'static-resolver-20260612-1';
+
+  var slots = [
+    { id: 'homeOn', room: 'home', slot: 'background.day', label: 'home.day' },
+    { id: 'homeOff', room: 'home', slot: 'background.night', label: 'home.night' },
+    { id: 'gameBg', room: 'coffeeCorner', slot: 'background.main', label: 'coffeeCorner.main' }
+  ];
+
+  function resolver(){
+    return window.KittenNestAssetResolver;
+  }
+
+  function cleanUrl(url){
+    return String(url || '');
+  }
+
+  async function applyOne(item){
+    var api = resolver();
+    var img = document.getElementById(item.id);
+    if(!api || !api.resolveAsset || !img) return null;
+
+    var result = await api.resolveAsset(item.room, item.slot);
+    if(!result || !result.url) return null;
+
+    var next = cleanUrl(result.url);
+    img.setAttribute('data-asset-source', result.source || '');
+    img.setAttribute('data-asset-room', item.room);
+    img.setAttribute('data-asset-slot', item.slot);
+    if(result.local_key) img.setAttribute('data-local-key', result.local_key);
+
+    if(img.getAttribute('src') !== next){
+      img.src = next;
+    }
+
+    return result;
+  }
+
+  async function applyAll(){
+    try{
+      if(!resolver()) return false;
+      var report = {};
+      for(var i=0;i<slots.length;i++){
+        var item = slots[i];
+        var result = await applyOne(item);
+        if(result) report[item.label] = result.source;
+      }
+      window.__kittenNestAssetSources = report;
+      document.body.setAttribute('data-asset-resolver', 'on');
+      return true;
+    }catch(e){
+      console.log('kitten nest dynamic asset resolver failed', e);
+      return false;
+    }
+  }
+
+  function boot(){
+    applyAll();
+  }
+
+  window.addEventListener('load', boot);
+  window.addEventListener('pageshow', boot);
+  window.addEventListener('focus', boot);
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) boot(); });
+  setTimeout(boot, 120);
+  setTimeout(boot, 500);
+  setTimeout(boot, 1400);
+})();
+</script>`;
+
 const cloudTextPatchScript = `
 <script>
 (function(){
@@ -166,7 +239,7 @@ function injectDefaultAssets(html) {
     .replace('<img id="homeOn" class="bg home-on">', `<img id="homeOn" class="bg home-on" src="${homeDay}">`)
     .replace('<img id="homeOff" class="bg home-off">', `<img id="homeOff" class="bg home-off" src="${homeNight}">`)
     .replace('<img id="gameBg" class="bg">', `<img id="gameBg" class="bg" src="${coffeeCorner}">`)
-    .replace('</body>', `${defaultAssetScript}\n${cloudTextPatchScript}\n</body>`);
+    .replace('</body>', `${assetResolverLibScript}\n${defaultAssetScript}\n${dynamicAssetResolverScript}\n${cloudTextPatchScript}\n</body>`);
 }
 
 module.exports = async function handler(req, res) {
