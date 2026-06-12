@@ -156,6 +156,68 @@ Keep local reset as a standalone test/utility entry for now.
 Do not merge reset controls into the main /cloud setup panel until deliberately requested and re-tested.
 ```
 
+## Admin asset upload test
+
+Standalone admin upload test entry:
+
+```text
+/assets-upload-edge
+```
+
+Current backend route:
+
+```text
+Supabase Edge Function: nest-asset-upload-form
+```
+
+Upload flow:
+
+```text
+Browser form
+-> Edge Function receives access_token in FormData
+-> Edge Function validates the Supabase Auth user
+-> Edge Function checks public.nest_admins admin whitelist
+-> Edge Function uploads to Storage using service_role
+-> Edge Function inserts one public.nest_assets registry record using service_role
+```
+
+Validated behavior:
+
+```text
+Admin upload can upload a test image to Supabase Storage and register a draft asset row in public.nest_assets.
+```
+
+Validated draft asset example:
+
+```text
+asset_id: room.coffeeCorner.background-main.20260612T090613Z
+room_id: coffeeCorner
+asset_type: roomBackground
+storage_path: assets/rooms/coffeeCorner/uploads/background-main-20260612T090613Z.png
+status: draft
+```
+
+Known orphan from first registry-permission test:
+
+```text
+assets/rooms/coffeeCorner/uploads/background-main-20260612T090104Z.png
+```
+
+Reason:
+
+```text
+Storage upload succeeded before service_role had INSERT permission on public.nest_assets.
+The registry insert then failed, leaving one unregistered Storage object.
+```
+
+Current orphan prevention:
+
+```text
+nest-asset-upload-form v2 attempts to delete the just-uploaded Storage object if the registry insert fails.
+```
+
+Do not wire this upload test into /cloud runtime until the publish/bind flow is separately tested.
+
 ## Migration principle
 
 ```text
