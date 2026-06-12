@@ -33,8 +33,8 @@
       selector: '.hubbyNoteButton',
       coordinateMode: 'lockedToBaseImage',
       coordinate: {
-        x: 0.815,
-        y: 0.59,
+        x: 0.800,
+        y: 0.605,
         width: 0.22,
         height: 0.18
       },
@@ -230,7 +230,7 @@
   }
 
   window.KittenNestHotspots = {
-    version: 'coordinate-hotspot-overlay-card-20260612-note-hot-1',
+    version: 'coordinate-hotspot-overlay-card-20260612-note-hot-2',
     cards: hotspotCards,
     overlayCards: overlayCards,
     defaultHotspotId: defaultHotspotId,
