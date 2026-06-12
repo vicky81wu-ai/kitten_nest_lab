@@ -161,7 +161,7 @@ function injectDefaultAssets(html) {
     .replace('<body>', '<body class="cloudDefaultAssets">')
     .replace('</head>', `${canvasFillCss}\n${setupPatchStyle}\n</head>`)
     .replace('<div id="setup" class="setup">', '<div id="setup" class="setup hidden">')
-    .replace('<div id="miscPage" class="setupPage"><div class="tiny">', '<div id="miscPage" class="setupPage"><a class="assetAdminLink" href="/assets-admin/?v=from-cloud-setup">素材库后台</a><div class="tiny">')
+    .replace('<div id="miscPage" class="setupPage"><div class="tiny">', '<div id="miscPage" class="setupPage"><a class="assetAdminLink" href="/assets-admin/?v=from-cloud-setup">素材库后台</a><a class="assetAdminLink" href="/local-reset/?v=from-cloud-setup">撤下本地图</a><div class="tiny">')
     .replace("function say(t){$('bubble').textContent=t}", "function say(t){bubbleOn=true;$('bubble').textContent=t;syncBubble()}")
     .replace('<img id="homeOn" class="bg home-on">', `<img id="homeOn" class="bg home-on" src="${homeDay}">`)
     .replace('<img id="homeOff" class="bg home-off">', `<img id="homeOff" class="bg home-off" src="${homeNight}">`)
