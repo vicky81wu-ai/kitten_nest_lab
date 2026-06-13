@@ -1,5 +1,5 @@
 (function(){
-  var VERSION = 'coffee-corner-variant-20260613-4-lap-chest-hot';
+  var VERSION = 'coffee-corner-variant-20260613-5-lap-chest-cycle';
   var LAP_URL = 'https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/variants/lap-close-01.jpg?v=20260613-lap-close-1';
   var mainSrc = '';
   var mode = 'main';
@@ -8,12 +8,13 @@
   var chestHot;
   var lapBubble;
   var stateSubscribed = false;
-  var lapText = '';
+  var lapLines = [];
+  var lapIndex = 0;
 
   var enterCard = {
     id: 'coffeeCorner.lapEnterHot',
     label: 'coffee corner lap close enter hotspot',
-    coordinate: { x: 0.34, y: 0.57, width: 0.38, height: 0.24 }
+    coordinate: { x: 0.48, y: 0.48, width: 0.24, height: 0.17 }
   };
 
   var backCard = {
@@ -25,72 +26,77 @@
   var chestCard = {
     id: 'coffeeCorner.lapChestHot',
     label: 'coffee corner lap close chest hotspot',
-    coordinate: { x: 0.60, y: 0.665, width: 0.42, height: 0.22 }
+    coordinate: { x: 0.56, y: 0.67, width: 0.40, height: 0.26 }
   };
 
   function room(){ return document.getElementById('gameRoom'); }
   function img(){ return document.getElementById('gameBg'); }
   function mainBubble(){ return document.getElementById('bubble'); }
 
-  function cleanText(value){
-    return String(value || '').trim();
+  function cleanText(value){ return String(value || '').trim(); }
+
+  function linesFrom(value){
+    if(Array.isArray(value)) return value.map(cleanText).filter(Boolean).slice(0,30);
+    return String(value || '').split(/\r?\n/).map(cleanText).filter(Boolean).slice(0,30);
   }
 
-  function firstLine(list){
-    if(!Array.isArray(list)) return '';
-    for(var i = 0; i < list.length; i++){
-      var text = cleanText(list[i]);
-      if(text) return text;
-    }
-    return '';
+  function linesFromState(state){
+    if(!state) return [];
+    var list = linesFrom(state.coffeeCornerLapCloseBubbles);
+    if(list.length) return list;
+    list = linesFrom(state.lapCloseBubbles);
+    if(list.length) return list;
+    list = linesFrom(state.coffeeCornerLapCloseBubble);
+    if(list.length) return list;
+    return linesFrom(state.lapCloseBubble);
   }
 
-  function textFromState(state){
-    if(!state) return '';
-    return cleanText(state.coffeeCornerLapCloseBubble) ||
-      cleanText(state.lapCloseBubble) ||
-      firstLine(state.coffeeCornerLapCloseBubbles) ||
-      firstLine(state.lapCloseBubbles);
+  function hasLapText(){ return lapLines.length > 0; }
+
+  function currentLapText(){
+    if(!lapLines.length) return '';
+    if(lapIndex < 0 || lapIndex >= lapLines.length) lapIndex = 0;
+    return lapLines[lapIndex] || '';
   }
 
-  function hasLapText(){ return !!cleanText(lapText); }
-
-  function syncLapBubbleText(text){
-    lapText = cleanText(text);
+  function syncLapBubbleLines(lines){
+    lapLines = Array.isArray(lines) ? lines.map(cleanText).filter(Boolean).slice(0,30) : linesFrom(lines);
+    if(lapIndex >= lapLines.length) lapIndex = 0;
     var b = ensureLapBubble();
     if(!b) return false;
-    b.textContent = lapText;
-    if(hasLapText()){
-      b.setAttribute('data-has-text', '1');
-    }else{
-      b.removeAttribute('data-has-text');
-    }
+    b.textContent = currentLapText();
+    if(hasLapText()) b.setAttribute('data-has-text', '1');
+    else b.removeAttribute('data-has-text');
     return true;
   }
 
-  function toggleLapBubble(){
+  function showNextLapBubble(){
     var b = ensureLapBubble();
     if(!b || mode !== 'lap' || !hasLapText()) return;
-    if(b.getAttribute('data-active') === '1') b.removeAttribute('data-active');
-    else b.setAttribute('data-active', '1');
+    if(b.getAttribute('data-active') === '1'){
+      lapIndex = (lapIndex + 1) % lapLines.length;
+    }
+    b.textContent = currentLapText();
+    b.setAttribute('data-has-text', '1');
+    b.setAttribute('data-active', '1');
   }
 
-  function readStateText(){
+  function readStateLines(){
     var client = window.KittenNestState;
-    if(!client || typeof client.get !== 'function') return '';
-    return textFromState(client.get());
+    if(!client || typeof client.get !== 'function') return [];
+    return linesFromState(client.get());
   }
 
   function attachState(){
     var client = window.KittenNestState;
     if(!client) return false;
-    var text = readStateText();
-    if(text) syncLapBubbleText(text);
-    if(stateSubscribed || typeof client.subscribe !== 'function') return !!text;
+    var list = readStateLines();
+    syncLapBubbleLines(list);
+    if(stateSubscribed || typeof client.subscribe !== 'function') return list.length > 0;
     stateSubscribed = true;
     client.subscribe(function(payload){
-      var text = textFromState(payload && payload.state);
-      syncLapBubbleText(text);
+      var list = linesFromState(payload && payload.state);
+      syncLapBubbleLines(list);
       updateHotspots();
     });
     return true;
@@ -165,8 +171,8 @@
     }
     if(!chestHot){
       chestHot = makeHot('lapChestHot', '坐腿近景胸口互动区');
-      chestHot.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); toggleLapBubble(); }, true);
-      chestHot.addEventListener('touchend', function(e){ e.preventDefault(); e.stopPropagation(); toggleLapBubble(); }, true);
+      chestHot.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); showNextLapBubble(); }, true);
+      chestHot.addEventListener('touchend', function(e){ e.preventDefault(); e.stopPropagation(); showNextLapBubble(); }, true);
       r.appendChild(chestHot);
     }
     ensureLapBubble();
@@ -230,8 +236,7 @@
       backHot.style.pointerEvents = 'auto';
       chestHot.style.display = 'block';
       chestHot.style.pointerEvents = 'auto';
-      if(b && hasLapText()) b.setAttribute('data-active', '1');
-      else if(b) b.removeAttribute('data-active');
+      if(b) b.removeAttribute('data-active');
       if(main) main.setAttribute('data-lap-hidden', '1');
     }else{
       enterHot.style.display = 'block';
@@ -261,8 +266,8 @@
     chestCard: chestCard,
     enterLap: enterLap,
     backMain: backMain,
-    setLapBubbleText: function(text){ syncLapBubbleText(text); updateHotspots(); },
-    clearLapBubbleText: function(){ syncLapBubbleText(''); updateHotspots(); },
+    setLapBubbleText: function(text){ syncLapBubbleLines(linesFrom(text)); updateHotspots(); },
+    clearLapBubbleText: function(){ syncLapBubbleLines([]); updateHotspots(); },
     updateHotspots: updateHotspots,
     boot: boot
   };
