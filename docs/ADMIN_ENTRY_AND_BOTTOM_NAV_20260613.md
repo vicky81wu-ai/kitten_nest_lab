@@ -47,6 +47,22 @@ preventDefault on touchstart inside the admin zone
 
 This prevents the blue selection handles / copy-query-translate bar from appearing during the long press.
 
+Important guardrail:
+
+```text
+Only touches that start inside the upper-left admin zone may be blocked.
+All other hotspot touchend/click behavior must pass through.
+```
+
+Verified by Vicky on 2026-06-13 after the scoped touch guard fix:
+
+```text
+left/right room navigation works
+home powder notebook works
+upper-left long press works
+native blue selection callout no longer blocks the flow
+```
+
 This is a temporary bridge.
 
 Future direction:
@@ -112,5 +128,5 @@ assets/setup-toggle.js
 Current injected version:
 
 ```text
-/assets/setup-toggle.js?v=20260613-admin-no-select-1
+/assets/setup-toggle.js?v=20260613-touchfix-1
 ```
