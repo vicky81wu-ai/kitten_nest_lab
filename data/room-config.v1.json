@@ -1,5 +1,5 @@
 {
-  "version": "0.1.10",
+  "version": "0.1.11",
   "status": "foundation-scene-hooks",
   "note": "Room and scene configuration foundation for Kitten Nest. This file is not a full roomEngine runtime yet. It keeps scene identity, active ports, protected current runtime facts, and directorRef hooks. Long director notes live in docs/DIRECTOR_GUIDE.md.",
   "currentRuntime": {
@@ -26,6 +26,7 @@
       "coffeeCorner.gameConsoleHotspot",
       "coffeeCorner.lapEnterHot",
       "coffeeCorner.lapBackHot",
+      "coffeeCorner.lapChestHot",
       "coffeeCorner.setupToggleButton"
     ],
     "activePanels": [
@@ -35,7 +36,7 @@
     "activeAssetPipelines": [
       "coffeeCorner.localImageUpload"
     ],
-    "stableWorkflow": "Alex update package -> /write -> generate drafts -> publish all -> /cloud. The powder notebook currently appears as a physical home object and opens a home-scoped archive-first notebook panel. Setup/local upload remains manually available. CoffeeCorner lap-close is a scene variant with its own upper-left bubble, not a new room and not the normal rotating coffeeCorner bubble."
+    "stableWorkflow": "Alex update package -> /write -> generate drafts -> publish all -> /cloud. The powder notebook currently appears as a physical home object and opens a home-scoped archive-first notebook panel. Setup/local upload remains manually available. CoffeeCorner lap-close is a scene variant with its own upper-left bubble and chest hotspot, not a new room and not the normal rotating coffeeCorner bubble."
   },
   "identityPolicy": {
     "coreRule": "No identity, no binding.",
@@ -128,7 +129,7 @@
       },
       "coordinateSpace": {
         "status": "mixed",
-        "activeBaseImageLocked": ["coffeeCorner.tattoo19_8", "coffeeCorner.photoWallHot", "coffeeCorner.lapEnterHot", "coffeeCorner.lapBackHot"],
+        "activeBaseImageLocked": ["coffeeCorner.tattoo19_8", "coffeeCorner.photoWallHot", "coffeeCorner.lapEnterHot", "coffeeCorner.lapBackHot", "coffeeCorner.lapChestHot"],
         "legacyViewport": ["coffeeCorner.bubbleOverlay", "coffeeCorner.windowWeatherOverlay"],
         "futureMode": "baseImageLocked"
       },
@@ -146,6 +147,7 @@
         "coffeeCorner.gameConsoleHotspot",
         "coffeeCorner.lapEnterHot",
         "coffeeCorner.lapBackHot",
+        "coffeeCorner.lapChestHot",
         "coffeeCorner.setupToggleButton"
       ],
       "activePanels": [
@@ -191,10 +193,11 @@
           "assetStoragePath": "assets/rooms/coffee-corner/variants/lap-close-01.jpg",
           "entryHotspot": "coffeeCorner.lapEnterHot",
           "returnHotspot": "coffeeCorner.lapBackHot",
+          "localHotspots": ["coffeeCorner.lapChestHot"],
           "textPorts": ["coffeeCorner.lapCloseBubble"],
           "directorRef": "director.scenes.coffeeCornerLapClose",
           "directorTags": ["lapClose", "intimate", "sweetCare", "closeUp", "cuddle", "sceneVariant"],
-          "notes": "A coffeeCorner scene variant entered by tapping Alex's lap/leg area. It is intimate, sweet, and close, but still belongs to coffeeCorner. It uses its own upper-left lapClose bubble and hides the normal coffeeCorner bubble while active."
+          "notes": "A coffeeCorner scene variant entered by tapping Alex's lap/leg area. It is intimate, sweet, and close, but still belongs to coffeeCorner. It uses its own upper-left lapClose bubble, has a lap-only chest hotspot, and hides the normal coffeeCorner bubble while active."
         }
       ],
       "directorRef": "director.scenes.coffeeCorner",
@@ -258,6 +261,7 @@
       "game console / game menu hotspot",
       "coffeeCorner lap-close variant enter/return behavior",
       "coffeeCorner lapCloseBubble must stay separate from normal coffeeCorner bubble queue",
+      "coffeeCorner lapChestHot must stay lap-close-only and not leak into main coffeeCorner",
       "setup panel manual access",
       "local image upload override pipeline",
       "Vercel Hobby function count budget"
