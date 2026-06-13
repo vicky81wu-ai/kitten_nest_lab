@@ -24,6 +24,48 @@ Translate the current chat into the right container:
 - `PermanentNote`: one preserved note, usually with continuity.
 - `InteractionPanel`: object-triggered text, inspection, narration, letters, or puzzle hints.
 
+## Manual package tags
+
+These are the tags Alex should use when sending Vicky a copy-paste update package for `/write`.
+
+Rule:
+
+Each bracketed block should publish to its own home. Do not rely on visual scene names alone. Use the exact tag when a block belongs to a non-default text port.
+
+Current supported tags:
+
+```text
+[coffeeCorner]
+```
+
+Publishes normal coffeeCorner bubble lines to `coffeeCorner.bubbles` / `alexBubbles`.
+
+```text
+[coffeeCornerLapClose]
+```
+
+Publishes one sitting-on-lap close-up line to `coffeeCorner.lapCloseBubble` / `coffeeCornerLapCloseBubble`. This is the tag to use for the lap-close upper-left bubble. Accepted aliases: `[lapClose]`, `[lapBubble]`, `[lapCloseBubble]`, `[coffeeCornerLapCloseBubble]`.
+
+```text
+[windowWeather]
+```
+
+Publishes two weather lines to the window weather port: first line temperature, second line description.
+
+```text
+[hubbyNote]
+```
+
+Publishes one permanent note to the home-scoped powder notebook panel.
+
+Default rule:
+
+If a package starts with text before any tag, `/write` treats it as `[coffeeCorner]`. Do not use an untagged block for lap-close text.
+
+Empty block rule:
+
+If `[coffeeCornerLapClose]` has no text under it, it creates no draft and no lap bubble will appear. This is intentional: lap-close should not have a default filler line.
+
 ## Scenes
 
 ### director.scenes.home
@@ -89,6 +131,12 @@ Meaning:
 
 The main Alex bubble in the coffee corner. It is immediate presence, not a permanent archive.
 
+Package tag:
+
+```text
+[coffeeCorner]
+```
+
 Use for:
 
 - daily greetings
@@ -109,6 +157,21 @@ Meaning:
 
 The small lap-close bubble shown in the upper-left of the lap-close scene variant. It is separate from the normal coffeeCorner bubble and should not rotate through the coffeeCorner queue.
 
+Package tag:
+
+```text
+[coffeeCornerLapClose]
+```
+
+Accepted aliases:
+
+```text
+[lapClose]
+[lapBubble]
+[lapCloseBubble]
+[coffeeCornerLapCloseBubble]
+```
+
 Use for:
 
 - one short line acknowledging that Vicky is now sitting closer
@@ -126,11 +189,21 @@ Sample direction:
 - 过来就别急着跑，小猫。咖啡还热，腿也给小猫占着。
 - 好，近一点。现在小猫讲话，老公听着。
 
+No-default rule:
+
+Do not hard-code these sample lines as fallback text. They are examples only. The lap-close bubble should appear only when Vicky or Alex publishes a current line through the lap-close package tag.
+
 ### director.textPorts.windowWeather
 
 Meaning:
 
 Small environmental mood text near the window.
+
+Package tag:
+
+```text
+[windowWeather]
+```
 
 Use for:
 
@@ -260,6 +333,12 @@ This is future-private. It should use user-controlled publishing and should not 
 Meaning:
 
 The current powder notebook / hubby note. It is a PermanentNote container, not the entire PermanentNote class.
+
+Package tag:
+
+```text
+[hubbyNote]
+```
 
 Use for:
 
