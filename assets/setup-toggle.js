@@ -2,6 +2,7 @@
   var LONG_PRESS_MS = 1800;
   var pressTimer = null;
   var longPressFired = false;
+  var adminPressActive = false;
 
   function setupEl(){ return document.getElementById('setup'); }
   function inAdminZoneFromPoint(x, y){
@@ -67,6 +68,7 @@
   function startPress(e){
     var p = eventPoint(e);
     if(!inAdminZoneFromPoint(p.x, p.y)) return;
+    adminPressActive = true;
     if(e){ e.preventDefault(); e.stopPropagation(); if(e.stopImmediatePropagation) e.stopImmediatePropagation(); }
     ensureStyle();
     document.body.classList.add('adminLongPressArmed');
@@ -79,11 +81,12 @@
   }
 
   function endPress(e){
-    var fired = longPressFired;
+    var shouldBlock = adminPressActive || longPressFired;
     clearPress();
     longPressFired = false;
+    adminPressActive = false;
     document.body.classList.remove('adminLongPressArmed');
-    if(e){
+    if(shouldBlock && e){
       e.preventDefault();
       e.stopPropagation();
       if(e.stopImmediatePropagation) e.stopImmediatePropagation();
@@ -93,6 +96,7 @@
   function cancelPress(){
     clearPress();
     longPressFired = false;
+    adminPressActive = false;
     document.body.classList.remove('adminLongPressArmed');
   }
 
@@ -118,7 +122,7 @@
       btn.addEventListener('mouseleave', cancelPress);
       btn.addEventListener('contextmenu', function(e){ e.preventDefault(); e.stopPropagation(); return false; }, true);
       btn.addEventListener('selectstart', function(e){ e.preventDefault(); e.stopPropagation(); return false; }, true);
-      btn.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); if(e.stopImmediatePropagation) e.stopImmediatePropagation(); }, true);
+      btn.addEventListener('click', function(e){ if(adminPressActive || longPressFired){ e.preventDefault(); e.stopPropagation(); if(e.stopImmediatePropagation) e.stopImmediatePropagation(); } }, true);
     }
   }
 
@@ -129,7 +133,7 @@
   }
 
   window.KittenNestSetupToggle = {
-    version:'setup-toggle-20260613-admin-longpress-no-select',
+    version:'setup-toggle-20260613-admin-longpress-scoped-guard',
     open:openSetup,
     close:closeSetup,
     longPressMs:LONG_PRESS_MS
