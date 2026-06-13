@@ -1,0 +1,52 @@
+{
+  "id": "coffeeCorner.coffeeSteamOverlay",
+  "roomId": "coffeeCorner",
+  "kind": "decorativeOverlay",
+  "selector": ".steam",
+  "owner": "coffeeSteamSvg",
+  "role": "coffeeCupSteamMistOverlay",
+  "action": "showSvgMistSteam",
+  "exclusive": true,
+  "runtimeStatus": "active",
+  "coordinateStatus": "baseImageLockedApproved",
+  "versionStatus": "canonicalCurrent",
+  "changePolicy": "mutableWithVersion",
+  "imageId": "gameBg",
+  "roomElementId": "gameRoom",
+  "approvedCoordinate": {
+    "x": 0.503,
+    "y": 0.313,
+    "width": 0.086,
+    "height": 0.132
+  },
+  "approvedFromCss": {
+    "right": "45.4%",
+    "top": "24.7%",
+    "width": "8.6%",
+    "height": "13.2%"
+  },
+  "approvedRuntimeVersions": {
+    "style": "/assets/coffee-corner-polish.css?v=20260613-steam-mist-left-1",
+    "script": "/assets/coffee-steam-svg.js?v=20260613-mist-1"
+  },
+  "implementationFiles": [
+    "assets/coffee-corner-polish.css",
+    "assets/coffee-steam-svg.js"
+  ],
+  "approvalDoc": "docs/overlay-approvals/coffeeCorner-coffeeSteamOverlay-20260613.md",
+  "runtimeMigrationTarget": "assets/hotspot-positioner.js overlayCards",
+  "notes": [
+    "This is not a clickable hotspot.",
+    "Keep it gated to #gameRoom.active / coffeeCorner only.",
+    "The approved visual is soft SVG mist, not rigid vertical white bars.",
+    "If runtime is migrated later, preserve the approvedCoordinate unless Vicky visually re-approves a change."
+  ],
+  "directorTags": [
+    "decorativeOverlay",
+    "coffeeSteam",
+    "mist",
+    "baseImageCoordinate",
+    "approvedPosition"
+  ],
+  "protected": true
+}
