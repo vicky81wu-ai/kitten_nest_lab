@@ -30,7 +30,7 @@ These are the tags Alex should use when sending Vicky a copy-paste update packag
 
 Rule:
 
-Each bracketed block should publish to its own home. Do not rely on visual scene names alone. Use the exact tag when a block belongs to a non-default text port.
+Each bracketed block should publish to its own home. Do not rely on visual scene names alone. Use the exact scene-scoped tag when a block belongs to a scene variant or non-default text port.
 
 Current supported tags:
 
@@ -44,7 +44,7 @@ Publishes normal coffeeCorner bubble lines to `coffeeCorner.bubbles` / `alexBubb
 [coffeeCornerLapClose]
 ```
 
-Publishes one sitting-on-lap close-up line to `coffeeCorner.lapCloseBubble` / `coffeeCornerLapCloseBubble`. This is the tag to use for the lap-close upper-left bubble. Accepted aliases: `[lapClose]`, `[lapBubble]`, `[lapCloseBubble]`, `[coffeeCornerLapCloseBubble]`.
+Publishes one sitting-on-lap close-up line to `coffeeCorner.lapCloseBubble` / `coffeeCornerLapCloseBubble`. This is the only supported tag for the lap-close upper-left bubble. Do not use `[lapClose]`, `[lapBubble]`, or other short aliases; they are ambiguous if another scene later has its own lap-close variant.
 
 ```text
 [windowWeather]
@@ -163,14 +163,9 @@ Package tag:
 [coffeeCornerLapClose]
 ```
 
-Accepted aliases:
+No alias rule:
 
-```text
-[lapClose]
-[lapBubble]
-[lapCloseBubble]
-[coffeeCornerLapCloseBubble]
-```
+Do not use short aliases such as `[lapClose]`, `[lapBubble]`, or `[lapCloseBubble]`. This port is scene-scoped and must keep the full `coffeeCorner` prefix so future rooms can have their own lap-close variants without tag collisions.
 
 Use for:
 
