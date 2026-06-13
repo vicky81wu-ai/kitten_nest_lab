@@ -25,7 +25,7 @@
     canvas.style.pointerEvents = 'none';
     canvas.style.zIndex = '9';
     canvas.style.mixBlendMode = 'screen';
-    canvas.style.opacity = '.42';
+    canvas.style.opacity = '.72';
     room.appendChild(canvas);
     ctx = canvas.getContext('2d');
     particles = [];
@@ -50,54 +50,64 @@
 
   function seedParticles(w,h){
     particles = [];
-    for(var i=0;i<26;i++){
+    for(var i=0;i<42;i++){
       particles.push({
-        x: w*(0.64 + Math.random()*0.32),
-        y: h*(0.08 + Math.random()*0.46),
-        r: .45 + Math.random()*1.1,
-        a: .06 + Math.random()*.13,
-        drift: .18 + Math.random()*.38,
+        x: w*(0.58 + Math.random()*0.38),
+        y: h*(0.07 + Math.random()*0.52),
+        r: .45 + Math.random()*1.35,
+        a: .08 + Math.random()*.18,
+        drift: .16 + Math.random()*.40,
         phase: Math.random()*Math.PI*2
       });
     }
+  }
+
+  function softBeam(w,h,t, spec){
+    var pulse = spec.pulseBase + Math.sin(t*spec.pulseSpeed + spec.phase)*spec.pulseRange;
+    var g = ctx.createLinearGradient(w*spec.x0, h*spec.y0, w*spec.x1, h*spec.y1);
+    g.addColorStop(0, 'rgba(255,242,205,' + (spec.a0*pulse) + ')');
+    g.addColorStop(.28, 'rgba(255,224,164,' + (spec.a1*pulse) + ')');
+    g.addColorStop(.66, 'rgba(255,205,132,' + (spec.a2*pulse) + ')');
+    g.addColorStop(1, 'rgba(255,205,132,0)');
+
+    ctx.beginPath();
+    spec.points.forEach(function(pt, idx){
+      if(idx === 0) ctx.moveTo(w*pt[0], h*pt[1]);
+      else ctx.lineTo(w*pt[0], h*pt[1]);
+    });
+    ctx.closePath();
+    ctx.fillStyle = g;
+    ctx.filter = 'blur(' + spec.blur + 'px)';
+    ctx.fill();
   }
 
   function drawBeam(w,h,t){
     ctx.save();
     ctx.globalCompositeOperation = 'screen';
 
-    var pulse = 0.82 + Math.sin(t*0.00045)*0.10;
+    softBeam(w,h,t, {
+      x0:.98, y0:.04, x1:.32, y1:.63,
+      a0:.24, a1:.125, a2:.045,
+      pulseBase:.90, pulseRange:.10, pulseSpeed:.00040, phase:0,
+      blur:22,
+      points:[[.91,.03],[.99,.15],[.47,.68],[.29,.66],[.49,.43],[.70,.23]]
+    });
 
-    var g1 = ctx.createLinearGradient(w*.94, h*.08, w*.34, h*.55);
-    g1.addColorStop(0, 'rgba(255,226,170,' + (0.115*pulse) + ')');
-    g1.addColorStop(.34, 'rgba(255,214,152,' + (0.060*pulse) + ')');
-    g1.addColorStop(.72, 'rgba(255,214,152,' + (0.018*pulse) + ')');
-    g1.addColorStop(1, 'rgba(255,214,152,0)');
+    softBeam(w,h,t, {
+      x0:.99, y0:.13, x1:.50, y1:.42,
+      a0:.17, a1:.080, a2:.025,
+      pulseBase:.88, pulseRange:.08, pulseSpeed:.00052, phase:1.7,
+      blur:14,
+      points:[[.94,.10],[.99,.20],[.55,.45],[.48,.38]]
+    });
 
-    ctx.beginPath();
-    ctx.moveTo(w*.90, h*.03);
-    ctx.bezierCurveTo(w*.78, h*.15, w*.66, h*.25, w*.48, h*.43);
-    ctx.bezierCurveTo(w*.40, h*.50, w*.35, h*.58, w*.30, h*.66);
-    ctx.lineTo(w*.46, h*.69);
-    ctx.bezierCurveTo(w*.58, h*.52, w*.73, h*.34, w*.98, h*.16);
-    ctx.closePath();
-    ctx.fillStyle = g1;
-    ctx.filter = 'blur(18px)';
-    ctx.fill();
-
-    var g2 = ctx.createLinearGradient(w*.99, h*.12, w*.58, h*.36);
-    g2.addColorStop(0, 'rgba(255,245,202,' + (0.070*pulse) + ')');
-    g2.addColorStop(.5, 'rgba(255,225,165,' + (0.028*pulse) + ')');
-    g2.addColorStop(1, 'rgba(255,225,165,0)');
-    ctx.beginPath();
-    ctx.moveTo(w*.93, h*.10);
-    ctx.lineTo(w*.97, h*.18);
-    ctx.lineTo(w*.56, h*.42);
-    ctx.lineTo(w*.51, h*.36);
-    ctx.closePath();
-    ctx.fillStyle = g2;
-    ctx.filter = 'blur(11px)';
-    ctx.fill();
+    softBeam(w,h,t, {
+      x0:.88, y0:.18, x1:.40, y1:.72,
+      a0:.10, a1:.048, a2:.018,
+      pulseBase:.86, pulseRange:.07, pulseSpeed:.00033, phase:3.1,
+      blur:28,
+      points:[[.84,.17],[.94,.25],[.45,.75],[.33,.71]]
+    });
 
     ctx.restore();
   }
@@ -105,14 +115,14 @@
   function drawDust(w,h,t){
     ctx.save();
     ctx.globalCompositeOperation = 'screen';
-    ctx.filter = 'blur(.25px)';
+    ctx.filter = 'blur(.22px)';
     particles.forEach(function(p){
-      var x = p.x + Math.sin(t*.00025 + p.phase)*4 + (t*.000012*p.drift*w)%18;
-      var y = p.y + Math.cos(t*.00032 + p.phase)*5;
-      var a = p.a * (0.65 + Math.sin(t*.001 + p.phase)*0.35);
+      var x = p.x + Math.sin(t*.00025 + p.phase)*5 + (t*.000010*p.drift*w)%16;
+      var y = p.y + Math.cos(t*.00032 + p.phase)*6;
+      var a = p.a * (0.58 + Math.sin(t*.001 + p.phase)*0.42);
       ctx.beginPath();
       ctx.arc(x, y, p.r, 0, Math.PI*2);
-      ctx.fillStyle = 'rgba(255,232,176,' + a + ')';
+      ctx.fillStyle = 'rgba(255,230,174,' + a + ')';
       ctx.fill();
     });
     ctx.restore();
@@ -140,7 +150,7 @@
     if(!raf) frame();
   }
 
-  window.KittenNestSunbeamCanvas = { version:'sunbeam-canvas-20260613-1', start:start, resize:resize };
+  window.KittenNestSunbeamCanvas = { version:'sunbeam-canvas-20260613-2', start:start, resize:resize };
   window.addEventListener('load', start);
   window.addEventListener('resize', resize);
   window.addEventListener('orientationchange', resize);
