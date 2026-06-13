@@ -1,6 +1,6 @@
 # Kitten Nest Construction Rules
 
-Updated: 2026-06-12
+Updated: 2026-06-13
 
 These rules exist to prevent rough patching as the nest grows from a small page into a larger interactive world.
 
@@ -166,16 +166,35 @@ Safari success plus PWA failure does not automatically mean runtime code is brok
 
 Do not write a giant incident diary for every bug.
 
-Long-term docs should prefer:
+Permanent docs should keep only:
 
 ```text
-framework rule
+current rule
 current object identity
+current coordinates / selectors
 current owner/exclusive policy
+stable guardrail
 one short example only if it teaches the rule
 ```
 
-Incident details belong in temporary handoff notes or a short construction-log note, not in a sprawling permanent casebook.
+Construction logs should keep:
+
+```text
+incident sequence
+failed attempts
+regressions
+verification notes
+temporary handoff details
+```
+
+Use this split:
+
+```text
+docs/*.md = permanent rules / current architecture
+docs/construction-logs/YYYY-MM-DD.md = day-specific construction history
+```
+
+When a permanent doc starts reading like a diary, move the incident details into the dated construction log and leave only the current rule behind.
 
 ## Closeout checklist
 
