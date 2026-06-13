@@ -1,5 +1,5 @@
 {
-  "version": "0.1.7",
+  "version": "0.1.8",
   "status": "foundation-current-identities",
   "note": "Static object and hotspot identity registry for Kitten Nest. This file is not wired into runtime yet. It exists to prevent selector reuse, hotspot ownership conflicts, decorative overlay drift, and rough patching. Detailed director writing guidance lives in docs/DIRECTOR_GUIDE.md.",
   "principles": [
@@ -14,7 +14,8 @@
     "Keep technical identity here; put long director notes in docs/DIRECTOR_GUIDE.md.",
     "Active base-image hotspots must be gated by their active room so home and coffeeCorner hotspots do not leak into each other.",
     "Notebook current-page preview and editor draft are separate states; do not auto-copy current page into the editor on render.",
-    "Notebook save archives the saved/confirmed text immediately; do not delay the saved text until the next save."
+    "Notebook save archives the saved/confirmed text immediately; do not delay the saved text until the next save.",
+    "Powder notebook currently belongs to the home scene as a physical object; the notebook panel is a shared overlay, not a coffeeCorner object."
   ],
   "objects": [
     {
@@ -163,29 +164,31 @@
       "protected": true
     },
     {
-      "id": "coffeeCorner.hubbyNoteEntry",
+      "id": "legacy.coffeeCorner.hubbyNoteEntry",
       "roomId": "coffeeCorner",
-      "kind": "buttonHotspot",
+      "kind": "legacyButtonHotspot",
       "selector": "#hubbyNoteButton",
       "owner": "hubbyNoteController",
-      "role": "notebookEntry",
+      "role": "legacyNotebookEntry",
       "action": "openHubbyNotePanel",
-      "exclusive": true,
-      "runtimeStatus": "active",
-      "coordinateStatus": "temporaryFixedButton",
-      "versionStatus": "canonicalCurrent",
-      "changePolicy": "mutableWithVersion",
+      "exclusive": false,
+      "runtimeStatus": "deprecated",
+      "coordinateStatus": "legacyFixedButton",
+      "versionStatus": "legacy",
+      "changePolicy": "doNotReviveWithoutNewSceneDecision",
       "textClass": "PermanentNote",
       "implementationType": "hubbyNoteDraft",
+      "supersededBy": "home.hubbyNoteHot",
       "directorRef": "director.notebooks.hubbyNote",
-      "directorTags": ["permanentNote", "notebook", "milestone", "shared"],
-      "protected": true
+      "directorTags": ["legacy", "notebook", "notCoffeeCornerCurrent"],
+      "runtimeNote": "CoffeeCorner currently has no physical powder notebook object. This old fixed/global button identity is deprecated; do not treat it as an active coffeeCorner hotspot.",
+      "protected": false
     },
     {
       "id": "home.hubbyNoteHot",
       "roomId": "home",
       "kind": "hotspot",
-      "selector": ".hubbyNoteButton",
+      "selectors": ["#hubbyNoteButton", ".hubbyNoteButton"],
       "owner": "hubbyNoteController",
       "role": "homePinkNotebookArtHotspot",
       "action": "openHubbyNotePanel",
@@ -198,8 +201,10 @@
       "roomElementId": "home",
       "approvedCoordinate": { "x": 0.8, "y": 0.605, "width": 0.22, "height": 0.18, "rotation": 7.1, "transformOrigin": "0 0" },
       "approvedBy": "Vicky visual inspection after angle micro-adjustment.",
+      "displayName": "粉本本",
+      "moduleName": "hubbyNote",
       "implementationFile": "assets/hotspot-positioner.js",
-      "runtimeNote": "This home-only art hotspot must not leak into coffeeCorner. Runtime gates it to home.active.",
+      "runtimeNote": "This home-only art hotspot opens the shared hubby note panel. It must not leak into coffeeCorner. Runtime gates it to home.active.",
       "textClass": "PermanentNote",
       "implementationType": "hubbyNoteDraft",
       "directorRef": "director.notebooks.hubbyNote",
@@ -207,24 +212,26 @@
       "protected": true
     },
     {
-      "id": "coffeeCorner.hubbyNotePanel",
-      "roomId": "coffeeCorner",
+      "id": "shared.hubbyNotePanel",
+      "roomId": "shared",
       "kind": "panel",
       "selector": "#hubbyNotePanel",
       "owner": "hubbyNoteController",
-      "role": "cloudNotebookPanel",
-      "action": "displayCurrentPreviewAndDraftEditorSaveFavoriteDeleteArchive",
+      "role": "sharedArchiveFirstNotebookPanel",
+      "action": "saveEditorTextToPermanentArchiveAndManageArchiveItems",
       "exclusive": true,
       "runtimeStatus": "active",
       "versionStatus": "canonicalCurrent",
       "changePolicy": "mutableWithVersion",
+      "displayName": "粉本本",
+      "moduleName": "hubbyNote",
       "textClass": "PermanentNote",
       "implementationType": "hubbyNoteDraft",
       "implementationFile": "assets/hubby-note-controller.js",
       "stateFields": ["hubbyNote", "hubbyNoteUpdatedAt", "hubbyNoteArchive", "hubbyNoteHistory", "hubbyNoteFavorite", "hubbyNoteTrash"],
-      "runtimeNote": "Current page preview and editor draft are separate. Rendering must not auto-copy hubbyNote into the editor. The Edit button loads current page into the editor. Save uses editor text when present, otherwise confirms current page. The saved/confirmed text is archived immediately if not already present, so there is no one-save delay and no duplicate archive insertion by text.",
+      "runtimeNote": "This is a shared/global notebook panel, not a coffeeCorner object. Current UX is archive-first: editor -> save -> permanent archive. The home powder notebook hotspot opens this panel. Future scene notebooks may also open this shared panel or their own scene-specific panel by explicit registry decision.",
       "directorRef": "director.notebooks.hubbyNote",
-      "directorTags": ["permanentNote", "archive", "shared", "cloudBacked", "draftDedupe", "currentPreview", "archiveNow"],
+      "directorTags": ["permanentNote", "archive", "shared", "cloudBacked", "archiveFirst", "globalPanel"],
       "protected": true
     },
     {
@@ -276,7 +283,7 @@
       "protected": true
     },
     {
-      "id": "coffeeCorner.futurePinkNotebookArtHotspot",
+      "id": "future.coffeeCorner.pinkNotebookArtHotspot",
       "roomId": "coffeeCorner",
       "kind": "futureHotspot",
       "plannedSelector": ".pinkNotebookHot",
@@ -289,8 +296,9 @@
       "changePolicy": "futureDecision",
       "textClass": "PermanentNote",
       "implementationType": "hubbyNoteDraft",
+      "runtimeNote": "CoffeeCorner does not currently have this physical object. Only use if a future coffeeCorner image actually contains a notebook object.",
       "directorRef": "director.notebooks.hubbyNote",
-      "directorTags": ["futureArt", "permanentNote", "notebook"],
+      "directorTags": ["futureArt", "permanentNote", "notebook", "notCurrent"],
       "protected": false
     },
     {
@@ -335,12 +343,13 @@
     "coordinateRule": "Current coordinates should use base-image coordinates, not device-specific CSS nudges.",
     "roomGateRule": "Hotspots that belong to different rooms must be gated by active room element, e.g. gameRoom.active vs home.active, so they do not leak across scenes.",
     "notebookDraftRule": "hubbyNote current preview and editor draft are separate. Do not auto-fill the editor from current page on render. Saving archives the saved/confirmed text immediately if not already present, instead of delaying it until the next save.",
+    "sharedPanelRule": "A panel injected globally into /cloud is not automatically a coffeeCorner object. If the physical notebook is only on home, classify the hotspot as home and the panel as shared.",
     "overlayRule": "Decorative overlays are not hotspots, but they still need identity, owner, and base-image coordinate records when they align with room art.",
     "versionRule": "canonicalCurrent is mutable only through explicit versioned change, not silent replacement.",
     "directorRule": "Use directorRef and directorTags here; put long director scripts and sample lines in docs/DIRECTOR_GUIDE.md."
   },
   "shortIncidentExample": {
-    "type": "selectorReuse",
-    "lesson": "A notebook entry once reused the game console selector and took over the game menu. The long-term rule is not a blacklist; it is selector ownership plus exclusive:true. A later room-leak incident showed active room gating is also required for shared/global selectors. A notebook duplication incident showed current-page preview and editor draft must stay separate, and saving must archive the saved text immediately rather than one save later."
+    "type": "selectorReuseAndMisclassification",
+    "lesson": "A notebook entry once reused the game console selector and took over the game menu. A later room-leak incident showed active room gating is required for shared/global selectors. A notebook duplication incident showed current-page preview and editor draft must stay separate. A classification correction showed that the powder notebook is currently a home physical object, while its archive panel is shared/global, not coffeeCorner."
   }
 }
