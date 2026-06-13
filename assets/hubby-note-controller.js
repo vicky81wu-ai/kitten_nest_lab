@@ -3,6 +3,7 @@
   var attached = false;
 
   function text(value){ return String(value == null ? '' : value); }
+  function clean(value){ return text(value).trim(); }
   function escapeHtml(value){ return text(value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;').replace(/'/g,'&#39;'); }
   function shortDate(raw){
     if(!raw) return '';
@@ -14,19 +15,26 @@
   }
   function id(){ return 'note_' + Date.now() + '_' + Math.random().toString(36).slice(2,8); }
   function token(){ return localStorage.getItem('kittenNestToken') || localStorage.getItem('nestToken') || ''; }
-  function saveToken(value){ var v = text(value).trim(); if(v) localStorage.setItem('kittenNestToken', v); }
+  function saveToken(value){ var v = clean(value); if(v) localStorage.setItem('kittenNestToken', v); }
   function noteArchive(state){
     if(Array.isArray(state && state.hubbyNoteArchive)) return state.hubbyNoteArchive;
     if(Array.isArray(state && state.hubbyNoteHistory)) return state.hubbyNoteHistory;
     return [];
   }
   function noteTrash(state){ return Array.isArray(state && state.hubbyNoteTrash) ? state.hubbyNoteTrash : []; }
-  function noteText(state){ return text(state && state.hubbyNote || '').trim() || '粉本本还空着。直接在下面写一页，点保存，就进云端永久档案。'; }
+  function noteText(state){ return clean(state && state.hubbyNote || '') || '粉本本还空着。上方是当前页；下面写新页，或点“编辑”把当前页载入编辑框。'; }
   function itemId(item, index){ return text(item && item.id || item && item.savedAt || '') + '|' + index; }
   function archiveWithIds(list){
     return (Array.isArray(list) ? list : []).map(function(item){
       if(item && item.id) return item;
       return Object.assign({}, item || {}, { id: id() });
+    });
+  }
+  function archiveHasText(archive, raw){
+    var needle = clean(raw);
+    if(!needle) return false;
+    return (Array.isArray(archive) ? archive : []).some(function(item){
+      return clean(item && (item.text || item.note) || '') === needle;
     });
   }
 
@@ -73,7 +81,7 @@
     panel = document.createElement('div');
     panel.id = 'hubbyNotePanel';
     panel.className = 'hubbyNotePanel';
-    panel.innerHTML = '<div class="hubbyNoteCard" role="dialog" aria-label="hubby note notebook"><div class="hubbyNoteHead"><div class="hubbyNoteTitle">粉本本 · Hubby note</div><button class="hubbyNoteClose" type="button" aria-label="close">×</button></div><div class="hubbyNoteMeta" id="hubbyNoteMeta"></div><div class="hubbyNoteBody" id="hubbyNoteBody"></div><div class="hubbyNoteActions"><button class="hubbyNoteMiniBtn" id="hubbyNoteEdit" type="button">编辑</button><button class="hubbyNoteMiniBtn" id="hubbyNoteFavorite" type="button">收藏</button><button class="hubbyNoteMiniBtn danger" id="hubbyNoteDelete" type="button">删除</button></div><div class="hubbyNoteEditor"><textarea class="hubbyNoteTextarea" id="hubbyNoteEditor" placeholder="小猫在这里写今天的猫窝进展……"></textarea><input class="hubbyNoteToken" id="hubbyNoteToken" autocomplete="off" placeholder="Nest key：本机保存一次，以后直接保存"/><button class="hubbyNoteAuthChip" id="hubbyNoteAuthChip" type="button">已授权 · 点这里换 key</button><button class="hubbyNoteSave" id="hubbyNoteSave" type="button">保存到粉本本</button><div class="hubbyNoteSaveStatus" id="hubbyNoteSaveStatus"></div></div><div class="hubbyNoteSection" id="hubbyNoteArchiveTitle">永久档案 · 最近显示</div><div class="hubbyNoteHistory" id="hubbyNoteHistory"></div><div class="hubbyNoteHint">保存会更新当前页；旧当前页自动进永久档案。删除是软删除，先进 trash；以后换专用图只换入口热点。</div></div>';
+    panel.innerHTML = '<div class="hubbyNoteCard" role="dialog" aria-label="hubby note notebook"><div class="hubbyNoteHead"><div class="hubbyNoteTitle">粉本本 · Hubby note</div><button class="hubbyNoteClose" type="button" aria-label="close">×</button></div><div class="hubbyNoteMeta" id="hubbyNoteMeta"></div><div class="hubbyNoteBody" id="hubbyNoteBody"></div><div class="hubbyNoteActions"><button class="hubbyNoteMiniBtn" id="hubbyNoteEdit" type="button">编辑</button><button class="hubbyNoteMiniBtn" id="hubbyNoteFavorite" type="button">收藏</button><button class="hubbyNoteMiniBtn danger" id="hubbyNoteDelete" type="button">删除</button></div><div class="hubbyNoteEditor"><textarea class="hubbyNoteTextarea" id="hubbyNoteEditor" placeholder="写新页；或点上面的“编辑”把当前页载入这里……"></textarea><input class="hubbyNoteToken" id="hubbyNoteToken" autocomplete="off" placeholder="Nest key：本机保存一次，以后直接保存"/><button class="hubbyNoteAuthChip" id="hubbyNoteAuthChip" type="button">已授权 · 点这里换 key</button><button class="hubbyNoteSave" id="hubbyNoteSave" type="button">保存到粉本本</button><div class="hubbyNoteSaveStatus" id="hubbyNoteSaveStatus"></div></div><div class="hubbyNoteSection" id="hubbyNoteArchiveTitle">永久档案 · 最近显示</div><div class="hubbyNoteHistory" id="hubbyNoteHistory"></div><div class="hubbyNoteHint">上方是当前页；保存会更新当前页，并只在需要时把旧当前页归档一次。删除是软删除，先进 trash。</div></div>';
     document.body.appendChild(panel);
     panel.addEventListener('click', function(e){ if(e.target === panel) close(); });
     panel.querySelector('.hubbyNoteClose').addEventListener('click', close);
@@ -122,13 +130,11 @@
     var meta = panel.querySelector('#hubbyNoteMeta');
     var history = panel.querySelector('#hubbyNoteHistory');
     var title = panel.querySelector('#hubbyNoteArchiveTitle');
-    var editor = panel.querySelector('#hubbyNoteEditor');
     var favBtn = panel.querySelector('#hubbyNoteFavorite');
-    var updated = text(state && (state.hubbyNoteUpdatedAt || state.updatedAt) || '').trim();
+    var updated = clean(state && (state.hubbyNoteUpdatedAt || state.updatedAt) || '');
     var archive = noteArchive(state);
     var note = noteText(state);
     body.textContent = (state && state.hubbyNoteFavorite ? '★ ' : '') + note;
-    if(editor && !editor.matches(':focus')) editor.value = text(state && state.hubbyNote || '').trim();
     if(favBtn) favBtn.textContent = state && state.hubbyNoteFavorite ? '已收藏' : '收藏';
     meta.textContent = updated ? ('云端保存 · ' + shortDate(updated) + ' · 永久档案 ' + archive.length + ' 条') : ('云端保存 · 永久档案 ' + archive.length + ' 条');
     if(title) title.textContent = '永久档案 · 最近显示 ' + Math.min(archive.length, 6) + ' 条';
@@ -158,7 +164,7 @@
   async function writePatch(patch){
     var panel = ensurePanel();
     var keyInput = panel.querySelector('#hubbyNoteToken');
-    var key = text(keyInput && keyInput.value || token()).trim();
+    var key = clean(keyInput && keyInput.value || token());
     if(!key) throw new Error('需要 Nest key 才能保存。');
     saveToken(key);
     var res = await fetch('/api/set-state', { method:'POST', headers:{ 'Content-Type':'application/json', 'X-Nest-Token': key }, body: JSON.stringify(patch), cache:'no-store' });
@@ -169,12 +175,15 @@
   }
 
   function notePatch(raw, state){
-    var note = text(raw).trim().slice(0,5000);
+    var note = clean(raw).slice(0,5000);
     if(!note) throw new Error('粉本本不能保存空白页。');
-    var old = text(state && state.hubbyNote || '').trim();
+    var old = clean(state && state.hubbyNote || '');
     var archive = archiveWithIds(noteArchive(state));
     var savedAt = new Date().toISOString();
-    var nextArchive = old ? [{ id:id(), text:old, savedAt: state.hubbyNoteUpdatedAt || state.updatedAt || savedAt, favorite: !!(state && state.hubbyNoteFavorite) }, ...archive] : archive;
+    var nextArchive = archive;
+    if(old && !archiveHasText(archive, old)){
+      nextArchive = [{ id:id(), text:old, savedAt: state.hubbyNoteUpdatedAt || state.updatedAt || savedAt, favorite: !!(state && state.hubbyNoteFavorite) }, ...archive];
+    }
     return { hubbyNote:note, hubbyNoteUpdatedAt:savedAt, hubbyNoteFavorite:false, hubbyNoteArchive:nextArchive, hubbyNoteHistory:nextArchive.slice(0,20) };
   }
 
@@ -183,11 +192,27 @@
   async function saveCurrent(){
     var panel = ensurePanel();
     var editor = panel.querySelector('#hubbyNoteEditor');
-    try{ setStatus('保存中……'); var state = currentState || await refresh() || {}; var value = await writePatch(notePatch(editor.value, state)); currentState = value; render(value); setStatus('保存好了，已经进云端。'); }
+    try{
+      setStatus('保存中……');
+      var state = currentState || await refresh() || {};
+      var typed = clean(editor && editor.value || '');
+      var current = clean(state && state.hubbyNote || '');
+      var saveText = typed || current;
+      var value = await writePatch(notePatch(saveText, state));
+      currentState = value;
+      if(editor){ editor.value = ''; editor.removeAttribute('data-edit-source'); }
+      render(value);
+      setStatus(typed ? '保存好了，已经进云端。' : '当前页已确认；永久档案不会重复塞同一条。');
+    }
     catch(e){ setStatus('保存失败：' + e.message); }
   }
 
-  function editCurrent(){ var editor = ensurePanel().querySelector('#hubbyNoteEditor'); if(editor){ editor.focus(); editor.scrollIntoView({ block:'center', behavior:'smooth' }); } }
+  function editCurrent(){
+    var panel = ensurePanel();
+    var editor = panel.querySelector('#hubbyNoteEditor');
+    var state = currentState || {};
+    if(editor){ editor.value = clean(state.hubbyNote || ''); editor.setAttribute('data-edit-source','current'); editor.focus(); editor.scrollIntoView({ block:'center', behavior:'smooth' }); }
+  }
 
   async function toggleCurrentFavorite(){
     try{ setStatus('更新收藏……'); var state = currentState || await refresh() || {}; var value = await writePatch({ hubbyNoteFavorite: !(state && state.hubbyNoteFavorite) }); currentState = value; render(value); setStatus(value.hubbyNoteFavorite ? '当前页已收藏。' : '当前页已取消收藏。'); }
@@ -197,7 +222,7 @@
   async function deleteCurrent(){
     try{
       var state = currentState || await refresh() || {};
-      var old = text(state.hubbyNote || '').trim();
+      var old = clean(state.hubbyNote || '');
       if(!old){ setStatus('当前页已经是空的。'); return; }
       if(!confirm('删除当前粉本本页面？会放进 trash，不会直接消失。')) return;
       var trash = [{ id:id(), text:old, deletedAt:new Date().toISOString(), source:'current', favorite:!!state.hubbyNoteFavorite }, ...noteTrash(state)];
@@ -223,7 +248,7 @@
     if(found.index < 0) return;
     if(action === 'load'){
       var editor = ensurePanel().querySelector('#hubbyNoteEditor');
-      if(editor){ editor.value = text(found.item.text || found.item.note || ''); editor.focus(); editor.scrollIntoView({ block:'center', behavior:'smooth' }); setStatus('已载入编辑框，改完点保存。'); }
+      if(editor){ editor.value = text(found.item.text || found.item.note || ''); editor.setAttribute('data-edit-source','archive'); editor.focus(); editor.scrollIntoView({ block:'center', behavior:'smooth' }); setStatus('已载入编辑框，改完点保存。'); }
       return;
     }
     if(action === 'favorite'){
@@ -261,7 +286,7 @@
     attached = true; ensureButton(); client.subscribe(function(payload){ setState(payload && payload.state); }); if(client.get) setState(client.get()); return true;
   }
 
-  window.KittenNestHubbyNote = { version:'hubby-note-notebook-20260610-controls-auth-owned', attach:attach, open:open, close:close, render:render, setState:setState, saveCurrent:saveCurrent, renderAuth:renderAuth };
+  window.KittenNestHubbyNote = { version:'hubby-note-notebook-20260613-draft-dedupe', attach:attach, open:open, close:close, render:render, setState:setState, saveCurrent:saveCurrent, renderAuth:renderAuth };
   window.addEventListener('load', ensureButton);
   setTimeout(ensureButton, 400);
   setTimeout(ensureButton, 1400);
