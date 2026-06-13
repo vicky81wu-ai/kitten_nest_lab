@@ -127,8 +127,8 @@ body.coffeeLapVariant #gameRoom.active .bubble{
 #gameRoom .lapBubble{
   display:none;
   position:absolute;
-  left:max(18px, env(safe-area-inset-left));
-  top:max(18px, env(safe-area-inset-top));
+  left:calc(max(18px, env(safe-area-inset-left)) + 30px);
+  top:calc(max(18px, env(safe-area-inset-top)) + 57px);
   z-index:34;
   max-width:min(48vw, 270px);
   padding:12px 14px;
@@ -146,7 +146,7 @@ body.coffeeLapVariant #gameRoom.active .bubble{
   pointer-events:none;
 }
 
-body.coffeeLapVariant #gameRoom.active .lapBubble[data-active="1"]{
+body.coffeeLapVariant #gameRoom.active .lapBubble[data-active="1"][data-has-text="1"]{
   display:block;
 }
 
