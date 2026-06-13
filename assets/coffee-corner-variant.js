@@ -1,20 +1,15 @@
 (function(){
-  var VERSION = 'coffee-corner-variant-20260613-7-lap-bubble-click-only';
+  var VERSION = 'coffee-corner-variant-20260613-rollback-enter-back-only-1';
   var LAP_URL = 'https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/variants/lap-close-01.jpg?v=20260613-lap-close-1';
   var mainSrc = '';
   var mode = 'main';
   var enterHot;
   var backHot;
-  var chestHot;
-  var lapBubble;
-  var stateSubscribed = false;
-  var lapLines = [];
-  var lapIndex = 0;
 
   var enterCard = {
     id: 'coffeeCorner.lapEnterHot',
     label: 'coffee corner lap close enter hotspot',
-    coordinate: { x: 0.48, y: 0.48, width: 0.24, height: 0.17 },
+    coordinate: { x: 0.34, y: 0.57, width: 0.38, height: 0.24 },
     debugVisible: false
   };
 
@@ -25,90 +20,15 @@
     debugVisible: true
   };
 
-  var chestCard = {
-    id: 'coffeeCorner.lapChestHot',
-    label: 'coffee corner lap close chest hotspot',
-    coordinate: { x: 0.56, y: 0.61, width: 0.44, height: 0.23 },
-    debugVisible: true
-  };
-
   function room(){ return document.getElementById('gameRoom'); }
   function img(){ return document.getElementById('gameBg'); }
   function mainBubble(){ return document.getElementById('bubble'); }
   function isDebug(){ return new URLSearchParams(location.search).get('debugLap') === '1'; }
+
   function isLapActive(){
     var image = img();
     var src = String((image && image.currentSrc) || (image && image.src) || '');
     return mode === 'lap' && src.indexOf('lap-close-01.jpg') !== -1;
-  }
-
-  function cleanText(value){ return String(value || '').trim(); }
-
-  function linesFrom(value){
-    if(Array.isArray(value)) return value.map(cleanText).filter(Boolean).slice(0,30);
-    return String(value || '').split(/\r?\n/).map(cleanText).filter(Boolean).slice(0,30);
-  }
-
-  function linesFromState(state){
-    if(!state) return [];
-    var list = linesFrom(state.coffeeCornerLapCloseBubbles);
-    if(list.length) return list;
-    list = linesFrom(state.lapCloseBubbles);
-    if(list.length) return list;
-    list = linesFrom(state.coffeeCornerLapCloseBubble);
-    if(list.length) return list;
-    return linesFrom(state.lapCloseBubble);
-  }
-
-  function hasLapText(){ return lapLines.length > 0; }
-
-  function currentLapText(){
-    if(!lapLines.length) return '';
-    if(lapIndex < 0 || lapIndex >= lapLines.length) lapIndex = 0;
-    return lapLines[lapIndex] || '';
-  }
-
-  function syncLapBubbleLines(lines){
-    lapLines = Array.isArray(lines) ? lines.map(cleanText).filter(Boolean).slice(0,30) : linesFrom(lines);
-    if(lapIndex >= lapLines.length) lapIndex = 0;
-    var b = ensureLapBubble();
-    if(!b) return false;
-    b.textContent = currentLapText();
-    if(hasLapText()) b.setAttribute('data-has-text', '1');
-    else b.removeAttribute('data-has-text');
-    return true;
-  }
-
-  function showNextLapBubble(){
-    var b = ensureLapBubble();
-    if(!b || !isLapActive() || !hasLapText()) return;
-    if(b.getAttribute('data-active') === '1'){
-      lapIndex = (lapIndex + 1) % lapLines.length;
-    }
-    b.textContent = currentLapText();
-    b.setAttribute('data-has-text', '1');
-    b.setAttribute('data-active', '1');
-  }
-
-  function readStateLines(){
-    var client = window.KittenNestState;
-    if(!client || typeof client.get !== 'function') return [];
-    return linesFromState(client.get());
-  }
-
-  function attachState(){
-    var client = window.KittenNestState;
-    if(!client) return false;
-    var list = readStateLines();
-    syncLapBubbleLines(list);
-    if(stateSubscribed || typeof client.subscribe !== 'function') return list.length > 0;
-    stateSubscribed = true;
-    client.subscribe(function(payload){
-      var list = linesFromState(payload && payload.state);
-      syncLapBubbleLines(list);
-      updateHotspots();
-    });
-    return true;
   }
 
   function coverBox(image){
@@ -123,8 +43,13 @@
     var drawH = rect.height;
     var offsetX = 0;
     var offsetY = 0;
-    if(boxRatio > imgRatio){ drawH = rect.width / imgRatio; offsetY = (rect.height - drawH) / 2; }
-    else{ drawW = rect.height * imgRatio; offsetX = (rect.width - drawW) / 2; }
+    if(boxRatio > imgRatio){
+      drawH = rect.width / imgRatio;
+      offsetY = (rect.height - drawH) / 2;
+    }else{
+      drawW = rect.height * imgRatio;
+      offsetX = (rect.width - drawW) / 2;
+    }
     return { left: rect.left + offsetX, top: rect.top + offsetY, width: drawW, height: drawH };
   }
 
@@ -143,21 +68,6 @@
     return el;
   }
 
-  function ensureLapBubble(){
-    var r = room();
-    if(!r) return null;
-    if(!lapBubble){
-      lapBubble = document.createElement('div');
-      lapBubble.id = 'lapCloseBubble';
-      lapBubble.className = 'lapBubble';
-      lapBubble.setAttribute('data-text-port', 'coffeeCorner.lapCloseBubble');
-      lapBubble.setAttribute('data-director-ref', 'director.textPorts.coffeeCornerLapCloseBubble');
-      lapBubble.textContent = '';
-      r.appendChild(lapBubble);
-    }
-    return lapBubble;
-  }
-
   function ensureHotspots(){
     var r = room();
     if(!r) return false;
@@ -173,19 +83,17 @@
       backHot.addEventListener('touchend', function(e){ e.preventDefault(); e.stopPropagation(); backMain(); }, true);
       r.appendChild(backHot);
     }
-    if(!chestHot){
-      chestHot = makeHot('lapChestHot', '坐腿近景胸口互动区');
-      chestHot.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); showNextLapBubble(); }, true);
-      chestHot.addEventListener('touchend', function(e){ e.preventDefault(); e.stopPropagation(); showNextLapBubble(); }, true);
-      r.appendChild(chestHot);
-    }
-    ensureLapBubble();
     return true;
   }
 
   function paintDebug(hot, card){
-    if(isDebug() && card.debugVisible){ hot.style.background = 'rgba(255,80,130,.18)'; hot.style.outline = '2px solid rgba(255,80,130,.85)'; }
-    else{ hot.style.background = 'transparent'; hot.style.outline = '0'; }
+    if(isDebug() && card.debugVisible){
+      hot.style.background = 'rgba(255,80,130,.18)';
+      hot.style.outline = '2px solid rgba(255,80,130,.85)';
+    }else{
+      hot.style.background = 'transparent';
+      hot.style.outline = '0';
+    }
   }
 
   function hideHot(hot){
@@ -231,7 +139,6 @@
     mode = next === 'lap' ? 'lap' : 'main';
     document.body.classList.toggle('coffeeLapVariant', mode === 'lap');
     image.src = mode === 'lap' ? LAP_URL : mainSrc;
-    attachState();
     updateHotspots();
     image.onload = function(){ updateHotspots(); };
     setTimeout(updateHotspots, 120);
@@ -245,19 +152,21 @@
     if(!ensureHotspots()) return;
     applyCard(enterHot, enterCard);
     applyCard(backHot, backCard);
-    applyCard(chestHot, chestCard);
-    var b = ensureLapBubble();
     var main = mainBubble();
+    var oldLapBubble = document.getElementById('lapCloseBubble');
+    if(oldLapBubble){
+      oldLapBubble.removeAttribute('data-active');
+      oldLapBubble.removeAttribute('data-has-text');
+      oldLapBubble.style.display = 'none';
+      oldLapBubble.style.pointerEvents = 'none';
+    }
     if(isLapActive()){
       hideHot(enterHot);
       showHot(backHot, backCard);
-      showHot(chestHot, chestCard);
       if(main) main.setAttribute('data-lap-hidden', '1');
     }else{
       showHot(enterHot, enterCard);
       hideHot(backHot);
-      hideHot(chestHot);
-      if(b) b.removeAttribute('data-active');
       if(main) main.removeAttribute('data-lap-hidden');
     }
   }
@@ -266,7 +175,6 @@
     var image = img();
     if(image && !mainSrc) mainSrc = image.getAttribute('src') || '';
     ensureHotspots();
-    attachState();
     updateHotspots();
   }
 
@@ -275,11 +183,8 @@
     lapUrl: LAP_URL,
     enterCard: enterCard,
     backCard: backCard,
-    chestCard: chestCard,
     enterLap: enterLap,
     backMain: backMain,
-    setLapBubbleText: function(text){ syncLapBubbleLines(linesFrom(text)); updateHotspots(); },
-    clearLapBubbleText: function(){ syncLapBubbleLines([]); updateHotspots(); },
     updateHotspots: updateHotspots,
     boot: boot
   };
