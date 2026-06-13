@@ -8,6 +8,10 @@ function noteArchiveOf(state) {
   return [];
 }
 
+function pendingDraftsOf(state) {
+  return Array.isArray(state && state.pendingDrafts) ? state.pendingDrafts : [];
+}
+
 function applyHubbyNotePackage(patch, state) {
   const bubbleLines = Array.isArray(patch.alexBubbles) ? patch.alexBubbles : (patch.alexBubble ? [patch.alexBubble] : []);
   const joined = bubbleLines.map((line) => String(line || '')).join('\n').trim();
@@ -50,8 +54,26 @@ function applyLapCloseState(patch) {
   patch.coffeeCornerLapCloseBubbleUpdatedAt = new Date().toISOString();
 }
 
+function applyLapCloseDraftsOnPublish(patch, state) {
+  if (!Array.isArray(patch.pendingDrafts) || patch.pendingDrafts.length !== 0) return;
+  if (!Object.prototype.hasOwnProperty.call(patch, 'lastPublishedAt')) return;
+
+  const drafts = pendingDraftsOf(state)
+    .slice()
+    .reverse()
+    .filter((draft) => draft && draft.type === 'lapCloseBubbleDraft');
+  if (!drafts.length) return;
+
+  const list = cleanLines(drafts.map((draft) => draft.text || '').join('\n')).slice(0, 30);
+  patch.coffeeCornerLapCloseBubbles = list;
+  patch.coffeeCornerLapCloseBubble = list[0] || '';
+  patch.coffeeCornerLapCloseBubbleIndex = 0;
+  patch.coffeeCornerLapCloseBubbleUpdatedAt = new Date().toISOString();
+}
+
 function normalizePatch(rawPatch, state) {
   const patch = { ...(rawPatch || {}) };
+  applyLapCloseDraftsOnPublish(patch, state);
   applyLapCloseState(patch);
   applyHubbyNotePackage(patch, state);
   return patch;
