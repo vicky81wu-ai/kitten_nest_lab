@@ -8,15 +8,14 @@ function noteArchiveOf(state) {
   return [];
 }
 
-function normalizePatch(rawPatch, state) {
-  const patch = { ...(rawPatch || {}) };
+function applyHubbyNotePackage(patch, state) {
   const bubbleLines = Array.isArray(patch.alexBubbles) ? patch.alexBubbles : (patch.alexBubble ? [patch.alexBubble] : []);
   const joined = bubbleLines.map((line) => String(line || '')).join('\n').trim();
   const match = joined.match(/^\s*\[hubbyNote\]\s*\n([\s\S]*)$/i);
-  if (!match) return patch;
+  if (!match) return false;
 
   const note = String(match[1] || '').trim().slice(0, 5000);
-  if (!note) return patch;
+  if (!note) return false;
 
   const old = String(state && state.hubbyNote || '').trim();
   const archive = noteArchiveOf(state);
@@ -32,6 +31,29 @@ function normalizePatch(rawPatch, state) {
   patch.hubbyNoteUpdatedAt = savedAt;
   patch.hubbyNoteArchive = nextArchive;
   patch.hubbyNoteHistory = nextArchive.slice(0, 20);
+  return true;
+}
+
+function applyLapCloseState(patch) {
+  const hasArray = Array.isArray(patch.coffeeCornerLapCloseBubbles);
+  const hasSingle = Object.prototype.hasOwnProperty.call(patch, 'coffeeCornerLapCloseBubble');
+  if (!hasArray && !hasSingle) return;
+
+  const source = hasArray ? patch.coffeeCornerLapCloseBubbles : patch.coffeeCornerLapCloseBubble;
+  const list = Array.isArray(source)
+    ? source.map((line) => String(line || '').trim()).filter(Boolean).slice(0, 30)
+    : cleanLines(source).slice(0, 30);
+
+  patch.coffeeCornerLapCloseBubbles = list;
+  patch.coffeeCornerLapCloseBubble = list[0] || '';
+  patch.coffeeCornerLapCloseBubbleIndex = 0;
+  patch.coffeeCornerLapCloseBubbleUpdatedAt = new Date().toISOString();
+}
+
+function normalizePatch(rawPatch, state) {
+  const patch = { ...(rawPatch || {}) };
+  applyLapCloseState(patch);
+  applyHubbyNotePackage(patch, state);
   return patch;
 }
 
