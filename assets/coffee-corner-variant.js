@@ -1,5 +1,5 @@
 (function(){
-  var VERSION = 'coffee-corner-variant-20260613-5-lap-chest-cycle';
+  var VERSION = 'coffee-corner-variant-20260613-6-lap-chest-only-debug';
   var LAP_URL = 'https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/variants/lap-close-01.jpg?v=20260613-lap-close-1';
   var mainSrc = '';
   var mode = 'main';
@@ -14,24 +14,33 @@
   var enterCard = {
     id: 'coffeeCorner.lapEnterHot',
     label: 'coffee corner lap close enter hotspot',
-    coordinate: { x: 0.48, y: 0.48, width: 0.24, height: 0.17 }
+    coordinate: { x: 0.48, y: 0.48, width: 0.24, height: 0.17 },
+    debugVisible: false
   };
 
   var backCard = {
     id: 'coffeeCorner.lapBackHot',
     label: 'coffee corner lap close back hotspot',
-    coordinate: { x: 0.12, y: 0.86, width: 0.24, height: 0.20 }
+    coordinate: { x: 0.12, y: 0.86, width: 0.24, height: 0.20 },
+    debugVisible: true
   };
 
   var chestCard = {
     id: 'coffeeCorner.lapChestHot',
     label: 'coffee corner lap close chest hotspot',
-    coordinate: { x: 0.56, y: 0.67, width: 0.40, height: 0.26 }
+    coordinate: { x: 0.56, y: 0.61, width: 0.44, height: 0.23 },
+    debugVisible: true
   };
 
   function room(){ return document.getElementById('gameRoom'); }
   function img(){ return document.getElementById('gameBg'); }
   function mainBubble(){ return document.getElementById('bubble'); }
+  function isDebug(){ return new URLSearchParams(location.search).get('debugLap') === '1'; }
+  function isLapActive(){
+    var image = img();
+    var src = String((image && image.currentSrc) || (image && image.src) || '');
+    return mode === 'lap' && src.indexOf('lap-close-01.jpg') !== -1;
+  }
 
   function cleanText(value){ return String(value || '').trim(); }
 
@@ -72,7 +81,7 @@
 
   function showNextLapBubble(){
     var b = ensureLapBubble();
-    if(!b || mode !== 'lap' || !hasLapText()) return;
+    if(!b || !isLapActive() || !hasLapText()) return;
     if(b.getAttribute('data-active') === '1'){
       lapIndex = (lapIndex + 1) % lapLines.length;
     }
@@ -179,6 +188,31 @@
     return true;
   }
 
+  function paintDebug(hot, card){
+    if(isDebug() && card.debugVisible){
+      hot.style.background = 'rgba(255,80,130,.18)';
+      hot.style.outline = '2px solid rgba(255,80,130,.85)';
+    }else{
+      hot.style.background = 'transparent';
+      hot.style.outline = '0';
+    }
+  }
+
+  function hideHot(hot){
+    if(!hot) return;
+    hot.style.display = 'none';
+    hot.style.pointerEvents = 'none';
+    hot.style.background = 'transparent';
+    hot.style.outline = '0';
+  }
+
+  function showHot(hot, card){
+    if(!hot) return;
+    hot.style.display = 'block';
+    hot.style.pointerEvents = 'auto';
+    paintDebug(hot, card);
+  }
+
   function applyCard(hot, card){
     var image = img();
     var r = room();
@@ -196,13 +230,7 @@
     hot.style.height = h + 'px';
     hot.setAttribute('data-variant-hotspot', card.id);
     hot.setAttribute('data-hotspot-label', card.label);
-    if(new URLSearchParams(location.search).get('debugLap') === '1'){
-      hot.style.background = 'rgba(255,80,130,.18)';
-      hot.style.outline = '2px solid rgba(255,80,130,.85)';
-    }else{
-      hot.style.background = 'transparent';
-      hot.style.outline = '0';
-    }
+    paintDebug(hot, card);
     return true;
   }
 
@@ -215,6 +243,7 @@
     image.src = mode === 'lap' ? LAP_URL : mainSrc;
     attachState();
     updateHotspots();
+    image.onload = function(){ updateHotspots(); };
     setTimeout(updateHotspots, 120);
     setTimeout(updateHotspots, 520);
   }
@@ -229,22 +258,16 @@
     applyCard(chestHot, chestCard);
     var b = ensureLapBubble();
     var main = mainBubble();
-    if(mode === 'lap'){
-      enterHot.style.display = 'none';
-      enterHot.style.pointerEvents = 'none';
-      backHot.style.display = 'block';
-      backHot.style.pointerEvents = 'auto';
-      chestHot.style.display = 'block';
-      chestHot.style.pointerEvents = 'auto';
+    if(isLapActive()){
+      hideHot(enterHot);
+      showHot(backHot, backCard);
+      showHot(chestHot, chestCard);
       if(b) b.removeAttribute('data-active');
       if(main) main.setAttribute('data-lap-hidden', '1');
     }else{
-      enterHot.style.display = 'block';
-      enterHot.style.pointerEvents = 'auto';
-      backHot.style.display = 'none';
-      backHot.style.pointerEvents = 'none';
-      chestHot.style.display = 'none';
-      chestHot.style.pointerEvents = 'none';
+      showHot(enterHot, enterCard);
+      hideHot(backHot);
+      hideHot(chestHot);
       if(b) b.removeAttribute('data-active');
       if(main) main.removeAttribute('data-lap-hidden');
     }
