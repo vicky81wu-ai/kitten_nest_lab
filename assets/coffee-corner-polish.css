@@ -19,38 +19,41 @@ body.cloudDefaultAssets #gameRoom.active::after{
   pointer-events:none;
   z-index:9;
   mix-blend-mode:screen;
-  opacity:.72;
+  opacity:.95;
 }
 
 body.cloudDefaultAssets #gameRoom.active::before{
   background:
     linear-gradient(126deg,
-      rgba(255,246,210,.30) 0%,
-      rgba(255,224,165,.18) 11%,
-      rgba(255,206,138,.075) 27%,
-      rgba(255,206,138,0) 49%) 74% 0% / 42% 54% no-repeat,
-    linear-gradient(132deg,
-      rgba(255,240,198,.18) 0%,
-      rgba(255,218,155,.085) 16%,
-      rgba(255,210,145,0) 40%) 67% 10% / 38% 42% no-repeat;
-  filter:blur(15px);
+      rgba(255,249,218,.62) 0%,
+      rgba(255,228,168,.38) 13%,
+      rgba(255,207,135,.18) 31%,
+      rgba(255,207,135,0) 56%) 70% -3% / 52% 66% no-repeat,
+    linear-gradient(134deg,
+      rgba(255,242,202,.42) 0%,
+      rgba(255,219,155,.22) 18%,
+      rgba(255,210,145,.075) 38%,
+      rgba(255,210,145,0) 58%) 61% 7% / 48% 52% no-repeat,
+    radial-gradient(ellipse at 83% 14%, rgba(255,251,225,.38) 0%, rgba(255,229,170,.14) 18%, rgba(255,229,170,0) 43%);
+  filter:blur(14px);
   transform-origin:86% 11%;
-  animation:cssSunbeamBreath 7.8s ease-in-out infinite;
+  animation:cssSunbeamBreath 5.6s ease-in-out infinite;
 }
 
 body.cloudDefaultAssets #gameRoom.active::after{
-  opacity:.54;
+  opacity:.78;
   background:
-    radial-gradient(circle at 82% 14%, rgba(255,244,205,.22) 0 1.2px, transparent 2.2px),
-    radial-gradient(circle at 76% 22%, rgba(255,226,165,.18) 0 1px, transparent 2px),
-    radial-gradient(circle at 70% 31%, rgba(255,236,184,.15) 0 1.1px, transparent 2.2px),
-    radial-gradient(circle at 62% 41%, rgba(255,222,160,.12) 0 .9px, transparent 1.8px),
+    radial-gradient(circle at 84% 13%, rgba(255,250,218,.52) 0 1.8px, transparent 3.2px),
+    radial-gradient(circle at 78% 21%, rgba(255,229,166,.42) 0 1.5px, transparent 3px),
+    radial-gradient(circle at 72% 29%, rgba(255,238,184,.36) 0 1.6px, transparent 3.1px),
+    radial-gradient(circle at 65% 38%, rgba(255,224,160,.30) 0 1.3px, transparent 2.7px),
+    radial-gradient(circle at 58% 47%, rgba(255,235,182,.24) 0 1.1px, transparent 2.3px),
     linear-gradient(130deg,
-      rgba(255,248,218,.10) 0%,
-      rgba(255,224,165,.045) 24%,
-      rgba(255,224,165,0) 50%);
-  filter:blur(.35px);
-  animation:cssSunDustBreath 6.6s ease-in-out infinite;
+      rgba(255,250,222,.25) 0%,
+      rgba(255,224,165,.13) 28%,
+      rgba(255,224,165,0) 58%);
+  filter:blur(.28px);
+  animation:cssSunDustBreath 3.8s ease-in-out infinite;
 }
 
 body.cloudDefaultAssets #gameRoom.active .steam{
@@ -174,14 +177,15 @@ body.cloudDefaultAssets #gameRoom.active .photoGlow:after{
 }
 
 @keyframes cssSunbeamBreath{
-  0%,100%{ opacity:.50; transform:translate3d(0,0,0) rotate(-.7deg) scale(.992); filter:blur(17px); }
-  42%{ opacity:.88; transform:translate3d(-.6%,.35%,0) rotate(.45deg) scale(1.018); filter:blur(13px); }
-  70%{ opacity:.66; transform:translate3d(.25%,-.25%,0) rotate(.15deg) scale(1.006); filter:blur(15px); }
+  0%,100%{ opacity:.72; transform:translate3d(0,0,0) rotate(-1.2deg) scale(.985); filter:blur(18px); }
+  35%{ opacity:1; transform:translate3d(-1.4%,.8%,0) rotate(.9deg) scale(1.035); filter:blur(11px); }
+  68%{ opacity:.84; transform:translate3d(.65%,-.55%,0) rotate(.35deg) scale(1.012); filter:blur(14px); }
 }
 
 @keyframes cssSunDustBreath{
-  0%,100%{ opacity:.26; transform:translate3d(0,0,0); }
-  50%{ opacity:.58; transform:translate3d(-.7%,.5%,0); }
+  0%,100%{ opacity:.42; transform:translate3d(.3%,0,0) scale(.99); }
+  42%{ opacity:.86; transform:translate3d(-1.3%,.9%,0) scale(1.018); }
+  70%{ opacity:.58; transform:translate3d(.4%,-.35%,0) scale(1.006); }
 }
 
 @keyframes coffeeMistArea{
