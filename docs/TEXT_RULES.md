@@ -1,6 +1,6 @@
 # Kitten Nest Text Rules
 
-Updated: 2026-06-10
+Updated: 2026-06-13
 
 This document is for the director layer. It explains where Alex should place different kinds of text in the nest. It does not change runtime code.
 
@@ -22,10 +22,10 @@ Purpose:
 
 - Immediate companion text.
 - Short lines.
-- Multiple rotating items.
+- Multiple rotating items when the specific bubble port supports rotation.
 - Current queue only, not a long-term archive.
 
-Current implementation:
+Current coffeeCorner implementation:
 
 ```json
 {
@@ -35,12 +35,19 @@ Current implementation:
 }
 ```
 
-Current behavior:
+Current coffeeCorner behavior:
 
 - A bubble may show automatically when the room opens.
 - Tapping the visible bubble hides it.
 - Tapping the tattoo hotspot while hidden shows the next bubble.
 - Tapping the tattoo hotspot while visible hides it.
+
+CoffeeCorner lap-close behavior:
+
+- The lap-close variant uses its own `coffeeCorner.lapCloseBubble` text port.
+- The lap-close bubble appears in the upper-left of the lap-close image.
+- It must not inherit or rotate through the normal coffeeCorner bubble queue.
+- The normal `coffeeCorner.bubble` should be hidden while lap-close mode is active.
 
 Use Bubble for:
 
@@ -50,6 +57,7 @@ Use Bubble for:
 - short comfort lines
 - playful room presence
 - quick contextual lines adapted from the current chat
+- short scene-variant presence lines when a variant defines its own bubble port
 
 Do not use Bubble for long archive notes.
 
@@ -150,5 +158,6 @@ Use `implementationType` for current code names:
 - `bubbleDraft`
 - `hubbyNoteDraft`
 - future `interactionPanel`
+- variant-specific static/direct bubble ports when explicitly documented
 
 This prevents current implementation names from becoming mistaken top-level concepts.
