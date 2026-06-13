@@ -1,0 +1,33 @@
+/* Backup before realistic steam rewrite - 2026-06-13
+   Source file: assets/coffee-corner-polish.css
+   Reason: Vicky requested rollback backup before trying a more natural coffee steam style.
+*/
+
+body.cloudDefaultAssets #gameRoom.active .steam{
+  right:42.8%!important;
+  top:30.6%!important;
+  width:14.5%!important;
+  height:11.5%!important;
+  opacity:.72!important;
+  filter:blur(.1px);
+}
+
+body.cloudDefaultAssets #gameRoom.active .steam i{
+  width:1.8px!important;
+  height:42%!important;
+  background:rgba(255,248,235,.52)!important;
+  filter:blur(.62px)!important;
+  animation-duration:4.4s!important;
+}
+
+body.cloudDefaultAssets #gameRoom.active .steam i:nth-child(1){
+  --dx:-9px!important;
+}
+
+body.cloudDefaultAssets #gameRoom.active .steam i:nth-child(2){
+  --dx:2px!important;
+}
+
+body.cloudDefaultAssets #gameRoom.active .steam i:nth-child(3){
+  --dx:10px!important;
+}
