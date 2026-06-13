@@ -22,7 +22,6 @@
     return [];
   }
   function noteTrash(state){ return Array.isArray(state && state.hubbyNoteTrash) ? state.hubbyNoteTrash : []; }
-  function noteText(state){ return clean(state && state.hubbyNote || '') || '粉本本还空着。上方是当前页；下面写新页，或点“编辑”把当前页载入编辑框。'; }
   function itemId(item, index){ return text(item && item.id || item && item.savedAt || '') + '|' + index; }
   function archiveWithIds(list){
     return (Array.isArray(list) ? list : []).map(function(item){
@@ -46,20 +45,16 @@
       '.hubbyNoteButton{position:fixed;left:14px;bottom:max(14px,env(safe-area-inset-bottom));z-index:29;border:0;border-radius:999px;padding:9px 12px;background:rgba(255,240,246,.84);color:#7a4054;box-shadow:0 10px 26px rgba(70,30,45,.22),inset 0 0 0 1px rgba(255,255,255,.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);font-weight:800;font-size:13px;letter-spacing:.02em;}',
       '.hubbyNotePanel{position:fixed;inset:0;z-index:64;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(30,12,24,.28);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);}',
       '.hubbyNotePanel.show{display:flex;}',
-      '.hubbyNoteCard{width:min(92vw,450px);max-height:82dvh;overflow:auto;border-radius:30px;padding:18px;background:linear-gradient(180deg,rgba(255,247,249,.94),rgba(255,232,239,.9));border:1px solid rgba(255,255,255,.82);box-shadow:0 22px 70px rgba(48,18,34,.36),inset 0 0 0 1px rgba(140,70,96,.08);color:#6f3d4e;}',
-      '.hubbyNoteHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;}',
+      '.hubbyNoteCard{position:relative;width:min(92vw,450px);max-height:82dvh;overflow:auto;border-radius:30px;padding:18px;background:linear-gradient(180deg,rgba(255,247,249,.94),rgba(255,232,239,.9));border:1px solid rgba(255,255,255,.82);box-shadow:0 22px 70px rgba(48,18,34,.36),inset 0 0 0 1px rgba(140,70,96,.08);color:#6f3d4e;}',
+      '.hubbyNoteHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;padding-right:40px;}',
       '.hubbyNoteTitle{font-size:20px;font-weight:850;letter-spacing:.02em;}',
-      '.hubbyNoteClose{border:0;width:30px;height:30px;border-radius:999px;background:rgba(255,255,255,.66);color:#7a4054;font-size:20px;line-height:28px;}',
+      '.hubbyNoteClose{position:absolute;right:14px;top:14px;border:0;width:32px;height:32px;border-radius:999px;background:rgba(255,255,255,.66);color:#7a4054;font-size:20px;line-height:30px;}',
       '.hubbyNoteMeta{font-size:11px;opacity:.62;margin:0 0 10px;}',
-      '.hubbyNoteBody{white-space:pre-wrap;font-size:14px;line-height:1.55;background:rgba(255,255,255,.52);border-radius:20px;padding:13px;box-shadow:inset 0 0 0 1px rgba(120,55,80,.08);font-weight:540;}',
-      '.hubbyNoteActions{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:9px 0 0;}',
-      '.hubbyNoteMiniBtn{border:0;border-radius:14px;padding:8px 7px;background:rgba(255,255,255,.62);color:#7a4054;box-shadow:inset 0 0 0 1px rgba(120,55,80,.09);font-weight:760;font-size:12px;}',
-      '.hubbyNoteMiniBtn.danger{color:#9a3d50;background:rgba(255,235,240,.62);}',
-      '.hubbyNoteEditor{margin-top:12px;display:grid;gap:8px;}',
-      '.hubbyNoteTextarea{width:100%;min-height:116px;resize:vertical;border:0;border-radius:18px;padding:12px;background:rgba(255,255,255,.7);box-shadow:inset 0 0 0 1px rgba(120,55,80,.1);color:#6f3d4e;font-size:14px;line-height:1.5;outline:none;}',
-      '.hubbyNoteToken{width:100%;border:0;border-radius:14px;padding:10px;background:rgba(255,255,255,.62);box-shadow:inset 0 0 0 1px rgba(120,55,80,.09);color:#6f3d4e;font-size:13px;outline:none;}',
-      '.hubbyNoteAuthChip{border:0;border-radius:14px;padding:10px;background:rgba(255,255,255,.62);box-shadow:inset 0 0 0 1px rgba(120,55,80,.09);color:#7a4054;font-size:12px;font-weight:760;text-align:center;}',
-      '.hubbyNoteAuthChip:active{transform:scale(.99);}',
+      '.hubbyNoteEditor{margin-top:8px;display:grid;gap:8px;}',
+      '.hubbyNoteTextarea{width:100%;min-height:132px;resize:vertical;border:0;border-radius:18px;padding:12px;background:rgba(255,255,255,.72);box-shadow:inset 0 0 0 1px rgba(120,55,80,.1);color:#6f3d4e;font-size:14px;line-height:1.5;outline:none;}',
+      '.hubbyNoteToken{width:100%;border:0;border-radius:14px;padding:10px;background:rgba(255,255,255,.68);box-shadow:inset 0 0 0 1px rgba(120,55,80,.09);color:#6f3d4e;font-size:13px;outline:none;}',
+      '.hubbyNoteAuthChip{position:absolute;right:52px;top:14px;width:32px;height:32px;border:0;border-radius:999px;padding:0;background:rgba(255,255,255,.64);box-shadow:inset 0 0 0 1px rgba(120,55,80,.09),0 6px 16px rgba(80,30,50,.1);color:#7a4054;font-size:16px;font-weight:760;text-align:center;line-height:32px;}',
+      '.hubbyNoteAuthChip:active{transform:scale(.96);}',
       '.hubbyNoteSave{border:0;border-radius:16px;padding:11px 12px;background:#7b4054;color:white;font-weight:820;font-size:14px;box-shadow:0 10px 24px rgba(123,64,84,.2);}',
       '.hubbyNoteSaveStatus{font-size:11px;opacity:.72;min-height:16px;text-align:center;}',
       '.hubbyNoteSection{margin-top:14px;font-size:12px;font-weight:820;opacity:.78;}',
@@ -69,6 +64,8 @@
       '.hubbyNoteItemTime{font-size:10px;opacity:.55;margin-bottom:4px;}',
       '.hubbyNoteItemText{font-size:12px;line-height:1.42;white-space:pre-wrap;}',
       '.hubbyNoteItemBtns{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:7px;}',
+      '.hubbyNoteMiniBtn{border:0;border-radius:14px;padding:8px 7px;background:rgba(255,255,255,.62);color:#7a4054;box-shadow:inset 0 0 0 1px rgba(120,55,80,.09);font-weight:760;font-size:12px;}',
+      '.hubbyNoteMiniBtn.danger{color:#9a3d50;background:rgba(255,235,240,.62);}',
       '.hubbyNoteHint{margin-top:12px;font-size:11px;opacity:.6;line-height:1.45;text-align:center;}'
     ].join('');
     document.head.appendChild(style);
@@ -81,14 +78,11 @@
     panel = document.createElement('div');
     panel.id = 'hubbyNotePanel';
     panel.className = 'hubbyNotePanel';
-    panel.innerHTML = '<div class="hubbyNoteCard" role="dialog" aria-label="hubby note notebook"><div class="hubbyNoteHead"><div class="hubbyNoteTitle">粉本本 · Hubby note</div><button class="hubbyNoteClose" type="button" aria-label="close">×</button></div><div class="hubbyNoteMeta" id="hubbyNoteMeta"></div><div class="hubbyNoteBody" id="hubbyNoteBody"></div><div class="hubbyNoteActions"><button class="hubbyNoteMiniBtn" id="hubbyNoteEdit" type="button">编辑</button><button class="hubbyNoteMiniBtn" id="hubbyNoteFavorite" type="button">收藏</button><button class="hubbyNoteMiniBtn danger" id="hubbyNoteDelete" type="button">删除</button></div><div class="hubbyNoteEditor"><textarea class="hubbyNoteTextarea" id="hubbyNoteEditor" placeholder="写新页；或点上面的“编辑”把当前页载入这里……"></textarea><input class="hubbyNoteToken" id="hubbyNoteToken" autocomplete="off" placeholder="Nest key：本机保存一次，以后直接保存"/><button class="hubbyNoteAuthChip" id="hubbyNoteAuthChip" type="button">已授权 · 点这里换 key</button><button class="hubbyNoteSave" id="hubbyNoteSave" type="button">保存到粉本本</button><div class="hubbyNoteSaveStatus" id="hubbyNoteSaveStatus"></div></div><div class="hubbyNoteSection" id="hubbyNoteArchiveTitle">永久档案 · 最近显示</div><div class="hubbyNoteHistory" id="hubbyNoteHistory"></div><div class="hubbyNoteHint">上方是当前页；保存会把这次确认/输入的内容立即放进永久档案。删除是软删除，先进 trash。</div></div>';
+    panel.innerHTML = '<div class="hubbyNoteCard" role="dialog" aria-label="hubby note notebook"><div class="hubbyNoteHead"><div class="hubbyNoteTitle">粉本本 · Hubby note</div><button class="hubbyNoteAuthChip" id="hubbyNoteAuthChip" type="button" aria-label="change nest key">🐾</button><button class="hubbyNoteClose" type="button" aria-label="close">×</button></div><div class="hubbyNoteMeta" id="hubbyNoteMeta"></div><div class="hubbyNoteEditor"><textarea class="hubbyNoteTextarea" id="hubbyNoteEditor" placeholder="写新页，保存后直接进永久档案……"></textarea><input class="hubbyNoteToken" id="hubbyNoteToken" autocomplete="off" placeholder="Nest key：本机保存一次，以后点右上小猫爪更换"/><button class="hubbyNoteSave" id="hubbyNoteSave" type="button">保存到粉本本</button><div class="hubbyNoteSaveStatus" id="hubbyNoteSaveStatus"></div></div><div class="hubbyNoteSection" id="hubbyNoteArchiveTitle">永久档案 · 最近显示</div><div class="hubbyNoteHistory" id="hubbyNoteHistory"></div><div class="hubbyNoteHint">写完保存，会立刻进永久档案。历史条目可载入编辑、收藏、删除。</div></div>';
     document.body.appendChild(panel);
     panel.addEventListener('click', function(e){ if(e.target === panel) close(); });
     panel.querySelector('.hubbyNoteClose').addEventListener('click', close);
     panel.querySelector('#hubbyNoteSave').addEventListener('click', saveCurrent);
-    panel.querySelector('#hubbyNoteEdit').addEventListener('click', editCurrent);
-    panel.querySelector('#hubbyNoteFavorite').addEventListener('click', toggleCurrentFavorite);
-    panel.querySelector('#hubbyNoteDelete').addEventListener('click', deleteCurrent);
     panel.querySelector('#hubbyNoteHistory').addEventListener('click', archiveAction);
     var keyInput = panel.querySelector('#hubbyNoteToken');
     var chip = panel.querySelector('#hubbyNoteAuthChip');
@@ -113,35 +107,30 @@
     var chip = panel.querySelector('#hubbyNoteAuthChip');
     if(!keyInput || !chip) return;
     keyInput.type = 'password';
+    chip.textContent = '🐾';
     if(token() && keyInput.dataset.editingKey !== '1'){
       keyInput.value = '';
       keyInput.style.display = 'none';
       chip.style.display = '';
-      chip.textContent = '已授权 · 点这里换 key';
     }else{
       keyInput.style.display = '';
-      chip.style.display = 'none';
+      chip.style.display = token() ? '' : 'none';
     }
   }
 
   function render(state){
     var panel = ensurePanel();
-    var body = panel.querySelector('#hubbyNoteBody');
     var meta = panel.querySelector('#hubbyNoteMeta');
     var history = panel.querySelector('#hubbyNoteHistory');
     var title = panel.querySelector('#hubbyNoteArchiveTitle');
-    var favBtn = panel.querySelector('#hubbyNoteFavorite');
     var updated = clean(state && (state.hubbyNoteUpdatedAt || state.updatedAt) || '');
     var archive = noteArchive(state);
-    var note = noteText(state);
-    body.textContent = (state && state.hubbyNoteFavorite ? '★ ' : '') + note;
-    if(favBtn) favBtn.textContent = state && state.hubbyNoteFavorite ? '已收藏' : '收藏';
     meta.textContent = updated ? ('云端保存 · ' + shortDate(updated) + ' · 永久档案 ' + archive.length + ' 条') : ('云端保存 · 永久档案 ' + archive.length + ' 条');
     if(title) title.textContent = '永久档案 · 最近显示 ' + Math.min(archive.length, 6) + ' 条';
     renderAuth();
     var items = archive.slice(0,6);
     if(!items.length){
-      history.innerHTML = '<div class="hubbyNoteItem"><div class="hubbyNoteItemText">还没有历史档案。今天施工第一条，正等小猫写进去。</div></div>';
+      history.innerHTML = '<div class="hubbyNoteItem"><div class="hubbyNoteItemText">还没有历史档案。小猫写一条，保存后就会住进这里。</div></div>';
     }else{
       history.innerHTML = items.map(function(item, i){
         var fav = item && item.favorite;
@@ -176,7 +165,7 @@
 
   function notePatch(raw, state){
     var note = clean(raw).slice(0,5000);
-    if(!note) throw new Error('粉本本不能保存空白页。');
+    if(!note) throw new Error('先写一点点再保存，小猫。');
     var archive = archiveWithIds(noteArchive(state));
     var savedAt = new Date().toISOString();
     var nextArchive = archiveHasText(archive, note) ? archive : [{ id:id(), text:note, savedAt:savedAt, favorite:false }, ...archive];
@@ -192,39 +181,13 @@
       setStatus('保存中……');
       var state = currentState || await refresh() || {};
       var typed = clean(editor && editor.value || '');
-      var current = clean(state && state.hubbyNote || '');
-      var saveText = typed || current;
-      var value = await writePatch(notePatch(saveText, state));
+      var value = await writePatch(notePatch(typed, state));
       currentState = value;
       if(editor){ editor.value = ''; editor.removeAttribute('data-edit-source'); }
       render(value);
-      setStatus(typed ? '保存好了，已经进云端和永久档案。' : '当前页已确认，已经进永久档案。');
+      setStatus('保存好了，已经进云端和永久档案。');
     }
     catch(e){ setStatus('保存失败：' + e.message); }
-  }
-
-  function editCurrent(){
-    var panel = ensurePanel();
-    var editor = panel.querySelector('#hubbyNoteEditor');
-    var state = currentState || {};
-    if(editor){ editor.value = clean(state.hubbyNote || ''); editor.setAttribute('data-edit-source','current'); editor.focus(); editor.scrollIntoView({ block:'center', behavior:'smooth' }); }
-  }
-
-  async function toggleCurrentFavorite(){
-    try{ setStatus('更新收藏……'); var state = currentState || await refresh() || {}; var value = await writePatch({ hubbyNoteFavorite: !(state && state.hubbyNoteFavorite) }); currentState = value; render(value); setStatus(value.hubbyNoteFavorite ? '当前页已收藏。' : '当前页已取消收藏。'); }
-    catch(e){ setStatus('收藏失败：' + e.message); }
-  }
-
-  async function deleteCurrent(){
-    try{
-      var state = currentState || await refresh() || {};
-      var old = clean(state.hubbyNote || '');
-      if(!old){ setStatus('当前页已经是空的。'); return; }
-      if(!confirm('删除当前粉本本页面？会放进 trash，不会直接消失。')) return;
-      var trash = [{ id:id(), text:old, deletedAt:new Date().toISOString(), source:'current', favorite:!!state.hubbyNoteFavorite }, ...noteTrash(state)];
-      var value = await writePatch({ hubbyNote:'', hubbyNoteUpdatedAt:new Date().toISOString(), hubbyNoteFavorite:false, hubbyNoteTrash:trash });
-      currentState = value; render(value); setStatus('当前页已删除，放进 trash。');
-    }catch(e){ setStatus('删除失败：' + e.message); }
   }
 
   function findArchiveItem(state, key){
@@ -282,7 +245,7 @@
     attached = true; ensureButton(); client.subscribe(function(payload){ setState(payload && payload.state); }); if(client.get) setState(client.get()); return true;
   }
 
-  window.KittenNestHubbyNote = { version:'hubby-note-notebook-20260613-save-current-to-archive', attach:attach, open:open, close:close, render:render, setState:setState, saveCurrent:saveCurrent, renderAuth:renderAuth };
+  window.KittenNestHubbyNote = { version:'hubby-note-notebook-20260613-archive-first-paw-key', attach:attach, open:open, close:close, render:render, setState:setState, saveCurrent:saveCurrent, renderAuth:renderAuth };
   window.addEventListener('load', ensureButton);
   setTimeout(ensureButton, 400);
   setTimeout(ensureButton, 1400);
