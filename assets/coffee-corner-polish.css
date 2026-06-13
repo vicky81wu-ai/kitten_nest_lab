@@ -1,0 +1,54 @@
+/* Coffee corner visual polish - 2026-06-13
+   Scope: bubble placement, coffee steam, photo wall highlight cleanup.
+   Runtime only; image/asset bindings unchanged. */
+
+body.cloudDefaultAssets #gameRoom.active .bubble{
+  top:auto!important;
+  right:9.5%!important;
+  bottom:68%!important;
+  max-width:48%!important;
+  min-width:118px;
+  transform-origin:100% 100%;
+}
+
+body.cloudDefaultAssets #gameRoom.active .bubble.hidden{
+  transform:scale(.96) translateY(4px);
+}
+
+body.cloudDefaultAssets #gameRoom.active .bubble:after{
+  right:22px;
+  bottom:-9px;
+}
+
+body.cloudDefaultAssets #gameRoom.active .steam{
+  right:43.2%!important;
+  top:31.4%!important;
+  width:12%!important;
+  height:8.8%!important;
+  opacity:.52!important;
+  filter:blur(.15px);
+}
+
+body.cloudDefaultAssets #gameRoom.active .steam i{
+  width:1.25px!important;
+  height:30%!important;
+  background:rgba(255,246,231,.34)!important;
+  filter:blur(.75px)!important;
+  animation-duration:4.8s!important;
+}
+
+body.cloudDefaultAssets #gameRoom.active .steam i:nth-child(1){
+  --dx:-7px!important;
+}
+
+body.cloudDefaultAssets #gameRoom.active .steam i:nth-child(2){
+  --dx:3px!important;
+}
+
+body.cloudDefaultAssets #gameRoom.active .steam i:nth-child(3){
+  --dx:8px!important;
+}
+
+body.cloudDefaultAssets #gameRoom.active .photoGlow i{
+  display:none!important;
+}
