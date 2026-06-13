@@ -37,7 +37,7 @@
     <section class="card primaryCard">
       <span class="useTag">日常用这个</span>
       <h2>Alex 更新包</h2>
-      <p class="small">当前支持：[coffeeCorner] 普通咖啡角气泡、[coffeeCornerLapClose] / [lapClose] 坐腿近景左上气泡、[windowWeather] 窗户天气、[hubbyNote] 粉本本永久档案。没有标签默认进 coffeeCorner 气泡。</p>
+      <p class="small">当前支持：[coffeeCorner] 普通咖啡角气泡、[coffeeCornerLapClose] 坐腿近景左上气泡、[windowWeather] 窗户天气、[hubbyNote] 粉本本永久档案。没有标签默认进 coffeeCorner 气泡。场景变体必须使用完整场景 tag；不支持 [lapClose] 这类短名。</p>
       <label for="packageText">Package</label>
       <textarea id="packageText" class="packageBox">[coffeeCorner]
 早上好，小猫。
@@ -140,7 +140,7 @@ Soft breeze
     const low = raw.toLowerCase().replace(/[\s_-]/g,'');
     if(low === 'weather' || low === 'windowweather' || low === 'window') return { kind:'weather', field:'windowWeather', label:'windowWeather' };
     if(low === 'hubbynote' || low === 'note' || low === 'notebook' || low === 'pinkbook' || low === '粉本本') return { kind:'hubbyNote', field:'hubbyNote', label:'hubbyNote' };
-    if(low === 'coffeecornerlapclose' || low === 'lapclose' || low === 'lapbubble' || low === 'lapclosebubble' || low === 'coffeecornerlapclosebubble' || low === 'sittinglap' || low === 'sitlap') return { kind:'lapCloseBubble', field:'coffeeCornerLapCloseBubble', label:'coffeeCornerLapClose' };
+    if(low === 'coffeecornerlapclose') return { kind:'lapCloseBubble', field:'coffeeCornerLapCloseBubble', label:'coffeeCornerLapClose' };
     const roomMap = { coffee:'coffeeCorner', coffeecorner:'coffeeCorner', cafe:'coffeeCorner', cafecorner:'coffeeCorner', home:'home', global:'global', restaurant:'restaurant', dining:'restaurant', fountain:'fountain', wishingfountain:'fountain', private:'privateRoom', privateroom:'privateRoom', secret:'privateRoom', bedroom:'bedroom', photobooth:'photoBooth' };
     return { kind:'bubble', room: roomMap[low] || raw || 'coffeeCorner', label: roomMap[low] || raw || 'coffeeCorner' };
   }
