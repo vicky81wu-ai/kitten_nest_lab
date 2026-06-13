@@ -1,5 +1,5 @@
 {
-  "version": "0.1.5",
+  "version": "0.1.6",
   "status": "foundation-current-identities",
   "note": "Static object and hotspot identity registry for Kitten Nest. This file is not wired into runtime yet. It exists to prevent selector reuse, hotspot ownership conflicts, decorative overlay drift, and rough patching. Detailed director writing guidance lives in docs/DIRECTOR_GUIDE.md.",
   "principles": [
@@ -12,7 +12,8 @@
     "canonicalCurrent means current official truth, not permanent immutability.",
     "Current official objects may change later through mutableWithVersion.",
     "Keep technical identity here; put long director notes in docs/DIRECTOR_GUIDE.md.",
-    "Active base-image hotspots must be gated by their active room so home and coffeeCorner hotspots do not leak into each other."
+    "Active base-image hotspots must be gated by their active room so home and coffeeCorner hotspots do not leak into each other.",
+    "Notebook current-page preview and editor draft are separate states; do not auto-copy current page into the editor on render."
   ],
   "objects": [
     {
@@ -211,16 +212,18 @@
       "selector": "#hubbyNotePanel",
       "owner": "hubbyNoteController",
       "role": "cloudNotebookPanel",
-      "action": "displayEditSaveFavoriteDeleteArchive",
+      "action": "displayCurrentPreviewAndDraftEditorSaveFavoriteDeleteArchive",
       "exclusive": true,
       "runtimeStatus": "active",
       "versionStatus": "canonicalCurrent",
       "changePolicy": "mutableWithVersion",
       "textClass": "PermanentNote",
       "implementationType": "hubbyNoteDraft",
+      "implementationFile": "assets/hubby-note-controller.js",
       "stateFields": ["hubbyNote", "hubbyNoteUpdatedAt", "hubbyNoteArchive", "hubbyNoteHistory", "hubbyNoteFavorite", "hubbyNoteTrash"],
+      "runtimeNote": "Current page preview and editor draft are separate. Rendering must not auto-copy hubbyNote into the editor. The Edit button loads current page into the editor. Save uses editor text when present, otherwise confirms current page. Archiving old current page must dedupe by text before inserting into hubbyNoteArchive/hubbyNoteHistory.",
       "directorRef": "director.notebooks.hubbyNote",
-      "directorTags": ["permanentNote", "archive", "shared", "cloudBacked"],
+      "directorTags": ["permanentNote", "archive", "shared", "cloudBacked", "draftDedupe", "currentPreview"],
       "protected": true
     },
     {
@@ -235,11 +238,7 @@
       "runtimeStatus": "active",
       "versionStatus": "canonicalCurrent",
       "changePolicy": "mutableWithVersion",
-      "rules": [
-        "May be hidden by default.",
-        "Manual entry must remain possible.",
-        "Local upload override pipeline must remain available."
-      ],
+      "rules": ["May be hidden by default.", "Manual entry must remain possible.", "Local upload override pipeline must remain available."],
       "directorRef": "director.engineering.setupPanel",
       "directorTags": ["engineeringOnly", "localUpload", "protected"],
       "protected": true
@@ -334,12 +333,13 @@
     "protectedChainCheck": "If protected:true, do not modify without staged plan and rollback.",
     "coordinateRule": "Current coordinates should use base-image coordinates, not device-specific CSS nudges.",
     "roomGateRule": "Hotspots that belong to different rooms must be gated by active room element, e.g. gameRoom.active vs home.active, so they do not leak across scenes.",
+    "notebookDraftRule": "hubbyNote current preview and editor draft are separate. Do not auto-fill the editor from current page on render. Archive insertion must dedupe existing text before adding old current page.",
     "overlayRule": "Decorative overlays are not hotspots, but they still need identity, owner, and base-image coordinate records when they align with room art.",
     "versionRule": "canonicalCurrent is mutable only through explicit versioned change, not silent replacement.",
     "directorRule": "Use directorRef and directorTags here; put long director scripts and sample lines in docs/DIRECTOR_GUIDE.md."
   },
   "shortIncidentExample": {
     "type": "selectorReuse",
-    "lesson": "A notebook entry once reused the game console selector and took over the game menu. The long-term rule is not a blacklist; it is selector ownership plus exclusive:true. A later room-leak incident showed active room gating is also required for shared/global selectors."
+    "lesson": "A notebook entry once reused the game console selector and took over the game menu. The long-term rule is not a blacklist; it is selector ownership plus exclusive:true. A later room-leak incident showed active room gating is also required for shared/global selectors. A notebook duplication incident showed current-page preview and editor draft must stay separate and archive insertion must dedupe."
   }
 }
