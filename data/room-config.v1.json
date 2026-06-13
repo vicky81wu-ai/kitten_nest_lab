@@ -1,5 +1,5 @@
 {
-  "version": "0.1.8",
+  "version": "0.1.9",
   "status": "foundation-scene-hooks",
   "note": "Room and scene configuration foundation for Kitten Nest. This file is not a full roomEngine runtime yet. It keeps scene identity, active ports, protected current runtime facts, and directorRef hooks. Long director notes live in docs/DIRECTOR_GUIDE.md.",
   "currentRuntime": {
@@ -23,16 +23,13 @@
       "coffeeCorner.setupToggleButton"
     ],
     "activePanels": [
-      "shared.hubbyNotePanel",
+      "home.hubbyNotePanel",
       "coffeeCorner.setupPanel"
     ],
     "activeAssetPipelines": [
       "coffeeCorner.localImageUpload"
     ],
-    "sharedFeatures": [
-      "shared.hubbyNotePanel"
-    ],
-    "stableWorkflow": "Alex update package -> /write -> generate drafts -> publish all -> /cloud. The powder notebook currently appears as a physical home object and opens a shared archive-first notebook panel. Setup/local upload remains manually available."
+    "stableWorkflow": "Alex update package -> /write -> generate drafts -> publish all -> /cloud. The powder notebook currently appears as a physical home object and opens a home-scoped archive-first notebook panel. Setup/local upload remains manually available."
   },
   "identityPolicy": {
     "coreRule": "No identity, no binding.",
@@ -41,7 +38,7 @@
     "versionRule": "canonicalCurrent means current official truth, not permanent immutability. Current objects may change later through mutableWithVersion.",
     "coordinateRule": "Coordinates should be locked to base-image coordinates, not device-specific offsets.",
     "roomGateRule": "Hotspots and overlays must be gated to their active room element so home and coffeeCorner controls do not leak into each other.",
-    "sharedPanelRule": "A shared/global panel is not automatically a room object. A room owns only its physical hotspot/object; a shared panel should be listed under sharedFeatures or activePanels as shared.*.",
+    "panelScopeRule": "A panel injected globally into /cloud is not automatically shared. Scope a panel by its actual scene ownership and actual entry points.",
     "directorRule": "Use directorRef and directorTags here; put long director notes in docs/DIRECTOR_GUIDE.md."
   },
   "packageTags": {
@@ -63,7 +60,7 @@
     "hubbyNote": {
       "textClass": "PermanentNote",
       "implementationType": "hubbyNoteDraft",
-      "target": "shared.hubbyNotePanel",
+      "target": "home.hubbyNotePanel",
       "runtimeStatus": "active",
       "versionStatus": "canonicalCurrent",
       "changePolicy": "mutableWithVersion"
@@ -96,11 +93,11 @@
       },
       "activeObjects": ["home.clockHandsOverlay"],
       "activeHotspots": ["home.hubbyNoteHot"],
-      "opensSharedPanels": ["shared.hubbyNotePanel"],
+      "activePanels": ["home.hubbyNotePanel"],
       "textPorts": [],
       "directorRef": "director.scenes.home",
       "directorTags": ["landing", "dayNight", "entry", "futureNavigation", "powderNotebookHome"],
-      "notes": "Current visual entry/background logic. Not a full text room yet. Home has the current physical powder notebook hotspot. The actual notebook archive panel is shared.hubbyNotePanel. Home-only hotspots must be gated to home.active."
+      "notes": "Current visual entry/background logic. Not a full text room yet. Home has the current physical powder notebook hotspot. Its archive-first panel is home.hubbyNotePanel. Home-only hotspots and panels must not be treated as coffeeCorner or shared unless a later explicit decision changes that."
     },
     {
       "id": "coffeeCorner",
@@ -157,21 +154,7 @@
       ],
       "directorRef": "director.scenes.coffeeCorner",
       "directorTags": ["active", "warm", "domestic", "coffee", "dailyCare", "constructionBase"],
-      "notes": "Current real front-stage room. CoffeeCorner currently has no physical powder notebook object. Object and hotspot details are in data/object-registry.v1.json. CoffeeCorner hotspots must be gated to gameRoom.active."
-    }
-  ],
-  "sharedFeatures": [
-    {
-      "id": "shared.hubbyNotePanel",
-      "kind": "panel",
-      "label": "粉本本永久档案面板",
-      "runtimeStatus": "active",
-      "versionStatus": "canonicalCurrent",
-      "changePolicy": "mutableWithVersion",
-      "openedBy": ["home.hubbyNoteHot"],
-      "stateFields": ["hubbyNote", "hubbyNoteUpdatedAt", "hubbyNoteArchive", "hubbyNoteHistory", "hubbyNoteFavorite", "hubbyNoteTrash"],
-      "directorRef": "director.notebooks.hubbyNote",
-      "notes": "Shared/global archive-first notebook panel. It is not a coffeeCorner scene object. Future scene notebooks may also open it only by explicit registry decision."
+      "notes": "Current real front-stage room. CoffeeCorner currently has no physical powder notebook object and no coffeeCorner notebook panel. Object and hotspot details are in data/object-registry.v1.json. CoffeeCorner hotspots must be gated to gameRoom.active."
     }
   ],
   "futureScenes": [
@@ -205,7 +188,7 @@
       "runtimeStatus": "future",
       "section": "indoor",
       "directorRef": "director.scenes.bedroom",
-      "notes": "Future room with possible notebook and blanket mood widgets. If bedroom has a physical notebook later, create a bedroom-scoped notebook hotspot instead of reusing home.hubbyNoteHot."
+      "notes": "Future room with possible notebook and blanket mood widgets. If bedroom has a physical notebook later, create a bedroom-scoped notebook hotspot and panel instead of reusing home.hubbyNoteHot/home.hubbyNotePanel."
     },
     {
       "id": "photoBooth",
@@ -225,7 +208,7 @@
       "single-bubble 19.8 re-show behavior",
       "windowWeather state fields and weather advice popup",
       "home powder notebook hotspot",
-      "shared hubbyNote archive-first panel",
+      "home hubbyNote archive-first panel",
       "hubbyNote favorite/delete/soft-delete/key hiding controls",
       "game console / game menu hotspot",
       "setup panel manual access",
