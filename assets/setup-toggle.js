@@ -21,10 +21,11 @@
     style.textContent = [
       'body.cloudDefaultAssets #setup:not(.hidden){display:block!important;position:fixed!important;left:5vw!important;right:5vw!important;bottom:max(14px,env(safe-area-inset-bottom))!important;max-height:58vh!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch!important;z-index:96!important;overscroll-behavior:contain!important;}',
       '#setupCloseButton{position:sticky;top:0;float:right;z-index:3;border:0;border-radius:999px;padding:7px 10px;margin:0 0 6px 8px;background:rgba(122,64,84,.92);color:white;font-weight:900;font-size:12px;box-shadow:0 8px 18px rgba(70,30,45,.22);}',
-      '#setupToggleButton{position:fixed;left:0;top:0;width:28vw;height:20vh;z-index:88;border:0;border-radius:0;padding:0;background:transparent!important;color:transparent!important;box-shadow:none!important;outline:0;font-size:0;opacity:1;} ',
+      '#setupToggleButton{position:fixed;left:0;top:0;width:28vw;height:20vh;z-index:88;border:0;border-radius:0;padding:0;background:transparent!important;color:transparent!important;box-shadow:none!important;outline:0;font-size:0;opacity:1;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:none;} ',
       '#setupToggleButton:before{content:"";}',
+      'body.adminLongPressArmed, body.adminLongPressArmed *{-webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important;}',
       'body.debug #setupToggleButton{background:rgba(130,80,255,.12)!important;outline:2px dashed rgba(130,80,255,.7);}',
-      'body.cloudDefaultAssets .toHomeHot{left:0!important;top:auto!important;right:auto!important;bottom:0!important;width:28%!important;height:20%!important;}',
+      'body.cloudDefaultAssets .toHomeHot{left:0!important;top:auto!important;right:auto!important;bottom:0!important;width:28%!important;height:20%!important;} ',
       'body.debug .toHomeHot{background:rgba(80,160,255,.16)!important;outline:2px dashed rgba(80,160,255,.8)!important;}'
     ].join('');
     document.head.appendChild(style);
@@ -66,8 +67,9 @@
   function startPress(e){
     var p = eventPoint(e);
     if(!inAdminZoneFromPoint(p.x, p.y)) return;
-    if(e){ e.stopPropagation(); if(e.stopImmediatePropagation) e.stopImmediatePropagation(); }
+    if(e){ e.preventDefault(); e.stopPropagation(); if(e.stopImmediatePropagation) e.stopImmediatePropagation(); }
     ensureStyle();
+    document.body.classList.add('adminLongPressArmed');
     clearPress();
     longPressFired = false;
     pressTimer = setTimeout(function(){
@@ -80,7 +82,8 @@
     var fired = longPressFired;
     clearPress();
     longPressFired = false;
-    if(fired && e){
+    document.body.classList.remove('adminLongPressArmed');
+    if(e){
       e.preventDefault();
       e.stopPropagation();
       if(e.stopImmediatePropagation) e.stopImmediatePropagation();
@@ -90,6 +93,7 @@
   function cancelPress(){
     clearPress();
     longPressFired = false;
+    document.body.classList.remove('adminLongPressArmed');
   }
 
   function ensureButton(){
@@ -112,6 +116,8 @@
       btn.addEventListener('mousedown', startPress);
       btn.addEventListener('mouseup', endPress);
       btn.addEventListener('mouseleave', cancelPress);
+      btn.addEventListener('contextmenu', function(e){ e.preventDefault(); e.stopPropagation(); return false; }, true);
+      btn.addEventListener('selectstart', function(e){ e.preventDefault(); e.stopPropagation(); return false; }, true);
       btn.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); if(e.stopImmediatePropagation) e.stopImmediatePropagation(); }, true);
     }
   }
@@ -123,7 +129,7 @@
   }
 
   window.KittenNestSetupToggle = {
-    version:'setup-toggle-20260613-admin-longpress-28x20',
+    version:'setup-toggle-20260613-admin-longpress-no-select',
     open:openSetup,
     close:closeSetup,
     longPressMs:LONG_PRESS_MS
