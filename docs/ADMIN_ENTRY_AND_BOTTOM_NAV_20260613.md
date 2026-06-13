@@ -36,6 +36,17 @@ long press 1.8s
 
 Short tap does not open the material panel.
 
+The upper-left admin zone must suppress native iOS/WebView text selection and lookup callouts:
+
+```text
+-webkit-user-select: none
+user-select: none
+-webkit-touch-callout: none
+preventDefault on touchstart inside the admin zone
+```
+
+This prevents the blue selection handles / copy-query-translate bar from appearing during the long press.
+
 This is a temporary bridge.
 
 Future direction:
@@ -101,5 +112,5 @@ assets/setup-toggle.js
 Current injected version:
 
 ```text
-/assets/setup-toggle.js?v=20260613-admin-28x20-1
+/assets/setup-toggle.js?v=20260613-admin-no-select-1
 ```
