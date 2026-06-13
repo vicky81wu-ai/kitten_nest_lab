@@ -1,10 +1,11 @@
 (function(){
-  var VERSION = 'coffee-corner-variant-20260613-1';
+  var VERSION = 'coffee-corner-variant-20260613-2-lap-bubble';
   var LAP_URL = 'https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/variants/lap-close-01.jpg?v=20260613-lap-close-1';
   var mainSrc = '';
   var mode = 'main';
   var enterHot;
   var backHot;
+  var lapBubble;
 
   var enterCard = {
     id: 'coffeeCorner.lapEnterHot',
@@ -20,6 +21,7 @@
 
   function room(){ return document.getElementById('gameRoom'); }
   function img(){ return document.getElementById('gameBg'); }
+  function mainBubble(){ return document.getElementById('bubble'); }
 
   function coverBox(image){
     if(!image) return null;
@@ -58,6 +60,21 @@
     return el;
   }
 
+  function ensureLapBubble(){
+    var r = room();
+    if(!r) return null;
+    if(!lapBubble){
+      lapBubble = document.createElement('div');
+      lapBubble.id = 'lapCloseBubble';
+      lapBubble.className = 'lapBubble';
+      lapBubble.setAttribute('data-text-port', 'coffeeCorner.lapCloseBubble');
+      lapBubble.setAttribute('data-director-ref', 'director.textPorts.coffeeCornerLapCloseBubble');
+      lapBubble.textContent = '坐稳，kitten。这里离老公近一点。';
+      r.appendChild(lapBubble);
+    }
+    return lapBubble;
+  }
+
   function ensureHotspots(){
     var r = room();
     if(!r) return false;
@@ -73,6 +90,7 @@
       backHot.addEventListener('touchend', function(e){ e.preventDefault(); e.stopPropagation(); backMain(); }, true);
       r.appendChild(backHot);
     }
+    ensureLapBubble();
     return true;
   }
 
@@ -122,16 +140,22 @@
     if(!ensureHotspots()) return;
     applyCard(enterHot, enterCard);
     applyCard(backHot, backCard);
+    var b = ensureLapBubble();
+    var main = mainBubble();
     if(mode === 'lap'){
       enterHot.style.display = 'none';
       enterHot.style.pointerEvents = 'none';
       backHot.style.display = 'block';
       backHot.style.pointerEvents = 'auto';
+      if(b) b.setAttribute('data-active', '1');
+      if(main) main.setAttribute('data-lap-hidden', '1');
     }else{
       enterHot.style.display = 'block';
       enterHot.style.pointerEvents = 'auto';
       backHot.style.display = 'none';
       backHot.style.pointerEvents = 'none';
+      if(b) b.removeAttribute('data-active');
+      if(main) main.removeAttribute('data-lap-hidden');
     }
   }
 
