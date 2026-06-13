@@ -1,5 +1,5 @@
 (function(){
-  var VERSION = 'coffee-corner-variant-20260613-6-lap-chest-only-debug';
+  var VERSION = 'coffee-corner-variant-20260613-7-lap-bubble-click-only';
   var LAP_URL = 'https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/variants/lap-close-01.jpg?v=20260613-lap-close-1';
   var mainSrc = '';
   var mode = 'main';
@@ -123,13 +123,8 @@
     var drawH = rect.height;
     var offsetX = 0;
     var offsetY = 0;
-    if(boxRatio > imgRatio){
-      drawH = rect.width / imgRatio;
-      offsetY = (rect.height - drawH) / 2;
-    }else{
-      drawW = rect.height * imgRatio;
-      offsetX = (rect.width - drawW) / 2;
-    }
+    if(boxRatio > imgRatio){ drawH = rect.width / imgRatio; offsetY = (rect.height - drawH) / 2; }
+    else{ drawW = rect.height * imgRatio; offsetX = (rect.width - drawW) / 2; }
     return { left: rect.left + offsetX, top: rect.top + offsetY, width: drawW, height: drawH };
   }
 
@@ -189,13 +184,8 @@
   }
 
   function paintDebug(hot, card){
-    if(isDebug() && card.debugVisible){
-      hot.style.background = 'rgba(255,80,130,.18)';
-      hot.style.outline = '2px solid rgba(255,80,130,.85)';
-    }else{
-      hot.style.background = 'transparent';
-      hot.style.outline = '0';
-    }
+    if(isDebug() && card.debugVisible){ hot.style.background = 'rgba(255,80,130,.18)'; hot.style.outline = '2px solid rgba(255,80,130,.85)'; }
+    else{ hot.style.background = 'transparent'; hot.style.outline = '0'; }
   }
 
   function hideHot(hot){
@@ -262,7 +252,6 @@
       hideHot(enterHot);
       showHot(backHot, backCard);
       showHot(chestHot, chestCard);
-      if(b) b.removeAttribute('data-active');
       if(main) main.setAttribute('data-lap-hidden', '1');
     }else{
       showHot(enterHot, enterCard);
