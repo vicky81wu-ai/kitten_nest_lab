@@ -8,23 +8,9 @@
       imageId: 'gameBg',
       selector: '.tattooHot',
       coordinateMode: 'lockedToBaseImage',
-      coordinate: {
-        x: 0.73,
-        y: 0.345,
-        width: 0.15,
-        height: 0.08
-      },
+      coordinate: { x: 0.73, y: 0.345, width: 0.15, height: 0.08 },
       behavior: 'bubble.showOrAdvance',
-      runtimeStatus: 'active',
-      directorNotes: {
-        vibe: ['possessive', 'teasing', 'intimate', 'hubby-presence'],
-        sceneUse: ['left shoulder tattoo', 'close-up teasing', 'claiming mark', 'coffee corner check-in'],
-        bubbleStyle: ['short', 'low-voiced', 'flirty', 'protective', 'direct'],
-        linkedTextPort: 'coffeeCorner.bubbles',
-        flirtLevel: 'medium-high',
-        memoryHook: 'Alex left-shoulder 19.8 tattoo',
-        futureUse: 'Can choose or filter bubble lines by hotspot mood later. Currently metadata only; it does not change runtime behavior.'
-      }
+      runtimeStatus: 'active'
     },
     'coffeeCorner.photoWallHot': {
       id: 'coffeeCorner.photoWallHot',
@@ -34,43 +20,23 @@
       imageId: 'gameBg',
       selector: '.photoHot',
       coordinateMode: 'lockedToBaseImage',
-      coordinate: {
-        x: 0.250,
-        y: 0.215,
-        width: 0.340,
-        height: 0.200
-      },
+      coordinate: { x: 0.250, y: 0.215, width: 0.340, height: 0.200 },
       behavior: 'memories.open',
       visual: 'transparent',
-      runtimeStatus: 'active',
-      directorNotes: {
-        type: 'transparent hotspot centered on the physical photo wall',
-        alignmentTarget: 'center of the photo wall; covers roughly two thirds of the photo wall, not the sofa/body area',
-        reason: 'Old CSS hotspot was left:0 top:13 width:56 height:34 and caused belly mis-taps plus crowding near top-left controls.'
-      }
+      runtimeStatus: 'active'
     },
-    'coffeeCorner.gameConsoleHot': {
-      id: 'coffeeCorner.gameConsoleHot',
+    'coffeeCorner.gameConsoleHotspot': {
+      id: 'coffeeCorner.gameConsoleHotspot',
       label: 'game console hotspot',
       roomId: 'coffeeCorner',
       roomElementId: 'gameRoom',
       imageId: 'gameBg',
       selector: '.consoleHot',
       coordinateMode: 'lockedToBaseImage',
-      coordinate: {
-        x: 0.205,
-        y: 0.700,
-        width: 0.310,
-        height: 0.125
-      },
+      coordinate: { x: 0.205, y: 0.700, width: 0.310, height: 0.125 },
       behavior: 'gameMenu.open',
       visual: 'transparent',
-      runtimeStatus: 'active',
-      directorNotes: {
-        type: 'transparent hotspot over the visible handheld game console',
-        alignmentTarget: 'console body and screen only; should not include too much lower table area',
-        reason: 'Old viewport CSS hotspot was too large and included extra lower-left table space.'
-      }
+      runtimeStatus: 'active'
     },
     'home.hubbyNoteHot': {
       id: 'home.hubbyNoteHot',
@@ -80,22 +46,10 @@
       imageId: 'homeOn',
       selector: '.hubbyNoteButton',
       coordinateMode: 'lockedToBaseImage',
-      coordinate: {
-        x: 0.800,
-        y: 0.605,
-        width: 0.22,
-        height: 0.18,
-        rotation: 7.1,
-        transformOrigin: '0 0'
-      },
+      coordinate: { x: 0.800, y: 0.605, width: 0.22, height: 0.18, rotation: 7.1, transformOrigin: '0 0' },
       behavior: 'hubbyNote.open',
       visual: 'transparent',
-      runtimeStatus: 'active',
-      directorNotes: {
-        type: 'transparent hotspot over the physical pink notebook on the home background',
-        alignmentTarget: 'top-left corner is the visual anchor; rotate clockwise to follow notebook angle',
-        futureUse: 'When the notebook UI becomes a drawn scene asset, keep this hotspot anchored to the same object coordinate instead of the temporary panel design.'
-      }
+      runtimeStatus: 'active'
     }
   };
 
@@ -108,18 +62,8 @@
       imageId: 'homeOn',
       selector: '.clock',
       coordinateMode: 'lockedToBaseImage',
-      coordinate: {
-        x: 0.2108,
-        y: 0.3353,
-        width: 0.312,
-        aspectRatio: 1
-      },
-      runtimeStatus: 'active',
-      directorNotes: {
-        type: 'decorative overlay, not hotspot',
-        alignmentTarget: 'painted clock face center on home background',
-        approvedFrom: 'Vicky visual inspection after micro-adjustment'
-      }
+      coordinate: { x: 0.2108, y: 0.3353, width: 0.312, aspectRatio: 1 },
+      runtimeStatus: 'active'
     }
   };
 
@@ -156,12 +100,7 @@
       offsetX = (rect.width - drawW) / 2;
     }
 
-    return {
-      left: rect.left + offsetX,
-      top: rect.top + offsetY,
-      width: drawW,
-      height: drawH
-    };
+    return { left: rect.left + offsetX, top: rect.top + offsetY, width: drawW, height: drawH };
   }
 
   function isCardRoomActive(card){
@@ -293,22 +232,13 @@
     return true;
   }
 
-  function apply(id){
-    return applyCard(getCard(id));
-  }
-
-  function applyOverlay(id){
-    return applyOverlayCard(getOverlayCard(id));
-  }
+  function apply(id){ return applyCard(getCard(id)); }
+  function applyOverlay(id){ return applyOverlayCard(getOverlayCard(id)); }
 
   function applyAll(){
     var ok = false;
-    Object.keys(hotspotCards).forEach(function(id){
-      ok = applyCard(hotspotCards[id]) || ok;
-    });
-    Object.keys(overlayCards).forEach(function(id){
-      ok = applyOverlayCard(overlayCards[id]) || ok;
-    });
+    Object.keys(hotspotCards).forEach(function(id){ ok = applyCard(hotspotCards[id]) || ok; });
+    Object.keys(overlayCards).forEach(function(id){ ok = applyOverlayCard(overlayCards[id]) || ok; });
     return ok;
   }
 
@@ -326,7 +256,7 @@
   }
 
   window.KittenNestHotspots = {
-    version: 'coordinate-hotspot-overlay-card-20260613-console-up-1',
+    version: 'coordinate-hotspot-overlay-card-20260613-console-final-1',
     cards: hotspotCards,
     overlayCards: overlayCards,
     defaultHotspotId: defaultHotspotId,
