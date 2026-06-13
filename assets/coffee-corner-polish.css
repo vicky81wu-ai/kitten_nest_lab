@@ -16,8 +16,8 @@ body.cloudDefaultAssets #gameRoom.active .steam{
   top:24.7%!important;
   width:8.6%!important;
   height:13.2%!important;
-  opacity:.78!important;
-  filter:blur(.05px);
+  opacity:.92!important;
+  filter:blur(.04px);
   overflow:visible;
   pointer-events:none;
 }
@@ -38,30 +38,30 @@ body.cloudDefaultAssets #gameRoom.active .coffeeSteamSvg{
 }
 
 body.cloudDefaultAssets #gameRoom.active .steamMist{
-  fill:rgba(255,248,236,.16);
-  filter:blur(8px);
+  fill:rgba(255,248,236,.24);
+  filter:blur(7px);
   opacity:0;
   transform-origin:50% 100%;
   animation:coffeeMistArea 7.2s ease-in-out infinite;
 }
 
 body.cloudDefaultAssets #gameRoom.active .steamMist.m1{
-  fill:rgba(255,251,242,.20);
+  fill:rgba(255,252,244,.31);
   animation-delay:-.4s;
 }
 
 body.cloudDefaultAssets #gameRoom.active .steamMist.m2{
-  fill:rgba(255,236,211,.13);
+  fill:rgba(255,238,216,.22);
   animation-delay:-1.8s;
 }
 
 body.cloudDefaultAssets #gameRoom.active .steamMist.m3{
-  fill:rgba(255,255,250,.11);
+  fill:rgba(255,255,250,.18);
   animation-delay:-3.3s;
 }
 
 body.cloudDefaultAssets #gameRoom.active .steamMist.m4{
-  fill:rgba(255,242,225,.08);
+  fill:rgba(255,242,225,.13);
   animation-delay:-5.1s;
 }
 
@@ -70,20 +70,20 @@ body.cloudDefaultAssets #gameRoom.active .steamWisp{
   stroke-linejoin:round;
   stroke-dasharray:62 120;
   stroke-dashoffset:16;
-  filter:blur(2.1px);
+  filter:blur(2.25px);
   opacity:0;
   animation:coffeeSteamPath 7.2s ease-in-out infinite;
 }
 
 body.cloudDefaultAssets #gameRoom.active .steamWisp.w1{
-  stroke:rgba(255,255,248,.18);
-  stroke-width:6.4;
+  stroke:rgba(255,255,248,.26);
+  stroke-width:7.2;
   animation-delay:-.9s;
 }
 
 body.cloudDefaultAssets #gameRoom.active .steamWisp.w2{
-  stroke:rgba(255,232,204,.13);
-  stroke-width:5.2;
+  stroke:rgba(255,232,204,.20);
+  stroke-width:6.0;
   animation-delay:-3.2s;
 }
 
@@ -133,17 +133,17 @@ body.cloudDefaultAssets #gameRoom.active .photoGlow:after{
 
 @keyframes coffeeMistArea{
   0%{ opacity:0; transform:translateY(8px) translateX(0) scale(.82,.74); }
-  22%{ opacity:.20; }
-  48%{ opacity:.36; transform:translateY(-4px) translateX(1px) scale(1.02,1.03); }
-  74%{ opacity:.18; transform:translateY(-14px) translateX(-2px) scale(1.14,1.20); }
+  22%{ opacity:.32; }
+  48%{ opacity:.56; transform:translateY(-4px) translateX(1px) scale(1.02,1.03); }
+  74%{ opacity:.30; transform:translateY(-14px) translateX(-2px) scale(1.14,1.20); }
   100%{ opacity:0; transform:translateY(-24px) translateX(2px) scale(1.22,1.30); }
 }
 
 @keyframes coffeeSteamPath{
   0%{ opacity:0; stroke-dashoffset:34; transform:translateY(8px) scale(.92); }
-  25%{ opacity:.13; }
-  52%{ opacity:.24; stroke-dashoffset:4; transform:translateY(-4px) scale(1.02); }
-  78%{ opacity:.10; stroke-dashoffset:-16; transform:translateY(-14px) scale(1.08); }
+  25%{ opacity:.20; }
+  52%{ opacity:.34; stroke-dashoffset:4; transform:translateY(-4px) scale(1.02); }
+  78%{ opacity:.16; stroke-dashoffset:-16; transform:translateY(-14px) scale(1.08); }
   100%{ opacity:0; stroke-dashoffset:-34; transform:translateY(-24px) scale(1.14); }
 }
 
