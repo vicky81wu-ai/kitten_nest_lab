@@ -1,11 +1,13 @@
 (function(){
-  var VERSION = 'coffee-corner-variant-20260613-2-lap-bubble';
+  var VERSION = 'coffee-corner-variant-20260613-3-lap-bubble-empty-port';
   var LAP_URL = 'https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/variants/lap-close-01.jpg?v=20260613-lap-close-1';
   var mainSrc = '';
   var mode = 'main';
   var enterHot;
   var backHot;
   var lapBubble;
+  var stateSubscribed = false;
+  var lapText = '';
 
   var enterCard = {
     id: 'coffeeCorner.lapEnterHot',
@@ -22,6 +24,63 @@
   function room(){ return document.getElementById('gameRoom'); }
   function img(){ return document.getElementById('gameBg'); }
   function mainBubble(){ return document.getElementById('bubble'); }
+
+  function cleanText(value){
+    return String(value || '').trim();
+  }
+
+  function firstLine(list){
+    if(!Array.isArray(list)) return '';
+    for(var i = 0; i < list.length; i++){
+      var text = cleanText(list[i]);
+      if(text) return text;
+    }
+    return '';
+  }
+
+  function textFromState(state){
+    if(!state) return '';
+    return cleanText(state.coffeeCornerLapCloseBubble) ||
+      cleanText(state.lapCloseBubble) ||
+      firstLine(state.coffeeCornerLapCloseBubbles) ||
+      firstLine(state.lapCloseBubbles);
+  }
+
+  function hasLapText(){ return !!cleanText(lapText); }
+
+  function syncLapBubbleText(text){
+    lapText = cleanText(text);
+    var b = ensureLapBubble();
+    if(!b) return false;
+    b.textContent = lapText;
+    if(hasLapText()){
+      b.setAttribute('data-has-text', '1');
+    }else{
+      b.removeAttribute('data-has-text');
+    }
+    return true;
+  }
+
+  function readStateText(){
+    var client = window.KittenNestState;
+    if(!client || typeof client.get !== 'function') return '';
+    return textFromState(client.get());
+  }
+
+  function attachState(){
+    var client = window.KittenNestState;
+    if(!client) return false;
+    var text = readStateText();
+    if(text) syncLapBubbleText(text);
+    if(stateSubscribed || typeof client.subscribe !== 'function') return !!text;
+    stateSubscribed = true;
+    client.subscribe(function(payload){
+      var text = textFromState(payload && payload.state);
+      syncLapBubbleText(text);
+      updateHotspots();
+    });
+    return true;
+  }
 
   function coverBox(image){
     if(!image) return null;
@@ -69,7 +128,7 @@
       lapBubble.className = 'lapBubble';
       lapBubble.setAttribute('data-text-port', 'coffeeCorner.lapCloseBubble');
       lapBubble.setAttribute('data-director-ref', 'director.textPorts.coffeeCornerLapCloseBubble');
-      lapBubble.textContent = '坐稳，kitten。这里离老公近一点。';
+      lapBubble.textContent = '';
       r.appendChild(lapBubble);
     }
     return lapBubble;
@@ -128,6 +187,7 @@
     mode = next === 'lap' ? 'lap' : 'main';
     document.body.classList.toggle('coffeeLapVariant', mode === 'lap');
     image.src = mode === 'lap' ? LAP_URL : mainSrc;
+    attachState();
     updateHotspots();
     setTimeout(updateHotspots, 120);
     setTimeout(updateHotspots, 520);
@@ -147,7 +207,8 @@
       enterHot.style.pointerEvents = 'none';
       backHot.style.display = 'block';
       backHot.style.pointerEvents = 'auto';
-      if(b) b.setAttribute('data-active', '1');
+      if(b && hasLapText()) b.setAttribute('data-active', '1');
+      else if(b) b.removeAttribute('data-active');
       if(main) main.setAttribute('data-lap-hidden', '1');
     }else{
       enterHot.style.display = 'block';
@@ -163,6 +224,7 @@
     var image = img();
     if(image && !mainSrc) mainSrc = image.getAttribute('src') || '';
     ensureHotspots();
+    attachState();
     updateHotspots();
   }
 
@@ -173,6 +235,8 @@
     backCard: backCard,
     enterLap: enterLap,
     backMain: backMain,
+    setLapBubbleText: function(text){ syncLapBubbleText(text); updateHotspots(); },
+    clearLapBubbleText: function(){ syncLapBubbleText(''); updateHotspots(); },
     updateHotspots: updateHotspots,
     boot: boot
   };
