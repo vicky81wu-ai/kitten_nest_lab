@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Kitten Nest Hotspot Lab</title>
+<style>
+  *{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif}
+  body{margin:0;min-height:100dvh;background:#151116;color:#fff;padding:14px}
+  .wrap{width:min(96vw,860px);margin:0 auto}.panel{border-radius:18px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);padding:12px;margin:10px 0}.stage{position:relative;width:100%;height:72dvh;min-height:520px;overflow:hidden;border-radius:22px;background:#050405;border:1px solid rgba(255,255,255,.18)}
+  img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}.hot{position:absolute;border:2px solid rgba(255,80,130,.95);background:rgba(255,80,130,.2);border-radius:20px;box-shadow:0 0 0 1px rgba(255,255,255,.8),0 10px 32px rgba(255,80,130,.35);pointer-events:none}.label{position:absolute;left:8px;top:8px;font-size:12px;font-weight:800;background:rgba(0,0,0,.58);border-radius:999px;padding:5px 8px}.cross:before,.cross:after{content:"";position:absolute;background:rgba(255,255,255,.9)}.cross:before{left:50%;top:0;width:1px;height:100%;transform:translateX(-.5px)}.cross:after{top:50%;left:0;height:1px;width:100%;transform:translateY(-.5px)}
+  h1{font-size:20px;margin:8px 0 4px}.small{font-size:12px;line-height:1.5;opacity:.76}textarea,input,select{width:100%;border:0;border-radius:12px;padding:10px;background:rgba(255,255,255,.9);color:#271820;font-size:14px}button{border:0;border-radius:12px;padding:10px;background:#ff5d91;color:white;font-weight:800}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.coords{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;white-space:pre-wrap;background:rgba(0,0,0,.35);border-radius:12px;padding:10px}.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.row button{flex:1;min-width:76px}.danger{background:#8d4658}.ok{background:#4f9d69}.ghost{background:rgba(255,255,255,.15)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Hotspot Lab / 安全粉框页</h1>
+  <div class="small">独立测试页：只画底图和粉框，不接 /cloud，不触发跳转，不写 state。调好后复制坐标，再人工搬回主窝。</div>
+
+  <div class="panel">
+    <div class="grid2">
+      <label>Scene
+        <select id="scene">
+          <option value="coffeeEnter">coffeeCorner enterLap 主图进入坐腿热点</option>
+          <option value="lapChest">lapClose chest 坐腿图胸口热点</option>
+        </select>
+      </label>
+      <label>Step
+        <select id="step"><option value="0.005">0.005 小步</option><option value="0.01" selected>0.01 中步</option><option value="0.02">0.02 大步</option></select>
+      </label>
+    </div>
+    <div class="small">当前只用于验粉框大小和位置。小猫截图后说“往左/右/上/下多少”即可。</div>
+  </div>
+
+  <div class="stage" id="stage">
+    <img id="bg" alt="hotspot calibration background" />
+    <div class="hot cross" id="hot"><span class="label" id="label">hotspot</span></div>
+  </div>
+
+  <div class="panel">
+    <div class="grid">
+      <button id="up">上</button><button id="down">下</button><button id="left">左</button><button id="right">右</button>
+      <button id="smallerW">窄</button><button id="widerW">宽</button><button id="shorterH">矮</button><button id="tallerH">高</button>
+    </div>
+    <div class="row" style="margin-top:8px"><button class="ghost" id="reset">重置</button><button class="ok" id="copy">复制坐标</button><button class="danger" id="hide">隐藏/显示粉框</button></div>
+  </div>
+
+  <div class="panel"><div class="coords" id="out"></div></div>
+</div>
+<script>
+(function(){
+  const DATA={
+    coffeeEnter:{
+      name:'coffeeCorner.lapEnterHot',
+      img:'/assets/rooms/coffee-corner/morning-evening.jpg',
+      fallback:'https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/morning-evening.jpg',
+      c:{x:.34,y:.57,width:.18,height:.12}
+    },
+    lapChest:{
+      name:'coffeeCorner.lapChestHot',
+      img:'https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/variants/lap-close-01.jpg',
+      fallback:'https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/variants/lap-close-01.jpg',
+      c:{x:.56,y:.61,width:.44,height:.23}
+    }
+  };
+  const stage=document.getElementById('stage'),bg=document.getElementById('bg'),hot=document.getElementById('hot'),label=document.getElementById('label'),out=document.getElementById('out'),scene=document.getElementById('scene'),step=document.getElementById('step');
+  let c={...DATA.coffeeEnter.c}, visible=true;
+  function coverBox(){
+    const r=bg.getBoundingClientRect(); const nw=bg.naturalWidth||r.width; const nh=bg.naturalHeight||r.height; if(!r.width||!r.height||!nw||!nh)return null;
+    const br=r.width/r.height, ir=nw/nh; let w=r.width,h=r.height,ox=0,oy=0; if(br>ir){h=r.width/ir;oy=(r.height-h)/2}else{w=r.height*ir;ox=(r.width-w)/2} return{left:ox,top:oy,width:w,height:h};
+  }
+  function apply(){
+    const box=coverBox(); if(!box)return; const w=box.width*c.width,h=box.height*c.height, cx=box.left+box.width*c.x, cy=box.top+box.height*c.y;
+    hot.style.left=(cx-w/2)+'px'; hot.style.top=(cy-h/2)+'px'; hot.style.width=w+'px'; hot.style.height=h+'px'; hot.style.display=visible?'block':'none';
+    label.textContent=DATA[scene.value].name;
+    out.textContent='scene: '+scene.value+'\n'+DATA[scene.value].name+'\n\ncoordinate: '+JSON.stringify(round(c))+'\n\ncopy for code:\ncoordinate: '+JSON.stringify(round(c)).replace(/"([^\"]+)":/g,'$1: ');
+    history.replaceState(null,'','?scene='+encodeURIComponent(scene.value)+'&x='+c.x.toFixed(4)+'&y='+c.y.toFixed(4)+'&w='+c.width.toFixed(4)+'&h='+c.height.toFixed(4));
+  }
+  function round(o){return{x:+o.x.toFixed(4),y:+o.y.toFixed(4),width:+o.width.toFixed(4),height:+o.height.toFixed(4)}}
+  function loadScene(){const d=DATA[scene.value];c={...d.c}; bg.src=d.img; bg.onerror=()=>{bg.onerror=null;bg.src=d.fallback}; setTimeout(apply,60)}
+  function bump(dx,dy,dw,dh){const s=parseFloat(step.value); c.x=Math.max(0,Math.min(1,c.x+dx*s)); c.y=Math.max(0,Math.min(1,c.y+dy*s)); c.width=Math.max(.02,Math.min(1,c.width+dw*s)); c.height=Math.max(.02,Math.min(1,c.height+dh*s)); apply()}
+  document.getElementById('up').onclick=()=>bump(0,-1,0,0);document.getElementById('down').onclick=()=>bump(0,1,0,0);document.getElementById('left').onclick=()=>bump(-1,0,0,0);document.getElementById('right').onclick=()=>bump(1,0,0,0);
+  document.getElementById('smallerW').onclick=()=>bump(0,0,-1,0);document.getElementById('widerW').onclick=()=>bump(0,0,1,0);document.getElementById('shorterH').onclick=()=>bump(0,0,0,-1);document.getElementById('tallerH').onclick=()=>bump(0,0,0,1);
+  document.getElementById('reset').onclick=loadScene;document.getElementById('hide').onclick=()=>{visible=!visible;apply()};document.getElementById('copy').onclick=async()=>{const txt=JSON.stringify(round(c)); try{await navigator.clipboard.writeText(txt);out.textContent+='\n\n已复制: '+txt}catch(e){out.textContent+='\n\n复制失败，手动复制上面坐标'}};
+  scene.onchange=loadScene; window.addEventListener('resize',apply); bg.onload=apply;
+  const q=new URLSearchParams(location.search); if(DATA[q.get('scene')]) scene.value=q.get('scene'); loadScene();
+  if(q.has('x')){c.x=parseFloat(q.get('x'))||c.x;c.y=parseFloat(q.get('y'))||c.y;c.width=parseFloat(q.get('w'))||c.width;c.height=parseFloat(q.get('h'))||c.height;setTimeout(apply,80)}
+})();
+</script>
+</body>
+</html>
