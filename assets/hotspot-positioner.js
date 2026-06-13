@@ -59,7 +59,7 @@
       coordinateMode: 'lockedToBaseImage',
       coordinate: {
         x: 0.205,
-        y: 0.790,
+        y: 0.700,
         width: 0.310,
         height: 0.125
       },
@@ -326,7 +326,7 @@
   }
 
   window.KittenNestHotspots = {
-    version: 'coordinate-hotspot-overlay-card-20260613-console-1',
+    version: 'coordinate-hotspot-overlay-card-20260613-console-up-1',
     cards: hotspotCards,
     overlayCards: overlayCards,
     defaultHotspotId: defaultHotspotId,
