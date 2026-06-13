@@ -49,6 +49,29 @@
         reason: 'Old CSS hotspot was left:0 top:13 width:56 height:34 and caused belly mis-taps plus crowding near top-left controls.'
       }
     },
+    'coffeeCorner.gameConsoleHot': {
+      id: 'coffeeCorner.gameConsoleHot',
+      label: 'game console hotspot',
+      roomId: 'coffeeCorner',
+      roomElementId: 'gameRoom',
+      imageId: 'gameBg',
+      selector: '.consoleHot',
+      coordinateMode: 'lockedToBaseImage',
+      coordinate: {
+        x: 0.205,
+        y: 0.790,
+        width: 0.310,
+        height: 0.125
+      },
+      behavior: 'gameMenu.open',
+      visual: 'transparent',
+      runtimeStatus: 'active',
+      directorNotes: {
+        type: 'transparent hotspot over the visible handheld game console',
+        alignmentTarget: 'console body and screen only; should not include too much lower table area',
+        reason: 'Old viewport CSS hotspot was too large and included extra lower-left table space.'
+      }
+    },
     'home.hubbyNoteHot': {
       id: 'home.hubbyNoteHot',
       label: 'pink notebook hubby note hotspot',
@@ -303,7 +326,7 @@
   }
 
   window.KittenNestHotspots = {
-    version: 'coordinate-hotspot-overlay-card-20260612-room-gate-1',
+    version: 'coordinate-hotspot-overlay-card-20260613-console-1',
     cards: hotspotCards,
     overlayCards: overlayCards,
     defaultHotspotId: defaultHotspotId,
