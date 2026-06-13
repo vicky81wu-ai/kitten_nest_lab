@@ -1,5 +1,5 @@
 (function(){
-  var VERSION = 'coffee-corner-variant-20260613-enter-verified-1';
+  var VERSION = 'coffee-corner-variant-20260613-enter-canvas-verified-1';
   var LAP_URL = 'https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/variants/lap-close-01.jpg?v=20260613-lap-close-1';
   var mainSrc = '';
   var mode = 'main';
@@ -9,7 +9,7 @@
   var enterCard = {
     id: 'coffeeCorner.lapEnterHot',
     label: 'coffee corner lap close enter hotspot',
-    coordinate: { x: 0.315, y: 0.52, width: 0.33, height: 0.12 },
+    coordinate: { x: 0.275, y: 0.54, width: 0.39, height: 0.12 },
     debugVisible: false
   };
 
