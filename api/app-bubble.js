@@ -1,7 +1,8 @@
 const appAssetctl = require('./app-assetctl');
 
-const coffeeCornerPolishStyle = '<link rel="stylesheet" href="/assets/coffee-corner-polish.css?v=20260613-steam-wisp-1">';
+const coffeeCornerPolishStyle = '<link rel="stylesheet" href="/assets/coffee-corner-polish.css?v=20260613-steam-svg-1">';
 const hotspotPositionerScript = '<script src="/assets/hotspot-positioner.js?v=20260613-bubble-base-1"></script>';
+const coffeeSteamScript = '<script src="/assets/coffee-steam-svg.js?v=20260613-1"></script>';
 const bubbleControllerScript = '<script src="/assets/bubble-controller.js?v=20260610-1"></script>';
 const hubbyNoteControllerScript = '<script src="/assets/hubby-note-controller.js?v=20260613-archive-first-paw-1"></script>';
 const setupToggleScript = '<script src="/assets/setup-toggle.js?v=20260613-touchfix-1"></script>';
@@ -13,6 +14,9 @@ const bubbleBootScript = `
     if(window.KittenNestHotspots && window.KittenNestHotspots.start && !window.__kittenNestHotspotsStarted){
       window.__kittenNestHotspotsStarted = true;
       window.KittenNestHotspots.start();
+    }
+    if(window.KittenNestCoffeeSteam && window.KittenNestCoffeeSteam.install){
+      window.KittenNestCoffeeSteam.install();
     }
     if(!window.KittenNestState || !window.KittenNestBubble) return;
     if(!window.__kittenNestBubbleAttached){
@@ -35,7 +39,7 @@ const bubbleBootScript = `
 </script>`;
 
 function injectBubbleController(html) {
-  const bundle = `${hotspotPositionerScript}\n${bubbleControllerScript}\n${hubbyNoteControllerScript}\n${setupToggleScript}\n${bubbleBootScript}\n${consoleRestoreScript}\n`;
+  const bundle = `${hotspotPositionerScript}\n${coffeeSteamScript}\n${bubbleControllerScript}\n${hubbyNoteControllerScript}\n${setupToggleScript}\n${bubbleBootScript}\n${consoleRestoreScript}\n`;
   return String(html)
     .replace('</head>', `${coffeeCornerPolishStyle}\n</head>`)
     .replace('</body>', `${bundle}</body>`);
