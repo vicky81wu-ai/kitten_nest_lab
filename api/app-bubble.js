@@ -1,6 +1,6 @@
 const appAssetctl = require('./app-assetctl');
 
-const coffeeCornerPolishStyle = '<link rel="stylesheet" href="/assets/coffee-corner-polish.css?v=20260613-css-sunbeam-2">';
+const coffeeCornerPolishStyle = '<link rel="stylesheet" href="/assets/coffee-corner-polish.css?v=20260613-css-sunbeam-3">';
 const hotspotPositionerScript = '<script src="/assets/hotspot-positioner.js?v=20260613-bubble-base-1"></script>';
 const coffeeSteamScript = '<script src="/assets/coffee-steam-svg.js?v=20260613-mist-1"></script>';
 const bubbleControllerScript = '<script src="/assets/bubble-controller.js?v=20260610-1"></script>';
