@@ -4,14 +4,15 @@
 
 One technical object should have one canonical ID.
 
-User-facing names may repeat across scenes, but technical IDs must be scene-scoped or explicitly marked as shared.
+User-facing names may repeat across scenes, but technical IDs must be scene-scoped unless the feature is truly global management.
 
 ```text
 Good:
 home.pinkNotebook.hotspot
+home.pinkNotebook.panel
 beach.pinkNotebook.hotspot
-bedroom.pinkNotebook.hotspot
-shared.hubbyNote.panel
+beach.pinkNotebook.panel
+admin.materialPanel
 
 Bad:
 pinkNotebook
@@ -25,7 +26,7 @@ A single thing may have several name layers. They are not the same job.
 
 ```text
 canonical ID     = unique technical identity in registry/config
-roomId           = where it belongs, or shared for global panels
+roomId           = where it belongs
 selector/class   = DOM hook used by code
 owner/controller = code module that manages it
 displayName      = name shown to Vicky
@@ -49,7 +50,7 @@ directorRef: director.notebooks.hubbyNote
 
 `hubbyNote` is the feature/module name.
 
-It owns the saving/archive/editing logic for the notebook feature.
+It owns the saving/archive/editing logic for the current home notebook feature.
 
 `粉本本` is a user-facing display name.
 
@@ -57,16 +58,13 @@ Current mapping:
 
 ```text
 home.hubbyNoteHot = physical powder notebook hotspot on home
-shared.hubbyNotePanel = shared archive-first notebook panel
+home.hubbyNotePanel = archive-first notebook panel opened by the home powder notebook
 coffeeCorner = no physical powder notebook currently
 ```
 
-Future scene objects can also be called 粉本本 in the UI while keeping unique technical IDs in the registry:
+The current powder notebook panel is home-scoped, not shared. It is only opened by the home powder notebook.
 
-```text
-beach.pinkNotebook.hotspot -> displayName: 粉本本
-bedroom.pinkNotebook.hotspot -> displayName: 粉本本
-```
+Future scene notebooks should get their own scene-scoped IDs unless Vicky explicitly approves a shared archive.
 
 Do not mass-rename runtime state fields such as:
 
@@ -110,20 +108,21 @@ Examples:
 
 ```text
 home.pinkNotebook.hotspot
+home.pinkNotebook.panel
 coffeeCorner.photoWall.hotspot
 beach.pinkNotebook.hotspot
-bedroom.blanketMoodCheck.widget
-shared.hubbyNote.panel
+beach.pinkNotebook.panel
+admin.materialPanel
 ```
 
 The current registry still has some legacy-style IDs such as:
 
 ```text
 home.hubbyNoteHot
-shared.hubbyNotePanel
+home.hubbyNotePanel
 ```
 
-These are acceptable for now because they are already scene-scoped/shared-scoped and working.
+These are acceptable for now because they are home-scoped and working.
 
 Future additions should prefer the cleaner pattern above.
 
@@ -145,5 +144,5 @@ beach.pinkNotebook.hotspot
 Short rule:
 
 ```text
-小猫看到的名字可以可爱重复；代码户口本里的身份证必须唯一带场景，或明确标 shared。
+小猫看到的名字可以可爱重复；代码户口本里的身份证必须唯一带场景。只有真正全局管理功能才用 admin/global/shared 之类的范围名。
 ```
