@@ -2,7 +2,7 @@
   var canvas;
   var ctx;
   var raf;
-  var particles = [];
+  var motes = [];
   var startTime = Date.now();
 
   function activeRoom(){
@@ -25,10 +25,10 @@
     canvas.style.pointerEvents = 'none';
     canvas.style.zIndex = '9';
     canvas.style.mixBlendMode = 'screen';
-    canvas.style.opacity = '.72';
+    canvas.style.opacity = '.76';
     room.appendChild(canvas);
     ctx = canvas.getContext('2d');
-    particles = [];
+    motes = [];
     return canvas;
   }
 
@@ -44,85 +44,105 @@
       c.height = h;
       ctx = c.getContext('2d');
       ctx.setTransform(dpr,0,0,dpr,0,0);
-      seedParticles(rect.width, rect.height);
+      seedMotes(rect.width, rect.height);
     }
   }
 
-  function seedParticles(w,h){
-    particles = [];
-    for(var i=0;i<42;i++){
-      particles.push({
-        x: w*(0.58 + Math.random()*0.38),
-        y: h*(0.07 + Math.random()*0.52),
-        r: .45 + Math.random()*1.35,
-        a: .08 + Math.random()*.18,
-        drift: .16 + Math.random()*.40,
+  function seedMotes(w,h){
+    motes = [];
+    for(var i=0;i<54;i++){
+      motes.push({
+        u: Math.random(),
+        v: Math.random(),
+        r: .35 + Math.random()*1.15,
+        a: .055 + Math.random()*.155,
+        speed: .018 + Math.random()*.034,
+        wiggle: 2 + Math.random()*7,
         phase: Math.random()*Math.PI*2
       });
     }
   }
 
-  function softBeam(w,h,t, spec){
-    var pulse = spec.pulseBase + Math.sin(t*spec.pulseSpeed + spec.phase)*spec.pulseRange;
-    var g = ctx.createLinearGradient(w*spec.x0, h*spec.y0, w*spec.x1, h*spec.y1);
-    g.addColorStop(0, 'rgba(255,242,205,' + (spec.a0*pulse) + ')');
-    g.addColorStop(.28, 'rgba(255,224,164,' + (spec.a1*pulse) + ')');
-    g.addColorStop(.66, 'rgba(255,205,132,' + (spec.a2*pulse) + ')');
-    g.addColorStop(1, 'rgba(255,205,132,0)');
-
-    ctx.beginPath();
-    spec.points.forEach(function(pt, idx){
-      if(idx === 0) ctx.moveTo(w*pt[0], h*pt[1]);
-      else ctx.lineTo(w*pt[0], h*pt[1]);
-    });
-    ctx.closePath();
-    ctx.fillStyle = g;
-    ctx.filter = 'blur(' + spec.blur + 'px)';
-    ctx.fill();
+  function beamCenter(w,h,u,t, shift){
+    var wave = Math.sin(t*.00055 + shift + u*3.2)*0.018;
+    var x = w*(.94 - .54*u + wave);
+    var y = h*(.12 + .53*u + Math.sin(t*.00038 + shift + u*4.1)*0.018);
+    return {x:x, y:y};
   }
 
-  function drawBeam(w,h,t){
+  function drawBreathingRibbon(w,h,t, spec){
+    var breath = spec.base + Math.sin(t*spec.speed + spec.phase)*spec.range;
+    var widthPulse = 1 + Math.sin(t*.00046 + spec.phase)*.09;
+    var steps = 18;
+    var upper = [];
+    var lower = [];
+
+    for(var i=0;i<=steps;i++){
+      var u = i/steps;
+      var c = beamCenter(w,h,u,t,spec.phase);
+      var thickness = h*(spec.thick0*(1-u) + spec.thick1*u) * widthPulse;
+      var softEdge = Math.sin(u*Math.PI);
+      var nx = -0.52;
+      var ny = 0.86;
+      var flutter = Math.sin(t*.00075 + u*8 + spec.phase)*h*.006*softEdge;
+      upper.push({ x:c.x + nx*(thickness+flutter), y:c.y + ny*(thickness+flutter) });
+      lower.push({ x:c.x - nx*(thickness-flutter), y:c.y - ny*(thickness-flutter) });
+    }
+
+    var g = ctx.createLinearGradient(w*.96, h*.08, w*.35, h*.66);
+    g.addColorStop(0, 'rgba(255,242,202,' + (spec.a0*breath) + ')');
+    g.addColorStop(.22, 'rgba(255,226,166,' + (spec.a1*breath) + ')');
+    g.addColorStop(.55, 'rgba(255,213,145,' + (spec.a2*breath) + ')');
+    g.addColorStop(1, 'rgba(255,213,145,0)');
+
     ctx.save();
     ctx.globalCompositeOperation = 'screen';
-
-    softBeam(w,h,t, {
-      x0:.98, y0:.04, x1:.32, y1:.63,
-      a0:.24, a1:.125, a2:.045,
-      pulseBase:.90, pulseRange:.10, pulseSpeed:.00040, phase:0,
-      blur:22,
-      points:[[.91,.03],[.99,.15],[.47,.68],[.29,.66],[.49,.43],[.70,.23]]
-    });
-
-    softBeam(w,h,t, {
-      x0:.99, y0:.13, x1:.50, y1:.42,
-      a0:.17, a1:.080, a2:.025,
-      pulseBase:.88, pulseRange:.08, pulseSpeed:.00052, phase:1.7,
-      blur:14,
-      points:[[.94,.10],[.99,.20],[.55,.45],[.48,.38]]
-    });
-
-    softBeam(w,h,t, {
-      x0:.88, y0:.18, x1:.40, y1:.72,
-      a0:.10, a1:.048, a2:.018,
-      pulseBase:.86, pulseRange:.07, pulseSpeed:.00033, phase:3.1,
-      blur:28,
-      points:[[.84,.17],[.94,.25],[.45,.75],[.33,.71]]
-    });
-
+    ctx.filter = 'blur(' + spec.blur + 'px)';
+    ctx.beginPath();
+    ctx.moveTo(upper[0].x, upper[0].y);
+    upper.forEach(function(p, idx){ if(idx) ctx.lineTo(p.x,p.y); });
+    lower.reverse().forEach(function(p){ ctx.lineTo(p.x,p.y); });
+    ctx.closePath();
+    ctx.fillStyle = g;
+    ctx.fill();
     ctx.restore();
   }
 
-  function drawDust(w,h,t){
+  function drawAirShimmer(w,h,t){
     ctx.save();
     ctx.globalCompositeOperation = 'screen';
-    ctx.filter = 'blur(.22px)';
-    particles.forEach(function(p){
-      var x = p.x + Math.sin(t*.00025 + p.phase)*5 + (t*.000010*p.drift*w)%16;
-      var y = p.y + Math.cos(t*.00032 + p.phase)*6;
-      var a = p.a * (0.58 + Math.sin(t*.001 + p.phase)*0.42);
+    ctx.filter = 'blur(9px)';
+    for(var i=0;i<5;i++){
+      var u = (i+1)/6;
+      var c = beamCenter(w,h,u,t,2.4+i);
+      var r = h*(.020 + i*.004);
+      var a = .018 + Math.sin(t*.0009+i)*.010;
+      var rg = ctx.createRadialGradient(c.x,c.y,0,c.x,c.y,r*4.5);
+      rg.addColorStop(0,'rgba(255,238,190,' + a + ')');
+      rg.addColorStop(1,'rgba(255,238,190,0)');
+      ctx.fillStyle = rg;
       ctx.beginPath();
-      ctx.arc(x, y, p.r, 0, Math.PI*2);
-      ctx.fillStyle = 'rgba(255,230,174,' + a + ')';
+      ctx.arc(c.x,c.y,r*4.5,0,Math.PI*2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawMotes(w,h,t){
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+    ctx.filter = 'blur(.25px)';
+    motes.forEach(function(m){
+      var u = (m.u + t*.00002*m.speed) % 1;
+      var c = beamCenter(w,h,u,t,m.phase);
+      var spread = h*(.035 + .09*u);
+      var x = c.x + Math.sin(t*.0006 + m.phase)*m.wiggle + (m.v-.5)*spread;
+      var y = c.y + Math.cos(t*.0005 + m.phase)*m.wiggle*.7;
+      var fade = Math.sin(u*Math.PI);
+      var a = m.a * fade * (.55 + .45*Math.sin(t*.0012 + m.phase));
+      ctx.beginPath();
+      ctx.arc(x,y,m.r,0,Math.PI*2);
+      ctx.fillStyle = 'rgba(255,231,174,' + a + ')';
       ctx.fill();
     });
     ctx.restore();
@@ -137,10 +157,15 @@
     resize();
     if(!canvas || !ctx){ raf = requestAnimationFrame(frame); return; }
     var rect = canvas.getBoundingClientRect();
-    ctx.clearRect(0,0,rect.width,rect.height);
     var t = Date.now() - startTime;
-    drawBeam(rect.width, rect.height, t);
-    drawDust(rect.width, rect.height, t);
+    ctx.clearRect(0,0,rect.width,rect.height);
+
+    drawBreathingRibbon(rect.width,rect.height,t,{ base:.86, range:.13, speed:.00032, phase:0, thick0:.022, thick1:.055, a0:.20, a1:.105, a2:.040, blur:24 });
+    drawBreathingRibbon(rect.width,rect.height,t,{ base:.78, range:.11, speed:.00044, phase:1.8, thick0:.010, thick1:.030, a0:.12, a1:.060, a2:.020, blur:14 });
+    drawBreathingRibbon(rect.width,rect.height,t,{ base:.72, range:.10, speed:.00028, phase:3.5, thick0:.035, thick1:.075, a0:.070, a1:.034, a2:.014, blur:34 });
+    drawAirShimmer(rect.width,rect.height,t);
+    drawMotes(rect.width,rect.height,t);
+
     raf = requestAnimationFrame(frame);
   }
 
@@ -150,7 +175,7 @@
     if(!raf) frame();
   }
 
-  window.KittenNestSunbeamCanvas = { version:'sunbeam-canvas-20260613-2', start:start, resize:resize };
+  window.KittenNestSunbeamCanvas = { version:'sunbeam-canvas-breathing-20260613-1', start:start, resize:resize };
   window.addEventListener('load', start);
   window.addEventListener('resize', resize);
   window.addEventListener('orientationchange', resize);
