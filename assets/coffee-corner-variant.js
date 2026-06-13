@@ -1,5 +1,5 @@
 (function(){
-  var VERSION = 'coffee-corner-variant-20260613-enter-verified-1';
+  var VERSION = 'coffee-corner-variant-20260613-lap-no-default-test-1';
   var LAP_URL = 'https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/variants/lap-close-01.jpg?v=20260613-lap-close-1';
   var mainSrc = '';
   var mode = 'main';
@@ -23,6 +23,7 @@
   function room(){ return document.getElementById('gameRoom'); }
   function img(){ return document.getElementById('gameBg'); }
   function mainBubble(){ return document.getElementById('bubble'); }
+  function lapBubble(){ return document.getElementById('lapCloseBubble'); }
   function isDebug(){ return new URLSearchParams(location.search).get('debugLap') === '1'; }
 
   function isLapActive(){
@@ -132,6 +133,31 @@
     return true;
   }
 
+  function forceHideBubble(el, reason){
+    if(!el) return;
+    el.classList.add('hidden');
+    el.setAttribute('data-lap-hidden', reason || '1');
+    el.style.setProperty('display', 'none', 'important');
+    el.style.setProperty('pointer-events', 'none', 'important');
+    el.removeAttribute('data-active');
+    el.removeAttribute('data-has-text');
+  }
+
+  function releaseMainBubble(el){
+    if(!el) return;
+    if(el.getAttribute('data-lap-hidden') !== 'main-bubble') return;
+    el.removeAttribute('data-lap-hidden');
+    el.style.removeProperty('display');
+    el.style.removeProperty('pointer-events');
+  }
+
+  function scrubLapBubble(){
+    var oldLapBubble = lapBubble();
+    if(!oldLapBubble) return;
+    oldLapBubble.textContent = '';
+    forceHideBubble(oldLapBubble, 'lap-bubble-empty-or-disabled');
+  }
+
   function setMode(next){
     var image = img();
     if(!image) return;
@@ -153,21 +179,16 @@
     applyCard(enterHot, enterCard);
     applyCard(backHot, backCard);
     var main = mainBubble();
-    var oldLapBubble = document.getElementById('lapCloseBubble');
-    if(oldLapBubble){
-      oldLapBubble.removeAttribute('data-active');
-      oldLapBubble.removeAttribute('data-has-text');
-      oldLapBubble.style.display = 'none';
-      oldLapBubble.style.pointerEvents = 'none';
-    }
+    scrubLapBubble();
     if(isLapActive()){
       hideHot(enterHot);
       showHot(backHot, backCard);
-      if(main) main.setAttribute('data-lap-hidden', '1');
+      forceHideBubble(main, 'main-bubble');
     }else{
       showHot(enterHot, enterCard);
       hideHot(backHot);
-      if(main) main.removeAttribute('data-lap-hidden');
+      releaseMainBubble(main);
+      scrubLapBubble();
     }
   }
 
