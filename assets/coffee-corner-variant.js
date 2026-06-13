@@ -1,10 +1,11 @@
 (function(){
-  var VERSION = 'coffee-corner-variant-20260613-3-lap-bubble-empty-port';
+  var VERSION = 'coffee-corner-variant-20260613-4-lap-chest-hot';
   var LAP_URL = 'https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/variants/lap-close-01.jpg?v=20260613-lap-close-1';
   var mainSrc = '';
   var mode = 'main';
   var enterHot;
   var backHot;
+  var chestHot;
   var lapBubble;
   var stateSubscribed = false;
   var lapText = '';
@@ -19,6 +20,12 @@
     id: 'coffeeCorner.lapBackHot',
     label: 'coffee corner lap close back hotspot',
     coordinate: { x: 0.12, y: 0.86, width: 0.24, height: 0.20 }
+  };
+
+  var chestCard = {
+    id: 'coffeeCorner.lapChestHot',
+    label: 'coffee corner lap close chest hotspot',
+    coordinate: { x: 0.60, y: 0.665, width: 0.42, height: 0.22 }
   };
 
   function room(){ return document.getElementById('gameRoom'); }
@@ -59,6 +66,13 @@
       b.removeAttribute('data-has-text');
     }
     return true;
+  }
+
+  function toggleLapBubble(){
+    var b = ensureLapBubble();
+    if(!b || mode !== 'lap' || !hasLapText()) return;
+    if(b.getAttribute('data-active') === '1') b.removeAttribute('data-active');
+    else b.setAttribute('data-active', '1');
   }
 
   function readStateText(){
@@ -149,6 +163,12 @@
       backHot.addEventListener('touchend', function(e){ e.preventDefault(); e.stopPropagation(); backMain(); }, true);
       r.appendChild(backHot);
     }
+    if(!chestHot){
+      chestHot = makeHot('lapChestHot', '坐腿近景胸口互动区');
+      chestHot.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); toggleLapBubble(); }, true);
+      chestHot.addEventListener('touchend', function(e){ e.preventDefault(); e.stopPropagation(); toggleLapBubble(); }, true);
+      r.appendChild(chestHot);
+    }
     ensureLapBubble();
     return true;
   }
@@ -200,6 +220,7 @@
     if(!ensureHotspots()) return;
     applyCard(enterHot, enterCard);
     applyCard(backHot, backCard);
+    applyCard(chestHot, chestCard);
     var b = ensureLapBubble();
     var main = mainBubble();
     if(mode === 'lap'){
@@ -207,6 +228,8 @@
       enterHot.style.pointerEvents = 'none';
       backHot.style.display = 'block';
       backHot.style.pointerEvents = 'auto';
+      chestHot.style.display = 'block';
+      chestHot.style.pointerEvents = 'auto';
       if(b && hasLapText()) b.setAttribute('data-active', '1');
       else if(b) b.removeAttribute('data-active');
       if(main) main.setAttribute('data-lap-hidden', '1');
@@ -215,6 +238,8 @@
       enterHot.style.pointerEvents = 'auto';
       backHot.style.display = 'none';
       backHot.style.pointerEvents = 'none';
+      chestHot.style.display = 'none';
+      chestHot.style.pointerEvents = 'none';
       if(b) b.removeAttribute('data-active');
       if(main) main.removeAttribute('data-lap-hidden');
     }
@@ -233,6 +258,7 @@
     lapUrl: LAP_URL,
     enterCard: enterCard,
     backCard: backCard,
+    chestCard: chestCard,
     enterLap: enterLap,
     backMain: backMain,
     setLapBubbleText: function(text){ syncLapBubbleText(text); updateHotspots(); },
