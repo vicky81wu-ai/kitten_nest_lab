@@ -1,5 +1,5 @@
 {
-  "version": "0.1.9",
+  "version": "0.1.10",
   "status": "foundation-current-identities",
   "note": "Static object and hotspot identity registry for Kitten Nest. This file is not wired into runtime yet. It exists to prevent selector reuse, hotspot ownership conflicts, decorative overlay drift, and rough patching. Detailed director writing guidance lives in docs/DIRECTOR_GUIDE.md.",
   "principles": [
@@ -15,7 +15,8 @@
     "Active base-image hotspots must be gated by their active room so home and coffeeCorner hotspots do not leak into each other.",
     "Notebook current-page preview and editor draft are separate states; do not auto-copy current page into the editor on render.",
     "Notebook save archives the saved/confirmed text immediately; do not delay the saved text until the next save.",
-    "Powder notebook currently belongs to the home scene; its panel is home-scoped because no other scene currently opens it."
+    "Powder notebook currently belongs to the home scene; its panel is home-scoped because no other scene currently opens it.",
+    "CoffeeCorner lap-close is a scene variant, not a separate room; it owns its own hotspots and upper-left bubble."
   ],
   "objects": [
     {
@@ -35,6 +36,75 @@
       "stateFields": ["alexBubble", "alexBubbles", "bubbleIndex"],
       "directorRef": "director.textPorts.coffeeCornerBubble",
       "directorTags": ["immediate", "short", "rotating", "roomPresence"],
+      "protected": true
+    },
+    {
+      "id": "coffeeCorner.lapCloseBubble",
+      "roomId": "coffeeCorner",
+      "sceneVariantId": "coffeeCorner.lapClose",
+      "kind": "textPort",
+      "selector": "#lapCloseBubble",
+      "owner": "coffeeCornerVariantController",
+      "role": "lapCloseUpperLeftBubble",
+      "action": "showLapCloseBubble",
+      "exclusive": true,
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalCurrent",
+      "changePolicy": "mutableWithVersion",
+      "textClass": "Bubble",
+      "implementationType": "lapCloseStaticBubble",
+      "implementationFile": "assets/coffee-corner-variant.js",
+      "runtimeNote": "The lap-close bubble is created by the coffeeCorner variant controller and shown in the upper-left only while coffeeLapVariant is active. It must not inherit the normal coffeeCorner rotating bubble queue.",
+      "directorRef": "director.textPorts.coffeeCornerLapCloseBubble",
+      "directorTags": ["lapClose", "intimate", "sweetCare", "upperLeft", "sceneVariant"],
+      "protected": true
+    },
+    {
+      "id": "coffeeCorner.lapEnterHot",
+      "roomId": "coffeeCorner",
+      "sceneVariantId": "coffeeCorner.lapClose",
+      "kind": "hotspot",
+      "selector": ".lapEnterHot",
+      "owner": "coffeeCornerVariantController",
+      "role": "lapCloseVariantEnterHotspot",
+      "action": "enterLapCloseVariant",
+      "exclusive": true,
+      "runtimeStatus": "active",
+      "coordinateStatus": "baseImageLocked",
+      "versionStatus": "canonicalCurrent",
+      "changePolicy": "mutableWithVersion",
+      "imageId": "gameBg",
+      "roomElementId": "gameRoom",
+      "approvedCoordinate": { "x": 0.34, "y": 0.57, "width": 0.38, "height": 0.24 },
+      "approvedBy": "Vicky verified the lap/leg hotspot enters the lap-close variant.",
+      "implementationFile": "assets/coffee-corner-variant.js",
+      "runtimeNote": "This hotspot enters the coffeeCorner lap-close scene variant. It is not a new room and must not reuse tattoo/photoWall/gameConsole selectors.",
+      "directorRef": "director.hotspots.coffeeCornerLapEnter",
+      "directorTags": ["lapClose", "sceneVariant", "intimate", "sweetCare", "baseImageCoordinate"],
+      "protected": true
+    },
+    {
+      "id": "coffeeCorner.lapBackHot",
+      "roomId": "coffeeCorner",
+      "sceneVariantId": "coffeeCorner.lapClose",
+      "kind": "hotspot",
+      "selector": ".lapBackHot",
+      "owner": "coffeeCornerVariantController",
+      "role": "lapCloseVariantReturnHotspot",
+      "action": "returnToCoffeeCornerMain",
+      "exclusive": true,
+      "runtimeStatus": "active",
+      "coordinateStatus": "baseImageLocked",
+      "versionStatus": "canonicalCurrent",
+      "changePolicy": "mutableWithVersion",
+      "imageId": "gameBg",
+      "roomElementId": "gameRoom",
+      "approvedCoordinate": { "x": 0.12, "y": 0.86, "width": 0.24, "height": 0.20 },
+      "approvedBy": "Runtime return hotspot added with lap-close variant; visual position still mutable with version.",
+      "implementationFile": "assets/coffee-corner-variant.js",
+      "runtimeNote": "This hotspot returns from the lap-close variant to the normal coffeeCorner image. It should not open panels or inherit normal coffeeCorner bubble behavior.",
+      "directorRef": "director.hotspots.coffeeCornerLapBack",
+      "directorTags": ["lapClose", "return", "sceneVariant", "baseImageCoordinate"],
       "protected": true
     },
     {
@@ -350,6 +420,6 @@
   },
   "shortIncidentExample": {
     "type": "selectorReuseAndMisclassification",
-    "lesson": "A notebook entry once reused the game console selector and took over the game menu. A later room-leak incident showed active room gating is required for cross-scene selectors. A notebook duplication incident showed current-page preview and editor draft must stay separate. A classification correction showed that the powder notebook hotspot and panel are currently home-scoped; coffeeCorner has no physical powder notebook, and the panel is not shared unless another scene explicitly opens it."
+    "lesson": "A notebook entry once reused the game console selector and took over the game menu. A later room-leak incident showed active room gating is required for cross-scene selectors. A notebook duplication incident showed current-page preview and editor draft must stay separate. A classification correction showed that the powder notebook hotspot and panel are currently home-scoped; coffeeCorner has no physical powder notebook, and the panel is not shared unless another scene explicitly opens it. The lap-close variant adds its own selector-owned hotspots and bubble so it does not inherit normal coffeeCorner bubble behavior."
   }
 }
