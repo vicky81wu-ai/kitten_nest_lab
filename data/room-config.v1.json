@@ -1,5 +1,5 @@
 {
-  "version": "0.1.9",
+  "version": "0.1.10",
   "status": "foundation-scene-hooks",
   "note": "Room and scene configuration foundation for Kitten Nest. This file is not a full roomEngine runtime yet. It keeps scene identity, active ports, protected current runtime facts, and directorRef hooks. Long director notes live in docs/DIRECTOR_GUIDE.md.",
   "currentRuntime": {
@@ -8,11 +8,15 @@
     "writerEntry": "/write",
     "visibleTextPorts": [
       "coffeeCorner.bubbles",
-      "coffeeCorner.windowWeather"
+      "coffeeCorner.windowWeather",
+      "coffeeCorner.lapCloseBubble"
     ],
     "activeScenes": [
       "home",
       "coffeeCorner"
+    ],
+    "activeSceneVariants": [
+      "coffeeCorner.lapClose"
     ],
     "activeHotspots": [
       "home.hubbyNoteHot",
@@ -20,6 +24,8 @@
       "coffeeCorner.photoWallHot",
       "coffeeCorner.windowWeatherAdviceHotspot",
       "coffeeCorner.gameConsoleHotspot",
+      "coffeeCorner.lapEnterHot",
+      "coffeeCorner.lapBackHot",
       "coffeeCorner.setupToggleButton"
     ],
     "activePanels": [
@@ -29,11 +35,12 @@
     "activeAssetPipelines": [
       "coffeeCorner.localImageUpload"
     ],
-    "stableWorkflow": "Alex update package -> /write -> generate drafts -> publish all -> /cloud. The powder notebook currently appears as a physical home object and opens a home-scoped archive-first notebook panel. Setup/local upload remains manually available."
+    "stableWorkflow": "Alex update package -> /write -> generate drafts -> publish all -> /cloud. The powder notebook currently appears as a physical home object and opens a home-scoped archive-first notebook panel. Setup/local upload remains manually available. CoffeeCorner lap-close is a scene variant with its own upper-left bubble, not a new room and not the normal rotating coffeeCorner bubble."
   },
   "identityPolicy": {
     "coreRule": "No identity, no binding.",
     "sceneRule": "Scenes belong in room-config; interactive objects and hotspots belong in object-registry.",
+    "variantRule": "Scene variants belong under their parent scene in room-config. Their hotspots and text ports still need object-registry identity cards.",
     "ownershipRule": "Every active selector has one primary owner. exclusive:true means no casual selector reuse.",
     "versionRule": "canonicalCurrent means current official truth, not permanent immutability. Current objects may change later through mutableWithVersion.",
     "coordinateRule": "Coordinates should be locked to base-image coordinates, not device-specific offsets.",
@@ -46,6 +53,14 @@
       "textClass": "Bubble",
       "implementationType": "bubbleDraft",
       "target": "coffeeCorner.bubbles",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalCurrent",
+      "changePolicy": "mutableWithVersion"
+    },
+    "coffeeCornerLapClose": {
+      "textClass": "Bubble",
+      "implementationType": "lapCloseStaticBubble",
+      "target": "coffeeCorner.lapCloseBubble",
       "runtimeStatus": "active",
       "versionStatus": "canonicalCurrent",
       "changePolicy": "mutableWithVersion"
@@ -113,13 +128,14 @@
       },
       "coordinateSpace": {
         "status": "mixed",
-        "activeBaseImageLocked": ["coffeeCorner.tattoo19_8", "coffeeCorner.photoWallHot"],
+        "activeBaseImageLocked": ["coffeeCorner.tattoo19_8", "coffeeCorner.photoWallHot", "coffeeCorner.lapEnterHot", "coffeeCorner.lapBackHot"],
         "legacyViewport": ["coffeeCorner.bubbleOverlay", "coffeeCorner.windowWeatherOverlay"],
         "futureMode": "baseImageLocked"
       },
       "activeObjects": [
         "coffeeCorner.bubble",
         "coffeeCorner.windowWeatherDisplay",
+        "coffeeCorner.lapCloseBubble",
         "coffeeCorner.setupPanel",
         "coffeeCorner.localImageUpload"
       ],
@@ -128,6 +144,8 @@
         "coffeeCorner.photoWallHot",
         "coffeeCorner.windowWeatherAdviceHotspot",
         "coffeeCorner.gameConsoleHotspot",
+        "coffeeCorner.lapEnterHot",
+        "coffeeCorner.lapBackHot",
         "coffeeCorner.setupToggleButton"
       ],
       "activePanels": [
@@ -144,6 +162,15 @@
           "directorRef": "director.textPorts.coffeeCornerBubble"
         },
         {
+          "id": "coffeeCorner.lapCloseBubble",
+          "packageTag": "coffeeCornerLapClose",
+          "textClass": "Bubble",
+          "implementationType": "lapCloseStaticBubble",
+          "runtimeStatus": "active",
+          "directorRef": "director.textPorts.coffeeCornerLapCloseBubble",
+          "notes": "This upper-left bubble belongs only to the lap-close scene variant and must not inherit the normal coffeeCorner rotating bubble queue."
+        },
+        {
           "id": "coffeeCorner.windowWeather",
           "packageTag": "windowWeather",
           "type": "weatherText",
@@ -152,9 +179,27 @@
           "directorRef": "director.textPorts.windowWeather"
         }
       ],
+      "sceneVariants": [
+        {
+          "id": "coffeeCorner.lapClose",
+          "label": "坐腿近景 / lap-close",
+          "runtimeStatus": "active",
+          "versionStatus": "canonicalCurrent",
+          "changePolicy": "mutableWithVersion",
+          "parentSceneId": "coffeeCorner",
+          "assetId": "room.coffeeCorner.variant.lapClose.01",
+          "assetStoragePath": "assets/rooms/coffee-corner/variants/lap-close-01.jpg",
+          "entryHotspot": "coffeeCorner.lapEnterHot",
+          "returnHotspot": "coffeeCorner.lapBackHot",
+          "textPorts": ["coffeeCorner.lapCloseBubble"],
+          "directorRef": "director.scenes.coffeeCornerLapClose",
+          "directorTags": ["lapClose", "intimate", "sweetCare", "closeUp", "cuddle", "sceneVariant"],
+          "notes": "A coffeeCorner scene variant entered by tapping Alex's lap/leg area. It is intimate, sweet, and close, but still belongs to coffeeCorner. It uses its own upper-left lapClose bubble and hides the normal coffeeCorner bubble while active."
+        }
+      ],
       "directorRef": "director.scenes.coffeeCorner",
       "directorTags": ["active", "warm", "domestic", "coffee", "dailyCare", "constructionBase"],
-      "notes": "Current real front-stage room. CoffeeCorner currently has no physical powder notebook object and no coffeeCorner notebook panel. Object and hotspot details are in data/object-registry.v1.json. CoffeeCorner hotspots must be gated to gameRoom.active."
+      "notes": "Current real front-stage room. CoffeeCorner currently has no physical powder notebook object and no coffeeCorner notebook panel. Object and hotspot details are in data/object-registry.v1.json. CoffeeCorner hotspots must be gated to gameRoom.active. The lap-close variant is a child scene variant, not a separate room."
     }
   ],
   "futureScenes": [
@@ -211,6 +256,8 @@
       "home hubbyNote archive-first panel",
       "hubbyNote favorite/delete/soft-delete/key hiding controls",
       "game console / game menu hotspot",
+      "coffeeCorner lap-close variant enter/return behavior",
+      "coffeeCorner lapCloseBubble must stay separate from normal coffeeCorner bubble queue",
       "setup panel manual access",
       "local image upload override pipeline",
       "Vercel Hobby function count budget"
