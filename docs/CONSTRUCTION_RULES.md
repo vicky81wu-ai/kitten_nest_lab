@@ -41,6 +41,64 @@ If a change has not been verified, keep it out of `/cloud`. Use a test entry suc
 
 No future construction window should ask Vicky to guard the stable route manually. The construction agent must guard it.
 
+## STATE protection rule
+
+Supabase `nest_state` is a protected live-content store, not a debugging field dump.
+
+State is more dangerous than a visual hotspot because `/cloud` reads it as the current active nest content. Do not casually clear, overwrite, or reshape state while fixing layout, hotspots, panels, assets, or visual bugs.
+
+Protected live state may include:
+
+```text
+alexBubble / alexBubbles / bubbleIndex
+coffeeCornerLapCloseBubble / coffeeCornerLapCloseBubbles / coffeeCornerLapCloseBubbleIndex
+windowTemp / windowDesc
+hubbyNote / hubbyNoteArchive / hubbyNoteHistory / hubbyNoteFavorite / hubbyNoteTrash
+pendingDrafts
+lastPublishedAt / previousPublished / updatedAt
+```
+
+Hard rules:
+
+- State is not a test route.
+- Do not edit state while also changing hotspots, bubbles, `/write`, assets, or panels in the same unverified step.
+- Do not clear state fields without first reading and saving a full `/api/state` backup.
+- Do not overwrite the whole state object when only a few fields are intended.
+- Only patch explicit fields that were named before the operation.
+- Never touch unrelated protected fields such as `alexBubbles`, `hubbyNote`, `windowTemp`, `windowDesc`, or `pendingDrafts` while cleaning a different feature.
+- If state cleanup fails or creates a regression, restore from the saved backup before applying more patches.
+
+Required flow for state cleanup:
+
+```text
+1. Read current /api/state.
+2. Save the full state JSON as a rollback backup.
+3. Name the exact fields to change.
+4. Confirm which fields must not be touched.
+5. Apply a narrow patch only to those fields.
+6. Verify /cloud and /write behavior.
+7. If broken, restore the backup first; do not stack more patches.
+```
+
+Example: if only an old lap-close bubble corpse must be cleared, the intended patch should be limited to fields such as:
+
+```json
+{
+  "coffeeCornerLapCloseBubble": "",
+  "coffeeCornerLapCloseBubbles": [],
+  "coffeeCornerLapCloseBubbleIndex": 0
+}
+```
+
+Do not touch these during that cleanup:
+
+```text
+alexBubble / alexBubbles / bubbleIndex
+hubbyNote / hubbyNoteArchive / hubbyNoteHistory
+windowTemp / windowDesc
+pendingDrafts
+```
+
 ## Object identity card
 
 Every active or planned interactive object should have a static identity card in `data/object-registry.v1.json` or `data/room-config.v1.json` before runtime code binds to it.
@@ -79,19 +137,22 @@ A current official object can still change later if the change is explicit, vers
 Before changing runtime code, answer these questions:
 
 1. Which route is affected? If it is `/cloud`, has the change already passed an independent test route or preview?
-2. Which room is affected?
-3. Which object, hotspot, overlay, panel, text port, or asset pipeline is affected?
-4. Does it already have an identity card in `data/object-registry.v1.json` or `data/room-config.v1.json`?
-5. Does the selector already have a primary owner?
-6. Is the existing item `exclusive: true`?
-7. Is the current object `canonicalCurrent` and `mutableWithVersion`?
-8. What stable chain could this affect?
-9. Is this a bug fix, a feature, architecture collection, or pure visual polish?
-10. What is the rollback plan?
+2. Which state fields could be affected? If any state write/cleanup is involved, where is the full `/api/state` backup and the exact field list?
+3. Which room is affected?
+4. Which object, hotspot, overlay, panel, text port, or asset pipeline is affected?
+5. Does it already have an identity card in `data/object-registry.v1.json` or `data/room-config.v1.json`?
+6. Does the selector already have a primary owner?
+7. Is the existing item `exclusive: true`?
+8. Is the current object `canonicalCurrent` and `mutableWithVersion`?
+9. What stable chain could this affect?
+10. Is this a bug fix, a feature, architecture collection, or pure visual polish?
+11. What is the rollback plan?
 
 If the object has no identity card, create or update the registry entry first. Do not bind code by guessing.
 
 If the change is not verified, do not put it on `/cloud`.
+
+If state is involved, do not proceed without a backup and an exact patch list.
 
 ## Ownership rules
 
@@ -108,6 +169,7 @@ If the change is not verified, do not put it on `/cloud`.
 Do not casually change these without a staged plan:
 
 - `/cloud` stable route itself
+- Supabase `nest_state` live content
 - `/write` update package workflow
 - coffee-corner bubble publishing
 - 19.8 tattoo hotspot behavior
@@ -210,8 +272,9 @@ Before saying a task is done, the construction agent must complete this closeout
 5. data/room-config.v1.json is updated for any room, scene, active hotspot, active object, text port, or coordinate-space change.
 6. docs/DIRECTOR_GUIDE.md or docs/TEXT_RULES.md is updated if the change affects writing behavior, directorRef, text container rules, or scene meaning.
 7. Supabase nest_assets is updated only when the change affects image assets, current slot bindings, public URLs, scene_group / scene_key, director_ref, or mood_tags.
-8. Vercel status is checked when a deploy is expected.
-9. Any temporary test route, debug flag, or experimental patch is either removed, documented, or clearly marked as temporary.
+8. Supabase nest_state was backed up before any state write/cleanup; exact touched fields were documented; unrelated live fields were not changed.
+9. Vercel status is checked when a deploy is expected.
+10. Any temporary test route, debug flag, or experimental patch is either removed, documented, or clearly marked as temporary.
 ```
 
 Short rule:
