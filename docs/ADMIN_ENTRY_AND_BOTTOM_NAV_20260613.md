@@ -1,8 +1,8 @@
-# Admin Entry and Bottom Navigation - 2026-06-13
+# Admin Entry and Bottom Navigation
 
-## Decision
+## Current rule
 
-Scene navigation should stay at the bottom of the image.
+Scene navigation stays at the bottom of the image.
 
 ```text
 bottom-right = go forward / enter next room
@@ -16,56 +16,59 @@ home -> coffeeCorner: bottom-right hotspot
 coffeeCorner -> home: bottom-left hotspot
 ```
 
-The old coffeeCorner return hotspot used the upper-left area. That area is now reserved for the management entry.
-
 ## Admin entry
 
 Global management should not appear as a visible permanent scene button.
 
 The old visible `素材` button is now a transparent upper-left management hot area.
 
-Current rule:
+Current management trigger:
 
 ```text
 upper-left transparent zone
 size: 28vw x 20vh
-matches the bottom navigation hotspot footprint
-long press 1.8s
--> open existing setup/material panel
+long press: 1.8s
+short tap: no action
+opens: existing setup/material panel
 ```
 
-Short tap does not open the material panel.
+## Touch guardrail
 
-The upper-left admin zone must suppress native iOS/WebView text selection and lookup callouts:
+The upper-left admin zone may suppress native iOS/WebView text selection and lookup callouts.
 
-```text
--webkit-user-select: none
-user-select: none
--webkit-touch-callout: none
-preventDefault on touchstart inside the admin zone
-```
-
-This prevents the blue selection handles / copy-query-translate bar from appearing during the long press.
-
-Important guardrail:
+However, this suppression must be scoped:
 
 ```text
 Only touches that start inside the upper-left admin zone may be blocked.
 All other hotspot touchend/click behavior must pass through.
 ```
 
-Verified by Vicky on 2026-06-13 after the scoped touch guard fix:
+Do not use a global touchend/click block for admin long-press logic.
+
+## Paw icon rule
+
+Use `🐾` as the general management/settings symbol for Kitten Nest.
+
+It may appear in:
 
 ```text
-left/right room navigation works
-home powder notebook works
-upper-left long press works
-native blue selection callout no longer blocks the flow
+key replacement button
+admin mode
+management menu
+future management room / 素材间
 ```
 
-This is a temporary bridge.
+It should not become a permanent floating button on every scene unless explicitly approved.
 
-Future direction:
+## Future direction
+
+Current bridge:
+
+```text
+upper-left long press -> existing material/setup panel
+```
+
+Future target:
 
 ```text
 upper-left long press -> 🐾 admin entry / management menu
@@ -83,43 +86,14 @@ debug tools
 export / import
 ```
 
-## Paw icon rule
-
-Use `🐾` as the general management/settings symbol for Kitten Nest.
-
-It may appear in:
-
-```text
-key replacement button
-admin mode
-management menu
-future Nest Studio / 素材间
-```
-
-But it should not become a permanent floating button on every scene unless explicitly approved.
-
-## Why not a visible permanent button
-
-Any permanent floating button can collide with future scene hotspots.
-
-So the management layer should be reachable without occupying visible map space.
-
-Current compromise:
-
-```text
-transparent upper-left long-press zone
-```
-
-Future ideal:
+Long-term ideal:
 
 ```text
 No visible global admin button in immersive scenes.
-A dedicated management room / 素材间 / Nest Studio can hold admin objects diegetically.
+A dedicated management room / 素材间 can hold admin objects diegetically.
 ```
 
 ## Runtime file
-
-Current controller:
 
 ```text
 assets/setup-toggle.js
@@ -129,4 +103,10 @@ Current injected version:
 
 ```text
 /assets/setup-toggle.js?v=20260613-touchfix-1
+```
+
+Detailed incident and verification notes live in:
+
+```text
+docs/construction-logs/2026-06-13.md
 ```
