@@ -1,5 +1,7 @@
 const appAssetctl = require('./app-assetctl');
 
+const coffeeCornerPolishStyle = '<link rel="stylesheet" href="/assets/coffee-corner-polish.css?v=20260613-1">';
+const hotspotPositionerScript = '<script src="/assets/hotspot-positioner.js?v=20260613-console-1"></script>';
 const bubbleControllerScript = '<script src="/assets/bubble-controller.js?v=20260610-1"></script>';
 const hubbyNoteControllerScript = '<script src="/assets/hubby-note-controller.js?v=20260613-archive-first-paw-1"></script>';
 const setupToggleScript = '<script src="/assets/setup-toggle.js?v=20260613-touchfix-1"></script>';
@@ -8,6 +10,10 @@ const bubbleBootScript = `
 <script>
 (function(){
   function boot(){
+    if(window.KittenNestHotspots && window.KittenNestHotspots.start && !window.__kittenNestHotspotsStarted){
+      window.__kittenNestHotspotsStarted = true;
+      window.KittenNestHotspots.start();
+    }
     if(!window.KittenNestState || !window.KittenNestBubble) return;
     if(!window.__kittenNestBubbleAttached){
       window.__kittenNestBubbleAttached = window.KittenNestBubble.attach(window.KittenNestState);
@@ -29,8 +35,10 @@ const bubbleBootScript = `
 </script>`;
 
 function injectBubbleController(html) {
-  const bundle = `${bubbleControllerScript}\n${hubbyNoteControllerScript}\n${setupToggleScript}\n${bubbleBootScript}\n${consoleRestoreScript}\n`;
-  return String(html).replace('</body>', `${bundle}</body>`);
+  const bundle = `${hotspotPositionerScript}\n${bubbleControllerScript}\n${hubbyNoteControllerScript}\n${setupToggleScript}\n${bubbleBootScript}\n${consoleRestoreScript}\n`;
+  return String(html)
+    .replace('</head>', `${coffeeCornerPolishStyle}\n</head>`)
+    .replace('</body>', `${bundle}</body>`);
 }
 
 module.exports = async function handler(req, res) {
