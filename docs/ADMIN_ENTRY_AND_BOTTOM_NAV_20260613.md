@@ -28,9 +28,13 @@ Current rule:
 
 ```text
 upper-left transparent zone
+size: 28vw x 20vh
+matches the bottom navigation hotspot footprint
 long press 1.8s
 -> open existing setup/material panel
 ```
+
+Short tap does not open the material panel.
 
 This is a temporary bridge.
 
@@ -97,5 +101,5 @@ assets/setup-toggle.js
 Current injected version:
 
 ```text
-/assets/setup-toggle.js?v=20260613-admin-longpress-1
+/assets/setup-toggle.js?v=20260613-admin-28x20-1
 ```
