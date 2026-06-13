@@ -1,5 +1,5 @@
 /* Coffee corner visual polish - 2026-06-13
-   Scope: coffee steam and photo wall light cleanup.
+   Scope: approved coffee steam and bubble placement only.
    Runtime only; image/asset bindings unchanged. */
 
 body.cloudDefaultAssets #gameRoom.active .bubble.hidden{
@@ -97,95 +97,17 @@ body.cloudDefaultAssets #gameRoom.active .steamWisp.w3{
   display:none;
 }
 
-body.cloudDefaultAssets #gameRoom.active .photoGlow{
-  pointer-events:none;
-  overflow:visible;
-}
-
-body.cloudDefaultAssets #gameRoom.active .photoGlow i{
-  display:none!important;
-}
-
+body.cloudDefaultAssets #gameRoom.active .photoGlow,
+body.cloudDefaultAssets #gameRoom.active .photoGlow i,
 body.cloudDefaultAssets #gameRoom.active .photoGlow:before,
 body.cloudDefaultAssets #gameRoom.active .photoGlow:after{
-  content:"";
-  position:absolute;
-  left:-1%;
-  top:-2%;
-  width:102%;
-  height:102%;
-  pointer-events:none;
-  mix-blend-mode:screen;
-  background-repeat:repeat;
-  background-image:
-    radial-gradient(circle, rgba(255,255,238,1) 0 .72px, rgba(255,224,108,.92) 1.02px, rgba(255,166,58,.30) 1.65px, transparent 2.85px),
-    radial-gradient(circle, rgba(255,250,218,.98) 0 .64px, rgba(255,205,72,.86) .98px, rgba(255,137,43,.28) 1.55px, transparent 2.65px),
-    radial-gradient(circle, rgba(255,255,230,.90) 0 .58px, rgba(255,234,142,.78) .92px, rgba(255,176,68,.24) 1.48px, transparent 2.45px),
-    radial-gradient(circle, rgba(255,245,205,.92) 0 .54px, rgba(255,194,64,.82) .90px, rgba(255,132,45,.22) 1.42px, transparent 2.35px);
-  background-size:
-    15px 14px,
-    19px 17px,
-    23px 21px,
-    29px 25px;
-  background-position:
-    0 0,
-    7px 3px,
-    4px 90%,
-    88% 8px;
-  opacity:.92;
-  filter:drop-shadow(0 0 3px rgba(255,199,91,.72)) blur(.08px);
-  animation:photoFrameGoldBreath 4.4s ease-in-out infinite;
-  -webkit-mask-image:
-    linear-gradient(#000,#000),
-    linear-gradient(#000,#000),
-    linear-gradient(#000,#000),
-    linear-gradient(#000,#000);
-  -webkit-mask-size:
-    100% 18%, 100% 18%, 16% 100%, 16% 100%;
-  -webkit-mask-position:
-    0 0, 0 100%, 0 0, 100% 0;
-  -webkit-mask-repeat:no-repeat;
-  mask-image:
-    linear-gradient(#000,#000),
-    linear-gradient(#000,#000),
-    linear-gradient(#000,#000),
-    linear-gradient(#000,#000);
-  mask-size:
-    100% 18%, 100% 18%, 16% 100%, 16% 100%;
-  mask-position:
-    0 0, 0 100%, 0 0, 100% 0;
-  mask-repeat:no-repeat;
-}
-
-body.cloudDefaultAssets #gameRoom.active .photoGlow:after{
-  left:-3%;
-  top:-4%;
-  width:106%;
-  height:106%;
-  opacity:.66;
-  filter:drop-shadow(0 0 5px rgba(255,190,78,.62)) blur(.42px);
-  background-size:
-    20px 18px,
-    25px 22px,
-    31px 27px,
-    38px 34px;
-  background-position:
-    3px 4px,
-    13px 5px,
-    9px 88%,
-    91% 12px;
-  animation:photoFrameGoldFloat 5.8s ease-in-out infinite;
-}
-
-@keyframes photoFrameGoldBreath{
-  0%,100%{ opacity:.58; transform:translate3d(0,0,0) scale(.996); filter:drop-shadow(0 0 2px rgba(255,195,83,.52)) blur(.16px); }
-  42%{ opacity:1; transform:translate3d(-.35%,.28%,0) scale(1.010); filter:drop-shadow(0 0 5px rgba(255,211,112,.86)) blur(.02px); }
-  72%{ opacity:.78; transform:translate3d(.20%,-.16%,0) scale(1.004); filter:drop-shadow(0 0 3px rgba(255,184,72,.66)) blur(.10px); }
-}
-
-@keyframes photoFrameGoldFloat{
-  0%,100%{ opacity:.34; transform:translate3d(.18%,-.16%,0) scale(.998); }
-  50%{ opacity:.72; transform:translate3d(-.45%,.36%,0) scale(1.010); }
+  content:none!important;
+  display:none!important;
+  opacity:0!important;
+  animation:none!important;
+  background:none!important;
+  filter:none!important;
+  box-shadow:none!important;
 }
 
 @keyframes coffeeMistArea{
