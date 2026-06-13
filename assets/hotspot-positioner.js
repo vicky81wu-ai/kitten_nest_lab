@@ -64,19 +64,25 @@
       coordinateMode: 'lockedToBaseImage',
       coordinate: { x: 0.2108, y: 0.3353, width: 0.312, aspectRatio: 1 },
       runtimeStatus: 'active'
+    },
+    'coffeeCorner.bubbleOverlay': {
+      id: 'coffeeCorner.bubbleOverlay',
+      label: 'coffee corner speech bubble overlay',
+      roomId: 'coffeeCorner',
+      roomElementId: 'gameRoom',
+      imageId: 'gameBg',
+      selector: '.bubble',
+      coordinateMode: 'lockedToBaseImage',
+      coordinate: { x: 0.905, y: 0.230, width: 0.480, anchor: 'bottomRight', heightMode: 'auto', growthDirection: 'upward' },
+      runtimeStatus: 'active'
     }
   };
 
   var defaultHotspotId = 'coffeeCorner.tattooHot';
   var defaultOverlayId = 'home.clockHandsOverlay';
 
-  function getCard(id){
-    return hotspotCards[id || defaultHotspotId] || null;
-  }
-
-  function getOverlayCard(id){
-    return overlayCards[id || defaultOverlayId] || null;
-  }
+  function getCard(id){ return hotspotCards[id || defaultHotspotId] || null; }
+  function getOverlayCard(id){ return overlayCards[id || defaultOverlayId] || null; }
 
   function coverBox(img){
     if(!img) return null;
@@ -123,6 +129,10 @@
     target.style.pointerEvents = '';
     target.style.opacity = '';
     target.removeAttribute('data-coordinate-inactive');
+  }
+
+  function setImportant(el, name, value){
+    el.style.setProperty(name, value, 'important');
   }
 
   function applyTransparentVisual(hot){
@@ -192,6 +202,24 @@
     return true;
   }
 
+  function applyBottomRightAutoOverlay(overlay, card, box, parentRect){
+    var point = card.coordinate;
+    var w = box.width * point.width;
+    var rightEdge = box.left + point.x * box.width;
+    var bottomEdge = box.top + point.y * box.height;
+    var left = rightEdge - w - parentRect.left;
+    var bottom = parentRect.bottom - bottomEdge;
+
+    setImportant(overlay, 'left', left + 'px');
+    setImportant(overlay, 'right', 'auto');
+    setImportant(overlay, 'top', 'auto');
+    setImportant(overlay, 'bottom', bottom + 'px');
+    setImportant(overlay, 'width', w + 'px');
+    setImportant(overlay, 'max-width', w + 'px');
+    setImportant(overlay, 'height', 'auto');
+    overlay.style.transformOrigin = '100% 100%';
+  }
+
   function applyOverlayCard(card){
     if(!card || !card.coordinate) return false;
     var overlay = document.querySelector(card.selector);
@@ -209,18 +237,23 @@
     var point = card.coordinate;
     var parent = overlay.offsetParent || document.body;
     var parentRect = parent.getBoundingClientRect();
-    var w = box.width * point.width;
-    var ratio = point.aspectRatio || 1;
-    var h = w / ratio;
-    var cx = box.left + point.x * box.width;
-    var cy = box.top + point.y * box.height;
 
-    overlay.style.left = (cx - parentRect.left - w / 2) + 'px';
-    overlay.style.top = (cy - parentRect.top - h / 2) + 'px';
-    overlay.style.right = 'auto';
-    overlay.style.bottom = 'auto';
-    overlay.style.width = w + 'px';
-    overlay.style.height = h + 'px';
+    if(point.anchor === 'bottomRight' && point.heightMode === 'auto'){
+      applyBottomRightAutoOverlay(overlay, card, box, parentRect);
+    }else{
+      var w = box.width * point.width;
+      var ratio = point.aspectRatio || 1;
+      var h = w / ratio;
+      var cx = box.left + point.x * box.width;
+      var cy = box.top + point.y * box.height;
+      overlay.style.left = (cx - parentRect.left - w / 2) + 'px';
+      overlay.style.top = (cy - parentRect.top - h / 2) + 'px';
+      overlay.style.right = 'auto';
+      overlay.style.bottom = 'auto';
+      overlay.style.width = w + 'px';
+      overlay.style.height = h + 'px';
+    }
+
     overlay.setAttribute('data-coordinate-overlay', card.id);
     overlay.setAttribute('data-overlay-label', card.label || card.id);
 
@@ -256,7 +289,7 @@
   }
 
   window.KittenNestHotspots = {
-    version: 'coordinate-hotspot-overlay-card-20260613-console-final-1',
+    version: 'coordinate-hotspot-overlay-card-20260613-bubble-base-1',
     cards: hotspotCards,
     overlayCards: overlayCards,
     defaultHotspotId: defaultHotspotId,
