@@ -71,9 +71,42 @@ function applyLapCloseDraftsOnPublish(patch, state) {
   patch.coffeeCornerLapCloseBubbleUpdatedAt = new Date().toISOString();
 }
 
+function applyLapCloseTagFromAlexBubbles(patch) {
+  const rawLines = Array.isArray(patch.alexBubbles) ? patch.alexBubbles : (patch.alexBubble ? [patch.alexBubble] : []);
+  const raw = rawLines.map((line) => String(line || '')).join('\n');
+  const marker = '[coffeeCornerLapClose]';
+  const markerIndex = raw.indexOf(marker);
+  if (markerIndex < 0) return;
+
+  const before = cleanLines(raw.slice(0, markerIndex).replace(/^\s*\[coffeeCorner\]\s*/i, ''));
+  const after = raw.slice(markerIndex + marker.length);
+  const nextTag = after.search(/\n\s*\[[^\]]+\]\s*\n/);
+  const lapText = nextTag >= 0 ? after.slice(0, nextTag) : after;
+  const lapList = cleanLines(lapText).slice(0, 30);
+
+  if (lapList.length) {
+    patch.coffeeCornerLapCloseBubbles = lapList;
+    patch.coffeeCornerLapCloseBubble = lapList[0] || '';
+    patch.coffeeCornerLapCloseBubbleIndex = 0;
+    patch.coffeeCornerLapCloseBubbleUpdatedAt = new Date().toISOString();
+  }
+
+  if (before.length) {
+    patch.alexBubble = before[0];
+    patch.alexBubbles = before;
+    patch.bubbleIndex = 0;
+  } else {
+    delete patch.alexBubble;
+    delete patch.alexBubbles;
+    delete patch.bubbleIndex;
+    delete patch.previousPublished;
+  }
+}
+
 function normalizePatch(rawPatch, state) {
   const patch = { ...(rawPatch || {}) };
   applyLapCloseDraftsOnPublish(patch, state);
+  applyLapCloseTagFromAlexBubbles(patch);
   applyLapCloseState(patch);
   applyHubbyNotePackage(patch, state);
   return patch;
