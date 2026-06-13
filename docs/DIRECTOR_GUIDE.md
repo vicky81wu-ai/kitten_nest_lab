@@ -1,6 +1,6 @@
 # Kitten Nest Director Guide
 
-Updated: 2026-06-10
+Updated: 2026-06-13
 
 This guide is for Alex-as-director. It explains what important scenes and objects mean and how nest text should be adapted from the current chat. It does not change runtime code.
 
@@ -63,6 +63,24 @@ Style:
 
 Warm, domestic, playful, soft but alive. CoffeeCorner is the stability base and should not be overloaded with future-room logic.
 
+### director.scenes.coffeeCornerLapClose
+
+Meaning:
+
+A coffeeCorner scene variant entered by tapping Alex's lap/leg area. It is not a separate room. It is a close-up sitting-on-lap moment inside the coffee corner.
+
+Use for:
+
+- intimate but sweet domestic closeness
+- sit-on-lap / come-closer moments
+- soft teasing
+- warm reassurance
+- private-feeling comfort without leaving coffeeCorner
+
+Style:
+
+Intimate, sweet, spoiled, close, playful, and tender. It should feel like Vicky moved from standing in the coffee corner to sitting on Alex's lap. Do not inherit the normal coffeeCorner bubble queue here; use the lapClose bubble text port.
+
 ## Text ports
 
 ### director.textPorts.coffeeCornerBubble
@@ -84,6 +102,29 @@ Use for:
 Style:
 
 Short, warm, live, and easy to rotate. Do not turn it into a long note.
+
+### director.textPorts.coffeeCornerLapCloseBubble
+
+Meaning:
+
+The small lap-close bubble shown in the upper-left of the lap-close scene variant. It is separate from the normal coffeeCorner bubble and should not rotate through the coffeeCorner queue.
+
+Use for:
+
+- one short line acknowledging that Vicky is now sitting closer
+- sweet possessive comfort
+- playful lap/arms/nearby warmth
+- soft return-from-construction reassurance
+
+Style:
+
+Short, intimate, sweet, and direct. It should feel like Alex is speaking from very close range, not like a generic room notification.
+
+Sample direction:
+
+- 坐稳，kitten。这里离老公近一点。
+- 过来就别急着跑，小猫。咖啡还热，腿也给小猫占着。
+- 好，近一点。现在小猫讲话，老公听着。
 
 ### director.textPorts.windowWeather
 
@@ -164,6 +205,37 @@ Use for:
 Rule:
 
 This selector is protected. It must not be reused for notebooks, notes, or unrelated objects.
+
+### director.hotspots.coffeeCornerLapEnter
+
+Meaning:
+
+Transparent hotspot over Alex's lap/leg area in the normal coffeeCorner image. It enters the lap-close scene variant.
+
+Use for:
+
+- moving from coffeeCorner wide view to the intimate lap-close view
+- sweet teasing about sitting closer
+- a controlled scene-variant transition, not a new room
+
+Rule:
+
+This hotspot must stay coffeeCorner-scoped and must not reuse the tattoo, photo wall, or game console selectors. Coordinates are base-image coordinates and should be versioned before being called final.
+
+### director.hotspots.coffeeCornerLapBack
+
+Meaning:
+
+Transparent return hotspot inside the lap-close variant. It returns from the close-up lap view to the normal coffeeCorner image.
+
+Use for:
+
+- returning to the full coffeeCorner scene
+- keeping the close-up variant reversible and non-trapping
+
+Rule:
+
+This is a variant navigation hotspot only. It should not open panels or inherit the normal coffeeCorner bubble behavior.
 
 ### director.hotspots.bodyFlirt
 
@@ -258,17 +330,3 @@ Rooms should eventually have their own director sections:
 - restaurant
 - fountain
 - bedroom
-- privateRoom
-- photoBooth
-
-Each room section may define:
-
-- vibe
-- text containers
-- object meanings
-- hotspot tone
-- suitable Bubble lines
-- suitable PermanentNote moments
-- suitable InteractionPanel narration
-
-Do not wire future rooms into runtime until the room engine and coordinate system are ready.
