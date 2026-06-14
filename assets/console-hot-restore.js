@@ -59,6 +59,11 @@
       if(i){ i.style.opacity=''; i.style.transform=''; i.style.filter=''; }
       if(o){ o.style.opacity='0'; o.style.transform='translateZ(0) scale(1.018) translateY(6px)'; o.style.filter='blur(1.2px)'; }
     }
+    function finish(kind, api){
+      if(kind==='enter') api.enterLap();
+      else api.backMain();
+      requestAnimationFrame(function(){ requestAnimationFrame(function(){ reset(); lock=false; }); });
+    }
     function run(kind){
       var api=window.KittenNestCoffeeCornerVariant, i=bg(), o=overlay();
       if(!api || !i || !o || lock) return;
@@ -71,7 +76,7 @@
         o.src=MAIN || '/assets/rooms/coffee-corner/morning-evening.jpg'; o.style.opacity='0';
         requestAnimationFrame(function(){ requestAnimationFrame(function(){ i.style.opacity='0'; i.style.transform='translateZ(0) scale(1.018) translateY(-4px)'; i.style.filter='blur(1.1px)'; o.style.opacity='1'; o.style.transform='translateZ(0) scale(1) translateY(0)'; o.style.filter='blur(0)'; }); });
       }
-      setTimeout(function(){ reset(); kind==='enter' ? api.enterLap() : api.backMain(); lock=false; }, 840);
+      setTimeout(function(){ finish(kind, api); }, 840);
     }
     function leaving(e){
       var t=e.target; if(!t || !t.closest || !t.closest('.toHomeHot')) return;
@@ -80,8 +85,8 @@
     }
     function catchLap(e){
       var t=e.target; if(!t || !t.closest) return;
-      if(t.closest('.lapEnterHot')){ e.preventDefault(); e.stopPropagation(); run('enter'); }
-      if(t.closest('.lapBackHot')){ e.preventDefault(); e.stopPropagation(); run('back'); }
+      if(t.closest('.lapEnterHot')){ e.preventDefault(); e.stopPropagation(); if(e.stopImmediatePropagation) e.stopImmediatePropagation(); run('enter'); return false; }
+      if(t.closest('.lapBackHot')){ e.preventDefault(); e.stopPropagation(); if(e.stopImmediatePropagation) e.stopImmediatePropagation(); run('back'); return false; }
     }
     function boot(){
       style(); overlay();
@@ -96,7 +101,7 @@
     return { boot:boot, run:run };
   })();
 
-  window.KittenNestConsoleRestore = { version:'console-hot-restore-20260614-lap-final-1', restore:restore, lapFinal:lapFinal };
+  window.KittenNestConsoleRestore = { version:'console-hot-restore-20260614-lap-final-2', restore:restore, lapFinal:lapFinal };
   window.addEventListener('load', function(){ setTimeout(restore, 700); setTimeout(restore, 1600); setTimeout(lapFinal.boot, 300); });
   window.addEventListener('pageshow', function(){ setTimeout(restore, 700); setTimeout(lapFinal.boot, 300); });
   document.addEventListener('visibilitychange', function(){ if(!document.hidden){ setTimeout(restore, 700); setTimeout(lapFinal.boot, 300); } });
