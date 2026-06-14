@@ -1,5 +1,6 @@
 (function(){
-  var VERSION = 'coffee-corner-variant-20260613-enter-canvas-verified-1';
+  var VERSION = 'coffee-corner-variant-20260614-lap-soft-paused-1';
+  var LAP_FEATURE_ENABLED = false;
   var LAP_URL = 'https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/variants/lap-close-01.jpg?v=20260613-lap-close-1';
   var mainSrc = '';
   var mode = 'main';
@@ -68,7 +69,42 @@
     return el;
   }
 
+  function removeLapHotspots(){
+    var nodes = document.querySelectorAll('.lapEnterHot,.lapBackHot');
+    Array.prototype.forEach.call(nodes, function(node){
+      if(node && node.parentNode) node.parentNode.removeChild(node);
+    });
+    enterHot = null;
+    backHot = null;
+  }
+
+  function hideLapBubblePort(){
+    var oldLapBubble = document.getElementById('lapCloseBubble');
+    if(oldLapBubble){
+      oldLapBubble.removeAttribute('data-active');
+      oldLapBubble.removeAttribute('data-has-text');
+      oldLapBubble.style.display = 'none';
+      oldLapBubble.style.pointerEvents = 'none';
+    }
+  }
+
+  function disableLapFeature(){
+    mode = 'main';
+    document.body.classList.remove('coffeeLapVariant');
+    removeLapHotspots();
+    hideLapBubblePort();
+    var main = mainBubble();
+    if(main) main.removeAttribute('data-lap-hidden');
+    var overlay = document.getElementById('lapFinalOverlay');
+    if(overlay){
+      overlay.style.opacity = '0';
+      overlay.style.pointerEvents = 'none';
+    }
+    return false;
+  }
+
   function ensureHotspots(){
+    if(!LAP_FEATURE_ENABLED) return disableLapFeature();
     var r = room();
     if(!r) return false;
     if(!enterHot){
@@ -133,6 +169,7 @@
   }
 
   function setMode(next){
+    if(!LAP_FEATURE_ENABLED) return disableLapFeature();
     var image = img();
     if(!image) return;
     if(!mainSrc) mainSrc = image.getAttribute('src') || '';
@@ -145,21 +182,16 @@
     setTimeout(updateHotspots, 520);
   }
 
-  function enterLap(){ setMode('lap'); }
-  function backMain(){ setMode('main'); }
+  function enterLap(){ if(!LAP_FEATURE_ENABLED) return disableLapFeature(); setMode('lap'); }
+  function backMain(){ if(!LAP_FEATURE_ENABLED) return disableLapFeature(); setMode('main'); }
 
   function updateHotspots(){
+    if(!LAP_FEATURE_ENABLED) return disableLapFeature();
     if(!ensureHotspots()) return;
     applyCard(enterHot, enterCard);
     applyCard(backHot, backCard);
     var main = mainBubble();
-    var oldLapBubble = document.getElementById('lapCloseBubble');
-    if(oldLapBubble){
-      oldLapBubble.removeAttribute('data-active');
-      oldLapBubble.removeAttribute('data-has-text');
-      oldLapBubble.style.display = 'none';
-      oldLapBubble.style.pointerEvents = 'none';
-    }
+    hideLapBubblePort();
     if(isLapActive()){
       hideHot(enterHot);
       showHot(backHot, backCard);
@@ -174,18 +206,21 @@
   function boot(){
     var image = img();
     if(image && !mainSrc) mainSrc = image.getAttribute('src') || '';
+    if(!LAP_FEATURE_ENABLED) return disableLapFeature();
     ensureHotspots();
     updateHotspots();
   }
 
   window.KittenNestCoffeeCornerVariant = {
     version: VERSION,
+    lapFeatureEnabled: LAP_FEATURE_ENABLED,
     lapUrl: LAP_URL,
     enterCard: enterCard,
     backCard: backCard,
     enterLap: enterLap,
     backMain: backMain,
     updateHotspots: updateHotspots,
+    disableLapFeature: disableLapFeature,
     boot: boot
   };
 
