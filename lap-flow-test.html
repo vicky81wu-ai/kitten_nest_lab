@@ -5,68 +5,264 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Kitten Nest Lap Flow Test</title>
+<title>Kitten Nest Lap Flow Cloud Harness</title>
 <style>
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#120b12;font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;color:#fff}
-body{position:fixed;inset:0}.screen{position:fixed;inset:0;width:100vw;height:100dvh;overflow:hidden;background:#120b12}.room{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity .42s ease}.room.active{opacity:1;pointer-events:auto}.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block;will-change:transform,opacity,filter;transform:translateZ(0);backface-visibility:hidden;-webkit-backface-visibility:hidden}.status{position:absolute;left:12px;top:calc(env(safe-area-inset-top) + 10px);z-index:90;padding:7px 10px;border-radius:999px;background:rgba(0,0,0,.42);backdrop-filter:blur(8px);font-size:12px;color:rgba(255,255,255,.88)}.controls{position:absolute;left:10px;right:10px;bottom:calc(env(safe-area-inset-bottom) + 10px);z-index:90;display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.controls button{border:0;border-radius:15px;padding:11px 7px;background:rgba(255,248,248,.86);color:#744052;font-weight:800;font-size:13px;box-shadow:0 8px 20px rgba(30,8,20,.18)}.controls button.hotBtn{background:#ff5d91;color:#fff}.controls button:disabled{opacity:.48}.homeLabel{position:absolute;left:50%;top:47%;transform:translate(-50%,-50%);z-index:5;padding:10px 14px;border-radius:999px;background:rgba(255,248,248,.66);color:#744052;font-weight:800;backdrop-filter:blur(8px)}.bubble{position:absolute;right:5%;top:16%;max-width:48%;padding:12px 14px;border-radius:20px;background:rgba(255,248,245,.86);border:1.4px solid rgba(255,255,255,.92);backdrop-filter:blur(3px);box-shadow:0 10px 28px rgba(83,38,51,.18),inset 0 0 0 1px rgba(120,50,70,.1);font-size:clamp(14px,3.5vw,20px);line-height:1.28;color:#733447;font-weight:540;text-shadow:0 1px rgba(255,255,255,.72);z-index:22}.bubble:after{content:"";position:absolute;right:22px;bottom:-9px;border-width:10px 7px 0 7px;border-style:solid;border-color:rgba(255,248,245,.86) transparent transparent transparent}.hot{position:absolute;border:0;background:transparent;z-index:35;border-radius:22px}.showHot .hot{background:rgba(255,80,130,.18);outline:2px solid rgba(255,80,130,.86)}.steam{position:absolute;right:45.4%;top:24.7%;width:8.6%;height:13.2%;opacity:.92;filter:blur(.04px);overflow:visible;pointer-events:none;z-index:14}.coffeeSteamSvg{position:absolute;left:0;bottom:0;width:100%;height:100%;overflow:visible;pointer-events:none;mix-blend-mode:screen}.steamMist{fill:rgba(255,248,236,.24);filter:blur(7px);opacity:0;transform-origin:50% 100%;animation:coffeeMistArea 7.2s ease-in-out infinite}.steamMist.m1{fill:rgba(255,252,244,.31);animation-delay:-.4s}.steamMist.m2{fill:rgba(255,238,216,.22);animation-delay:-1.8s}.steamMist.m3{fill:rgba(255,255,250,.18);animation-delay:-3.3s}.steamMist.m4{fill:rgba(255,242,225,.13);animation-delay:-5.1s}.steamWisp{stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:62 120;stroke-dashoffset:16;filter:blur(2.25px);opacity:0;animation:coffeeSteamPath 7.2s ease-in-out infinite}.steamWisp.w1{stroke:rgba(255,255,248,.26);stroke-width:7.2;animation-delay:-.9s}.steamWisp.w2{stroke:rgba(255,232,204,.20);stroke-width:6.0;animation-delay:-3.2s}.photoGlow{position:absolute;left:6%;top:10%;width:44%;height:25%;pointer-events:none;z-index:15}.photoGlow i{position:absolute;left:var(--x);top:var(--y);width:6px;height:6px;border-radius:50%;background:rgba(255,231,160,.8);box-shadow:0 0 12px rgba(255,218,125,.8);animation:twinkle 3s ease-in-out infinite;animation-delay:var(--d)}
-/* Test fix: coffeeCorner leaving guard. If active drops before overlays are destroyed, do not let dark SVG/default particles leak for even one frame. */
-#gameRoom:not(.active) .steam,#gameRoom:not(.active) .photoGlow,#gameRoom.leaving .steam,#gameRoom.leaving .photoGlow,body.leavingCoffeeCorner #gameRoom .steam,body.leavingCoffeeCorner #gameRoom .photoGlow{display:none!important;opacity:0!important;pointer-events:none!important;animation:none!important}
-body.lapMode #gameRoom .steam,body.lapMode #gameRoom .photoGlow,body.lapMode #gameRoom .bubble{display:none!important;pointer-events:none!important}
-#lapBg{opacity:0;transform:translateZ(0) scale(1.018) translateY(6px);filter:blur(1.2px);z-index:2}.coffeeMain{z-index:1}body.lapMode #lapBg{opacity:1;transform:translateZ(0) scale(1) translateY(0);filter:blur(0)}body.lapMode .coffeeMain{opacity:0}.screen.play .coffeeMain{animation:mainSmoothOut var(--dur) cubic-bezier(.22,.8,.25,1) forwards}.screen.play #lapBg{animation:lapSmoothInClean var(--dur) cubic-bezier(.22,.8,.25,1) forwards}.screen.back .coffeeMain{animation:mainSmoothBack var(--dur) cubic-bezier(.22,.8,.25,1) forwards}.screen.back #lapBg{animation:lapSmoothOut var(--dur) cubic-bezier(.22,.8,.25,1) forwards}
-:root{--dur:820ms;--scale:1.042;--blur:.9px;--drop:6px}
-@keyframes mainSmoothOut{0%{opacity:1;transform:translateZ(0) scale(1) translateY(0);filter:blur(0)}12%{opacity:.92;transform:translateZ(0) scale(1.008) translateY(calc(var(--drop) * .12));filter:blur(.08px)}30%{opacity:.72;transform:translateZ(0) scale(1.020) translateY(calc(var(--drop) * .34));filter:blur(.22px)}55%{opacity:.38;transform:translateZ(0) scale(calc(1 + ((var(--scale) - 1) * .74))) translateY(calc(var(--drop) * .70));filter:blur(calc(var(--blur) * .55))}82%{opacity:.08;transform:translateZ(0) scale(var(--scale)) translateY(var(--drop));filter:blur(var(--blur))}100%{opacity:0;transform:translateZ(0) scale(var(--scale)) translateY(var(--drop));filter:blur(var(--blur))}}
-@keyframes lapSmoothInClean{0%{opacity:0;transform:translateZ(0) scale(1.018) translateY(6px);filter:blur(1.2px)}6%{opacity:.04;transform:translateZ(0) scale(1.017) translateY(5.8px);filter:blur(1.15px)}22%{opacity:.18;transform:translateZ(0) scale(1.014) translateY(4.8px);filter:blur(.9px)}45%{opacity:.48;transform:translateZ(0) scale(1.009) translateY(3px);filter:blur(.55px)}68%{opacity:.76;transform:translateZ(0) scale(1.004) translateY(1.4px);filter:blur(.22px)}88%{opacity:.94;transform:translateZ(0) scale(1.001) translateY(.3px);filter:blur(.06px)}100%{opacity:1;transform:translateZ(0) scale(1) translateY(0);filter:blur(0)}}
-@keyframes mainSmoothBack{0%{opacity:0;transform:translateZ(0) scale(var(--scale)) translateY(var(--drop));filter:blur(var(--blur))}10%{opacity:.05;transform:translateZ(0) scale(var(--scale)) translateY(var(--drop));filter:blur(var(--blur))}35%{opacity:.36;transform:translateZ(0) scale(1.025) translateY(calc(var(--drop) * .55));filter:blur(.7px)}65%{opacity:.74;transform:translateZ(0) scale(1.010) translateY(calc(var(--drop) * .20));filter:blur(.18px)}100%{opacity:1;transform:translateZ(0) scale(1) translateY(0);filter:blur(0)}}
-@keyframes lapSmoothOut{0%{opacity:1;transform:translateZ(0) scale(1) translateY(0);filter:blur(0)}18%{opacity:.86;transform:translateZ(0) scale(1.003) translateY(-.8px);filter:blur(.08px)}44%{opacity:.48;transform:translateZ(0) scale(1.008) translateY(-2px);filter:blur(.35px)}72%{opacity:.14;transform:translateZ(0) scale(1.014) translateY(-3.5px);filter:blur(.85px)}100%{opacity:0;transform:translateZ(0) scale(1.018) translateY(-4px);filter:blur(1.1px)}}
-@keyframes coffeeMistArea{0%{opacity:0;transform:translateY(8px) translateX(0) scale(.82,.74)}22%{opacity:.32}48%{opacity:.56;transform:translateY(-4px) translateX(1px) scale(1.02,1.03)}74%{opacity:.30;transform:translateY(-14px) translateX(-2px) scale(1.14,1.20)}100%{opacity:0;transform:translateY(-24px) translateX(2px) scale(1.22,1.30)}}@keyframes coffeeSteamPath{0%{opacity:0;stroke-dashoffset:34;transform:translateY(8px) scale(.92)}25%{opacity:.20}52%{opacity:.34;stroke-dashoffset:4;transform:translateY(-4px) scale(1.02)}78%{opacity:.16;stroke-dashoffset:-16;transform:translateY(-14px) scale(1.08)}100%{opacity:0;stroke-dashoffset:-34;transform:translateY(-24px) scale(1.14)}}@keyframes twinkle{0%,100%{transform:scale(.75);opacity:.24}50%{transform:scale(1.25);opacity:.82}}
+body{position:fixed;inset:0}
+iframe{position:fixed;inset:0;width:100vw;height:100dvh;border:0;background:#120b12}
+.badge{position:fixed;left:10px;top:calc(env(safe-area-inset-top) + 8px);z-index:10;max-width:calc(100vw - 20px);padding:6px 9px;border-radius:999px;background:rgba(0,0,0,.38);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);font-size:11px;line-height:1.2;color:rgba(255,255,255,.82);pointer-events:none;opacity:.72}
 </style>
 </head>
 <body>
-<div class="screen" id="screen">
-  <section class="room active" id="home"><img class="bg" src="/assets/rooms/home/day.jpg" alt="home"><div class="homeLabel">Home / 主房间测试占位</div></section>
-  <section class="room" id="gameRoom">
-    <img class="bg coffeeMain" id="coffeeBg" src="/assets/rooms/coffee-corner/morning-evening.jpg" alt="coffee corner">
-    <img class="bg" id="lapBg" src="https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/variants/lap-close-01.jpg?v=20260613-lap-close-1" alt="lap close">
-    <div class="bubble">测试入口：点腿进坐腿；返回主页时检查咖啡杯上方黑块/照片墙白点。</div>
-    <button class="hot" id="lapEnterHot" aria-label="进入坐腿"></button>
-    <button class="hot" id="lapBackHot" aria-label="返回咖啡角"></button>
-    <div class="steam" aria-hidden="true"><svg class="coffeeSteamSvg coffeeSteamMistSvg" viewBox="0 0 100 112" preserveAspectRatio="xMidYMax meet"><ellipse class="steamMist m1" cx="48" cy="88" rx="19" ry="11"/><ellipse class="steamMist m2" cx="54" cy="66" rx="22" ry="14"/><ellipse class="steamMist m3" cx="44" cy="45" rx="16" ry="13"/><ellipse class="steamMist m4" cx="57" cy="30" rx="13" ry="10"/><path class="steamWisp w1" d="M42 100 C34 84 55 75 46 60 C38 47 57 39 50 25" fill="none"/><path class="steamWisp w2" d="M56 101 C65 84 43 74 56 58 C68 44 48 37 60 24" fill="none"/></svg></div>
-    <div class="photoGlow" aria-hidden="true"><i style="--x:16%;--y:35%;--d:-.2s"></i><i style="--x:35%;--y:66%;--d:-1.1s"></i><i style="--x:18%;--y:82%;--d:-2.0s"></i></div>
-  </section>
-  <div class="status" id="status">安全测试入口：未触主窝 / 未触 state</div>
-  <div class="controls"><button id="toCoffee" class="hotBtn">进咖啡角</button><button id="toHome">回主页</button><button id="backCoffee">回咖啡角</button><button id="toggleHot">粉框</button></div>
-</div>
+<iframe id="cloudFrame" src="/cloud?lapFlowHarness=1&v=20260614-cloud-like-test" title="Kitten Nest Cloud Test"></iframe>
+<div class="badge">保真测试壳：真实 /cloud 热点；只临时注入腿转场和离场保护</div>
 <script>
 (function(){
-  var screen=document.getElementById('screen');
-  var home=document.getElementById('home');
-  var room=document.getElementById('gameRoom');
-  var coffeeBg=document.getElementById('coffeeBg');
-  var lapBg=document.getElementById('lapBg');
-  var enterHot=document.getElementById('lapEnterHot');
-  var backHot=document.getElementById('lapBackHot');
-  var status=document.getElementById('status');
-  var mode='home';
-  var transitionLock=false;
-  var enterCard={x:.275,y:.54,width:.39,height:.12};
-  var backCard={x:.12,y:.86,width:.24,height:.20};
-  function coverBox(image){var rect=image.getBoundingClientRect();var nw=image.naturalWidth||rect.width;var nh=image.naturalHeight||rect.height;var br=rect.width/rect.height;var ir=nw/nh;var w=rect.width,h=rect.height,x=rect.left,y=rect.top;if(br>ir){h=rect.width/ir;y=rect.top+(rect.height-h)/2}else{w=rect.height*ir;x=rect.left+(rect.width-w)/2}return{left:x,top:y,width:w,height:h};}
-  function applyHot(el,c){var box=coverBox(mode==='lap'?lapBg:coffeeBg);var parent=room.getBoundingClientRect();var w=box.width*c.width,h=box.height*c.height,cx=box.left+box.width*c.x,cy=box.top+box.height*c.y;el.style.left=(cx-parent.left-w/2)+'px';el.style.top=(cy-parent.top-h/2)+'px';el.style.width=w+'px';el.style.height=h+'px';}
-  function updateHotspots(){applyHot(enterHot,enterCard);applyHot(backHot,backCard);enterHot.style.display=mode==='coffee'?'block':'none';backHot.style.display=mode==='lap'?'block':'none';}
-  function setStatus(t){status.textContent=t;}
-  function setHome(){document.body.classList.remove('lapMode','leavingCoffeeCorner');screen.classList.remove('play','back');room.classList.remove('active','leaving');home.classList.add('active');mode='home';setStatus('主页：咖啡角 overlay 已隐藏，不应闪黑块/白点');updateHotspots();}
-  function setCoffee(){document.body.classList.remove('lapMode','leavingCoffeeCorner');screen.classList.remove('play','back');home.classList.remove('active');room.classList.remove('leaving');room.classList.add('active');coffeeBg.style.opacity='1';coffeeBg.style.transform='translateZ(0) scale(1) translateY(0)';coffeeBg.style.filter='blur(0)';lapBg.style.opacity='0';lapBg.style.transform='translateZ(0) scale(1.018) translateY(6px)';lapBg.style.filter='blur(1.2px)';mode='coffee';setStatus('咖啡角：点腿区测试 final-clean 转场');updateHotspots();}
-  function setLap(){document.body.classList.add('lapMode');screen.classList.remove('play','back');coffeeBg.style.opacity='0';coffeeBg.style.transform='translateZ(0) scale(var(--scale)) translateY(var(--drop))';coffeeBg.style.filter='blur(var(--blur))';lapBg.style.opacity='1';lapBg.style.transform='translateZ(0) scale(1) translateY(0)';lapBg.style.filter='blur(0)';mode='lap';setStatus('坐腿图：返回不应闪跳');updateHotspots();}
-  function enterLap(){if(transitionLock||mode!=='coffee')return;transitionLock=true;setCoffee();void screen.offsetWidth;requestAnimationFrame(function(){requestAnimationFrame(function(){screen.classList.add('play');setStatus('转场中：咖啡角 → 坐腿');});});}
-  function backCoffee(){if(transitionLock)return;if(mode==='home'){setCoffee();return;}if(mode!=='lap')return;transitionLock=true;setLap();void screen.offsetWidth;requestAnimationFrame(function(){requestAnimationFrame(function(){screen.classList.add('back');setStatus('转场中：坐腿 → 咖啡角');});});}
-  function leaveHome(){if(mode==='home')return;if(transitionLock)return;transitionLock=true;document.body.classList.add('leavingCoffeeCorner');room.classList.add('leaving');setStatus('离场保护中：先隐藏 steam/photoGlow，再切主页');setTimeout(function(){transitionLock=false;setHome();},90);}
-  screen.addEventListener('animationend',function(e){if(e.target!==coffeeBg&&e.target!==lapBg)return;if(screen.classList.contains('play')){transitionLock=false;setLap();}else if(screen.classList.contains('back')){transitionLock=false;setCoffee();}});
-  enterHot.addEventListener('click',enterLap);enterHot.addEventListener('touchend',function(e){e.preventDefault();enterLap();},{passive:false});backHot.addEventListener('click',backCoffee);backHot.addEventListener('touchend',function(e){e.preventDefault();backCoffee();},{passive:false});
-  document.getElementById('toCoffee').onclick=setCoffee;document.getElementById('toHome').onclick=leaveHome;document.getElementById('backCoffee').onclick=backCoffee;document.getElementById('toggleHot').onclick=function(){screen.classList.toggle('showHot');};
-  window.addEventListener('resize',updateHotspots);window.addEventListener('orientationchange',function(){setTimeout(updateHotspots,180);});
-  [coffeeBg,lapBg].forEach(function(img){img.addEventListener('load',updateHotspots);});
-  updateHotspots();
+  var frame = document.getElementById('cloudFrame');
+  var LAP_URL = 'https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/variants/lap-close-01.jpg?v=20260613-lap-close-1';
+  var MAIN_SRC = '';
+  var patchTimer = null;
+  var transitionLock = false;
+
+  function doc(){
+    try { return frame.contentWindow && frame.contentWindow.document; }
+    catch(e){ return null; }
+  }
+  function win(){
+    try { return frame.contentWindow; }
+    catch(e){ return null; }
+  }
+
+  function installStyle(d){
+    if(!d || d.getElementById('lapFlowHarnessStyle')) return;
+    var style = d.createElement('style');
+    style.id = 'lapFlowHarnessStyle';
+    style.textContent = `
+      #gameRoom:not(.active) .steam,
+      #gameRoom:not(.active) .photoGlow,
+      #gameRoom.leavingCoffeeCorner .steam,
+      #gameRoom.leavingCoffeeCorner .photoGlow,
+      body.leavingCoffeeCorner #gameRoom .steam,
+      body.leavingCoffeeCorner #gameRoom .photoGlow{
+        display:none!important;
+        opacity:0!important;
+        pointer-events:none!important;
+        animation:none!important;
+      }
+      body.lapFlowTransitioning .lapEnterHot,
+      body.lapFlowTransitioning .lapBackHot{
+        pointer-events:none!important;
+      }
+      #lapFlowOverlayImg{
+        position:absolute;
+        inset:0;
+        width:100%;
+        height:100%;
+        object-fit:cover;
+        object-position:center;
+        z-index:32;
+        pointer-events:none;
+        opacity:0;
+        transform:translateZ(0) scale(1.018) translateY(6px);
+        filter:blur(1.2px);
+        will-change:transform,opacity,filter;
+        backface-visibility:hidden;
+        -webkit-backface-visibility:hidden;
+      }
+      body.lapFlowTransitioning #gameBg{
+        will-change:transform,opacity,filter;
+        transform:translateZ(0);
+        backface-visibility:hidden;
+        -webkit-backface-visibility:hidden;
+      }
+      body.lapFlowEnter #gameBg{animation:lapFlowMainOut 820ms cubic-bezier(.22,.8,.25,1) forwards;}
+      body.lapFlowEnter #lapFlowOverlayImg{animation:lapFlowLapIn 820ms cubic-bezier(.22,.8,.25,1) forwards;}
+      body.lapFlowBack #gameBg{animation:lapFlowLapOut 820ms cubic-bezier(.22,.8,.25,1) forwards;}
+      body.lapFlowBack #lapFlowOverlayImg{animation:lapFlowMainBack 820ms cubic-bezier(.22,.8,.25,1) forwards;}
+      @keyframes lapFlowMainOut{
+        0%{opacity:1;transform:translateZ(0) scale(1) translateY(0);filter:blur(0)}
+        12%{opacity:.92;transform:translateZ(0) scale(1.008) translateY(.72px);filter:blur(.08px)}
+        30%{opacity:.72;transform:translateZ(0) scale(1.020) translateY(2.04px);filter:blur(.22px)}
+        55%{opacity:.38;transform:translateZ(0) scale(1.031) translateY(4.2px);filter:blur(.5px)}
+        82%{opacity:.08;transform:translateZ(0) scale(1.042) translateY(6px);filter:blur(.9px)}
+        100%{opacity:0;transform:translateZ(0) scale(1.042) translateY(6px);filter:blur(.9px)}
+      }
+      @keyframes lapFlowLapIn{
+        0%{opacity:0;transform:translateZ(0) scale(1.018) translateY(6px);filter:blur(1.2px)}
+        6%{opacity:.04;transform:translateZ(0) scale(1.017) translateY(5.8px);filter:blur(1.15px)}
+        22%{opacity:.18;transform:translateZ(0) scale(1.014) translateY(4.8px);filter:blur(.9px)}
+        45%{opacity:.48;transform:translateZ(0) scale(1.009) translateY(3px);filter:blur(.55px)}
+        68%{opacity:.76;transform:translateZ(0) scale(1.004) translateY(1.4px);filter:blur(.22px)}
+        88%{opacity:.94;transform:translateZ(0) scale(1.001) translateY(.3px);filter:blur(.06px)}
+        100%{opacity:1;transform:translateZ(0) scale(1) translateY(0);filter:blur(0)}
+      }
+      @keyframes lapFlowLapOut{
+        0%{opacity:1;transform:translateZ(0) scale(1) translateY(0);filter:blur(0)}
+        18%{opacity:.86;transform:translateZ(0) scale(1.003) translateY(-.8px);filter:blur(.08px)}
+        44%{opacity:.48;transform:translateZ(0) scale(1.008) translateY(-2px);filter:blur(.35px)}
+        72%{opacity:.14;transform:translateZ(0) scale(1.014) translateY(-3.5px);filter:blur(.85px)}
+        100%{opacity:0;transform:translateZ(0) scale(1.018) translateY(-4px);filter:blur(1.1px)}
+      }
+      @keyframes lapFlowMainBack{
+        0%{opacity:0;transform:translateZ(0) scale(1.042) translateY(6px);filter:blur(.9px)}
+        10%{opacity:.05;transform:translateZ(0) scale(1.042) translateY(6px);filter:blur(.9px)}
+        35%{opacity:.36;transform:translateZ(0) scale(1.025) translateY(3.3px);filter:blur(.7px)}
+        65%{opacity:.74;transform:translateZ(0) scale(1.010) translateY(1.2px);filter:blur(.18px)}
+        100%{opacity:1;transform:translateZ(0) scale(1) translateY(0);filter:blur(0)}
+      }
+    `;
+    d.head.appendChild(style);
+  }
+
+  function ensureOverlay(d){
+    var room = d.getElementById('gameRoom');
+    if(!room) return null;
+    var overlay = d.getElementById('lapFlowOverlayImg');
+    if(!overlay){
+      overlay = d.createElement('img');
+      overlay.id = 'lapFlowOverlayImg';
+      overlay.alt = '';
+      room.appendChild(overlay);
+    }
+    return overlay;
+  }
+
+  function clearClasses(d){
+    d.body.classList.remove('lapFlowTransitioning','lapFlowEnter','lapFlowBack','leavingCoffeeCorner');
+    var room = d.getElementById('gameRoom');
+    if(room) room.classList.remove('leavingCoffeeCorner');
+  }
+
+  function hardResetVisual(d){
+    var img = d.getElementById('gameBg');
+    var overlay = d.getElementById('lapFlowOverlayImg');
+    if(img){
+      img.style.opacity = '';
+      img.style.transform = '';
+      img.style.filter = '';
+      img.style.animation = '';
+    }
+    if(overlay){
+      overlay.style.opacity = '0';
+      overlay.style.animation = '';
+    }
+  }
+
+  function patchVariant(d){
+    var w = win();
+    if(!w || !w.KittenNestCoffeeCornerVariant || w.__lapFlowHarnessPatched) return false;
+    var api = w.KittenNestCoffeeCornerVariant;
+    var originalEnter = api.enterLap;
+    var originalBack = api.backMain;
+    if(typeof originalEnter !== 'function' || typeof originalBack !== 'function') return false;
+
+    w.__lapFlowHarnessPatched = true;
+    w.__lapFlowOriginalEnterLap = originalEnter;
+    w.__lapFlowOriginalBackMain = originalBack;
+
+    api.enterLap = function(){ runTransition('enter', originalEnter, originalBack); };
+    api.backMain = function(){ runTransition('back', originalEnter, originalBack); };
+    return true;
+  }
+
+  function runTransition(kind, originalEnter, originalBack){
+    var d = doc();
+    if(!d || transitionLock) return;
+    var img = d.getElementById('gameBg');
+    var overlay = ensureOverlay(d);
+    if(!img || !overlay){
+      if(kind === 'enter') originalEnter(); else originalBack();
+      return;
+    }
+    transitionLock = true;
+    installStyle(d);
+    clearClasses(d);
+    hardResetVisual(d);
+
+    if(kind === 'enter'){
+      MAIN_SRC = img.currentSrc || img.src || MAIN_SRC;
+      overlay.src = LAP_URL;
+      overlay.style.opacity = '0';
+      d.body.classList.add('lapFlowTransitioning','lapFlowEnter');
+    }else{
+      overlay.src = MAIN_SRC || '/assets/rooms/coffee-corner/morning-evening.jpg';
+      overlay.style.opacity = '0';
+      d.body.classList.add('lapFlowTransitioning','lapFlowBack');
+    }
+
+    setTimeout(function(){
+      if(kind === 'enter') originalEnter(); else originalBack();
+      clearClasses(d);
+      hardResetVisual(d);
+      transitionLock = false;
+    }, 840);
+  }
+
+  function installLeavingGuard(d){
+    if(d.__lapFlowLeavingGuard) return;
+    d.__lapFlowLeavingGuard = true;
+    function markLeaving(e){
+      var t = e.target;
+      if(!t || !t.closest) return;
+      if(t.closest('.toHomeHot')){
+        d.body.classList.add('leavingCoffeeCorner');
+        var room = d.getElementById('gameRoom');
+        if(room) room.classList.add('leavingCoffeeCorner');
+        setTimeout(function(){
+          d.body.classList.remove('leavingCoffeeCorner');
+          if(room) room.classList.remove('leavingCoffeeCorner');
+        }, 900);
+      }
+    }
+    d.addEventListener('click', markLeaving, true);
+    d.addEventListener('touchstart', markLeaving, true);
+  }
+
+  function installCaptureFallback(d){
+    if(d.__lapFlowCaptureFallback) return;
+    d.__lapFlowCaptureFallback = true;
+    d.addEventListener('click', function(e){
+      var t = e.target;
+      if(!t || !t.closest) return;
+      if(t.closest('.lapEnterHot') && win() && win().KittenNestCoffeeCornerVariant){
+        e.preventDefault(); e.stopImmediatePropagation();
+        win().KittenNestCoffeeCornerVariant.enterLap();
+      }
+      if(t.closest('.lapBackHot') && win() && win().KittenNestCoffeeCornerVariant){
+        e.preventDefault(); e.stopImmediatePropagation();
+        win().KittenNestCoffeeCornerVariant.backMain();
+      }
+    }, true);
+    d.addEventListener('touchend', function(e){
+      var t = e.target;
+      if(!t || !t.closest) return;
+      if(t.closest('.lapEnterHot') && win() && win().KittenNestCoffeeCornerVariant){
+        e.preventDefault(); e.stopImmediatePropagation();
+        win().KittenNestCoffeeCornerVariant.enterLap();
+      }
+      if(t.closest('.lapBackHot') && win() && win().KittenNestCoffeeCornerVariant){
+        e.preventDefault(); e.stopImmediatePropagation();
+        win().KittenNestCoffeeCornerVariant.backMain();
+      }
+    }, {capture:true, passive:false});
+  }
+
+  function patch(){
+    var d = doc();
+    if(!d || !d.body) return;
+    installStyle(d);
+    ensureOverlay(d);
+    patchVariant(d);
+    installLeavingGuard(d);
+    installCaptureFallback(d);
+  }
+
+  frame.addEventListener('load', function(){
+    clearInterval(patchTimer);
+    patchTimer = setInterval(patch, 250);
+    setTimeout(function(){ clearInterval(patchTimer); }, 8000);
+  });
 })();
 </script>
 </body>
