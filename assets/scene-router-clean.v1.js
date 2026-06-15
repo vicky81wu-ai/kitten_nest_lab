@@ -1,5 +1,5 @@
 (function(){
-  var VERSION = 'scene-router-clean-v1-20260614-1';
+  var VERSION = 'scene-router-clean-v1-20260614-2';
   var LAP_URL = 'https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/variants/lap-close-01.jpg?v=20260613-lap-close-1';
   var state = {
     current: 'originalHome',
@@ -7,7 +7,8 @@
     lock: false,
     installed: false,
     lastRouterTouchAt: 0,
-    coffeeSrc: ''
+    coffeeSrc: '',
+    debug: false
   };
 
   var scenes = {
@@ -29,7 +30,8 @@
     var s = document.createElement('style');
     s.id = 'sceneRouterCleanStyle';
     s.textContent = [
-      'body.sceneRouterClean #sceneRouterCleanStatus{position:absolute;left:10px;top:calc(env(safe-area-inset-top) + 36px);z-index:120;padding:5px 8px;border-radius:999px;background:rgba(0,0,0,.34);color:rgba(255,255,255,.78);font:10px/1.2 -apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;pointer-events:none;opacity:.68}',
+      'body.sceneRouterClean #sceneRouterCleanStatus{display:none}',
+      'body.sceneRouterCleanDebug #sceneRouterCleanStatus{display:block;position:absolute;left:10px;top:calc(env(safe-area-inset-top) + 36px);z-index:120;padding:5px 8px;border-radius:999px;background:rgba(0,0,0,.34);color:rgba(255,255,255,.78);font:10px/1.2 -apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;pointer-events:none;opacity:.68}',
       'body.sceneRouterClean #sceneAtlasPlaceholder{position:absolute;inset:0;z-index:50;display:none;align-items:center;justify-content:center;padding:24px;background:linear-gradient(180deg,rgba(28,15,28,.72),rgba(17,8,18,.82));backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:white;text-align:center;font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif}',
       'body.sceneRouterClean.scene-atlas #sceneAtlasPlaceholder{display:flex}',
       'body.sceneRouterClean #sceneAtlasPlaceholder .box{max-width:320px;border-radius:26px;padding:22px;background:rgba(255,245,248,.16);box-shadow:inset 0 0 0 1px rgba(255,255,255,.22),0 18px 40px rgba(0,0,0,.24)}',
@@ -45,6 +47,7 @@
   }
 
   function ensureStatus(){
+    if(!state.debug) return;
     var el = $('sceneRouterCleanStatus');
     if(!el){
       el = document.createElement('div');
@@ -54,7 +57,13 @@
     updateStatus();
   }
 
+  function removeStatus(){
+    var el = $('sceneRouterCleanStatus');
+    if(el && !state.debug) el.remove();
+  }
+
   function updateStatus(){
+    if(!state.debug) return;
     var el = $('sceneRouterCleanStatus');
     if(!el) return;
     el.textContent = 'cleanRouter: ' + state.current + ' | stack: ' + (state.stack.length ? state.stack.join(' > ') : 'empty');
@@ -271,9 +280,11 @@
 
   function start(options){
     options = options || {};
+    state.debug = !!options.debug;
     document.body.classList.add('sceneRouterClean');
-    if(options.debug) document.body.classList.add('sceneRouterCleanDebug');
+    document.body.classList.toggle('sceneRouterCleanDebug', state.debug);
     ensureStyle();
+    removeStatus();
     ensureStatus();
     ensureAtlasPlaceholder();
     rememberCoffeeSrc();
