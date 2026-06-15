@@ -1,14 +1,13 @@
 (function(){
-  var VERSION = 'scene-manifest-isolation-test-20260615-3-home-name';
+  var VERSION = 'scene-manifest-isolation-20260615-promoted-1';
   var qs = new URLSearchParams(location.search);
-  if(qs.get('sceneManifestTest') !== '1') return;
-  var homeNameTest = qs.get('sceneNameHomeTest') === '1';
+  if(qs.get('sceneManifestOff') === '1') return;
 
   var manifest = null;
   var disabled = new WeakMap();
   var panelMemory = new WeakMap();
 
-  function homeSceneId(){ return homeNameTest ? 'home' : 'originalHome'; }
+  function homeSceneId(){ return 'home'; }
 
   function currentScene(){
     var home = document.getElementById('home');
@@ -110,9 +109,8 @@
     var sceneId = currentScene();
     var allowed = sceneAllowedIds(sceneId);
     var safeSelectors = allowedSelectors(allowed);
-    document.body.setAttribute('data-scene-manifest-test', VERSION);
+    document.body.setAttribute('data-scene-manifest', VERSION);
     document.body.setAttribute('data-scene-manifest-current', sceneId);
-    if(homeNameTest) document.body.setAttribute('data-scene-name-home-test', '1');
     allObjectEntries().forEach(function(entry){
       applyObject(entry.id, entry.card, !!allowed[entry.id], safeSelectors);
     });
@@ -134,19 +132,18 @@
     if(document.getElementById('sceneManifestDebugStyle')) return;
     var style = document.createElement('style');
     style.id = 'sceneManifestDebugStyle';
-    style.textContent = 'body:after{content:"sceneManifestTest: " attr(data-scene-manifest-current);position:absolute;left:12px;top:calc(env(safe-area-inset-top) + 12px);z-index:130;padding:5px 8px;border-radius:999px;background:rgba(0,0,0,.34);color:rgba(255,255,255,.78);font:10px/1.2 -apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;pointer-events:none}';
+    style.textContent = 'body:after{content:"sceneManifest: " attr(data-scene-manifest-current);position:absolute;left:12px;top:calc(env(safe-area-inset-top) + 12px);z-index:130;padding:5px 8px;border-radius:999px;background:rgba(0,0,0,.34);color:rgba(255,255,255,.78);font:10px/1.2 -apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;pointer-events:none}';
     document.head.appendChild(style);
   }
 
   async function load(){
     ensureDebugStyle();
     try{
-      var manifestUrl = homeNameTest ? '/data/scene-manifest.home-name-test.v1.json?v=20260615-home-name-test-1' : '/data/scene-manifest.test.v1.json?v=20260615-scene-manifest-2';
-      var res = await fetch(manifestUrl, { cache:'no-store' });
+      var res = await fetch('/data/scene-manifest.home-name-test.v1.json?v=20260615-home-name-promoted-1', { cache:'no-store' });
       manifest = await res.json();
       reconcile();
     }catch(e){
-      console.warn('[sceneManifestTest] failed to load manifest', e);
+      console.warn('[sceneManifest] failed to load manifest', e);
     }
   }
 
