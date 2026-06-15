@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <title>Kitten Nest Tag Test</title>
 <style>
-body{margin:0;min-height:100dvh;background:linear-gradient(180deg,#fff3f6,#f2d9df);color:#6b3d49;padding:18px;font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif}.wrap{max-width:720px;margin:0 auto}.card{border-radius:24px;background:rgba(255,255,255,.74);padding:16px;margin:14px 0;box-shadow:0 18px 55px rgba(77,35,48,.16)}textarea{width:100%;min-height:260px;border:0;border-radius:16px;padding:12px;background:rgba(255,255,255,.86);font-size:15px;color:#6b3d49}button{width:100%;border:0;border-radius:16px;margin-top:10px;padding:12px;background:#7b4054;color:white;font-weight:750}.result{white-space:pre-wrap;font-size:13px;line-height:1.5;margin-top:12px}.pill{display:inline-block;border-radius:999px;background:rgba(123,64,84,.1);padding:4px 8px;margin:2px;font-size:12px}
+body{margin:0;min-height:100dvh;background:linear-gradient(180deg,#fff3f6,#f2d9df);color:#6b3d49;padding:18px;font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif}.wrap{max-width:720px;margin:0 auto}.card{border-radius:24px;background:rgba(255,255,255,.74);padding:16px;margin:14px 0;box-shadow:0 18px 55px rgba(77,35,48,.16)}textarea{width:100%;min-height:300px;border:0;border-radius:16px;padding:12px;background:rgba(255,255,255,.86);font-size:15px;color:#6b3d49}button{width:100%;border:0;border-radius:16px;margin-top:10px;padding:12px;background:#7b4054;color:white;font-weight:750}.result{white-space:pre-wrap;font-size:13px;line-height:1.5;margin-top:12px}.pill{display:inline-block;border-radius:999px;background:rgba(123,64,84,.1);padding:4px 8px;margin:2px;font-size:12px}
 </style>
 </head>
 <body>
@@ -13,7 +13,7 @@ body{margin:0;min-height:100dvh;background:linear-gradient(180deg,#fff3f6,#f2d9d
 <h1>Kitten Nest Tag Test</h1>
 <p>只测 tag 解析，不写入状态。</p>
 <div class="card">
-<div><span class="pill">parser only</span><span class="pill">no state write</span></div>
+<div><span class="pill">parser only</span><span class="pill">no state write</span><span class="pill">canonical + alias</span></div>
 <textarea id="pkg">[hubbyNote]
 主页粉本本测试。
 
@@ -24,8 +24,14 @@ body{margin:0;min-height:100dvh;background:linear-gradient(180deg,#fff3f6,#f2d9d
 23°C
 Soft breeze
 
-[lapCloseBubble]
+[coffeeCornerLapCloseBubble]
 坐稳，小猫。
+
+[coffeeCornerLapClose]
+旧别名也应该回到同一个坐腿气泡。
+
+[lapCloseBubble]
+这个是 deprecated 泛名，只在测试页标出来，不作为标准。
 </textarea>
 <button id="parse">解析 tag</button>
 <div class="result" id="result"></div>
@@ -38,24 +44,26 @@ Soft breeze
   function normalizeTag(tag){
     const raw = String(tag || '').trim();
     const low = raw.toLowerCase().replace(/[\s_-]/g,'');
-    if(low === 'weather' || low === 'windowweather' || low === 'window') return { kind:'weatherDraft', field:'windowWeather', label:'windowWeather' };
-    if(low === 'hubbynote' || low === 'note' || low === 'notebook' || low === 'pinkbook' || low === '粉本本') return { kind:'hubbyNoteDraft', field:'hubbyNote', label:'hubbyNote' };
-    if(low === 'lapclosebubble' || low === 'coffeecornerlapclose') return { kind:'lapCloseBubbleDraft', field:'coffeeCornerLapCloseBubble', label:'lapCloseBubble' };
-    if(low === 'coffee' || low === 'coffeecorner' || low === 'cafe' || low === 'cafecorner') return { kind:'bubbleDraft', field:'alexBubbles', label:'coffeeCorner' };
-    return { kind:'bubbleDraft', field:'alexBubbles', label:raw || 'coffeeCorner' };
+    if(low === 'weather' || low === 'windowweather' || low === 'window') return { kind:'weatherDraft', field:'windowWeather', label:'windowWeather', status:'active' };
+    if(low === 'hubbynote' || low === 'note' || low === 'notebook' || low === 'pinkbook' || low === '粉本本') return { kind:'hubbyNoteDraft', field:'hubbyNote', label:'hubbyNote', status:'active' };
+    if(low === 'coffeecornerlapclosebubble') return { kind:'lapCloseBubbleDraft', field:'coffeeCornerLapCloseBubble', label:'coffeeCornerLapCloseBubble', status:'canonical' };
+    if(low === 'coffeecornerlapclose') return { kind:'lapCloseBubbleDraft', field:'coffeeCornerLapCloseBubble', label:'coffeeCornerLapClose', status:'alias -> coffeeCornerLapCloseBubble' };
+    if(low === 'lapclosebubble') return { kind:'lapCloseBubbleDraft', field:'coffeeCornerLapCloseBubble', label:'lapCloseBubble', status:'deprecated: missing parent scene' };
+    if(low === 'coffee' || low === 'coffeecorner' || low === 'cafe' || low === 'cafecorner') return { kind:'bubbleDraft', field:'alexBubbles', label:'coffeeCorner', status:'active' };
+    return { kind:'bubbleDraft', field:'alexBubbles', label:raw || 'coffeeCorner', status:'unknown bubble route' };
   }
   function parse(raw){
     const out = [];
     let tag = normalizeTag('coffeeCorner');
     let buf = [];
-    function flush(){ const text = buf.join('\n').trim(); if(text) out.push({ tag:tag.label, type:tag.kind, field:tag.field, text }); buf = []; }
+    function flush(){ const text = buf.join('\n').trim(); if(text) out.push({ tag:tag.label, status:tag.status, type:tag.kind, field:tag.field, text }); buf = []; }
     String(raw || '').replace(/\r\n/g,'\n').split('\n').forEach(line => { const m = line.match(/^\s*\[([^\]]+)\]\s*$/); if(m){ flush(); tag = normalizeTag(m[1]); } else buf.push(line); });
     flush();
     return out;
   }
   document.getElementById('parse').onclick = function(){
     const drafts = parse(pkg.value);
-    result.textContent = drafts.map(d => '[' + d.tag + '] -> ' + d.type + ' / ' + d.field + '\n' + d.text).join('\n\n');
+    result.textContent = drafts.map(d => '[' + d.tag + '] (' + d.status + ') -> ' + d.type + ' / ' + d.field + '\n' + d.text).join('\n\n');
   };
 })();
 </script>
