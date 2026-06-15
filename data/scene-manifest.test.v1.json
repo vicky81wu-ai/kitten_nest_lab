@@ -1,5 +1,5 @@
 {
-  "version": "0.1.0-test",
+  "version": "0.1.1-test",
   "status": "test-only-scene-manifest",
   "runtimeMode": "testOnly",
   "activationQuery": "sceneManifestTest=1",
@@ -7,13 +7,18 @@
     "pushIsolation": "A pushed child scene may use only its owned objects plus explicitly inherited objects.",
     "panelRule": "Panels owned by scenes not allowed by the current scene must close.",
     "hotspotRule": "Hotspots owned by scenes not allowed by the current scene must not receive pointer events.",
+    "entryHotspotRule": "A parent scene owns the hotspot that enters a child scene; the child scene does not own its own entry hotspot.",
     "noSelectorPatchList": "The isolation engine must consume this manifest rather than hardcoding lapClose selector blacklist logic."
   },
   "scenes": {
     "originalHome": {
       "id": "originalHome",
       "parent": null,
-      "owns": ["home.hubbyNoteHot", "home.hubbyNotePanel", "home.clockHandsOverlay"],
+      "owns": [
+        "home.hubbyNoteHot",
+        "home.hubbyNotePanel",
+        "home.clockHandsOverlay"
+      ],
       "inherits": []
     },
     "coffeeCorner": {
@@ -29,7 +34,10 @@
         "coffeeCorner.setupPanel",
         "coffeeCorner.setupToggleButton",
         "coffeeCorner.steamOverlay",
-        "coffeeCorner.photoGlowOverlay"
+        "coffeeCorner.photoGlowOverlay",
+        "coffeeCorner.lapCloseEnterHot.cleanRouter",
+        "gameMenu.panel",
+        "memories.panel"
       ],
       "inherits": ["dock.left", "dock.right"]
     },
@@ -38,7 +46,6 @@
       "parent": "coffeeCorner",
       "owns": [
         "coffeeCorner.lapCloseScene",
-        "coffeeCorner.lapCloseEnterHot.cleanRouter",
         "coffeeCorner.lapCloseBubble.cleanRouter",
         "coffeeCorner.lapBodyHot.cleanRouterTest"
       ],
