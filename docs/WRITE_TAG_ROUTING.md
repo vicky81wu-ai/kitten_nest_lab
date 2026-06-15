@@ -13,6 +13,23 @@ Every writable place must have a registered tag before it is connected to /write
 
 This prevents messages from leaking into the wrong panel, bubble, notebook, room, or future scene group.
 
+## Tag naming rule
+
+```text
+New complex tags must include scene path and surface type.
+For nested scenes, include parent scene + child scene + surface type.
+Do not use a generic state name alone.
+```
+
+Example:
+
+```text
+Good: [coffeeCornerLapCloseBubble]
+Alias: [coffeeCornerLapClose]
+Bad:  [lapCloseBubble]
+Bad:  [lapClose]
+```
+
 ## Current active tags
 
 ### `[coffeeCorner]`
@@ -34,7 +51,7 @@ Rules:
 ```text
 Short lines only.
 Belongs to coffeeCorner normal scene.
-Must not affect lapClose bubble.
+Must not affect coffeeCornerLapCloseBubble.
 Must not affect home notebook.
 ```
 
@@ -87,7 +104,7 @@ Do not use this tag for general notebook messages.
 
 These are not all active write routes yet. They are reserved so future work has a clean naming lane.
 
-### `[lapCloseBubble]`
+### `[coffeeCornerLapCloseBubble]`
 
 Destination:
 
@@ -98,16 +115,29 @@ coffeeCorner.lapCloseBubble.cleanRouter
 Use for:
 
 ```text
-Lap-close child scene bubble text.
+Coffee-corner lap-close child-scene bubble text.
 ```
 
 Rules:
 
 ```text
-Belongs to lapClose.
+Belongs to lapClose under coffeeCorner.
 Must not share queue with [coffeeCorner].
 Must hide outside lapClose.
 Must be registered in scene manifest before cloud write is connected.
+This is the preferred canonical future tag.
+```
+
+Backward-compatible alias:
+
+```text
+[coffeeCornerLapClose]
+```
+
+Deprecated generic tag:
+
+```text
+[lapCloseBubble]
 ```
 
 ### `[moodNote]`
@@ -154,8 +184,10 @@ Default routing:
 猫窝留言 / home notebook / longer note -> [hubbyNote]
 coffee-corner short bubble -> [coffeeCorner]
 home weather/window advice -> [windowWeather]
-lap-close bubble -> [lapCloseBubble]
+coffee-corner lap-close bubble -> [coffeeCornerLapCloseBubble]
 ```
+
+If live `/write` does not yet support the canonical long tag, use the registered alias `[coffeeCornerLapClose]` until the parser change is tested and promoted.
 
 If the requested destination is ambiguous, do not invent a new route. Use `[hubbyNote]` for general nest messages, or ask which writable place should receive it.
 
@@ -167,4 +199,5 @@ Do not reuse [coffeeCorner] for lapClose.
 Do not route home weather under coffeeCorner.
 Do not add a writable panel without a tag.
 Do not make one tag update multiple unrelated destinations.
+Do not use [lapCloseBubble] as a canonical tag because it lacks parent scene.
 ```
