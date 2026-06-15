@@ -42,15 +42,17 @@ function hydrateHtml(html, state) {
 const bridge = `
 <script>
 (function(){
-  window.__kittenNestBridge = 'cloud-bridge-q3-single-bubble-hotspot';
+  window.__kittenNestBridge = 'cloud-bridge-q4-bubble-guard';
 
   const STATE_URL = '/api/state';
+  const ADVANCE_GUARD_MS = 720;
   let cloudState = null;
   let queueIndex = 0;
   let lastStateStamp = '';
   let applying = false;
   let manualHidden = false;
   let lastTouchAt = 0;
+  let lastAdvanceAt = 0;
 
   const css = document.createElement('style');
   css.textContent = '.bubble{pointer-events:auto!important;}.tattooHot{pointer-events:auto!important;}';
@@ -74,23 +76,40 @@ const bridge = `
     return q[((queueIndex % q.length) + q.length) % q.length];
   }
 
+  function userHidden(){
+    const b = bubbleEl();
+    return manualHidden || !!(b && b.getAttribute('data-bubble-user-hidden') === '1');
+  }
+
+  function markHidden(value){
+    const b = bubbleEl();
+    manualHidden = !!value;
+    if(!b) return;
+    if(value) b.setAttribute('data-bubble-user-hidden', '1');
+    else b.removeAttribute('data-bubble-user-hidden');
+  }
+
   function syncQueueIndex(){
     if(!cloudState) return;
     const stamp = String(cloudState.updatedAt || '') + '|' + JSON.stringify(cloudState.alexBubbles || cloudState.alexBubble || '');
     if(stamp !== lastStateStamp){
       lastStateStamp = stamp;
       queueIndex = Number(cloudState.bubbleIndex || 0) || 0;
-      manualHidden = false;
     }
   }
 
-  function apply(force){
+  function apply(reason){
     const b = bubbleEl();
     const text = currentText();
     if(!b || !text) return;
-    if(panelOpen() && !force) return;
-    if(manualHidden && !force) return;
+    if(panelOpen() && reason !== 'user') return;
+    if(userHidden() && reason !== 'user'){
+      b.textContent = text;
+      b.setAttribute('data-cloud','1');
+      return;
+    }
     applying = true;
+    if(reason === 'user') markHidden(false);
     b.textContent = text;
     b.setAttribute('data-cloud','1');
     b.classList.remove('hidden');
@@ -101,7 +120,7 @@ const bridge = `
     const b = bubbleEl();
     if(!b || panelOpen()) return false;
     stop(e);
-    manualHidden = true;
+    markHidden(true);
     applying = true;
     b.classList.add('hidden');
     setTimeout(function(){ applying = false; }, 40);
@@ -112,20 +131,23 @@ const bridge = `
     const q = queue();
     if(!q.length || panelOpen()) return false;
     stop(e);
+    const now = Date.now();
+    if(now - lastAdvanceAt < ADVANCE_GUARD_MS) return true;
+    lastAdvanceAt = now;
     if(q.length > 1) queueIndex = (queueIndex + 1) % q.length;
-    manualHidden = false;
-    apply(true);
+    markHidden(false);
+    apply('user');
     return true;
   }
 
-  async function load(force){
+  async function load(reason){
     try{
       const res = await fetch(STATE_URL + '?t=' + Date.now(), { cache:'no-store' });
       if(!res.ok) return;
       cloudState = await res.json();
       window.kittenNestCloudState = cloudState;
       syncQueueIndex();
-      apply(force);
+      apply(reason || 'refresh');
     }catch(e){ console.log('cloud state unavailable', e); }
   }
 
@@ -160,7 +182,7 @@ const bridge = `
     if(e.type === 'touchend') lastTouchAt = Date.now();
 
     const b = bubbleEl();
-    const isHidden = manualHidden || (b && b.classList.contains('hidden'));
+    const isHidden = userHidden() || (b && b.classList.contains('hidden'));
     if(kind === 'bubble') hideBubble(e);
     else if(kind === 'tattoo') isHidden ? showNext(e) : hideBubble(e);
   }
@@ -170,23 +192,23 @@ const bridge = `
     if(!b || b.__qObserve) return;
     b.__qObserve = true;
     const mo = new MutationObserver(function(){
-      if(applying || manualHidden) return;
+      if(applying || userHidden()) return;
       const text = currentText();
-      if(text && b.textContent !== text && !panelOpen()) setTimeout(function(){ apply(false); }, 150);
+      if(text && b.textContent !== text && !panelOpen()) setTimeout(function(){ apply('refresh'); }, 150);
     });
     mo.observe(b, { childList:true, characterData:true, subtree:true, attributes:true, attributeFilter:['class'] });
   }
 
-  function tick(force){ observe(); load(force); }
+  function tick(reason){ observe(); load(reason || 'refresh'); }
 
   document.addEventListener('click', capture, true);
   document.addEventListener('touchend', capture, true);
-  window.addEventListener('load', function(){ tick(true); setInterval(function(){ tick(false); }, 4000); });
-  window.addEventListener('focus', function(){ tick(true); });
-  document.addEventListener('visibilitychange', function(){ if(!document.hidden) tick(true); });
-  setTimeout(function(){ tick(true); }, 250);
-  setTimeout(function(){ tick(true); }, 900);
-  setTimeout(function(){ tick(true); }, 1800);
+  window.addEventListener('load', function(){ tick('refresh'); setInterval(function(){ tick('refresh'); }, 4000); });
+  window.addEventListener('focus', function(){ tick('refresh'); });
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) tick('refresh'); });
+  setTimeout(function(){ tick('refresh'); }, 250);
+  setTimeout(function(){ tick('refresh'); }, 900);
+  setTimeout(function(){ tick('refresh'); }, 1800);
 })();
 </script>`;
 
