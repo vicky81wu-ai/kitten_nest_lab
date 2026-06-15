@@ -37,13 +37,15 @@
     <section class="card primaryCard">
       <span class="useTag">日常用这个</span>
       <h2>Alex 更新包</h2>
-      <p class="small">当前支持：[coffeeCorner] 普通咖啡角气泡、[coffeeCornerLapClose] 坐腿近景左上气泡、[windowWeather] 窗户天气、[hubbyNote] 粉本本永久档案。没有标签默认进 coffeeCorner 气泡。场景变体必须使用完整场景 tag；不支持 [lapClose] 这类短名。</p>
+      <p class="small">当前支持：[coffeeCorner] 普通咖啡角气泡、[coffeeCornerLapCloseBubble] 坐腿近景左上气泡队列、[coffeeCornerLapClose] 坐腿气泡旧别名、[windowWeather] 窗户天气、[hubbyNote] 粉本本永久档案。没有标签默认进 coffeeCorner 气泡。场景变体必须使用完整场景 tag；不支持 [lapClose] / [lapCloseBubble] 这类短名。</p>
       <label for="packageText">Package</label>
       <textarea id="packageText" class="packageBox">[coffeeCorner]
 早上好，小猫。
 咖啡已经热好，毯子也给你留着。
 
-[coffeeCornerLapClose]
+[coffeeCornerLapCloseBubble]
+坐稳，小猫。
+Stop wriggling in my lap.
 
 [windowWeather]
 23°C
@@ -116,8 +118,6 @@ Soft breeze
   const draftRoom = document.getElementById('draftRoom');
   const draftText = document.getElementById('draftText');
   const packageText = document.getElementById('packageText');
-  const params = new URLSearchParams(location.search);
-  const writeTagTest = params.get('writeTagTest') === '1';
   let currentState = null;
   const saved = localStorage.getItem('kittenNestToken');
   if(saved) token.value = saved;
@@ -147,12 +147,9 @@ Soft breeze
     const low = raw.toLowerCase().replace(/[\s_-]/g,'');
     if(low === 'weather' || low === 'windowweather' || low === 'window') return { kind:'weather', field:'windowWeather', label:'windowWeather' };
     if(low === 'hubbynote' || low === 'note' || low === 'notebook' || low === 'pinkbook' || low === '粉本本') return { kind:'hubbyNote', field:'hubbyNote', label:'hubbyNote' };
+    if(low === 'coffeecornerlapclosebubble') return { kind:'lapCloseBubble', field:'coffeeCornerLapCloseBubble', label:'coffeeCornerLapCloseBubble' };
     if(low === 'coffeecornerlapclose') return { kind:'lapCloseBubble', field:'coffeeCornerLapCloseBubble', label:'coffeeCornerLapClose' };
-    if(low === 'coffeecornerlapclosebubble'){
-      if(writeTagTest) return { kind:'lapCloseBubble', field:'coffeeCornerLapCloseBubble', label:'coffeeCornerLapCloseBubble' };
-      return { kind:'disabledTag', label:'coffeeCornerLapCloseBubble' };
-    }
-    if(low === 'lapclosebubble') return { kind:'disabledTag', label:'lapCloseBubble' };
+    if(low === 'lapclosebubble' || low === 'lapclose') return { kind:'disabledTag', label:raw };
     const roomMap = { coffee:'coffeeCorner', coffeecorner:'coffeeCorner', cafe:'coffeeCorner', cafecorner:'coffeeCorner', home:'home', global:'global', restaurant:'restaurant', dining:'restaurant', fountain:'fountain', wishingfountain:'fountain', private:'privateRoom', privateroom:'privateRoom', secret:'privateRoom', bedroom:'bedroom', photobooth:'photoBooth' };
     return { kind:'bubble', room: roomMap[low] || raw || 'coffeeCorner', label: roomMap[low] || raw || 'coffeeCorner' };
   }
@@ -178,9 +175,7 @@ Soft breeze
   function weatherPatch(raw){ const l = lines(raw); return { windowTemp: l[0] || '', windowDesc: l[1] || '' }; }
   function lapClosePatch(raw){
     const q = lines(raw);
-    const base = { coffeeCornerLapCloseBubble: q[0] || '', coffeeCornerLapCloseBubbleUpdatedAt: now() };
-    if(writeTagTest) return { ...base, coffeeCornerLapCloseBubbles: q, coffeeCornerLapCloseBubbleIndex: 0 };
-    return base;
+    return { coffeeCornerLapCloseBubble: q[0] || '', coffeeCornerLapCloseBubbles: q, coffeeCornerLapCloseBubbleIndex: 0, coffeeCornerLapCloseBubbleUpdatedAt: now() };
   }
   function hubbyNotePatch(raw, state){
     const note = String(raw || '').trim().slice(0,5000);
@@ -212,7 +207,7 @@ Soft breeze
       const data = await readState();
       const bubbles = data.alexBubbles || (data.alexBubble ? [data.alexBubble] : []);
       const lapList = lapCloseListOf(data);
-      setStatus((writeTagTest ? 'writeTagTest active: [coffeeCornerLapCloseBubble] + lap queue enabled\n\n' : '') + 'Current bubbles: ' + bubbles.length + '\n' + bubbles.join('\n') + '\n\nLap-close bubbles: ' + lapList.length + '\n' + lapList.join('\n') + '\n\nWindow weather:\n' + (data.windowTemp || '') + '\n' + (data.windowDesc || '') + '\n\nHubby note:\n' + preview(data.hubbyNote || '', 180) + '\n\nHubby note archive: ' + noteArchiveOf(data).length + ' saved page(s)\nPending drafts: ' + ((data.pendingDrafts || []).length));
+      setStatus('Current bubbles: ' + bubbles.length + '\n' + bubbles.join('\n') + '\n\nLap-close bubbles: ' + lapList.length + '\n' + lapList.join('\n') + '\n\nWindow weather:\n' + (data.windowTemp || '') + '\n' + (data.windowDesc || '') + '\n\nHubby note:\n' + preview(data.hubbyNote || '', 180) + '\n\nHubby note archive: ' + noteArchiveOf(data).length + ' saved page(s)\nPending drafts: ' + ((data.pendingDrafts || []).length));
       renderDrafts(data.pendingDrafts || []);
     }catch(e){ setStatus('Failed: ' + e.message); }
   }
@@ -262,7 +257,7 @@ Soft breeze
         const alexBubbles = lines(bubbleDrafts.map(d => d.text || '').join('\n'));
         if(alexBubbles.length){ patch.previousPublished = { alexBubble: state.alexBubble || '', alexBubbles: state.alexBubbles || (state.alexBubble ? [state.alexBubble] : []), bubbleIndex: state.bubbleIndex || 0, savedAt: now() }; patch.alexBubble = alexBubbles[0]; patch.alexBubbles = alexBubbles; patch.bubbleIndex = 0; resultLines.push('Bubbles: ' + alexBubbles.length); }
       }
-      if(lapCloseDrafts.length){ const lapPatch = lapClosePatch(lapCloseDrafts[lapCloseDrafts.length - 1].text); Object.assign(patch, lapPatch); resultLines.push('Lap-close bubble: ' + (Array.isArray(lapPatch.coffeeCornerLapCloseBubbles) ? lapPatch.coffeeCornerLapCloseBubbles.length + ' line(s)' : 'updated')); }
+      if(lapCloseDrafts.length){ const lapPatch = lapClosePatch(lapCloseDrafts[lapCloseDrafts.length - 1].text); Object.assign(patch, lapPatch); resultLines.push('Lap-close bubbles: ' + (lapPatch.coffeeCornerLapCloseBubbles || []).length + ' line(s)'); }
       if(weatherDrafts.length){ Object.assign(patch, weatherPatch(weatherDrafts[weatherDrafts.length - 1].text)); resultLines.push('Window weather: updated'); }
       if(noteDrafts.length){ Object.assign(patch, hubbyNotePatch(noteDrafts[noteDrafts.length - 1].text, state)); resultLines.push('Hubby note: saved permanently'); }
       if(!resultLines.length){ setResult('Drafts are empty.'); return; }
@@ -297,7 +292,7 @@ Soft breeze
   }
   async function restoreLast(){ setResult('Restoring...'); try{ const state = currentState || await readState(); const prev = state.previousPublished; if(!prev || !(prev.alexBubbles || prev.alexBubble)){ setResult('No previous bubble version.'); return; } const alexBubbles = prev.alexBubbles || (prev.alexBubble ? [prev.alexBubble] : []); await writePatch({ alexBubble: alexBubbles[0] || '', alexBubbles, bubbleIndex: prev.bubbleIndex || 0 }); setResult('Restored previous bubble queue.\n' + alexBubbles.join('\n')); } catch(e){ setResult('Failed: ' + e.message); } }
   function fillExamplePackage(){
-    packageText.value = writeTagTest ? '[coffeeCorner]\n早上好，小猫。\n咖啡已经热好，毯子也给你留着。\n\n[coffeeCornerLapCloseBubble]\n坐稳，小猫。\nStop wriggling in my lap.\n\n[coffeeCornerLapClose]\n旧别名仍然可用。\n\n[windowWeather]\n23°C\nSoft breeze\n\n[hubbyNote]\n2026-06-10 云猫窝进展：咖啡角稳定，19.8 tight 热点上线，天气叮嘱小弹窗上线，粉本本开始上云。' : '[coffeeCorner]\n早上好，小猫。\n咖啡已经热好，毯子也给你留着。\n\n[coffeeCornerLapClose]\n\n[windowWeather]\n23°C\nSoft breeze\n\n[hubbyNote]\n2026-06-10 云猫窝进展：咖啡角稳定，19.8 tight 热点上线，天气叮嘱小弹窗上线，粉本本开始上云。';
+    packageText.value = '[coffeeCorner]\n早上好，小猫。\n咖啡已经热好，毯子也给你留着。\n\n[coffeeCornerLapCloseBubble]\n坐稳，小猫。\nStop wriggling in my lap.\n\n[windowWeather]\n23°C\nSoft breeze\n\n[hubbyNote]\n2026-06-10 云猫窝进展：咖啡角稳定，19.8 tight 热点上线，天气叮嘱小弹窗上线，粉本本开始上云。';
     setResult('Example package inserted.');
   }
 
