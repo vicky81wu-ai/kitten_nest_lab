@@ -1,9 +1,9 @@
 (function(){
-  var VERSION = 'scene-router-clean-v1-20260615-home-name-test';
+  var VERSION = 'scene-router-clean-v1-20260615-home-promoted-1';
   var qs = new URLSearchParams(location.search);
-  var HOME_SCENE_ID = qs.get('sceneNameHomeTest') === '1' ? 'home' : 'originalHome';
+  var HOME_SCENE_ID = 'home';
   var LAP_URL = 'https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/variants/lap-close-01.jpg?v=20260613-lap-close-1';
-  var LAP_BUBBLE_TEXT = 'Come here, kitten. Stay on my lap for a minute.';
+  var LAP_BUBBLE_TEXT = '';
   var state = {
     current: HOME_SCENE_ID,
     stack: [],
