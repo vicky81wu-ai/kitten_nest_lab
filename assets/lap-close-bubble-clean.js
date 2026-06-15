@@ -1,5 +1,8 @@
 (function(){
-  var VERSION = 'lap-close-bubble-clean-20260614-2';
+  var VERSION = 'lap-close-bubble-clean-20260614-test-1';
+  var enabled = new URLSearchParams(location.search).get('lapBubbleTest') === '1';
+  if(!enabled) return;
+
   var TEXT = '坐稳，小猫。';
   var CARD = {
     id: 'coffeeCorner.lapCloseBubble.cleanRouter',
@@ -37,6 +40,8 @@
       el.id = 'sceneRouterCleanLapBubble';
       el.setAttribute('aria-hidden', 'true');
       el.setAttribute('data-coordinate-overlay', CARD.id);
+      el.setAttribute('data-owner', 'sceneRouterClean');
+      el.setAttribute('data-scene', 'lapClose');
       r.appendChild(el);
     }
     el.textContent = TEXT;
@@ -89,6 +94,7 @@
   }
 
   function start(){
+    document.body.setAttribute('data-lap-bubble-test', VERSION);
     sync();
     window.addEventListener('pageshow', sync);
     window.addEventListener('focus', sync);
