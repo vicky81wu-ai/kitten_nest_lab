@@ -1,12 +1,12 @@
 (function(){
-  var VERSION = 'scene-router-v1-test-20260614-2';
+  var VERSION = 'scene-router-v1-test-20260614-3';
   var LAP_URL = 'https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/variants/lap-close-01.jpg?v=20260613-lap-close-1';
   var state = {
     current: 'originalHome',
     stack: [],
     lock: false,
     mainCoffeeSrc: '',
-    lastTouchAt: 0,
+    lastRouterTouchAt: 0,
     installed: false,
     needsSteamWake: false
   };
@@ -15,35 +15,23 @@
     originalHome: {
       id: 'originalHome',
       leftDock: { action: 'go', target: 'nestAtlas' },
-      rightDock: { action: 'go', target: 'coffeeCorner' },
-      onEnter: ['showHome'],
-      onLeave: ['hideTransientOverlays']
+      rightDock: { action: 'go', target: 'coffeeCorner' }
     },
     coffeeCorner: {
       id: 'coffeeCorner',
       leftDock: { action: 'go', target: 'originalHome' },
-      rightDock: null,
-      hotspots: [
-        { id: 'coffeeCorner.lapEnterHot', action: 'push', target: 'lapClose' }
-      ],
-      onEnter: ['showCoffee', 'restoreCoffeeBubble'],
-      afterEnter: ['wakeSteam', 'restorePhotoGlow'],
-      onLeave: ['hideTransientOverlays']
+      rightDock: null
     },
     lapClose: {
       id: 'lapClose',
       parent: 'coffeeCorner',
       leftDock: { action: 'back' },
-      rightDock: null,
-      onEnter: ['showLap', 'hideCoffeeBubble', 'hideSteam'],
-      onLeave: ['hideTransientOverlays']
+      rightDock: null
     },
     nestAtlas: {
       id: 'nestAtlas',
       leftDock: null,
-      rightDock: { action: 'go', target: 'originalHome' },
-      onEnter: ['showAtlasPlaceholder'],
-      onLeave: []
+      rightDock: { action: 'go', target: 'originalHome' }
     }
   };
 
@@ -68,7 +56,7 @@
       'body.sceneRouterTest #sceneAtlasPlaceholder p{margin:5px 0;font-size:13px;opacity:.82}',
       'body.sceneRouterTest .sceneRouterLapHot{position:absolute;border:0;padding:0;background:transparent;border-radius:22px;z-index:65;pointer-events:auto;color:transparent;font-size:0;touch-action:manipulation}',
       'body.sceneRouterDebug .sceneRouterLapHot{background:rgba(255,80,130,.18);outline:2px solid rgba(255,80,130,.85)}',
-      'body.sceneRouterLocked .hot,body.sceneRouterLocked .sceneRouterLapHot{pointer-events:none!important}',
+      'body.sceneRouterLocked .toGameHot,body.sceneRouterLocked .toHomeHot,body.sceneRouterLocked .sceneRouterLapHot{pointer-events:none!important}',
       'body.sceneRouterLap #bubble,body.sceneRouterLocked #bubble{opacity:0!important;pointer-events:none!important}',
       'body.sceneRouterLap #gameRoom .steam,body.sceneRouterLocked #gameRoom .steam,body.sceneRouterLap #gameRoom .photoGlow,body.sceneRouterLocked #gameRoom .photoGlow{display:none!important;opacity:0!important;pointer-events:none!important}',
       '#sceneRouterFade{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;z-index:58;pointer-events:none;opacity:0;transition:opacity 360ms cubic-bezier(.22,.8,.25,1);will-change:opacity;backface-visibility:hidden;-webkit-backface-visibility:hidden}'
@@ -173,7 +161,7 @@
       hot.className = 'sceneRouterLapHot';
       hot.setAttribute('aria-label', 'scene router lap close');
       hot.addEventListener('click', function(e){ stop(e); push('lapClose'); }, true);
-      hot.addEventListener('touchend', function(e){ stop(e); state.lastTouchAt = Date.now(); push('lapClose'); }, {capture:true, passive:false});
+      hot.addEventListener('touchend', function(e){ stop(e); state.lastRouterTouchAt = Date.now(); push('lapClose'); }, {capture:true, passive:false});
       r.appendChild(hot);
     }
     var image = bg();
@@ -235,9 +223,7 @@
     p.style.pointerEvents = '';
   }
 
-  function hideTransient(){
-    hideBubble();
-  }
+  function hideTransient(){ hideBubble(); }
 
   function runLifecycle(sceneId, stage){
     if(sceneId === 'coffeeCorner'){
@@ -294,7 +280,6 @@
     var prev = state.current;
     if(!scenes[next] || state.lock) return;
     if(prev === next) return;
-
     withLock(function(){
       runLifecycle(prev, 'onLeave');
       if(mode === 'push') state.stack.push(prev);
@@ -303,7 +288,6 @@
       document.body.classList.toggle('sceneRouterLap', next === 'lapClose');
       document.body.classList.toggle('coffeeLapVariant', next === 'lapClose');
       setRoomActive(next);
-
       if(next === 'coffeeCorner'){
         transitionBg(currentCoffeeSrc(), function(){
           runLifecycle(next, 'onEnter');
@@ -329,10 +313,7 @@
     var target = state.stack.length ? state.stack.pop() : (scenes[state.current] && scenes[state.current].parent) || 'originalHome';
     setScene(target, 'back');
   }
-  function jumpTo(target){
-    state.stack = [];
-    setScene(target, 'jumpTo');
-  }
+  function jumpTo(target){ state.stack = []; setScene(target, 'jumpTo'); }
 
   function handleDock(action){
     if(!action) return;
@@ -342,21 +323,20 @@
     else if(action.action === 'jumpTo') jumpTo(action.target);
   }
 
+  function dockSideFromTarget(target){
+    if(!target || !target.closest) return '';
+    if(target.closest('.toGameHot')) return 'rightDock';
+    if(target.closest('.toHomeHot')) return 'leftDock';
+    return '';
+  }
+
   function capture(e){
-    var t = e.target;
-    if(e.type === 'click' && Date.now() - state.lastTouchAt < 650){ stop(e); return; }
-    if(e.type === 'touchend') state.lastTouchAt = Date.now();
-    if(t && t.closest && t.closest('#sceneRouterLapHot')) return;
-    if(t && t.closest && t.closest('.toGameHot')){
-      stop(e);
-      handleDock(scenes[state.current] && scenes[state.current].rightDock);
-      return;
-    }
-    if(t && t.closest && t.closest('.toHomeHot')){
-      stop(e);
-      handleDock(scenes[state.current] && scenes[state.current].leftDock);
-      return;
-    }
+    var side = dockSideFromTarget(e.target);
+    if(!side) return;
+    if(e.type === 'click' && Date.now() - state.lastRouterTouchAt < 650){ stop(e); return; }
+    if(e.type === 'touchend') state.lastRouterTouchAt = Date.now();
+    stop(e);
+    handleDock(scenes[state.current] && scenes[state.current][side]);
   }
 
   function refreshScene(){
