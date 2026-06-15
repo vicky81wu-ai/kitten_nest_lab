@@ -1,5 +1,5 @@
 (function(){
-  var VERSION = 'lap-close-bubble-clean-20260615-queue-promoted-1';
+  var VERSION = 'lap-close-bubble-clean-20260615-overlay-lifecycle-1';
   var qs = new URLSearchParams(location.search);
 
   function $(id){ return document.getElementById(id); }
@@ -203,6 +203,7 @@
       visible = true;
     }
     sync();
+    if(window.KittenNestOverlayLifecycle) window.KittenNestOverlayLifecycle.request('lap-bubble-toggle');
   }
 
   function sync(){
@@ -216,19 +217,28 @@
     if(el) el.setAttribute('data-visible', visible && currentText() ? '1' : '0');
   }
 
+  function registerOverlayLifecycle(){
+    if(!window.KittenNestOverlayLifecycle) return false;
+    window.KittenNestOverlayLifecycle.register({
+      id: 'coffeeCorner.lapCloseBubble.cleanRouter',
+      scene: 'lapClose',
+      place: function(){ sync(); }
+    });
+    return true;
+  }
+
   function start(){
     document.body.setAttribute('data-lap-bubble', VERSION);
     document.body.setAttribute('data-coffee-corner-lap-close-bubble-queue', '1');
     if(qs.get('debugLapBubble') === '1') document.body.setAttribute('data-debug-lap-bubble', '1');
     refreshState();
     sync();
+    registerOverlayLifecycle();
+    window.addEventListener('overlayLifecycleReady', registerOverlayLifecycle);
     ['pageshow','focus','resize','orientationchange'].forEach(function(name){ window.addEventListener(name, function(){ refreshState(); sync(); }); });
     document.addEventListener('visibilitychange', function(){ if(!document.hidden){ refreshState(); sync(); } });
     document.addEventListener('click', function(){ setTimeout(function(){ refreshState(); sync(); }, 80); }, true);
     document.addEventListener('touchend', function(){ setTimeout(function(){ refreshState(); sync(); }, 80); }, true);
-    setTimeout(function(){ refreshState(); sync(); }, 250);
-    setTimeout(function(){ refreshState(); sync(); }, 900);
-    setTimeout(function(){ refreshState(); sync(); }, 1600);
   }
 
   window.KittenNestLapCloseBubbleClean = { version:VERSION, bubbleCard:bubbleCard, bodyCard:bodyCard, sync:sync, refreshState:refreshState, setText:function(value){ text = String(value || ''); queue = text ? [text] : []; visible = false; sync(); }, setQueue:function(value){ queue = cleanList(value); index = 0; visible = false; sync(); }, show:function(){ if(currentText()){ visible = true; sync(); } }, hide:function(){ visible = false; sync(); } };
