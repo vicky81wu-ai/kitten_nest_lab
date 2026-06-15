@@ -1,5 +1,5 @@
 {
-  "version": "0.1.2",
+  "version": "0.1.3",
   "status": "shadow-runtime-map",
   "createdAt": "2026-06-14",
   "stableBaseline": {
@@ -12,7 +12,8 @@
     "Make the existing no blind binding / object information card rule machine-readable.",
     "Keep a narrow shadow map before binding code starts enforcing owners.",
     "Avoid reintroducing the old lapFinal / leavingCoffeeCorner / console-hot-restore mixed patch chain.",
-    "Record base-image locked decorative overlays so future checker work can detect overlay drift or selector reuse."
+    "Record base-image locked decorative overlays so future checker work can detect overlay drift or selector reuse.",
+    "Record that current window weather belongs to originalHome, not coffeeCorner."
   ],
   "runtimeMode": "shadowOnly",
   "enforcement": {
@@ -150,6 +151,20 @@
         "It must not reuse #console / .consoleHot.",
         "It must not open from coffeeCorner unless a future coffeeCorner art object is explicitly approved."
       ]
+    },
+    {
+      "id": "home.windowWeatherAdvice",
+      "owner": "weatherController",
+      "file": "assets/weather-controller.js",
+      "selectors": ["#temp", "#desc", ".weather", "#hubbyWeatherAdvice", ".hubbyWeatherAdvice"],
+      "action": "showWindowWeatherAndOpenAdvicePanel",
+      "exclusive": true,
+      "scope": "originalHome only",
+      "rules": [
+        "The current weather window and advice card belong to originalHome.",
+        "Do not name new weather identity cards coffeeCorner.windowWeather unless a future coffeeCorner image has its own physical weather object.",
+        "The advice panel is dynamically created by weather-controller.js and must be allowed by originalHome scene ownership."
+      ]
     }
   ],
   "antiPatterns": [
@@ -158,7 +173,8 @@
     "reviving full console-hot-restore.js as a general fix",
     "reviving lapFinal old patch chain",
     "global overlay repaint guard that touches home and coffeeCorner together",
-    "viewport CSS nudge as canonical coordinate for art-locked overlay"
+    "viewport CSS nudge as canonical coordinate for art-locked overlay",
+    "naming home weather objects under coffeeCorner"
   ],
   "promotionPlan": [
     "1. Keep this file as shadow documentation first.",
