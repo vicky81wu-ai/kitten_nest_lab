@@ -4,7 +4,8 @@ const coffeeCornerPolishStyle = '<link rel="stylesheet" href="/assets/coffee-cor
 const hotspotPositionerScript = '<script src="/assets/hotspot-positioner.js?v=20260614-steam-overlay-locked-1"></script>';
 const coffeeSteamScript = '<script src="/assets/coffee-steam-svg.js?v=20260613-mist-1"></script>';
 const overlayLockTestScript = '<script src="/assets/overlay-lock-test.js?v=20260614-overlay-lock-test-1"></script>';
-const lapCloseBubbleCleanScript = '<script src="/assets/lap-close-bubble-clean.js?v=20260614-lap-bubble-2"></script>';
+const lapCloseBubbleCleanScript = '<script src="/assets/lap-close-bubble-clean.js?v=20260614-lap-bubble-test-3"></script>';
+const sceneIsolationTestScript = '<script src="/assets/scene-isolation-test.js?v=20260615-scene-isolation-test-1"></script>';
 const coffeeCornerVariantScript = '<script src="/assets/coffee-corner-variant.js?v=20260613-enter-canvas-verified-1"></script>';
 const bubbleControllerScript = '<script src="/assets/bubble-controller.js?v=20260614-guard-1"></script>';
 const hubbyNoteControllerScript = '<script src="/assets/hubby-note-controller.js?v=20260614-no-consolehot-1"></script>';
@@ -87,7 +88,8 @@ function injectBubbleController(html, options = {}) {
     hotspotPositionerScript,
     coffeeSteamScript,
     overlayLockTestScript,
-    lapCloseBubbleCleanScript
+    lapCloseBubbleCleanScript,
+    sceneIsolationTestScript
   ];
   if (!clean) scripts.push(coffeeCornerVariantScript);
   scripts.push(
