@@ -1,7 +1,6 @@
 (function(){
-  var VERSION = 'lap-close-bubble-clean-20260614-test-3';
+  var VERSION = 'lap-close-bubble-clean-20260615-promoted-1';
   var qs = new URLSearchParams(location.search);
-  var enabled = qs.get('lapBubbleTest') === '1';
 
   function $(id){ return document.getElementById(id); }
 
@@ -38,12 +37,11 @@
   }
 
   startSuppressor();
-  if(!enabled) return;
 
-  var text = qs.get('lapBubbleText') || '';
+  var text = qs.has('lapBubbleText') ? qs.get('lapBubbleText') : '坐稳，小猫。';
   var visible = false;
   var bubbleCard = { id:'coffeeCorner.lapCloseBubble.cleanRouter', selector:'#sceneRouterCleanLapBubble', coordinate:{ x:0.365, y:0.205, width:0.43 } };
-  var bodyCard = { id:'coffeeCorner.lapBodyHot.cleanRouterTest', selector:'#sceneRouterCleanLapBodyHot', coordinate:{ x:0.60, y:0.665, width:0.42, height:0.22 } };
+  var bodyCard = { id:'coffeeCorner.lapBodyHot.cleanRouter', selector:'#sceneRouterCleanLapBodyHot', coordinate:{ x:0.60, y:0.695, width:0.42, height:0.22 } };
 
   function room(){ return $('gameRoom'); }
   function img(){ return $('gameBg'); }
@@ -166,7 +164,7 @@
   }
 
   function start(){
-    document.body.setAttribute('data-lap-bubble-test', VERSION);
+    document.body.setAttribute('data-lap-bubble', VERSION);
     if(qs.get('debugLapBubble') === '1') document.body.setAttribute('data-debug-lap-bubble', '1');
     sync();
     ['pageshow','focus','resize','orientationchange'].forEach(function(name){ window.addEventListener(name, sync); });
