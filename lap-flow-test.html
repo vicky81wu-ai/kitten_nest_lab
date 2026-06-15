@@ -5,263 +5,60 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Kitten Nest Lap Flow Cloud Harness</title>
+<title>Kitten Nest Lap Clean Harness</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#120b12;font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;color:#fff}
 body{position:fixed;inset:0}
-iframe{position:fixed;inset:0;width:100vw;height:100dvh;border:0;background:#120b12}
+iframe{position:fixed;inset:0;width:100vw;height:100lvh;border:0;background:#120b12}
 .badge{position:fixed;left:10px;top:calc(env(safe-area-inset-top) + 8px);z-index:10;max-width:calc(100vw - 20px);padding:6px 9px;border-radius:999px;background:rgba(0,0,0,.38);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);font-size:11px;line-height:1.2;color:rgba(255,255,255,.82);pointer-events:none;opacity:.72}
 </style>
 </head>
 <body>
-<iframe id="cloudFrame" src="/cloud?lapFlowHarness=1&v=20260614-cloud-like-test" title="Kitten Nest Cloud Test"></iframe>
-<div class="badge">保真测试壳：真实 /cloud 热点；只临时注入腿转场和离场保护</div>
+<iframe id="cloudFrame" src="/cloud?lapCleanHarness=1&v=20260614-lap-clean-harness-1" title="Kitten Nest Cloud Lap Clean Test"></iframe>
+<div class="badge">保真测试壳：真实 /cloud + clean lap controller；主窝坐腿入口仍暂停</div>
 <script>
 (function(){
   var frame = document.getElementById('cloudFrame');
-  var LAP_URL = 'https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/variants/lap-close-01.jpg?v=20260613-lap-close-1';
-  var MAIN_SRC = '';
-  var patchTimer = null;
-  var transitionLock = false;
+  var controllerSrc = '/assets/coffee-corner-lap-clean-controller.js?v=20260614-clean-1';
 
   function doc(){
     try { return frame.contentWindow && frame.contentWindow.document; }
     catch(e){ return null; }
   }
+
   function win(){
     try { return frame.contentWindow; }
     catch(e){ return null; }
   }
 
-  function installStyle(d){
-    if(!d || d.getElementById('lapFlowHarnessStyle')) return;
-    var style = d.createElement('style');
-    style.id = 'lapFlowHarnessStyle';
-    style.textContent = `
-      #gameRoom:not(.active) .steam,
-      #gameRoom:not(.active) .photoGlow,
-      #gameRoom.leavingCoffeeCorner .steam,
-      #gameRoom.leavingCoffeeCorner .photoGlow,
-      body.leavingCoffeeCorner #gameRoom .steam,
-      body.leavingCoffeeCorner #gameRoom .photoGlow{
-        display:none!important;
-        opacity:0!important;
-        pointer-events:none!important;
-        animation:none!important;
-      }
-      body.lapFlowTransitioning .lapEnterHot,
-      body.lapFlowTransitioning .lapBackHot{
-        pointer-events:none!important;
-      }
-      #lapFlowOverlayImg{
-        position:absolute;
-        inset:0;
-        width:100%;
-        height:100%;
-        object-fit:cover;
-        object-position:center;
-        z-index:32;
-        pointer-events:none;
-        opacity:0;
-        transform:translateZ(0) scale(1.018) translateY(6px);
-        filter:blur(1.2px);
-        will-change:transform,opacity,filter;
-        backface-visibility:hidden;
-        -webkit-backface-visibility:hidden;
-      }
-      body.lapFlowTransitioning #gameBg{
-        will-change:transform,opacity,filter;
-        transform:translateZ(0);
-        backface-visibility:hidden;
-        -webkit-backface-visibility:hidden;
-      }
-      body.lapFlowEnter #gameBg{animation:lapFlowMainOut 820ms cubic-bezier(.22,.8,.25,1) forwards;}
-      body.lapFlowEnter #lapFlowOverlayImg{animation:lapFlowLapIn 820ms cubic-bezier(.22,.8,.25,1) forwards;}
-      body.lapFlowBack #gameBg{animation:lapFlowLapOut 820ms cubic-bezier(.22,.8,.25,1) forwards;}
-      body.lapFlowBack #lapFlowOverlayImg{animation:lapFlowMainBack 820ms cubic-bezier(.22,.8,.25,1) forwards;}
-      @keyframes lapFlowMainOut{
-        0%{opacity:1;transform:translateZ(0) scale(1) translateY(0);filter:blur(0)}
-        12%{opacity:.92;transform:translateZ(0) scale(1.008) translateY(.72px);filter:blur(.08px)}
-        30%{opacity:.72;transform:translateZ(0) scale(1.020) translateY(2.04px);filter:blur(.22px)}
-        55%{opacity:.38;transform:translateZ(0) scale(1.031) translateY(4.2px);filter:blur(.5px)}
-        82%{opacity:.08;transform:translateZ(0) scale(1.042) translateY(6px);filter:blur(.9px)}
-        100%{opacity:0;transform:translateZ(0) scale(1.042) translateY(6px);filter:blur(.9px)}
-      }
-      @keyframes lapFlowLapIn{
-        0%{opacity:0;transform:translateZ(0) scale(1.018) translateY(6px);filter:blur(1.2px)}
-        6%{opacity:.04;transform:translateZ(0) scale(1.017) translateY(5.8px);filter:blur(1.15px)}
-        22%{opacity:.18;transform:translateZ(0) scale(1.014) translateY(4.8px);filter:blur(.9px)}
-        45%{opacity:.48;transform:translateZ(0) scale(1.009) translateY(3px);filter:blur(.55px)}
-        68%{opacity:.76;transform:translateZ(0) scale(1.004) translateY(1.4px);filter:blur(.22px)}
-        88%{opacity:.94;transform:translateZ(0) scale(1.001) translateY(.3px);filter:blur(.06px)}
-        100%{opacity:1;transform:translateZ(0) scale(1) translateY(0);filter:blur(0)}
-      }
-      @keyframes lapFlowLapOut{
-        0%{opacity:1;transform:translateZ(0) scale(1) translateY(0);filter:blur(0)}
-        18%{opacity:.86;transform:translateZ(0) scale(1.003) translateY(-.8px);filter:blur(.08px)}
-        44%{opacity:.48;transform:translateZ(0) scale(1.008) translateY(-2px);filter:blur(.35px)}
-        72%{opacity:.14;transform:translateZ(0) scale(1.014) translateY(-3.5px);filter:blur(.85px)}
-        100%{opacity:0;transform:translateZ(0) scale(1.018) translateY(-4px);filter:blur(1.1px)}
-      }
-      @keyframes lapFlowMainBack{
-        0%{opacity:0;transform:translateZ(0) scale(1.042) translateY(6px);filter:blur(.9px)}
-        10%{opacity:.05;transform:translateZ(0) scale(1.042) translateY(6px);filter:blur(.9px)}
-        35%{opacity:.36;transform:translateZ(0) scale(1.025) translateY(3.3px);filter:blur(.7px)}
-        65%{opacity:.74;transform:translateZ(0) scale(1.010) translateY(1.2px);filter:blur(.18px)}
-        100%{opacity:1;transform:translateZ(0) scale(1) translateY(0);filter:blur(0)}
-      }
-    `;
-    d.head.appendChild(style);
-  }
-
-  function ensureOverlay(d){
-    var room = d.getElementById('gameRoom');
-    if(!room) return null;
-    var overlay = d.getElementById('lapFlowOverlayImg');
-    if(!overlay){
-      overlay = d.createElement('img');
-      overlay.id = 'lapFlowOverlayImg';
-      overlay.alt = '';
-      room.appendChild(overlay);
-    }
-    return overlay;
-  }
-
-  function clearClasses(d){
-    d.body.classList.remove('lapFlowTransitioning','lapFlowEnter','lapFlowBack','leavingCoffeeCorner');
-    var room = d.getElementById('gameRoom');
-    if(room) room.classList.remove('leavingCoffeeCorner');
-  }
-
-  function hardResetVisual(d){
-    var img = d.getElementById('gameBg');
-    var overlay = d.getElementById('lapFlowOverlayImg');
-    if(img){
-      img.style.opacity = '';
-      img.style.transform = '';
-      img.style.filter = '';
-      img.style.animation = '';
-    }
-    if(overlay){
-      overlay.style.opacity = '0';
-      overlay.style.animation = '';
-    }
-  }
-
-  function patchVariant(d){
+  function inject(){
+    var d = doc();
+    if(!d || !d.body) return false;
     var w = win();
-    if(!w || !w.KittenNestCoffeeCornerVariant || w.__lapFlowHarnessPatched) return false;
-    var api = w.KittenNestCoffeeCornerVariant;
-    var originalEnter = api.enterLap;
-    var originalBack = api.backMain;
-    if(typeof originalEnter !== 'function' || typeof originalBack !== 'function') return false;
+    if(!w) return false;
 
-    w.__lapFlowHarnessPatched = true;
-    w.__lapFlowOriginalEnterLap = originalEnter;
-    w.__lapFlowOriginalBackMain = originalBack;
+    if(w.KittenNestLapClean && w.KittenNestLapClean.start){
+      w.KittenNestLapClean.start({ debug:false });
+      return true;
+    }
 
-    api.enterLap = function(){ runTransition('enter', originalEnter, originalBack); };
-    api.backMain = function(){ runTransition('back', originalEnter, originalBack); };
+    if(d.getElementById('lapCleanControllerScript')) return false;
+    var s = d.createElement('script');
+    s.id = 'lapCleanControllerScript';
+    s.src = controllerSrc;
+    s.onload = function(){
+      if(w.KittenNestLapClean && w.KittenNestLapClean.start){
+        w.KittenNestLapClean.start({ debug:false });
+      }
+    };
+    d.body.appendChild(s);
     return true;
   }
 
-  function runTransition(kind, originalEnter, originalBack){
-    var d = doc();
-    if(!d || transitionLock) return;
-    var img = d.getElementById('gameBg');
-    var overlay = ensureOverlay(d);
-    if(!img || !overlay){
-      if(kind === 'enter') originalEnter(); else originalBack();
-      return;
-    }
-    transitionLock = true;
-    installStyle(d);
-    clearClasses(d);
-    hardResetVisual(d);
-
-    if(kind === 'enter'){
-      MAIN_SRC = img.currentSrc || img.src || MAIN_SRC;
-      overlay.src = LAP_URL;
-      overlay.style.opacity = '0';
-      d.body.classList.add('lapFlowTransitioning','lapFlowEnter');
-    }else{
-      overlay.src = MAIN_SRC || '/assets/rooms/coffee-corner/morning-evening.jpg';
-      overlay.style.opacity = '0';
-      d.body.classList.add('lapFlowTransitioning','lapFlowBack');
-    }
-
-    setTimeout(function(){
-      if(kind === 'enter') originalEnter(); else originalBack();
-      clearClasses(d);
-      hardResetVisual(d);
-      transitionLock = false;
-    }, 840);
-  }
-
-  function installLeavingGuard(d){
-    if(d.__lapFlowLeavingGuard) return;
-    d.__lapFlowLeavingGuard = true;
-    function markLeaving(e){
-      var t = e.target;
-      if(!t || !t.closest) return;
-      if(t.closest('.toHomeHot')){
-        d.body.classList.add('leavingCoffeeCorner');
-        var room = d.getElementById('gameRoom');
-        if(room) room.classList.add('leavingCoffeeCorner');
-        setTimeout(function(){
-          d.body.classList.remove('leavingCoffeeCorner');
-          if(room) room.classList.remove('leavingCoffeeCorner');
-        }, 900);
-      }
-    }
-    d.addEventListener('click', markLeaving, true);
-    d.addEventListener('touchstart', markLeaving, true);
-  }
-
-  function installCaptureFallback(d){
-    if(d.__lapFlowCaptureFallback) return;
-    d.__lapFlowCaptureFallback = true;
-    d.addEventListener('click', function(e){
-      var t = e.target;
-      if(!t || !t.closest) return;
-      if(t.closest('.lapEnterHot') && win() && win().KittenNestCoffeeCornerVariant){
-        e.preventDefault(); e.stopImmediatePropagation();
-        win().KittenNestCoffeeCornerVariant.enterLap();
-      }
-      if(t.closest('.lapBackHot') && win() && win().KittenNestCoffeeCornerVariant){
-        e.preventDefault(); e.stopImmediatePropagation();
-        win().KittenNestCoffeeCornerVariant.backMain();
-      }
-    }, true);
-    d.addEventListener('touchend', function(e){
-      var t = e.target;
-      if(!t || !t.closest) return;
-      if(t.closest('.lapEnterHot') && win() && win().KittenNestCoffeeCornerVariant){
-        e.preventDefault(); e.stopImmediatePropagation();
-        win().KittenNestCoffeeCornerVariant.enterLap();
-      }
-      if(t.closest('.lapBackHot') && win() && win().KittenNestCoffeeCornerVariant){
-        e.preventDefault(); e.stopImmediatePropagation();
-        win().KittenNestCoffeeCornerVariant.backMain();
-      }
-    }, {capture:true, passive:false});
-  }
-
-  function patch(){
-    var d = doc();
-    if(!d || !d.body) return;
-    installStyle(d);
-    ensureOverlay(d);
-    patchVariant(d);
-    installLeavingGuard(d);
-    installCaptureFallback(d);
-  }
-
   frame.addEventListener('load', function(){
-    clearInterval(patchTimer);
-    patchTimer = setInterval(patch, 250);
-    setTimeout(function(){ clearInterval(patchTimer); }, 8000);
+    var timer = setInterval(inject, 220);
+    setTimeout(function(){ clearInterval(timer); }, 7000);
   });
 })();
 </script>
