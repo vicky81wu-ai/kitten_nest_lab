@@ -1,7 +1,7 @@
 (function(){
-  var VERSION = 'coffee-corner-lap-clean-controller-20260614-2';
+  var VERSION = 'coffee-corner-lap-clean-controller-20260614-3';
   var LAP_URL = 'https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/variants/lap-close-01.jpg?v=20260613-lap-close-1';
-  var DURATION = 820;
+  var DURATION = 520;
   var lock = false;
   var mode = 'main';
   var mainSrc = '';
@@ -55,8 +55,8 @@
     style.textContent = [
       '#gameRoom:not(.active) .steam,#gameRoom:not(.active) .photoGlow,#gameRoom.leavingCoffeeCorner .steam,#gameRoom.leavingCoffeeCorner .photoGlow,body.leavingCoffeeCorner #gameRoom .steam,body.leavingCoffeeCorner #gameRoom .photoGlow{display:none!important;opacity:0!important;pointer-events:none!important;animation:none!important}',
       'body.lapCleanTransitioning #gameRoom .hot{pointer-events:none!important}',
-      '#lapCleanOverlay{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;z-index:36;pointer-events:none;opacity:0;transform:translateZ(0) scale(1.018) translateY(6px);filter:blur(1.2px);transition:opacity 820ms cubic-bezier(.22,.8,.25,1),transform 820ms cubic-bezier(.22,.8,.25,1),filter 820ms cubic-bezier(.22,.8,.25,1);will-change:opacity,transform,filter;backface-visibility:hidden;-webkit-backface-visibility:hidden}',
-      'body.lapCleanTransitioning #gameBg{transition:opacity 820ms cubic-bezier(.22,.8,.25,1),transform 820ms cubic-bezier(.22,.8,.25,1),filter 820ms cubic-bezier(.22,.8,.25,1);will-change:opacity,transform,filter;backface-visibility:hidden;-webkit-backface-visibility:hidden}',
+      '#lapCleanOverlay{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;z-index:36;pointer-events:none;opacity:0;transition:opacity 520ms cubic-bezier(.22,.8,.25,1);will-change:opacity;backface-visibility:hidden;-webkit-backface-visibility:hidden}',
+      'body.lapCleanTransitioning #gameBg{will-change:auto}',
       '.lapCleanEnterHot,.lapCleanBackHot{position:absolute;border:0;padding:0;background:transparent;border-radius:22px;z-index:60;pointer-events:auto;color:transparent;font-size:0;touch-action:manipulation}',
       'body:not(.lapCleanDebug) .lapCleanEnterHot,body:not(.lapCleanDebug) .lapCleanBackHot{outline:0;box-shadow:none}',
       'body.lapCleanDebug .lapCleanEnterHot,body.lapCleanDebug .lapCleanBackHot{background:rgba(255,80,130,.18);outline:2px solid rgba(255,80,130,.85)}'
@@ -112,17 +112,21 @@
     return true;
   }
 
-  function reinstallSteam(){
+  function ensureSteam(){
     if(!isCoffeeActive() || mode !== 'main') return;
     var steam = document.querySelector('#gameRoom .steam');
-    if(steam){ steam.removeAttribute('data-steam-svg'); if(!steam.querySelector('svg')) steam.innerHTML = ''; }
+    if(!steam) return;
+    var ok = steam.querySelector('svg') && steam.getAttribute('data-steam-svg') === '2';
+    if(ok) return;
+    steam.removeAttribute('data-steam-svg');
+    if(!steam.querySelector('svg')) steam.innerHTML = '';
     if(window.KittenNestCoffeeSteam && typeof window.KittenNestCoffeeSteam.install === 'function') window.KittenNestCoffeeSteam.install();
   }
 
   function updateHotspots(){
     ensureStyle(); ensureHotspots(); currentMainSrc();
     var active = isCoffeeActive();
-    if(active && mode === 'main' && !lock) reinstallSteam();
+    if(active && mode === 'main' && !lock) ensureSteam();
     if(enterHot){
       placeHot(enterHot, enterCard);
       enterHot.style.display = active && mode === 'main' && !lock ? 'block' : 'none';
@@ -146,7 +150,7 @@
     var image = bg(); var overlay = ensureOverlay();
     document.body.classList.remove('lapCleanTransitioning');
     if(image){ image.style.opacity = ''; image.style.transform = ''; image.style.filter = ''; }
-    if(overlay){ overlay.style.opacity = '0'; overlay.style.transform = 'translateZ(0) scale(1.018) translateY(6px)'; overlay.style.filter = 'blur(1.2px)'; }
+    if(overlay){ overlay.style.opacity = '0'; }
   }
 
   function swapBg(src, done){
@@ -162,26 +166,19 @@
     lock = true; ensureStyle(); clearVisual(); updateHotspots(); document.body.classList.add('lapCleanTransitioning');
     var target = kind === 'enter' ? LAP_URL : currentMainSrc();
     if(kind === 'enter') currentMainSrc();
+    if(kind === 'back'){ document.body.classList.remove('coffeeLapVariant'); ensureSteam(); }
     preload(target, function(){
-      overlay.src = target; overlay.style.opacity = '0';
-      overlay.style.transform = kind === 'enter' ? 'translateZ(0) scale(1.018) translateY(6px)' : 'translateZ(0) scale(1.042) translateY(6px)';
-      overlay.style.filter = kind === 'enter' ? 'blur(1.2px)' : 'blur(.9px)';
-      requestAnimationFrame(function(){ requestAnimationFrame(function(){
-        if(kind === 'enter'){
-          document.body.classList.add('coffeeLapVariant');
-          image.style.opacity = '0'; image.style.transform = 'translateZ(0) scale(1.042) translateY(6px)'; image.style.filter = 'blur(.9px)';
-          overlay.style.opacity = '1'; overlay.style.transform = 'translateZ(0) scale(1) translateY(0)'; overlay.style.filter = 'blur(0)';
-        }else{
-          image.style.opacity = '0'; image.style.transform = 'translateZ(0) scale(1.018) translateY(-4px)'; image.style.filter = 'blur(1.1px)';
-          overlay.style.opacity = '1'; overlay.style.transform = 'translateZ(0) scale(1) translateY(0)'; overlay.style.filter = 'blur(0)';
-        }
-      }); });
+      overlay.src = target;
+      overlay.style.opacity = '0';
+      requestAnimationFrame(function(){ requestAnimationFrame(function(){ overlay.style.opacity = '1'; }); });
       setTimeout(function(){
         swapBg(target, function(){
           mode = kind === 'enter' ? 'lap' : 'main';
-          if(mode === 'main') document.body.classList.remove('coffeeLapVariant');
+          if(mode === 'enter') document.body.classList.add('coffeeLapVariant');
+          if(kind === 'enter') document.body.classList.add('coffeeLapVariant');
+          if(kind === 'back') document.body.classList.remove('coffeeLapVariant');
           requestAnimationFrame(function(){ requestAnimationFrame(function(){
-            clearVisual(); lock = false; updateHotspots(); if(mode === 'main') reinstallSteam(); scheduleRefresh();
+            clearVisual(); lock = false; updateHotspots(); if(mode === 'main') ensureSteam(); scheduleRefresh();
           }); });
         });
       }, DURATION + 20);
@@ -199,7 +196,7 @@
 
   function start(options){
     options = options || {}; if(options.debug) document.body.classList.add('lapCleanDebug');
-    ensureStyle(); ensureOverlay(); ensureHotspots(); currentMainSrc(); updateHotspots(); reinstallSteam(); scheduleRefresh();
+    ensureStyle(); ensureOverlay(); ensureHotspots(); currentMainSrc(); updateHotspots(); ensureSteam(); scheduleRefresh();
     if(!installed){
       installed = true;
       window.addEventListener('resize', scheduleRefresh);
@@ -211,8 +208,8 @@
       document.addEventListener('touchend', scheduleRefresh, {capture:true, passive:true});
       document.addEventListener('click', leavingGuard, true);
       document.addEventListener('touchstart', leavingGuard, {capture:true, passive:true});
-      refreshTimer = setInterval(function(){ if(isCoffeeActive()) updateHotspots(); }, 450);
-      setTimeout(function(){ if(refreshTimer){ clearInterval(refreshTimer); refreshTimer = null; } }, 15000);
+      refreshTimer = setInterval(function(){ if(isCoffeeActive()) updateHotspots(); }, 650);
+      setTimeout(function(){ if(refreshTimer){ clearInterval(refreshTimer); refreshTimer = null; } }, 12000);
     }
   }
 
@@ -221,5 +218,5 @@
     enterHot = null; backHot = null; clearVisual(); document.body.classList.remove('coffeeLapVariant','lapCleanDebug'); mode = 'main'; lock = false;
   }
 
-  window.KittenNestLapClean = { version: VERSION, start: start, stop: stop, enterLap: enterLap, backMain: backMain, updateHotspots: updateHotspots, reinstallSteam: reinstallSteam };
+  window.KittenNestLapClean = { version: VERSION, start: start, stop: stop, enterLap: enterLap, backMain: backMain, updateHotspots: updateHotspots, ensureSteam: ensureSteam };
 })();
