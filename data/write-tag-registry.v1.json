@@ -1,0 +1,133 @@
+{
+  "version": "1.0.0",
+  "status": "active-routing-registry",
+  "purpose": "Machine-readable registry for /write tag routing and future writable scene objects.",
+  "coreRule": "No tag, no write. One tag, one destination family. Every writable object must have a tag registry entry before it is connected to /write.",
+  "defaultForGeneralNestMessage": "hubbyNote",
+  "tags": {
+    "hubbyNote": {
+      "tag": "[hubbyNote]",
+      "status": "active",
+      "destinationFamily": "home.hubbyNotePanel",
+      "ownerScene": "home",
+      "objectId": "home.hubbyNotePanel",
+      "writeSurface": "home powder notebook / 猫窝留言",
+      "useFor": [
+        "general nest message",
+        "home notebook note",
+        "longer daily note",
+        "隔壁一句：写猫窝留言"
+      ],
+      "mustNotAffect": [
+        "coffeeCorner.bubble",
+        "coffeeCorner.lapCloseBubble.cleanRouter",
+        "home.windowWeatherAdvicePanel"
+      ],
+      "notes": "This is the default destination when the user says 写猫窝留言 without naming a specific bubble or panel."
+    },
+    "coffeeCorner": {
+      "tag": "[coffeeCorner]",
+      "status": "active",
+      "destinationFamily": "coffeeCorner.bubble",
+      "ownerScene": "coffeeCorner",
+      "objectId": "coffeeCorner.bubble",
+      "writeSurface": "coffee corner rotating bubble queue",
+      "useFor": [
+        "coffee-corner short bubble lines",
+        "Alex short rotating speech in coffeeCorner"
+      ],
+      "mustNotAffect": [
+        "home.hubbyNotePanel",
+        "coffeeCorner.lapCloseBubble.cleanRouter",
+        "home.windowWeatherAdvicePanel"
+      ],
+      "notes": "Short lines only. This tag belongs to the normal coffeeCorner scene, not lapClose."
+    },
+    "windowWeather": {
+      "tag": "[windowWeather]",
+      "status": "active",
+      "destinationFamily": "home.windowWeatherAdvicePanel",
+      "ownerScene": "home",
+      "objectId": "home.windowWeatherAdvicePanel",
+      "writeSurface": "home weather window / 窗边叮嘱",
+      "useFor": [
+        "home weather display",
+        "window-side advice",
+        "weather note under the home window"
+      ],
+      "mustNotAffect": [
+        "coffeeCorner.bubble",
+        "coffeeCorner.lapCloseBubble.cleanRouter",
+        "home.hubbyNotePanel"
+      ],
+      "notes": "Home weather belongs to home. Do not route or name it under coffeeCorner."
+    },
+    "lapCloseBubble": {
+      "tag": "[lapCloseBubble]",
+      "status": "active-ui-not-cloud-wired-yet",
+      "destinationFamily": "coffeeCorner.lapCloseBubble.cleanRouter",
+      "ownerScene": "lapClose",
+      "objectId": "coffeeCorner.lapCloseBubble.cleanRouter",
+      "writeSurface": "lapClose child-scene bubble / 坐腿图气泡",
+      "useFor": [
+        "lap-close child scene speech bubble",
+        "sitting-on-lap close scene line",
+        "隔壁一句：写猫窝所有地方时必须 include this as a target"
+      ],
+      "mustNotAffect": [
+        "coffeeCorner.bubble",
+        "home.hubbyNotePanel",
+        "home.windowWeatherAdvicePanel"
+      ],
+      "notes": "UI exists and is scene-manifest-owned. Cloud write route may still need a dedicated /write safety test before promotion. Do not reuse [coffeeCorner] for this."
+    },
+    "moodNote": {
+      "tag": "[moodNote]",
+      "status": "reserved-inactive",
+      "destinationFamily": "home.moodNote",
+      "ownerScene": "home",
+      "objectId": "home.moodNote",
+      "writeSurface": "short mood note",
+      "useFor": [
+        "future short mood note if UI is active"
+      ],
+      "mustNotAffect": [
+        "home.hubbyNotePanel",
+        "coffeeCorner.bubble",
+        "coffeeCorner.lapCloseBubble.cleanRouter"
+      ],
+      "notes": "Do not use until the current UI has an active moodNote target."
+    }
+  },
+  "writeAllPlacesPreset": {
+    "name": "allKnownWritablePlaces",
+    "description": "Use when the user says 写猫窝所有地方 / write all nest places.",
+    "includeTags": [
+      "[hubbyNote]",
+      "[coffeeCorner]",
+      "[windowWeather]",
+      "[lapCloseBubble]"
+    ],
+    "excludeUnlessExplicitlyRequested": [
+      "[moodNote]"
+    ],
+    "rule": "If a tag has status active-ui-not-cloud-wired-yet, include it in the generated tagged draft but do not claim /write can publish it until the /write route is safety-tested and promoted."
+  },
+  "newWritableObjectChecklist": [
+    "Create object information card.",
+    "Assign ownerScene.",
+    "Assign exactly one unique tag.",
+    "Add the tag here.",
+    "Add the object to scene manifest / owner registry.",
+    "Only then connect it to /write.",
+    "Safety-test /write before promotion if runtime parsing or publishing changes."
+  ],
+  "antiPatterns": [
+    "untagged write",
+    "one tag writes to unrelated destinations",
+    "reusing [coffeeCorner] for lapClose",
+    "routing home weather under coffeeCorner",
+    "adding writable UI without tag registry",
+    "promoting /write changes without a write safety test"
+  ]
+}
