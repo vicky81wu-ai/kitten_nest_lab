@@ -8,6 +8,23 @@ const bubbleControllerScript = '<script src="/assets/bubble-controller.js?v=2026
 const hubbyNoteControllerScript = '<script src="/assets/hubby-note-controller.js?v=20260613-archive-first-paw-1"></script>';
 const setupToggleScript = '<script src="/assets/setup-toggle.js?v=20260613-touchfix-1"></script>';
 const consoleRestoreScript = '<script src="/assets/console-hot-restore.js?v=20260610-1"></script>';
+const sceneRouterScript = '<script src="/assets/scene-router.v1.js?v=20260614-router-1"></script>';
+const sceneRouterBootScript = `
+<script>
+(function(){
+  function boot(){
+    if(window.KittenNestSceneRouter && window.KittenNestSceneRouter.start && !window.__kittenNestSceneRouterStarted){
+      window.__kittenNestSceneRouterStarted = true;
+      window.KittenNestSceneRouter.start({ debug:false });
+    }
+  }
+  window.addEventListener('load', boot);
+  window.addEventListener('pageshow', boot);
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) boot(); });
+  setTimeout(boot, 300);
+  setTimeout(boot, 1300);
+})();
+</script>`;
 const bubbleBootScript = `
 <script>
 (function(){
@@ -42,17 +59,19 @@ const bubbleBootScript = `
 })();
 </script>`;
 
-function injectBubbleController(html) {
-  const bundle = `${hotspotPositionerScript}\n${coffeeSteamScript}\n${coffeeCornerVariantScript}\n${bubbleControllerScript}\n${hubbyNoteControllerScript}\n${setupToggleScript}\n${bubbleBootScript}\n${consoleRestoreScript}\n`;
+function injectBubbleController(html, options = {}) {
+  const sceneRouterBundle = options.sceneRouterTest ? `${sceneRouterScript}\n${sceneRouterBootScript}\n` : '';
+  const bundle = `${hotspotPositionerScript}\n${coffeeSteamScript}\n${coffeeCornerVariantScript}\n${bubbleControllerScript}\n${hubbyNoteControllerScript}\n${setupToggleScript}\n${bubbleBootScript}\n${consoleRestoreScript}\n${sceneRouterBundle}`;
   return String(html)
     .replace('</head>', `${coffeeCornerPolishStyle}\n</head>`)
     .replace('</body>', `${bundle}</body>`);
 }
 
 module.exports = async function handler(req, res) {
+  const sceneRouterTest = String(req.url || '').includes('sceneRouterTest=1');
   const originalSend = res.send.bind(res);
   res.send = function sendWithBubbleController(body) {
-    if (typeof body === 'string') return originalSend(injectBubbleController(body));
+    if (typeof body === 'string') return originalSend(injectBubbleController(body, { sceneRouterTest }));
     return originalSend(body);
   };
   return appAssetctl(req, res);
