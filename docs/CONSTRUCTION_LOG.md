@@ -181,3 +181,46 @@ If promoting clean-router-3-clock into normal /cloud, preserve the clean split:
 - clock guard owns only home clock hands
 - bubble controller owns bubble queue and hidden/advance guard
 ```
+
+## 2026-06-14 shadow runtime owner map
+
+New file:
+
+```text
+data/object-owner-runtime-shadow.v1.json
+```
+
+Purpose:
+
+```text
+Make the existing no blind binding / object information-card rule machine-readable
+without changing runtime behavior yet.
+```
+
+Safety:
+
+```text
+runtimeMode = shadowOnly
+enforcement = none
+```
+
+This file records the current clean `/cloud` split after the status-watermark removal. It is a backup and planning map, not an active controller.
+
+Recorded current owners:
+
+```text
+sceneRouterClean -> go / push / back / jumpTo navigation only
+consoleHot / #console -> gameMenu only
+bubbleController -> #bubble / .tattooHot queue behavior only
+coffeeCleanLeaveGuard -> steam/photoGlow hide only during coffeeCorner exit
+clockHandsGuard -> home clock hands only
+hubbyNoteController -> home 粉本本 only
+```
+
+Important boundary:
+
+```text
+Do not turn this shadow map into enforcement in the same step.
+Next safe step is read-only registry checking under a test-only query parameter.
+Only after that passes should future binders consult the registry before adding handlers.
+```
