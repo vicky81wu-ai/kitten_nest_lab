@@ -1,5 +1,5 @@
 (function(){
-  var VERSION = 'scene-manifest-isolation-test-20260615-1';
+  var VERSION = 'scene-manifest-isolation-test-20260615-2';
   var qs = new URLSearchParams(location.search);
   if(qs.get('sceneManifestTest') !== '1') return;
 
@@ -30,6 +30,20 @@
   function allObjectEntries(){
     if(!manifest || !manifest.objects) return [];
     return Object.keys(manifest.objects).map(function(id){ return { id:id, card:manifest.objects[id] }; });
+  }
+
+  function allowedSelectors(allowed){
+    var out = [];
+    allObjectEntries().forEach(function(entry){
+      if(!allowed[entry.id]) return;
+      (entry.card.selectors || []).forEach(function(sel){ out.push(sel); });
+    });
+    return out;
+  }
+
+  function matchesAny(el, selectors){
+    if(!el || !el.matches) return false;
+    return selectors.some(function(sel){ try{ return el.matches(sel); }catch(e){ return false; } });
   }
 
   function setDisabled(el, objectId){
@@ -69,10 +83,10 @@
     panelMemory.delete(el);
   }
 
-  function applyObject(id, card, allowed){
+  function applyObject(id, card, allowed, safeSelectors){
     (card.selectors || []).forEach(function(sel){
       document.querySelectorAll(sel).forEach(function(el){
-        if(allowed){
+        if(allowed || matchesAny(el, safeSelectors)){
           restoreDisabled(el);
           restorePanel(el);
           return;
@@ -92,10 +106,11 @@
     if(!manifest) return;
     var sceneId = currentScene();
     var allowed = sceneAllowedIds(sceneId);
+    var safeSelectors = allowedSelectors(allowed);
     document.body.setAttribute('data-scene-manifest-test', VERSION);
     document.body.setAttribute('data-scene-manifest-current', sceneId);
     allObjectEntries().forEach(function(entry){
-      applyObject(entry.id, entry.card, !!allowed[entry.id]);
+      applyObject(entry.id, entry.card, !!allowed[entry.id], safeSelectors);
     });
   }
 
@@ -122,7 +137,7 @@
   async function load(){
     ensureDebugStyle();
     try{
-      var res = await fetch('/data/scene-manifest.test.v1.json?v=20260615-scene-manifest-1', { cache:'no-store' });
+      var res = await fetch('/data/scene-manifest.test.v1.json?v=20260615-scene-manifest-2', { cache:'no-store' });
       manifest = await res.json();
       reconcile();
     }catch(e){
