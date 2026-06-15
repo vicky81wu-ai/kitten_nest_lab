@@ -1,22 +1,23 @@
 {
-  "version": "0.1.1",
+  "version": "0.1.2",
   "status": "shadow-runtime-map",
   "createdAt": "2026-06-14",
   "stableBaseline": {
-    "name": "clean-router-promoted-no-status",
-    "entry": "/cloud?v=20260614-clean-no-status",
+    "name": "clean-router-promoted-no-status-plus-locked-overlays",
+    "entry": "/cloud?v=20260614-steam-overlay-locked-1",
     "rollbackEntry": "/cloud?sceneRouterLegacy=1&v=legacy-backup",
-    "note": "This file does not change runtime behavior. It documents the current clean /cloud owner split before any future runtime enforcement."
+    "note": "This file does not enforce runtime behavior. It documents the current clean /cloud owner split before any future registry checker or bind enforcement."
   },
   "purpose": [
     "Make the existing no blind binding / object information card rule machine-readable.",
     "Keep a narrow shadow map before binding code starts enforcing owners.",
-    "Avoid reintroducing the old lapFinal / leavingCoffeeCorner / console-hot-restore mixed patch chain."
+    "Avoid reintroducing the old lapFinal / leavingCoffeeCorner / console-hot-restore mixed patch chain.",
+    "Record base-image locked decorative overlays so future checker work can detect overlay drift or selector reuse."
   ],
   "runtimeMode": "shadowOnly",
   "enforcement": {
     "current": "none",
-    "nextSafeStep": "read-only checker under a test parameter only",
+    "nextSafeStep": "read-only checker under a test parameter only, if ever needed",
     "doNotDoYet": "Do not block clicks or replace existing handlers from this registry until the read-only checker passes on real /cloud and screen-home PWA."
   },
   "ownerCards": [
@@ -33,15 +34,28 @@
         "Does not own bubble queue.",
         "Does not own game menu.",
         "Does not own clock rendering.",
-        "Does not own coffee steam art except scene show/hide state."
+        "Does not own decorative overlay coordinates except scene show/hide state."
       ]
+    },
+    {
+      "id": "coffeeCorner.lapCloseEnterHot.cleanRouter",
+      "owner": "sceneRouterClean",
+      "file": "assets/scene-router-clean.v1.js",
+      "selectors": ["#sceneRouterCleanLapHot", ".sceneRouterCleanLapHot"],
+      "action": "pushLapClose",
+      "coordinateMode": "lockedToBaseImage",
+      "coordinate": { "x": 0.275, "y": 0.54, "width": 0.39, "height": 0.12 },
+      "exclusive": true,
+      "scope": "coffeeCorner only"
     },
     {
       "id": "coffeeCorner.gameConsoleHotspot",
       "owner": "gameMenu",
-      "file": "assets/console-hot-clean-restore.js",
+      "file": "assets/console-hot-clean-restore.js + assets/hotspot-positioner.js",
       "selectors": ["#console", ".consoleHot"],
       "action": "openGameMenu",
+      "coordinateMode": "lockedToBaseImage",
+      "coordinate": { "x": 0.205, "y": 0.7, "width": 0.31, "height": 0.125 },
       "exclusive": true,
       "scope": "coffeeCorner only",
       "rules": [
@@ -53,7 +67,7 @@
     {
       "id": "coffeeCorner.bubbleAndTattooHotspot",
       "owner": "bubbleController",
-      "file": "assets/bubble-controller.js",
+      "file": "assets/bubble-controller.js + assets/hotspot-positioner.js",
       "selectors": ["#bubble", ".tattooHot"],
       "action": "toggleOrAdvanceBubble",
       "exclusive": true,
@@ -65,30 +79,55 @@
       ]
     },
     {
-      "id": "coffeeCorner.ambientSteamPhotoGlow",
-      "owner": "coffeeCleanLeaveGuard",
-      "file": "assets/coffee-clean-leave-guard.js",
-      "selectors": ["#gameRoom .steam", "#gameRoom .photoGlow"],
-      "action": "hideDuringCoffeeExitOnly",
-      "exclusive": false,
-      "scope": "coffeeCorner visual exit guard only",
+      "id": "coffeeCorner.steamOverlay",
+      "owner": "hotspotPositioner",
+      "visualOwner": "coffeeSteamSvg",
+      "exitGuard": "coffeeCleanLeaveGuard",
+      "file": "assets/hotspot-positioner.js + assets/coffee-steam-svg.js + assets/coffee-clean-leave-guard.js",
+      "selectors": ["#gameRoom .steam"],
+      "action": "alignSteamToCupMouth",
+      "coordinateMode": "lockedToBaseImage",
+      "coordinate": { "x": 0.503, "y": 0.313, "width": 0.086, "height": 0.132 },
+      "exclusive": true,
+      "scope": "coffeeCorner only",
       "rules": [
-        "May hide steam/photoGlow only while leaving coffeeCorner to avoid black block / white flash.",
-        "Must not manage clock hands.",
-        "Must not manage bubble queue.",
-        "Must not become a global overlay repaint guard."
+        "Coordinate owner is hotspotPositioner.",
+        "Visual SVG owner is coffeeSteamSvg.",
+        "Exit hiding guard is coffeeCleanLeaveGuard.",
+        "Do not replace this with viewport CSS nudges or a global overlay repaint guard."
+      ]
+    },
+    {
+      "id": "coffeeCorner.photoGlowOverlay",
+      "owner": "hotspotPositioner",
+      "exitGuard": "coffeeCleanLeaveGuard",
+      "file": "assets/hotspot-positioner.js + assets/coffee-clean-leave-guard.js",
+      "selectors": ["#gameRoom .photoGlow"],
+      "action": "alignPhotoGlowToPhotoWall",
+      "coordinateMode": "lockedToBaseImage",
+      "coordinate": { "x": 0.28, "y": 0.225, "width": 0.44, "height": 0.25 },
+      "exclusive": true,
+      "scope": "coffeeCorner only",
+      "rules": [
+        "Coordinate owner is hotspotPositioner.",
+        "Exit hiding guard is coffeeCleanLeaveGuard.",
+        "It may stay visually suppressed by polish CSS, but its identity and coordinate remain registered."
       ]
     },
     {
       "id": "home.clockHandsOverlay",
-      "owner": "clockHandsGuard",
-      "file": "assets/clock-hands-guard.js",
+      "owner": "hotspotPositioner",
+      "renderGuard": "clockHandsGuard",
+      "file": "assets/hotspot-positioner.js + assets/clock-hands-guard.js",
       "selectors": ["#home .clock", "#hourHand", "#minuteHand", "#secondHand"],
-      "action": "keepClockHandsVisibleInHome",
-      "exclusive": false,
+      "action": "alignAndKeepClockHandsVisibleInHome",
+      "coordinateMode": "lockedToBaseImage",
+      "coordinate": { "x": 0.2108, "y": 0.3353, "width": 0.312, "aspectRatio": 1 },
+      "exclusive": true,
       "scope": "home only",
       "rules": [
-        "May touch only home clock and hands.",
+        "Coordinate owner is hotspotPositioner.",
+        "Render health guard is clockHandsGuard.",
         "Must not touch coffeeCorner hotspots.",
         "Must not touch steam/photoGlow.",
         "Must not be replaced by a global repaint guard."
@@ -97,11 +136,13 @@
     {
       "id": "home.hubbyNoteHotspot",
       "owner": "hubbyNoteController",
-      "file": "assets/hubby-note-controller.js / assets/hotspot-positioner.js",
+      "file": "assets/hubby-note-controller.js + assets/hotspot-positioner.js",
       "selectors": ["#hubbyNoteButton", ".hubbyNoteButton"],
-      "displayNameEn": "Home notebook",
+      "displayNameEn": "Home hubbyNote notebook",
       "displayNameZh": "粉本本",
       "action": "openHubbyNotePanel",
+      "coordinateMode": "lockedToBaseImage",
+      "coordinate": { "x": 0.8, "y": 0.605, "width": 0.22, "height": 0.18, "rotation": 7.1, "transformOrigin": "0 0" },
       "exclusive": true,
       "scope": "home only",
       "rules": [
@@ -116,11 +157,12 @@
     "one script owning router + bubble + steam + console + clock together",
     "reviving full console-hot-restore.js as a general fix",
     "reviving lapFinal old patch chain",
-    "global overlay repaint guard that touches home and coffeeCorner together"
+    "global overlay repaint guard that touches home and coffeeCorner together",
+    "viewport CSS nudge as canonical coordinate for art-locked overlay"
   ],
   "promotionPlan": [
     "1. Keep this file as shadow documentation first.",
-    "2. Add a read-only registry checker under a test-only query parameter if tool safety allows.",
+    "2. If needed later, add a read-only registry checker under a test-only query parameter.",
     "3. Compare checker results against data/object-registry.v1.json and this shadow map.",
     "4. Only after read-only checks pass, make future binders consult the registry before adding handlers.",
     "5. Do not enforce owner blocking on current /cloud in the same step as registry wiring."
