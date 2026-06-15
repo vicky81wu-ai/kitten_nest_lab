@@ -309,6 +309,24 @@ transitionLock owned by sceneRouter
 steam/bubble/photoGlow restored by scene lifecycle
 ```
 
+## Scene framework draft pointer
+
+Current scene framework planning lives in:
+
+```text
+docs/SCENE_FRAMEWORK_DRAFT.md
+```
+
+Important current naming:
+
+```text
+originalHome = current first homepage / nest origin
+nestAtlas    = future big-world entrance / map of hubs
+storyHub     = 故事区, replacing the earlier roleplayHub draft name
+```
+
+Do not move the existing originalHome -> coffeeCorner -> lapClose branch under nestAtlas yet. Future hubs belong under nestAtlas; existing working branch stays in place until a future migration is explicitly planned.
+
 ## Current protected areas
 
 Protect these before refactoring:
@@ -349,6 +367,7 @@ docs/ARCHITECTURE_NOTES.md
 docs/CONSTRUCTION_LOG.md
 docs/CONSTRUCTION_RULES.md
 docs/CODEX_CLEANUP_PLAN.md
+docs/SCENE_FRAMEWORK_DRAFT.md
 data/room-config.v1.json
 data/object-registry.v1.json
 ```
