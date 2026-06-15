@@ -1,11 +1,14 @@
 (function(){
-  var VERSION = 'scene-manifest-isolation-test-20260615-2';
+  var VERSION = 'scene-manifest-isolation-test-20260615-3-home-name';
   var qs = new URLSearchParams(location.search);
   if(qs.get('sceneManifestTest') !== '1') return;
+  var homeNameTest = qs.get('sceneNameHomeTest') === '1';
 
   var manifest = null;
   var disabled = new WeakMap();
   var panelMemory = new WeakMap();
+
+  function homeSceneId(){ return homeNameTest ? 'home' : 'originalHome'; }
 
   function currentScene(){
     var home = document.getElementById('home');
@@ -13,7 +16,7 @@
     if(document.body.classList.contains('sceneRouterCleanLap')) return 'lapClose';
     if(document.body.classList.contains('scene-atlas')) return 'nestAtlas';
     if(game && game.classList.contains('active')) return 'coffeeCorner';
-    if(home && home.classList.contains('active')) return 'originalHome';
+    if(home && home.classList.contains('active')) return homeSceneId();
     return 'unknown';
   }
 
@@ -109,6 +112,7 @@
     var safeSelectors = allowedSelectors(allowed);
     document.body.setAttribute('data-scene-manifest-test', VERSION);
     document.body.setAttribute('data-scene-manifest-current', sceneId);
+    if(homeNameTest) document.body.setAttribute('data-scene-name-home-test', '1');
     allObjectEntries().forEach(function(entry){
       applyObject(entry.id, entry.card, !!allowed[entry.id], safeSelectors);
     });
@@ -137,7 +141,8 @@
   async function load(){
     ensureDebugStyle();
     try{
-      var res = await fetch('/data/scene-manifest.test.v1.json?v=20260615-scene-manifest-2', { cache:'no-store' });
+      var manifestUrl = homeNameTest ? '/data/scene-manifest.home-name-test.v1.json?v=20260615-home-name-test-1' : '/data/scene-manifest.test.v1.json?v=20260615-scene-manifest-2';
+      var res = await fetch(manifestUrl, { cache:'no-store' });
       manifest = await res.json();
       reconcile();
     }catch(e){
@@ -158,7 +163,7 @@
     setTimeout(reconcile, 900);
   }
 
-  window.KittenNestSceneManifestIsolationTest = { version: VERSION, reconcile: reconcile, currentScene: currentScene };
+  window.KittenNestSceneManifestIsolationTest = { version: VERSION, reconcile: reconcile, currentScene: currentScene, homeSceneId: homeSceneId };
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
   else start();
 })();
