@@ -79,295 +79,105 @@ width = 0.15
 height = 0.08
 ```
 
-Status:
+## 2026-06-14 clean scene router / lapClose checkpoint
+
+Stable backup point:
 
 ```text
-runtimeStatus: active
-coordinateStatus: baseImageLocked
-versionStatus: canonicalCurrent
-changePolicy: mutableWithVersion
+clean-router-3-clock
 ```
 
-Meaning: this is the current official version, but it can be adjusted later through an explicit versioned change.
-
-Important: future clock/overlay/hotspot coordinate tuning must use the successful `100lvh` canvas baseline, not older black-edge states.
-
-## Single-bubble 19.8 fix
-
-Problem:
+Verified test entry:
 
 ```text
-After a one-line [coffeeCorner] package, tapping 19.8 did not re-show the hidden bubble.
+/cloud?sceneRouterClean=1&v=20260614-clean-router-3-clock
 ```
 
-Cause:
+Purpose:
 
 ```text
-api/app-q.js showNext() returned false when q.length <= 1.
+Stop repairing the old lap/coffee patch pile symptom by symptom.
+Rebuild the lapClose nesting flow from a clean sceneRouter test line.
 ```
 
-Fix:
+Clean test line loads:
 
 ```text
-if one bubble: re-show current bubble
-if multiple bubbles: advance queue
+assets/scene-router-clean.v1.js
+assets/console-hot-clean-restore.js
+assets/coffee-clean-leave-guard.js
+assets/clock-hands-guard.js
+assets/bubble-controller.js?v=20260614-guard-1
+assets/coffee-steam-svg.js
+cloud state / cloud asset loading
 ```
 
-Status: working and protected.
-
-## Weather line
-
-Current state:
-
-- Window weather displays from `windowTemp` / `windowDesc`.
-- Weather area is clickable.
-- Tapping it opens a small weather advice popup.
-- Weather advice does not write cloud state and does not alter the main bubble queue.
-- `assets/weather-controller.js` is the active owner.
-- Legacy `assets/weather-patch.js` and `assets/weather-advice-hotspot.js` are retained in repo but not loaded by `/cloud` after cleanup.
-
-Status: working; keep behavior stable.
-
-## Powder notebook / hubbyNote
-
-Current state:
-
-- `[hubbyNote]` writes the current powder notebook page.
-- `hubbyNoteArchive` is the permanent archive and should not be auto-trimmed.
-- `hubbyNoteTrash` is soft-delete trash.
-- Current page supports edit/save/favorite/delete inside `/cloud`.
-- Archive items support load-to-editor/favorite/delete.
-- Stored Nest key is hidden after authorization and only reappears when changing key.
-- `api/set-state.js` guards against old cached `/write` pages accidentally sending `[hubbyNote]` as a bubble.
-- Standalone `assets/hubby-note-auth-guard.js` was removed after key hiding moved into `hubby-note-controller`.
-
-Status: working; future notebook visual polish should wait for dedicated notebook art.
-
-## Object identity rule
-
-Static identity layer:
+Clean test line intentionally does not load:
 
 ```text
-data/object-registry.v1.json
-data/room-config.v1.json
+assets/coffee-corner-variant.js
+assets/console-hot-restore.js full old bundle
+lapFinal old transition patch
+leavingCoffeeCorner old defense chain
 ```
 
-Long-term rule:
+Verified good in `clean-router-3-clock`:
+
+- `originalHome -> coffeeCorner` works.
+- `coffeeCorner -> originalHome` works.
+- `coffeeCorner -> lapClose` works.
+- `lapClose -> coffeeCorner` works.
+- Coffee steam is mostly smooth / immediate. Occasional 0.2s-0.3s delay remains acceptable for now.
+- Bubble queue is stable. It no longer breaks when panels/hotspots are opened.
+- Game console hotspot opens `gameMenu` again, not the powder notebook.
+- Coffee-corner return-to-home black block flash is gone.
+- Home clock hands are protected by a clock-only guard.
+
+Important lesson from the failed patch line:
 
 ```text
-No identity, no binding.
+Do not keep chasing local symptoms inside the old lapFinal patch pile.
+The old chain mixed router, transition, coffee steam, bubble visibility, console restore,
+leavingCoffeeCorner, and iOS click/touch guards into one unstable patch stack.
 ```
 
-Do not build blacklists like "X cannot steal Y". Use:
+Binding lesson repeated:
 
 ```text
-id
-selector
-owner
-exclusive
-runtimeStatus
-versionStatus
-changePolicy
+no blind binding
 ```
 
-Short specimen: a notebook entry once reused the game console selector and took over the game menu. The long-term fix is selector ownership and `exclusive:true`, not a growing casebook.
+Before binding any hotspot, check the object's owner / ID information card. The `consoleHot` case is the reference lesson: the visual game console must have exactly one owner and action.
 
-## PWA black-edge fix
-
-Symptom:
+Approved clean owner mapping:
 
 ```text
-Screen-home PWA showed a persistent bottom black edge.
-It happened with default assets and locally uploaded horizontal images.
+#console / consoleHot -> gameMenu
 ```
 
-Failed paths that should not be repeated blindly:
+Do not reintroduce as-is:
 
 ```text
-bottom overscan / extending the canvas downward
-warm-color visual fallback strip
-html/body background-image safe-area fallback
+console-hot-restore.js full old bundle
+lapFinal old patch
+leavingCoffeeCorner old chain
+global overlay repaint guard that touches home clock / clock hands / coffee hotspots together
 ```
 
-Confirmed:
+Current acceptable imperfection:
 
 ```text
-viewport-fit=cover was already present in index.html
+Coffee steam can occasionally appear with a tiny 0.2s-0.3s delay.
+Do not reopen the whole patch pile just to chase this unless a clean, narrow, tested fix exists.
 ```
 
-Successful path:
+Next safe path:
 
 ```text
-assets/canvas-fill.css uses viewport-height ownership:
-height: 100vh
-height: 100dvh
-height: 100lvh
-```
-
-Successful test:
-
-```text
-https://kitten-nest-lab.vercel.app/cloud?v=0611-canvas-lvh-test
-```
-
-Result:
-
-```text
-Old screen-home PWA became full-screen and visually clean.
-```
-
-Current protected baseline:
-
-```text
-PWA / screen-home /cloud uses 100lvh canvas baseline.
-Do not break this for Safari-web polish.
-```
-
-## Safari/web canvas attempt
-
-Observation:
-
-```text
-Safari web may show a bottom browser-toolbar / address-bar artifact while the PWA is clean.
-```
-
-Likely reason:
-
-```text
-Safari browser UI participates in dynamic viewport calculation and can overlay the bottom of the page.
-```
-
-Attempted fix:
-
-```text
-Use browser-only 100dvh split while keeping PWA at 100lvh.
-```
-
-Result:
-
-```text
-Failed. It brought back a black bottom edge in the screen-home PWA and only changed the Safari artifact into a black edge.
-```
-
-Decision:
-
-```text
-Restore pure 100lvh PWA baseline.
-Do not keep experimenting on the main /cloud canvas for Safari-web polish.
-If Safari-web needs perfection later, create a separate route such as /cloud-web with its own canvas rules.
-```
-
-## Coffee-corner lap clean test findings
-
-Context:
-
-```text
-The main /cloud lap entry was soft-paused after lap enter/back caused navigation leakage, image flicker, steam loss, and occasional hotspot lockups.
-```
-
-Clean-test files:
-
-```text
-assets/coffee-corner-lap-clean-controller.js
-lap-clean-test-v3.html
-```
-
-Useful findings:
-
-- Lap visual flow is viable.
-- Stable fade/crossfade is safer than zoom/blur/scale for now.
-- Zoom/blur/scale caused or amplified flicker/jitter and should not be restored until navigation ownership is clean.
-- The lap image asset itself is not the root problem.
-- The main problem is navigation ownership: home, coffeeCorner, and lapClose are not managed by one scene router.
-- Steam and bubble recovery should belong to scene lifecycle hooks, not click-side patches or repeated forced reinstalls.
-- Patch-style fixes such as touch de-dupe, click-through guards, force locks, and forced steam/bubble hiding are useful diagnostic tools but should not become the final main-nest architecture.
-
-Current decision:
-
-```text
-Do not connect the lap clean controller back into main /cloud as-is.
-Stop v6-style patching.
-Build a sceneRouter / sceneStack test line before reconnecting lapClose to the main nest.
-```
-
-Target model:
-
-```text
-sceneStack: [home, coffeeCorner, lapClose]
-leftHot: sceneRouter.back()
-rightHot: sceneRouter.primary()
-object hotspots: sceneRouter.push(sceneId)
-```
-
-Lifecycle target:
-
-```text
-onLeave(oldScene)
-onEnter(newScene)
-afterEnter(newScene)
-transitionLock owned by sceneRouter
-steam/bubble/photoGlow restored by scene lifecycle
-```
-
-## Scene framework draft pointer
-
-Current scene framework planning lives in:
-
-```text
-docs/SCENE_FRAMEWORK_DRAFT.md
-```
-
-Important current naming:
-
-```text
-originalHome = current first homepage / nest origin
-nestAtlas    = future big-world entrance / map of hubs
-storyHub     = 故事区, replacing the earlier roleplayHub draft name
-```
-
-Do not move the existing originalHome -> coffeeCorner -> lapClose branch under nestAtlas yet. Future hubs belong under nestAtlas; existing working branch stays in place until a future migration is explicitly planned.
-
-## Current protected areas
-
-Protect these before refactoring:
-
-```text
-/write publishing workflow
-/cloud deployability under Vercel Hobby limit
-coffeeCorner bubble queue
-single-bubble 19.8 re-show behavior
-19.8 tight coordinate hotspot
-successful 100lvh PWA canvas baseline
-windowWeather display
-weather advice popup
-powder notebook current page/archive/favorite/delete/trash/key hiding
-game console / GAME MENU hotspot ownership
-setup/materials panel manual access
-local image upload override pipeline
-object identity registry
-```
-
-## Next recommended work
-
-- Do not add new rooms yet.
-- Do not add new `api/*.js` wrappers.
-- Do not tune clock/overlay coordinates until the `100lvh` baseline remains stable.
-- If Safari-web canvas polish is needed, use a separate route instead of touching the main `/cloud` PWA canvas.
-- Build `sceneRouter / sceneStack` in a test line before reconnecting lapClose to main `/cloud`.
-- Continue cleanup one line at a time, preserving visible behavior.
-
-## New-window handoff rule
-
-New construction windows should read:
-
-```text
-PROJECT_STATUS.md
-docs/CURRENT_STATUS.md
-docs/ARCHITECTURE_NOTES.md
-docs/CONSTRUCTION_LOG.md
-docs/CONSTRUCTION_RULES.md
-docs/CODEX_CLEANUP_PLAN.md
-docs/SCENE_FRAMEWORK_DRAFT.md
-data/room-config.v1.json
-data/object-registry.v1.json
+If promoting clean-router-3-clock into normal /cloud, preserve the clean split:
+- clean sceneRouter owns go / push / back
+- clean console restore owns only #console -> gameMenu
+- clean coffee leave guard owns only steam/photoGlow hiding during coffee exit
+- clock guard owns only home clock hands
+- bubble controller owns bubble queue and hidden/advance guard
 ```
