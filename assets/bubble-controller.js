@@ -2,6 +2,8 @@
   var index = 0;
   var stamp = '';
   var hidden = false;
+  var lastAdvanceAt = 0;
+  var ADVANCE_GUARD_MS = 720;
 
   function bubble(){ return document.getElementById('bubble'); }
   function tattoo(){ return document.querySelector('.tattooHot'); }
@@ -25,30 +27,51 @@
     return q[((index % q.length) + q.length) % q.length];
   }
 
-  function show(state){
+  function isUserHidden(){
+    var b = bubble();
+    return hidden || !!(b && b.getAttribute('data-bubble-user-hidden') === '1');
+  }
+
+  function markHidden(value){
+    var b = bubble();
+    hidden = !!value;
+    if(!b) return;
+    if(value) b.setAttribute('data-bubble-user-hidden', '1');
+    else b.removeAttribute('data-bubble-user-hidden');
+  }
+
+  function show(state, options){
+    options = options || {};
     var b = bubble();
     var text = current(state);
     if(!b || !text) return false;
     b.textContent = text;
+    b.setAttribute('data-bubble-controller', 'guarded');
+    if(isUserHidden() && !options.user){
+      return true;
+    }
+    markHidden(false);
     b.classList.remove('hidden');
-    b.setAttribute('data-bubble-controller', 'passive');
-    hidden = false;
     return true;
   }
 
   function hide(){
     var b = bubble();
     if(!b) return false;
+    markHidden(true);
     b.classList.add('hidden');
-    hidden = true;
     return true;
   }
 
-  function next(state){
+  function next(state, options){
+    options = options || {};
     var q = list(state);
     if(!q.length) return false;
+    var now = Date.now();
+    if(!options.force && now - lastAdvanceAt < ADVANCE_GUARD_MS) return true;
+    lastAdvanceAt = now;
     index = (index + 1) % q.length;
-    return show(state);
+    return show(state, { user:true });
   }
 
   function sync(state){
@@ -56,7 +79,7 @@
     if(nextStamp && nextStamp !== stamp){
       stamp = nextStamp;
       index = Number(state && state.bubbleIndex || 0) || 0;
-      if(!hidden) show(state);
+      show(state, { user:false });
       return true;
     }
     return false;
@@ -71,7 +94,7 @@
   }
 
   window.KittenNestBubble = {
-    version: 'passive-bubble-controller-20260610',
+    version: 'guarded-bubble-controller-20260614',
     list: list,
     current: current,
     show: show,
@@ -80,6 +103,8 @@
     sync: sync,
     attach: attach,
     bubble: bubble,
-    tattoo: tattoo
+    tattoo: tattoo,
+    isUserHidden: isUserHidden,
+    markHidden: markHidden
   };
 })();
