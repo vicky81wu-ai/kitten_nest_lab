@@ -1,5 +1,5 @@
 {
-  "version": "0.1.3-test",
+  "version": "0.1.4-test",
   "status": "test-only-scene-manifest",
   "runtimeMode": "testOnly",
   "activationQuery": "sceneManifestTest=1",
@@ -8,7 +8,7 @@
     "panelRule": "Panels owned by scenes not allowed by the current scene must close.",
     "hotspotRule": "Hotspots owned by scenes not allowed by the current scene must not receive pointer events.",
     "entryHotspotRule": "A parent scene owns the hotspot that enters a child scene; the child scene does not own its own entry hotspot.",
-    "sharedWeatherRule": "The current weather DOM is shared by the original home window. Do not disable it when originalHome is active.",
+    "homeWeatherRule": "The current weather DOM belongs to originalHome. Do not use coffeeCorner ids for home weather objects.",
     "noSelectorPatchList": "The isolation engine must consume this manifest rather than hardcoding lapClose selector blacklist logic."
   },
   "scenes": {
@@ -19,9 +19,9 @@
         "home.hubbyNoteHot",
         "home.hubbyNotePanel",
         "home.clockHandsOverlay",
-        "coffeeCorner.windowWeatherDisplay",
-        "coffeeCorner.windowWeatherAdviceHotspot",
-        "coffeeCorner.windowWeatherAdvicePanel"
+        "home.windowWeatherDisplay",
+        "home.windowWeatherAdviceHotspot",
+        "home.windowWeatherAdvicePanel"
       ],
       "inherits": []
     },
@@ -33,9 +33,6 @@
         "coffeeCorner.photoWallHot",
         "coffeeCorner.tattoo19_8",
         "coffeeCorner.bubble",
-        "coffeeCorner.windowWeatherDisplay",
-        "coffeeCorner.windowWeatherAdviceHotspot",
-        "coffeeCorner.windowWeatherAdvicePanel",
         "coffeeCorner.setupPanel",
         "coffeeCorner.setupToggleButton",
         "coffeeCorner.steamOverlay",
@@ -63,13 +60,14 @@
     "dock.right": { "kind": "dock", "selectors": [".toGameHot"], "closeWhenDisallowed": false },
     "dock.left.back": { "kind": "dock", "selectors": [".toHomeHot"], "closeWhenDisallowed": false },
 
+    "home.windowWeatherDisplay": { "kind": "textOverlay", "ownerScene": "originalHome", "selectors": ["#temp", "#desc"] },
+    "home.windowWeatherAdviceHotspot": { "kind": "hotspot", "ownerScene": "originalHome", "selectors": [".weather"] },
+    "home.windowWeatherAdvicePanel": { "kind": "panel", "ownerScene": "originalHome", "selectors": ["#hubbyWeatherAdvice", ".hubbyWeatherAdvice"], "closeClasses": ["show"] },
+
     "coffeeCorner.gameConsoleHotspot": { "kind": "hotspot", "ownerScene": "coffeeCorner", "selectors": ["#console", ".consoleHot"] },
     "coffeeCorner.photoWallHot": { "kind": "hotspot", "ownerScene": "coffeeCorner", "selectors": [".photoHot"] },
     "coffeeCorner.tattoo19_8": { "kind": "hotspot", "ownerScene": "coffeeCorner", "selectors": [".tattooHot"] },
     "coffeeCorner.bubble": { "kind": "textOverlay", "ownerScene": "coffeeCorner", "selectors": ["#bubble"] },
-    "coffeeCorner.windowWeatherDisplay": { "kind": "textOverlay", "ownerScene": "coffeeCorner", "selectors": ["#temp", "#desc"] },
-    "coffeeCorner.windowWeatherAdviceHotspot": { "kind": "hotspot", "ownerScene": "coffeeCorner", "selectors": [".weather"] },
-    "coffeeCorner.windowWeatherAdvicePanel": { "kind": "panel", "ownerScene": "coffeeCorner", "selectors": ["#hubbyWeatherAdvice", ".hubbyWeatherAdvice"], "closeClasses": ["show"] },
     "coffeeCorner.setupPanel": { "kind": "panel", "ownerScene": "coffeeCorner", "selectors": ["#setup"], "closeClasses": ["show"], "addCloseClasses": ["hidden"] },
     "coffeeCorner.setupToggleButton": { "kind": "hotspot", "ownerScene": "coffeeCorner", "selectors": ["#setupToggleButton"] },
     "coffeeCorner.steamOverlay": { "kind": "decorativeOverlay", "ownerScene": "coffeeCorner", "selectors": ["#gameRoom .steam"] },
