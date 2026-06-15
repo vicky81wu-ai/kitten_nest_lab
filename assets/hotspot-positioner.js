@@ -75,6 +75,28 @@
       coordinateMode: 'lockedToBaseImage',
       coordinate: { x: 0.905, y: 0.230, width: 0.480, anchor: 'bottomRight', heightMode: 'auto', growthDirection: 'upward' },
       runtimeStatus: 'active'
+    },
+    'coffeeCorner.steamOverlay': {
+      id: 'coffeeCorner.steamOverlay',
+      label: 'coffee cup steam overlay',
+      roomId: 'coffeeCorner',
+      roomElementId: 'gameRoom',
+      imageId: 'gameBg',
+      selector: '#gameRoom .steam',
+      coordinateMode: 'lockedToBaseImage',
+      coordinate: { x: 0.503, y: 0.313, width: 0.086, height: 0.132 },
+      runtimeStatus: 'active'
+    },
+    'coffeeCorner.photoGlowOverlay': {
+      id: 'coffeeCorner.photoGlowOverlay',
+      label: 'photo wall glow overlay',
+      roomId: 'coffeeCorner',
+      roomElementId: 'gameRoom',
+      imageId: 'gameBg',
+      selector: '#gameRoom .photoGlow',
+      coordinateMode: 'lockedToBaseImage',
+      coordinate: { x: 0.280, y: 0.225, width: 0.440, height: 0.250 },
+      runtimeStatus: 'active'
     }
   };
 
@@ -243,15 +265,15 @@
     }else{
       var w = box.width * point.width;
       var ratio = point.aspectRatio || 1;
-      var h = w / ratio;
+      var h = point.height != null ? box.height * point.height : w / ratio;
       var cx = box.left + point.x * box.width;
       var cy = box.top + point.y * box.height;
-      overlay.style.left = (cx - parentRect.left - w / 2) + 'px';
-      overlay.style.top = (cy - parentRect.top - h / 2) + 'px';
-      overlay.style.right = 'auto';
-      overlay.style.bottom = 'auto';
-      overlay.style.width = w + 'px';
-      overlay.style.height = h + 'px';
+      setImportant(overlay, 'left', (cx - parentRect.left - w / 2) + 'px');
+      setImportant(overlay, 'top', (cy - parentRect.top - h / 2) + 'px');
+      setImportant(overlay, 'right', 'auto');
+      setImportant(overlay, 'bottom', 'auto');
+      setImportant(overlay, 'width', w + 'px');
+      setImportant(overlay, 'height', h + 'px');
     }
 
     overlay.setAttribute('data-coordinate-overlay', card.id);
@@ -289,7 +311,7 @@
   }
 
   window.KittenNestHotspots = {
-    version: 'coordinate-hotspot-overlay-card-20260613-bubble-base-1',
+    version: 'coordinate-hotspot-overlay-card-20260614-steam-overlay-locked-1',
     cards: hotspotCards,
     overlayCards: overlayCards,
     defaultHotspotId: defaultHotspotId,
