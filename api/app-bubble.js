@@ -3,8 +3,9 @@ const appAssetctl = require('./app-assetctl');
 const coffeeCornerPolishStyle = '<link rel="stylesheet" href="/assets/coffee-corner-polish.css?v=20260613-lap-bubble-empty-port-3">';
 const hotspotPositionerScript = '<script src="/assets/hotspot-positioner.js?v=20260614-steam-overlay-locked-1"></script>';
 const coffeeSteamScript = '<script src="/assets/coffee-steam-svg.js?v=20260613-mist-1"></script>';
+const overlayLifecycleCoordinatorScript = '<script src="/assets/overlay-lifecycle-coordinator.js?v=20260615-overlay-lifecycle-1"></script>';
 const overlayLockTestScript = '<script src="/assets/overlay-lock-test.js?v=20260614-overlay-lock-test-1"></script>';
-const lapCloseBubbleCleanScript = '<script src="/assets/lap-close-bubble-clean.js?v=20260615-coffee-corner-lap-bubble-queue-promoted-1"></script>';
+const lapCloseBubbleCleanScript = '<script src="/assets/lap-close-bubble-clean.js?v=20260615-lap-bubble-overlay-lifecycle-1"></script>';
 const sceneManifestIsolationTestScript = '<script src="/assets/scene-manifest-isolation-test.js?v=20260615-scene-manifest-promoted-1"></script>';
 const coffeeCornerVariantScript = '<script src="/assets/coffee-corner-variant.js?v=20260613-enter-canvas-verified-1"></script>';
 const bubbleControllerScript = '<script src="/assets/bubble-controller.js?v=20260614-guard-1"></script>';
@@ -87,6 +88,7 @@ function injectBubbleController(html, options = {}) {
   const scripts = [
     hotspotPositionerScript,
     coffeeSteamScript,
+    overlayLifecycleCoordinatorScript,
     overlayLockTestScript,
     lapCloseBubbleCleanScript,
     sceneManifestIsolationTestScript
