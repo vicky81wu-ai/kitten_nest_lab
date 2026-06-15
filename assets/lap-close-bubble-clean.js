@@ -1,6 +1,7 @@
 (function(){
-  var VERSION = 'lap-close-bubble-clean-20260615-promoted-1';
+  var VERSION = 'lap-close-bubble-clean-20260615-queue-test-1';
   var qs = new URLSearchParams(location.search);
+  var queueTest = qs.get('lapCloseBubbleQueueTest') === '1';
 
   function $(id){ return document.getElementById(id); }
 
@@ -39,13 +40,56 @@
   startSuppressor();
 
   var text = qs.has('lapBubbleText') ? qs.get('lapBubbleText') : '坐稳，小猫。';
+  var queue = text ? [text] : [];
+  var index = 0;
   var visible = false;
+  var stamp = '';
+  var lastToggleAt = 0;
+  var TOGGLE_GUARD_MS = 520;
   var bubbleCard = { id:'coffeeCorner.lapCloseBubble.cleanRouter', selector:'#sceneRouterCleanLapBubble', coordinate:{ x:0.365, y:0.205, width:0.43 } };
   var bodyCard = { id:'coffeeCorner.lapBodyHot.cleanRouter', selector:'#sceneRouterCleanLapBodyHot', coordinate:{ x:0.60, y:0.695, width:0.42, height:0.22 } };
 
   function room(){ return $('gameRoom'); }
   function img(){ return $('gameBg'); }
   function activeLap(){ return document.body.classList.contains('sceneRouterCleanLap') && room() && room().classList.contains('active'); }
+  function currentText(){
+    if(!queue.length) return '';
+    return queue[((index % queue.length) + queue.length) % queue.length] || '';
+  }
+  function cleanList(value){
+    if(Array.isArray(value)) return value.map(function(x){ return String(x || '').trim(); }).filter(Boolean).slice(0,30);
+    return [];
+  }
+  function stateList(state){
+    if(!state) return [];
+    var q = cleanList(state.coffeeCornerLapCloseBubbles);
+    if(q.length) return q;
+    var one = String(state.coffeeCornerLapCloseBubble || state.lapCloseBubble || '').trim();
+    return one ? [one] : [];
+  }
+  function makeStamp(state){
+    return String(state && (state.coffeeCornerLapCloseBubbleUpdatedAt || state.updatedAt) || '') + '|' + JSON.stringify(stateList(state));
+  }
+  function syncState(state){
+    if(!queueTest || !state) return false;
+    var nextStamp = makeStamp(state);
+    if(nextStamp === stamp) return false;
+    stamp = nextStamp;
+    queue = stateList(state);
+    index = Number(state.coffeeCornerLapCloseBubbleIndex || 0) || 0;
+    text = currentText();
+    visible = false;
+    sync();
+    return true;
+  }
+  async function refreshState(){
+    if(!queueTest) return;
+    try{
+      var res = await fetch('/api/state?ts=' + Date.now(), { cache:'no-store' });
+      var data = await res.json();
+      syncState(data);
+    }catch(e){ console.warn('[lapCloseBubbleQueueTest] state read failed', e); }
+  }
   function box(){
     var image = img();
     if(!image) return null;
@@ -89,9 +133,11 @@
       el.setAttribute('data-scene', 'lapClose');
       r.appendChild(el);
     }
+    text = currentText();
     el.textContent = text;
     el.setAttribute('data-has-text', text ? '1' : '0');
     el.setAttribute('data-visible', visible && text ? '1' : '0');
+    if(queueTest) el.setAttribute('data-queue-test', String(queue.length));
     return el;
   }
 
@@ -147,8 +193,17 @@
 
   function toggle(e){
     if(e){ e.preventDefault(); e.stopPropagation(); if(e.stopImmediatePropagation) e.stopImmediatePropagation(); }
-    if(!text) return;
-    visible = !visible;
+    if(queueTest) refreshState();
+    if(!currentText()) return;
+    var now = Date.now();
+    if(now - lastToggleAt < TOGGLE_GUARD_MS) return;
+    lastToggleAt = now;
+    if(visible){
+      visible = false;
+      if(queue.length > 1) index = (index + 1) % queue.length;
+    }else{
+      visible = true;
+    }
     sync();
   }
 
@@ -160,23 +215,25 @@
     placeBubble();
     placeBodyHot();
     var el = $('sceneRouterCleanLapBubble');
-    if(el) el.setAttribute('data-visible', visible && text ? '1' : '0');
+    if(el) el.setAttribute('data-visible', visible && currentText() ? '1' : '0');
   }
 
   function start(){
     document.body.setAttribute('data-lap-bubble', VERSION);
+    if(queueTest) document.body.setAttribute('data-lap-bubble-queue-test', '1');
     if(qs.get('debugLapBubble') === '1') document.body.setAttribute('data-debug-lap-bubble', '1');
+    refreshState();
     sync();
-    ['pageshow','focus','resize','orientationchange'].forEach(function(name){ window.addEventListener(name, sync); });
-    document.addEventListener('visibilitychange', function(){ if(!document.hidden) sync(); });
-    document.addEventListener('click', function(){ setTimeout(sync, 80); }, true);
-    document.addEventListener('touchend', function(){ setTimeout(sync, 80); }, true);
-    setTimeout(sync, 250);
-    setTimeout(sync, 900);
-    setTimeout(sync, 1600);
+    ['pageshow','focus','resize','orientationchange'].forEach(function(name){ window.addEventListener(name, function(){ refreshState(); sync(); }); });
+    document.addEventListener('visibilitychange', function(){ if(!document.hidden){ refreshState(); sync(); } });
+    document.addEventListener('click', function(){ setTimeout(function(){ refreshState(); sync(); }, 80); }, true);
+    document.addEventListener('touchend', function(){ setTimeout(function(){ refreshState(); sync(); }, 80); }, true);
+    setTimeout(function(){ refreshState(); sync(); }, 250);
+    setTimeout(function(){ refreshState(); sync(); }, 900);
+    setTimeout(function(){ refreshState(); sync(); }, 1600);
   }
 
-  window.KittenNestLapCloseBubbleClean = { version:VERSION, bubbleCard:bubbleCard, bodyCard:bodyCard, sync:sync, setText:function(value){ text = String(value || ''); visible = false; sync(); }, show:function(){ if(text){ visible = true; sync(); } }, hide:function(){ visible = false; sync(); } };
+  window.KittenNestLapCloseBubbleClean = { version:VERSION, bubbleCard:bubbleCard, bodyCard:bodyCard, sync:sync, refreshState:refreshState, setText:function(value){ text = String(value || ''); queue = text ? [text] : []; visible = false; sync(); }, setQueue:function(value){ queue = cleanList(value); index = 0; visible = false; sync(); }, show:function(){ if(currentText()){ visible = true; sync(); } }, hide:function(){ visible = false; sync(); } };
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
   else start();
 })();
