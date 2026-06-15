@@ -1,0 +1,89 @@
+{
+  "version": "0.1.0-home-name-test",
+  "status": "test-only-home-scene-name-manifest",
+  "runtimeMode": "testOnly",
+  "activationQuery": "sceneManifestTest=1&sceneNameHomeTest=1",
+  "rules": {
+    "sceneNameRule": "In this test line, the technical scene id is home, and home-owned objects use the home.* prefix.",
+    "displayNameRule": "original home may be used only as wording/display note, not as a technical id.",
+    "pushIsolation": "A pushed child scene may use only its owned objects plus explicitly inherited objects.",
+    "panelRule": "Panels owned by scenes not allowed by the current scene must close.",
+    "hotspotRule": "Hotspots owned by scenes not allowed by the current scene must not receive pointer events.",
+    "entryHotspotRule": "A parent scene owns the hotspot that enters a child scene; the child scene does not own its own entry hotspot.",
+    "noSelectorPatchList": "The isolation engine must consume this manifest rather than hardcoding lapClose selector blacklist logic."
+  },
+  "scenes": {
+    "home": {
+      "id": "home",
+      "displayName": "original home",
+      "parent": null,
+      "owns": [
+        "home.hubbyNoteHot",
+        "home.hubbyNotePanel",
+        "home.clockHandsOverlay",
+        "home.windowWeatherDisplay",
+        "home.windowWeatherAdviceHotspot",
+        "home.windowWeatherAdvicePanel"
+      ],
+      "inherits": []
+    },
+    "coffeeCorner": {
+      "id": "coffeeCorner",
+      "parent": null,
+      "owns": [
+        "coffeeCorner.gameConsoleHotspot",
+        "coffeeCorner.photoWallHot",
+        "coffeeCorner.tattoo19_8",
+        "coffeeCorner.bubble",
+        "coffeeCorner.setupPanel",
+        "coffeeCorner.setupToggleButton",
+        "coffeeCorner.steamOverlay",
+        "coffeeCorner.photoGlowOverlay",
+        "coffeeCorner.lapCloseEnterHot.cleanRouter",
+        "gameMenu.panel",
+        "memories.panel"
+      ],
+      "inherits": ["dock.left", "dock.right"]
+    },
+    "lapClose": {
+      "id": "lapClose",
+      "parent": "coffeeCorner",
+      "owns": [
+        "coffeeCorner.lapCloseScene",
+        "coffeeCorner.lapCloseBubble.cleanRouter",
+        "coffeeCorner.lapBodyHot.cleanRouterTest"
+      ],
+      "inherits": ["dock.left.back"],
+      "blocksParentInteractive": true
+    }
+  },
+  "objects": {
+    "dock.left": { "kind": "dock", "selectors": [".toHomeHot"], "closeWhenDisallowed": false },
+    "dock.right": { "kind": "dock", "selectors": [".toGameHot"], "closeWhenDisallowed": false },
+    "dock.left.back": { "kind": "dock", "selectors": [".toHomeHot"], "closeWhenDisallowed": false },
+
+    "home.windowWeatherDisplay": { "kind": "textOverlay", "ownerScene": "home", "selectors": ["#temp", "#desc"] },
+    "home.windowWeatherAdviceHotspot": { "kind": "hotspot", "ownerScene": "home", "selectors": [".weather"] },
+    "home.windowWeatherAdvicePanel": { "kind": "panel", "ownerScene": "home", "selectors": ["#hubbyWeatherAdvice", ".hubbyWeatherAdvice"], "closeClasses": ["show"] },
+    "home.hubbyNoteHot": { "kind": "hotspot", "ownerScene": "home", "selectors": ["#hubbyNoteButton", ".hubbyNoteButton"] },
+    "home.hubbyNotePanel": { "kind": "panel", "ownerScene": "home", "selectors": ["#hubbyNotePanel"], "closeClasses": ["show"] },
+    "home.clockHandsOverlay": { "kind": "decorativeOverlay", "ownerScene": "home", "selectors": ["#home .clock", "#hourHand", "#minuteHand", "#secondHand"] },
+
+    "coffeeCorner.gameConsoleHotspot": { "kind": "hotspot", "ownerScene": "coffeeCorner", "selectors": ["#console", ".consoleHot"] },
+    "coffeeCorner.photoWallHot": { "kind": "hotspot", "ownerScene": "coffeeCorner", "selectors": [".photoHot"] },
+    "coffeeCorner.tattoo19_8": { "kind": "hotspot", "ownerScene": "coffeeCorner", "selectors": [".tattooHot"] },
+    "coffeeCorner.bubble": { "kind": "textOverlay", "ownerScene": "coffeeCorner", "selectors": ["#bubble"] },
+    "coffeeCorner.setupPanel": { "kind": "panel", "ownerScene": "coffeeCorner", "selectors": ["#setup"], "closeClasses": ["show"], "addCloseClasses": ["hidden"] },
+    "coffeeCorner.setupToggleButton": { "kind": "hotspot", "ownerScene": "coffeeCorner", "selectors": ["#setupToggleButton"] },
+    "coffeeCorner.steamOverlay": { "kind": "decorativeOverlay", "ownerScene": "coffeeCorner", "selectors": ["#gameRoom .steam"] },
+    "coffeeCorner.photoGlowOverlay": { "kind": "decorativeOverlay", "ownerScene": "coffeeCorner", "selectors": ["#gameRoom .photoGlow"] },
+
+    "coffeeCorner.lapCloseScene": { "kind": "sceneVariant", "ownerScene": "lapClose", "selectors": [] },
+    "coffeeCorner.lapCloseEnterHot.cleanRouter": { "kind": "hotspot", "ownerScene": "coffeeCorner", "selectors": ["#sceneRouterCleanLapHot", ".sceneRouterCleanLapHot"] },
+    "coffeeCorner.lapCloseBubble.cleanRouter": { "kind": "textOverlay", "ownerScene": "lapClose", "selectors": ["#sceneRouterCleanLapBubble"] },
+    "coffeeCorner.lapBodyHot.cleanRouterTest": { "kind": "hotspot", "ownerScene": "lapClose", "selectors": ["#sceneRouterCleanLapBodyHot"] },
+
+    "gameMenu.panel": { "kind": "panel", "ownerScene": "coffeeCorner", "selectors": [".gameMenu", ".gomokuPanel"], "closeClasses": ["show"] },
+    "memories.panel": { "kind": "panel", "ownerScene": "coffeeCorner", "selectors": [".memoriesPanel"], "closeClasses": ["show"] }
+  }
+}
