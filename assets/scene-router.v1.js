@@ -1,5 +1,5 @@
 (function(){
-  var VERSION = 'scene-router-v1-test-20260614-1';
+  var VERSION = 'scene-router-v1-test-20260614-2';
   var LAP_URL = 'https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/variants/lap-close-01.jpg?v=20260613-lap-close-1';
   var state = {
     current: 'originalHome',
@@ -7,7 +7,8 @@
     lock: false,
     mainCoffeeSrc: '',
     lastTouchAt: 0,
-    installed: false
+    installed: false,
+    needsSteamWake: false
   };
 
   var scenes = {
@@ -212,14 +213,14 @@
     b.setAttribute('data-lap-hidden', '1');
   }
 
-  function wakeSteam(){
+  function wakeSteam(force){
     var s = steam();
     if(!s || state.current !== 'coffeeCorner' || state.lock) return;
     s.style.display = '';
     s.style.opacity = '';
     s.style.pointerEvents = '';
     s.style.animation = '';
-    if(!s.querySelector('svg') || s.getAttribute('data-steam-svg') !== '2'){
+    if(force || !s.querySelector('svg') || s.getAttribute('data-steam-svg') !== '2'){
       s.removeAttribute('data-steam-svg');
       s.innerHTML = '';
       if(window.KittenNestCoffeeSteam && window.KittenNestCoffeeSteam.install) window.KittenNestCoffeeSteam.install();
@@ -241,7 +242,7 @@
   function runLifecycle(sceneId, stage){
     if(sceneId === 'coffeeCorner'){
       if(stage === 'onEnter') showBubble();
-      if(stage === 'afterEnter'){ wakeSteam(); restorePhotoGlow(); }
+      if(stage === 'afterEnter'){ wakeSteam(false); restorePhotoGlow(); }
       if(stage === 'onLeave') hideTransient();
     }
     if(sceneId === 'lapClose'){
@@ -298,6 +299,7 @@
       runLifecycle(prev, 'onLeave');
       if(mode === 'push') state.stack.push(prev);
       state.current = next;
+      if(next === 'coffeeCorner') state.needsSteamWake = true;
       document.body.classList.toggle('sceneRouterLap', next === 'lapClose');
       document.body.classList.toggle('coffeeLapVariant', next === 'lapClose');
       setRoomActive(next);
@@ -362,7 +364,10 @@
     if(state.current === 'coffeeCorner'){
       placeLapHot();
       showBubble();
-      setTimeout(wakeSteam, 40);
+      var forceSteam = !!state.needsSteamWake;
+      state.needsSteamWake = false;
+      setTimeout(function(){ wakeSteam(forceSteam); }, 40);
+      setTimeout(function(){ wakeSteam(false); }, 220);
       setTimeout(restorePhotoGlow, 60);
     }else{
       hideLapHot();
@@ -382,6 +387,7 @@
     setRoomActive('originalHome');
     state.current = 'originalHome';
     state.stack = [];
+    state.needsSteamWake = false;
     refreshScene();
     if(!state.installed){
       state.installed = true;
