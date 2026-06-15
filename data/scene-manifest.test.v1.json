@@ -1,5 +1,5 @@
 {
-  "version": "0.1.1-test",
+  "version": "0.1.2-test",
   "status": "test-only-scene-manifest",
   "runtimeMode": "testOnly",
   "activationQuery": "sceneManifestTest=1",
@@ -31,6 +31,7 @@
         "coffeeCorner.bubble",
         "coffeeCorner.windowWeatherDisplay",
         "coffeeCorner.windowWeatherAdviceHotspot",
+        "coffeeCorner.windowWeatherAdvicePanel",
         "coffeeCorner.setupPanel",
         "coffeeCorner.setupToggleButton",
         "coffeeCorner.steamOverlay",
@@ -64,6 +65,7 @@
     "coffeeCorner.bubble": { "kind": "textOverlay", "ownerScene": "coffeeCorner", "selectors": ["#bubble"] },
     "coffeeCorner.windowWeatherDisplay": { "kind": "textOverlay", "ownerScene": "coffeeCorner", "selectors": ["#temp", "#desc"] },
     "coffeeCorner.windowWeatherAdviceHotspot": { "kind": "hotspot", "ownerScene": "coffeeCorner", "selectors": [".weather"] },
+    "coffeeCorner.windowWeatherAdvicePanel": { "kind": "panel", "ownerScene": "coffeeCorner", "selectors": ["#hubbyWeatherAdvice", ".hubbyWeatherAdvice"], "closeClasses": ["show"] },
     "coffeeCorner.setupPanel": { "kind": "panel", "ownerScene": "coffeeCorner", "selectors": ["#setup"], "closeClasses": ["show"], "addCloseClasses": ["hidden"] },
     "coffeeCorner.setupToggleButton": { "kind": "hotspot", "ownerScene": "coffeeCorner", "selectors": ["#setupToggleButton"] },
     "coffeeCorner.steamOverlay": { "kind": "decorativeOverlay", "ownerScene": "coffeeCorner", "selectors": ["#gameRoom .steam"] },
