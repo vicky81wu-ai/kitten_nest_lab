@@ -1,0 +1,127 @@
+{
+  "version": "0.1.0",
+  "status": "shadow-runtime-map",
+  "createdAt": "2026-06-14",
+  "stableBaseline": {
+    "name": "clean-router-promoted-no-status",
+    "entry": "/cloud?v=20260614-clean-no-status",
+    "rollbackEntry": "/cloud?sceneRouterLegacy=1&v=legacy-backup",
+    "note": "This file does not change runtime behavior. It documents the current clean /cloud owner split before any future runtime enforcement."
+  },
+  "purpose": [
+    "Make the existing no blind binding / object information card rule machine-readable.",
+    "Keep a narrow shadow map before binding code starts enforcing owners.",
+    "Avoid reintroducing the old lapFinal / leavingCoffeeCorner / console-hot-restore mixed patch chain."
+  ],
+  "runtimeMode": "shadowOnly",
+  "enforcement": {
+    "current": "none",
+    "nextSafeStep": "read-only checker under a test parameter only",
+    "doNotDoYet": "Do not block clicks or replace existing handlers from this registry until the read-only checker passes on real /cloud and screen-home PWA."
+  },
+  "ownerCards": [
+    {
+      "id": "router.cleanSceneStack",
+      "owner": "sceneRouterClean",
+      "file": "assets/scene-router-clean.v1.js",
+      "selectors": [".toGameHot", ".toHomeHot", "#sceneRouterCleanLapHot", ".sceneRouterCleanLapHot"],
+      "actions": ["go", "push", "back", "jumpTo"],
+      "exclusive": true,
+      "scope": "scene navigation only",
+      "rules": [
+        "Owns originalHome / coffeeCorner / lapClose navigation.",
+        "Does not own bubble queue.",
+        "Does not own game menu.",
+        "Does not own clock rendering.",
+        "Does not own coffee steam art except scene show/hide state."
+      ]
+    },
+    {
+      "id": "coffeeCorner.gameConsoleHotspot",
+      "owner": "gameMenu",
+      "file": "assets/console-hot-clean-restore.js",
+      "selectors": ["#console", ".consoleHot"],
+      "action": "openGameMenu",
+      "exclusive": true,
+      "scope": "coffeeCorner only",
+      "rules": [
+        "#console must open gameMenu only.",
+        "#console must not open hubbyNote / 粉本本.",
+        "Do not revive the full old console-hot-restore.js bundle just to fix console."
+      ]
+    },
+    {
+      "id": "coffeeCorner.bubbleAndTattooHotspot",
+      "owner": "bubbleController",
+      "file": "assets/bubble-controller.js",
+      "selectors": ["#bubble", ".tattooHot"],
+      "action": "toggleOrAdvanceBubble",
+      "exclusive": true,
+      "scope": "coffeeCorner normal scene only",
+      "rules": [
+        "Refresh restores current line but must not advance the queue.",
+        "Only user hotspot action may advance the queue.",
+        "Scene router must not show/hide/advance bubble directly."
+      ]
+    },
+    {
+      "id": "coffeeCorner.ambientSteamPhotoGlow",
+      "owner": "coffeeCleanLeaveGuard",
+      "file": "assets/coffee-clean-leave-guard.js",
+      "selectors": ["#gameRoom .steam", "#gameRoom .photoGlow"],
+      "action": "hideDuringCoffeeExitOnly",
+      "exclusive": false,
+      "scope": "coffeeCorner visual exit guard only",
+      "rules": [
+        "May hide steam/photoGlow only while leaving coffeeCorner to avoid black block / white flash.",
+        "Must not manage clock hands.",
+        "Must not manage bubble queue.",
+        "Must not become a global overlay repaint guard."
+      ]
+    },
+    {
+      "id": "home.clockHandsOverlay",
+      "owner": "clockHandsGuard",
+      "file": "assets/clock-hands-guard.js",
+      "selectors": ["#home .clock", "#hourHand", "#minuteHand", "#secondHand"],
+      "action": "keepClockHandsVisibleInHome",
+      "exclusive": false,
+      "scope": "home only",
+      "rules": [
+        "May touch only home clock and hands.",
+        "Must not touch coffeeCorner hotspots.",
+        "Must not touch steam/photoGlow.",
+        "Must not be replaced by a global repaint guard."
+      ]
+    },
+    {
+      "id": "home.hubbyNoteHotspot",
+      "owner": "hubbyNoteController",
+      "file": "assets/hubby-note-controller.js / assets/hotspot-positioner.js",
+      "selectors": ["#hubbyNoteButton", ".hubbyNoteButton"],
+      "displayName": "粉本本",
+      "action": "openHubbyNotePanel",
+      "exclusive": true,
+      "scope": "home only",
+      "rules": [
+        "粉本本 belongs to home in the current art.",
+        "It must not reuse #console / .consoleHot.",
+        "It must not open from coffeeCorner unless a future coffeeCorner art object is explicitly approved."
+      ]
+    }
+  ],
+  "antiPatterns": [
+    "blind binding",
+    "one script owning router + bubble + steam + console + clock together",
+    "reviving full console-hot-restore.js as a general fix",
+    "reviving lapFinal old patch chain",
+    "global overlay repaint guard that touches home and coffeeCorner together"
+  ],
+  "promotionPlan": [
+    "1. Keep this file as shadow documentation first.",
+    "2. Add a read-only registry checker under a test-only query parameter if tool safety allows.",
+    "3. Compare checker results against data/object-registry.v1.json and this shadow map.",
+    "4. Only after read-only checks pass, make future binders consult the registry before adding handlers.",
+    "5. Do not enforce owner blocking on current /cloud in the same step as registry wiring."
+  ]
+}
