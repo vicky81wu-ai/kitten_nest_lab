@@ -188,7 +188,7 @@ const dynamicAssetResolverScript = `
 const cloudTextPatchScript = `
 <script>
 (function(){
-  window.__kittenNestTextPatch = 'text-patch-20260610-2';
+  window.__kittenNestTextPatch = 'text-patch-20260614-guard-1';
   var lastStamp = '';
   var index = 0;
   function bubble(){ return document.getElementById('bubble'); }
@@ -197,12 +197,16 @@ const cloudTextPatchScript = `
     if(Array.isArray(state.alexBubbles)) return state.alexBubbles.map(function(x){ return String(x||'').trim(); }).filter(Boolean);
     return state.alexBubble ? [String(state.alexBubble)] : [];
   }
+  function userHidden(b){
+    return !!(b && b.getAttribute('data-bubble-user-hidden') === '1');
+  }
   function show(text){
     var b = bubble();
     if(!b || !text) return;
     b.textContent = text;
-    b.classList.remove('hidden');
     b.setAttribute('data-cloud-refresh','1');
+    if(userHidden(b)) return;
+    b.classList.remove('hidden');
   }
   async function refresh(force){
     try{
