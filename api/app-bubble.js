@@ -12,7 +12,7 @@ const consoleCleanRestoreScript = '<script src="/assets/console-hot-clean-restor
 const coffeeCleanLeaveGuardScript = '<script src="/assets/coffee-clean-leave-guard.js?v=20260614-clean-leave-1"></script>';
 const clockHandsGuardScript = '<script src="/assets/clock-hands-guard.js?v=20260614-clock-1"></script>';
 const sceneRouterScript = '<script src="/assets/scene-router.v1.js?v=20260614-router-5-rollback"></script>';
-const sceneRouterCleanScript = '<script src="/assets/scene-router-clean.v1.js?v=20260614-clean-1"></script>';
+const sceneRouterCleanScript = '<script src="/assets/scene-router-clean.v1.js?v=20260614-clean-2"></script>';
 const sceneRouterBootScript = `
 <script>
 (function(){
