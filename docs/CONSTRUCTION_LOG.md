@@ -257,6 +257,58 @@ Do not keep experimenting on the main /cloud canvas for Safari-web polish.
 If Safari-web needs perfection later, create a separate route such as /cloud-web with its own canvas rules.
 ```
 
+## Coffee-corner lap clean test findings
+
+Context:
+
+```text
+The main /cloud lap entry was soft-paused after lap enter/back caused navigation leakage, image flicker, steam loss, and occasional hotspot lockups.
+```
+
+Clean-test files:
+
+```text
+assets/coffee-corner-lap-clean-controller.js
+lap-clean-test-v3.html
+```
+
+Useful findings:
+
+- Lap visual flow is viable.
+- Stable fade/crossfade is safer than zoom/blur/scale for now.
+- Zoom/blur/scale caused or amplified flicker/jitter and should not be restored until navigation ownership is clean.
+- The lap image asset itself is not the root problem.
+- The main problem is navigation ownership: home, coffeeCorner, and lapClose are not managed by one scene router.
+- Steam and bubble recovery should belong to scene lifecycle hooks, not click-side patches or repeated forced reinstalls.
+- Patch-style fixes such as touch de-dupe, click-through guards, force locks, and forced steam/bubble hiding are useful diagnostic tools but should not become the final main-nest architecture.
+
+Current decision:
+
+```text
+Do not connect the lap clean controller back into main /cloud as-is.
+Stop v6-style patching.
+Build a sceneRouter / sceneStack test line before reconnecting lapClose to the main nest.
+```
+
+Target model:
+
+```text
+sceneStack: [home, coffeeCorner, lapClose]
+leftHot: sceneRouter.back()
+rightHot: sceneRouter.primary()
+object hotspots: sceneRouter.push(sceneId)
+```
+
+Lifecycle target:
+
+```text
+onLeave(oldScene)
+onEnter(newScene)
+afterEnter(newScene)
+transitionLock owned by sceneRouter
+steam/bubble/photoGlow restored by scene lifecycle
+```
+
 ## Current protected areas
 
 Protect these before refactoring:
@@ -283,6 +335,7 @@ object identity registry
 - Do not add new `api/*.js` wrappers.
 - Do not tune clock/overlay coordinates until the `100lvh` baseline remains stable.
 - If Safari-web canvas polish is needed, use a separate route instead of touching the main `/cloud` PWA canvas.
+- Build `sceneRouter / sceneStack` in a test line before reconnecting lapClose to main `/cloud`.
 - Continue cleanup one line at a time, preserving visible behavior.
 
 ## New-window handoff rule
