@@ -1,5 +1,5 @@
 (function(){
-  var VERSION = 'scene-router-v1-test-20260614-4';
+  var VERSION = 'scene-router-v1-test-20260614-5';
   var LAP_URL = 'https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/variants/lap-close-01.jpg?v=20260613-lap-close-1';
   var state = {
     current: 'originalHome',
@@ -157,7 +157,7 @@
 
   function wakeSteam(force){
     var s = steam();
-    if(!s || state.current !== 'coffeeCorner' || state.lock) return;
+    if(!s || state.current !== 'coffeeCorner' || state.lock) return false;
     s.style.display = '';
     s.style.opacity = '';
     s.style.pointerEvents = '';
@@ -167,14 +167,16 @@
       s.innerHTML = '';
       if(window.KittenNestCoffeeSteam && window.KittenNestCoffeeSteam.install) window.KittenNestCoffeeSteam.install();
     }
+    return true;
   }
 
   function restorePhotoGlow(){
     var p = photoGlow();
-    if(!p || state.current !== 'coffeeCorner' || state.lock) return;
+    if(!p || state.current !== 'coffeeCorner' || state.lock) return false;
     p.style.display = '';
     p.style.opacity = '';
     p.style.pointerEvents = '';
+    return true;
   }
 
   function runLifecycle(sceneId, stage){
@@ -289,10 +291,15 @@
     updateStatus();
     if(state.current === 'coffeeCorner'){
       placeLapHot();
+      if(state.lock){
+        setTimeout(refreshScene, 90);
+        return;
+      }
       var forceSteam = !!state.needsSteamWake;
       state.needsSteamWake = false;
-      setTimeout(function(){ wakeSteam(forceSteam); }, 40);
-      setTimeout(function(){ wakeSteam(false); }, 220);
+      setTimeout(function(){ wakeSteam(forceSteam); }, 30);
+      setTimeout(function(){ wakeSteam(false); }, 180);
+      setTimeout(function(){ wakeSteam(false); }, 420);
       setTimeout(restorePhotoGlow, 60);
     }else{
       hideLapHot();
