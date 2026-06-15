@@ -1,8 +1,9 @@
 {
-  "version": "1.0.0",
+  "version": "1.0.1",
   "status": "active-routing-registry",
-  "purpose": "Machine-readable registry for /write tag routing and future writable scene objects.",
-  "coreRule": "No tag, no write. One tag, one destination family. Every writable object must have a tag registry entry before it is connected to /write.",
+  "purpose": "Machine-readable registry for nest console tag routing and future writable scene objects.",
+  "coreRule": "No tag, no text route. One tag, one destination family. Every writable object must have a tag registry entry before it is connected to the nest console.",
+  "tagNamingRule": "Use scene path plus surface type for new complex or nested surfaces. A tag must not use only a generic state name such as lapClose. If a scene has multiple text surfaces, include the surface type such as Bubble, Note, Caption, or Hint.",
   "defaultForGeneralNestMessage": "hubbyNote",
   "tags": {
     "hubbyNote": {
@@ -12,6 +13,7 @@
       "ownerScene": "home",
       "objectId": "home.hubbyNotePanel",
       "writeSurface": "home powder notebook / 猫窝留言",
+      "surfaceType": "Note",
       "useFor": [
         "general nest message",
         "home notebook note",
@@ -32,6 +34,7 @@
       "ownerScene": "coffeeCorner",
       "objectId": "coffeeCorner.bubble",
       "writeSurface": "coffee corner rotating bubble queue",
+      "surfaceType": "Bubble",
       "useFor": [
         "coffee-corner short bubble lines",
         "Alex short rotating speech in coffeeCorner"
@@ -41,7 +44,7 @@
         "coffeeCorner.lapCloseBubble.cleanRouter",
         "home.windowWeatherAdvicePanel"
       ],
-      "notes": "Short lines only. This tag belongs to the normal coffeeCorner scene, not lapClose."
+      "notes": "Legacy simple tag is kept because coffeeCorner currently means the main coffeeCorner bubble by convention. New nested surfaces must use fuller scene-path tags."
     },
     "windowWeather": {
       "tag": "[windowWeather]",
@@ -50,6 +53,7 @@
       "ownerScene": "home",
       "objectId": "home.windowWeatherAdvicePanel",
       "writeSurface": "home weather window / 窗边叮嘱",
+      "surfaceType": "WeatherAdvice",
       "useFor": [
         "home weather display",
         "window-side advice",
@@ -62,24 +66,32 @@
       ],
       "notes": "Home weather belongs to home. Do not route or name it under coffeeCorner."
     },
-    "lapCloseBubble": {
-      "tag": "[lapCloseBubble]",
-      "status": "active-ui-not-cloud-wired-yet",
+    "coffeeCornerLapCloseBubble": {
+      "tag": "[coffeeCornerLapCloseBubble]",
+      "status": "canonical-active-ui-route-test-needed",
       "destinationFamily": "coffeeCorner.lapCloseBubble.cleanRouter",
       "ownerScene": "lapClose",
+      "parentScene": "coffeeCorner",
       "objectId": "coffeeCorner.lapCloseBubble.cleanRouter",
-      "writeSurface": "lapClose child-scene bubble / 坐腿图气泡",
+      "writeSurface": "coffeeCorner lapClose child-scene bubble / 坐腿图气泡",
+      "surfaceType": "Bubble",
+      "aliases": [
+        "[coffeeCornerLapClose]"
+      ],
+      "deprecatedAliases": [
+        "[lapCloseBubble]"
+      ],
       "useFor": [
-        "lap-close child scene speech bubble",
-        "sitting-on-lap close scene line",
-        "隔壁一句：写猫窝所有地方时必须 include this as a target"
+        "coffeeCorner lap-close child scene speech bubble",
+        "sitting-on-lap close scene line under coffeeCorner",
+        "隔壁一句：写猫窝所有地方时必须 include this target"
       ],
       "mustNotAffect": [
         "coffeeCorner.bubble",
         "home.hubbyNotePanel",
         "home.windowWeatherAdvicePanel"
       ],
-      "notes": "UI exists and is scene-manifest-owned. Cloud write route may still need a dedicated /write safety test before promotion. Do not reuse [coffeeCorner] for this."
+      "notes": "Canonical tag includes parent scene, child scene, and surface type. Existing console tag [coffeeCornerLapClose] can remain as backward-compatible alias. Generic [lapCloseBubble] is deprecated because other scenes may later have their own lapClose bubble."
     },
     "moodNote": {
       "tag": "[moodNote]",
@@ -88,6 +100,7 @@
       "ownerScene": "home",
       "objectId": "home.moodNote",
       "writeSurface": "short mood note",
+      "surfaceType": "Note",
       "useFor": [
         "future short mood note if UI is active"
       ],
@@ -106,28 +119,34 @@
       "[hubbyNote]",
       "[coffeeCorner]",
       "[windowWeather]",
+      "[coffeeCornerLapCloseBubble]"
+    ],
+    "aliasAcceptedForLapCloseBubble": "[coffeeCornerLapClose]",
+    "deprecatedDoNotUse": [
       "[lapCloseBubble]"
     ],
     "excludeUnlessExplicitlyRequested": [
       "[moodNote]"
     ],
-    "rule": "If a tag has status active-ui-not-cloud-wired-yet, include it in the generated tagged draft but do not claim /write can publish it until the /write route is safety-tested and promoted."
+    "rule": "If a canonical tag is not yet supported by the live console, use the registered alias and do not claim canonical support until the parser route is safety-tested and promoted."
   },
   "newWritableObjectChecklist": [
     "Create object information card.",
-    "Assign ownerScene.",
-    "Assign exactly one unique tag.",
+    "Assign ownerScene and parentScene when nested.",
+    "Assign exactly one canonical tag using scene path plus surface type when needed.",
+    "Add aliases only for backward compatibility.",
     "Add the tag here.",
     "Add the object to scene manifest / owner registry.",
-    "Only then connect it to /write.",
-    "Safety-test /write before promotion if runtime parsing or publishing changes."
+    "Only then connect it to the nest console.",
+    "Safety-test the console before promotion if runtime parsing or publishing changes."
   ],
   "antiPatterns": [
-    "untagged write",
+    "untagged text route",
     "one tag writes to unrelated destinations",
     "reusing [coffeeCorner] for lapClose",
+    "using [lapCloseBubble] as canonical without parent scene",
     "routing home weather under coffeeCorner",
     "adding writable UI without tag registry",
-    "promoting /write changes without a write safety test"
+    "promoting console changes without a safety test"
   ]
 }
