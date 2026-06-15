@@ -1,0 +1,218 @@
+{
+  "schemaVersion": "scene-registry.v1",
+  "status": "draft-not-runtime",
+  "runtimeConnected": false,
+  "entryScene": "originalHome",
+  "notes": [
+    "This file is a static framework draft only. It is not loaded by /cloud yet.",
+    "Existing originalHome -> coffeeCorner -> lapClose side branch is preserved and is not moved under nestAtlas.",
+    "nestAtlas is the future top-level map / hub selector placeholder, not a concrete explorable city.",
+    "Future top-level hubs are reserved only. They should not force current scenes to move.",
+    "Shortcut entries from originalHome should be added later as explicit dock/hotspot config, not as early usage-tier fields."
+  ],
+  "actionTypes": {
+    "go": "Direct navigation to a target scene/hub. Does not imply a deep-drill stack push.",
+    "push": "Enter a deeper nested scene from a hotspot. Adds current scene to sceneStack.",
+    "back": "Return one level through sceneStack.",
+    "jumpTo": "Navigation panel anchor jump to a known root/hub scene.",
+    "openPanel": "Open a navigation or management panel."
+  },
+  "globalAnchors": {
+    "originalHome": "originalHome",
+    "nestAtlas": "nestAtlas"
+  },
+  "topHubs": [
+    "dreamHub",
+    "lifeHub",
+    "privateHub",
+    "storyHub",
+    "nestCity",
+    "futureHub"
+  ],
+  "scenes": {
+    "originalHome": {
+      "id": "originalHome",
+      "displayName": "Original Home",
+      "type": "scene",
+      "assetKey": "home.main",
+      "status": {
+        "runtimeStatus": "active",
+        "versionStatus": "canonicalCurrent",
+        "changePolicy": "mutableWithVersion"
+      },
+      "dockActions": {
+        "leftDock": { "action": "go", "target": "nestAtlas" },
+        "rightDock": { "action": "go", "target": "coffeeCorner" },
+        "navPanelHot": { "action": "openPanel", "target": "navPanel" }
+      },
+      "hotspots": [],
+      "lifecycle": {
+        "onLeave": ["hideTransientOverlays"],
+        "onEnter": ["restoreHomeObjects"],
+        "afterEnter": []
+      },
+      "directorNote": "First drawn home image and default opening facade. Keep current home behavior intact. Future world access starts from leftDock."
+    },
+    "coffeeCorner": {
+      "id": "coffeeCorner",
+      "displayName": "Coffee Corner",
+      "type": "scene",
+      "assetKey": "coffeeCorner.main",
+      "status": {
+        "runtimeStatus": "active",
+        "versionStatus": "canonicalCurrent",
+        "changePolicy": "mutableWithVersion"
+      },
+      "dockActions": {
+        "leftDock": { "action": "go", "target": "originalHome" },
+        "rightDock": null,
+        "navPanelHot": { "action": "openPanel", "target": "navPanel" }
+      },
+      "hotspots": [
+        {
+          "id": "coffeeCorner.lapEnterHot",
+          "action": "push",
+          "target": "lapClose",
+          "status": "pausedInMainCloud"
+        },
+        {
+          "id": "coffeeCorner.tattoo198Hot",
+          "action": "bubble",
+          "target": "coffeeCornerBubble",
+          "status": "active"
+        },
+        {
+          "id": "coffeeCorner.gameConsoleHot",
+          "action": "openPanel",
+          "target": "gameMenu",
+          "status": "active"
+        }
+      ],
+      "lifecycle": {
+        "onLeave": ["hideSteamDuringTransition", "hidePhotoGlowDuringTransition"],
+        "onEnter": ["restoreCoffeeBackground", "restoreCoffeeBubble"],
+        "afterEnter": ["wakeSteam", "restorePhotoGlow"]
+      },
+      "directorNote": "Current coffee corner remains a direct rightDock branch from originalHome. Do not move it under nestAtlas just because future hubs exist."
+    },
+    "lapClose": {
+      "id": "lapClose",
+      "displayName": "Lap Close",
+      "type": "scene",
+      "assetKey": "coffeeCorner.lapClose01",
+      "parent": "coffeeCorner",
+      "status": {
+        "runtimeStatus": "testOnly",
+        "mainCloudStatus": "paused",
+        "versionStatus": "draftCurrent",
+        "changePolicy": "mutableWithVersion"
+      },
+      "dockActions": {
+        "leftDock": { "action": "back" },
+        "rightDock": null,
+        "navPanelHot": { "action": "openPanel", "target": "navPanel" }
+      },
+      "hotspots": [],
+      "lifecycle": {
+        "onLeave": ["hideLapOnlyOverlays"],
+        "onEnter": ["hideCoffeeBubble", "hideSteam"],
+        "afterEnter": []
+      },
+      "directorNote": "Lap visual flow is viable, but current patch controller must not connect to main /cloud as-is. Reconnect only through sceneRouter/sceneStack."
+    },
+    "nestAtlas": {
+      "id": "nestAtlas",
+      "displayName": "Nest Atlas / 猫窝星图",
+      "type": "hub",
+      "assetKey": null,
+      "status": {
+        "runtimeStatus": "reserved",
+        "assetStatus": "noArtYet",
+        "versionStatus": "draftCurrent",
+        "changePolicy": "mutableWithVersion"
+      },
+      "dockActions": {
+        "leftDock": null,
+        "rightDock": { "action": "go", "target": "originalHome" },
+        "navPanelHot": { "action": "openPanel", "target": "navPanel" }
+      },
+      "hubEntries": [
+        "dreamHub",
+        "lifeHub",
+        "privateHub",
+        "storyHub",
+        "nestCity",
+        "futureHub"
+      ],
+      "hotspots": [],
+      "lifecycle": {
+        "onLeave": ["hideTransientOverlays"],
+        "onEnter": ["renderHubEntries"],
+        "afterEnter": []
+      },
+      "directorNote": "Top-level map / category selector placeholder. It is not the same as nestCity."
+    },
+    "dreamHub": {
+      "id": "dreamHub",
+      "displayName": "Dream Hub / 梦境区",
+      "type": "hub",
+      "assetKey": null,
+      "status": { "runtimeStatus": "reserved", "assetStatus": "noArtYet" },
+      "directorNote": "Experimental scenes and one-off images: newspaper style, illustration style, 2D, dreamlike formats."
+    },
+    "lifeHub": {
+      "id": "lifeHub",
+      "displayName": "Life Hub / 日常区",
+      "type": "hub",
+      "assetKey": null,
+      "status": { "runtimeStatus": "reserved", "assetStatus": "noArtYet" },
+      "directorNote": "Daily-life and date scene groups for future additions. Existing coffeeCorner is not automatically moved here."
+    },
+    "privateHub": {
+      "id": "privateHub",
+      "displayName": "Private Hub / 私密区",
+      "type": "hub",
+      "assetKey": null,
+      "status": { "runtimeStatus": "reserved", "assetStatus": "noArtYet" },
+      "directorNote": "Nest management, records, memory/archive areas, and kitten's own places."
+    },
+    "storyHub": {
+      "id": "storyHub",
+      "displayName": "Story Hub / 故事区",
+      "type": "hub",
+      "assetKey": null,
+      "status": { "runtimeStatus": "reserved", "assetStatus": "noArtYet" },
+      "directorNote": "Playful roleplay/story setups such as doctor, athlete, alternate roles, and story-book style scenes. Replaces earlier roleplayHub naming."
+    },
+    "nestCity": {
+      "id": "nestCity",
+      "displayName": "Nest City / 猫窝城",
+      "type": "hub",
+      "assetKey": null,
+      "status": { "runtimeStatus": "reserved", "assetStatus": "noArtYet" },
+      "directorNote": "Constructed explorable nest-world area with object interaction: secret garden, magic stone entrance, love stone, restaurant, newsstand, camera area, vendors, etc. It is not the top-level atlas."
+    },
+    "futureHub": {
+      "id": "futureHub",
+      "displayName": "Future Hub / 未定区",
+      "type": "hub",
+      "assetKey": null,
+      "status": { "runtimeStatus": "reserved", "assetStatus": "noArtYet" },
+      "directorNote": "One top-level future bucket is enough for now. If it grows, split inside this hub later instead of pre-allocating many empty top-level hubs."
+    }
+  },
+  "navPanelDraft": {
+    "status": "planned-not-runtime",
+    "anchors": [
+      { "id": "originalHome", "label": "回原点", "action": "jumpTo", "target": "originalHome" },
+      { "id": "nestAtlas", "label": "回猫窝星图", "action": "jumpTo", "target": "nestAtlas" },
+      { "id": "currentHubRoot", "label": "回当前分区根节点", "action": "jumpTo", "target": "currentHubRoot" },
+      { "id": "currentGroupRoot", "label": "回当前组起点", "action": "jumpTo", "target": "currentGroupRoot" }
+    ],
+    "note": "No full breadcrumb UI for now. Navigation panel should expose major anchors only."
+  },
+  "assetAdminDraft": {
+    "status": "planned-not-runtime",
+    "note": "Future asset admin should allow upload/preview/set-current and automatic version bump by assetKey. This belongs to assetController/admin, not sceneRouter."
+  }
+}
