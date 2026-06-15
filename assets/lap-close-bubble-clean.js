@@ -1,7 +1,6 @@
 (function(){
-  var VERSION = 'lap-close-bubble-clean-20260615-coffee-corner-queue-test-1';
+  var VERSION = 'lap-close-bubble-clean-20260615-queue-promoted-1';
   var qs = new URLSearchParams(location.search);
-  var queueTest = qs.get('coffeeCornerLapCloseBubbleQueueTest') === '1';
 
   function $(id){ return document.getElementById(id); }
 
@@ -39,7 +38,7 @@
 
   startSuppressor();
 
-  var text = qs.has('lapBubbleText') ? qs.get('lapBubbleText') : '坐稳，小猫。';
+  var text = qs.has('lapBubbleText') ? qs.get('lapBubbleText') : '';
   var queue = text ? [text] : [];
   var index = 0;
   var visible = false;
@@ -71,7 +70,7 @@
     return String(state && (state.coffeeCornerLapCloseBubbleUpdatedAt || state.updatedAt) || '') + '|' + JSON.stringify(stateList(state));
   }
   function syncState(state){
-    if(!queueTest || !state) return false;
+    if(!state) return false;
     var nextStamp = makeStamp(state);
     if(nextStamp === stamp) return false;
     stamp = nextStamp;
@@ -83,12 +82,11 @@
     return true;
   }
   async function refreshState(){
-    if(!queueTest) return;
     try{
       var res = await fetch('/api/state?ts=' + Date.now(), { cache:'no-store' });
       var data = await res.json();
       syncState(data);
-    }catch(e){ console.warn('[coffeeCornerLapCloseBubbleQueueTest] state read failed', e); }
+    }catch(e){ console.warn('[coffeeCornerLapCloseBubbleQueue] state read failed', e); }
   }
   function box(){
     var image = img();
@@ -137,7 +135,7 @@
     el.textContent = text;
     el.setAttribute('data-has-text', text ? '1' : '0');
     el.setAttribute('data-visible', visible && text ? '1' : '0');
-    if(queueTest) el.setAttribute('data-coffee-corner-lap-close-bubble-queue-test', String(queue.length));
+    el.setAttribute('data-coffee-corner-lap-close-bubble-queue', String(queue.length));
     return el;
   }
 
@@ -193,7 +191,7 @@
 
   function toggle(e){
     if(e){ e.preventDefault(); e.stopPropagation(); if(e.stopImmediatePropagation) e.stopImmediatePropagation(); }
-    if(queueTest) refreshState();
+    refreshState();
     if(!currentText()) return;
     var now = Date.now();
     if(now - lastToggleAt < TOGGLE_GUARD_MS) return;
@@ -220,7 +218,7 @@
 
   function start(){
     document.body.setAttribute('data-lap-bubble', VERSION);
-    if(queueTest) document.body.setAttribute('data-coffee-corner-lap-close-bubble-queue-test', '1');
+    document.body.setAttribute('data-coffee-corner-lap-close-bubble-queue', '1');
     if(qs.get('debugLapBubble') === '1') document.body.setAttribute('data-debug-lap-bubble', '1');
     refreshState();
     sync();
