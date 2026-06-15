@@ -1,7 +1,7 @@
 (function(){
-  var VERSION = 'lap-close-bubble-clean-20260615-queue-test-1';
+  var VERSION = 'lap-close-bubble-clean-20260615-coffee-corner-queue-test-1';
   var qs = new URLSearchParams(location.search);
-  var queueTest = qs.get('lapCloseBubbleQueueTest') === '1';
+  var queueTest = qs.get('coffeeCornerLapCloseBubbleQueueTest') === '1';
 
   function $(id){ return document.getElementById(id); }
 
@@ -88,7 +88,7 @@
       var res = await fetch('/api/state?ts=' + Date.now(), { cache:'no-store' });
       var data = await res.json();
       syncState(data);
-    }catch(e){ console.warn('[lapCloseBubbleQueueTest] state read failed', e); }
+    }catch(e){ console.warn('[coffeeCornerLapCloseBubbleQueueTest] state read failed', e); }
   }
   function box(){
     var image = img();
@@ -137,7 +137,7 @@
     el.textContent = text;
     el.setAttribute('data-has-text', text ? '1' : '0');
     el.setAttribute('data-visible', visible && text ? '1' : '0');
-    if(queueTest) el.setAttribute('data-queue-test', String(queue.length));
+    if(queueTest) el.setAttribute('data-coffee-corner-lap-close-bubble-queue-test', String(queue.length));
     return el;
   }
 
@@ -150,7 +150,7 @@
       hot = document.createElement('button');
       hot.id = 'sceneRouterCleanLapBodyHot';
       hot.type = 'button';
-      hot.setAttribute('aria-label', 'lap bubble hotspot');
+      hot.setAttribute('aria-label', 'coffee corner lap close bubble hotspot');
       hot.setAttribute('data-coordinate-hotspot', bodyCard.id);
       hot.setAttribute('data-owner', 'sceneRouterClean');
       hot.setAttribute('data-scene', 'lapClose');
@@ -220,7 +220,7 @@
 
   function start(){
     document.body.setAttribute('data-lap-bubble', VERSION);
-    if(queueTest) document.body.setAttribute('data-lap-bubble-queue-test', '1');
+    if(queueTest) document.body.setAttribute('data-coffee-corner-lap-close-bubble-queue-test', '1');
     if(qs.get('debugLapBubble') === '1') document.body.setAttribute('data-debug-lap-bubble', '1');
     refreshState();
     sync();
