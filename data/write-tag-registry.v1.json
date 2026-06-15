@@ -1,5 +1,5 @@
 {
-  "version": "1.0.1",
+  "version": "1.0.2",
   "status": "active-routing-registry",
   "purpose": "Machine-readable registry for nest console tag routing and future writable scene objects.",
   "coreRule": "No tag, no text route. One tag, one destination family. Every writable object must have a tag registry entry before it is connected to the nest console.",
@@ -68,7 +68,7 @@
     },
     "coffeeCornerLapCloseBubble": {
       "tag": "[coffeeCornerLapCloseBubble]",
-      "status": "canonical-active-ui-route-test-needed",
+      "status": "active",
       "destinationFamily": "coffeeCorner.lapCloseBubble.cleanRouter",
       "ownerScene": "lapClose",
       "parentScene": "coffeeCorner",
@@ -91,7 +91,7 @@
         "home.hubbyNotePanel",
         "home.windowWeatherAdvicePanel"
       ],
-      "notes": "Canonical tag includes parent scene, child scene, and surface type. Existing console tag [coffeeCornerLapClose] can remain as backward-compatible alias. Generic [lapCloseBubble] is deprecated because other scenes may later have their own lapClose bubble."
+      "notes": "Canonical tag includes parent scene, child scene, and surface type. Existing console tag [coffeeCornerLapClose] remains as backward-compatible alias. Generic [lapCloseBubble] is deprecated because other scenes may later have their own lapClose bubble."
     },
     "moodNote": {
       "tag": "[moodNote]",
@@ -128,7 +128,7 @@
     "excludeUnlessExplicitlyRequested": [
       "[moodNote]"
     ],
-    "rule": "If a canonical tag is not yet supported by the live console, use the registered alias and do not claim canonical support until the parser route is safety-tested and promoted."
+    "rule": "Use canonical tags by default. Backward-compatible aliases may remain for old packages."
   },
   "newWritableObjectChecklist": [
     "Create object information card.",
