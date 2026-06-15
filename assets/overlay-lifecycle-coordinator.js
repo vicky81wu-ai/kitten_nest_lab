@@ -1,5 +1,5 @@
 (function(){
-  var VERSION = 'overlay-lifecycle-coordinator-20260615-1';
+  var VERSION = 'overlay-lifecycle-coordinator-20260615-2';
   var items = [];
   var scheduled = false;
   var cycle = 0;
@@ -89,14 +89,19 @@
 
   function start(){
     scanImages();
-    var mo = new MutationObserver(function(){ scanImages(); request('dom-mutation'); });
-    mo.observe(document.documentElement, { childList:true, subtree:true, attributes:true, attributeFilter:['class','src','style'] });
+    if(document.body){
+      var bodyObserver = new MutationObserver(function(){ request('body-class'); });
+      bodyObserver.observe(document.body, { attributes:true, attributeFilter:['class'] });
+    }
+    var childObserver = new MutationObserver(function(){ scanImages(); request('dom-child'); });
+    childObserver.observe(document.documentElement, { childList:true, subtree:true });
     ['pageshow','focus','resize','orientationchange'].forEach(function(name){
       window.addEventListener(name, function(){ request(name); });
     });
     document.addEventListener('visibilitychange', function(){ if(!document.hidden) request('visibilitychange'); });
     document.addEventListener('click', function(){ request('click'); }, true);
     document.addEventListener('touchend', function(){ request('touchend'); }, true);
+    window.dispatchEvent(new CustomEvent('overlayLifecycleReady'));
     request('start');
   }
 
