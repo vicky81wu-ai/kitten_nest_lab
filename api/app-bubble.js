@@ -8,7 +8,7 @@ const bubbleControllerScript = '<script src="/assets/bubble-controller.js?v=2026
 const hubbyNoteControllerScript = '<script src="/assets/hubby-note-controller.js?v=20260613-archive-first-paw-1"></script>';
 const setupToggleScript = '<script src="/assets/setup-toggle.js?v=20260613-touchfix-1"></script>';
 const consoleRestoreScript = '<script src="/assets/console-hot-restore.js?v=20260610-1"></script>';
-const sceneRouterScript = '<script src="/assets/scene-router.v1.js?v=20260614-router-4"></script>';
+const sceneRouterScript = '<script src="/assets/scene-router.v1.js?v=20260614-router-6"></script>';
 const sceneRouterBootScript = `
 <script>
 (function(){
