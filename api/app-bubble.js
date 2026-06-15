@@ -80,7 +80,7 @@ const bubbleBootScript = `
 </script>`;
 
 function injectBubbleController(html, options = {}) {
-  const clean = !!options.sceneRouterClean;
+  const clean = !!options.cleanDefault;
   const scripts = [
     hotspotPositionerScript,
     coffeeSteamScript
@@ -105,10 +105,11 @@ function injectBubbleController(html, options = {}) {
 module.exports = async function handler(req, res) {
   const url = String(req.url || '');
   const sceneRouterTest = url.includes('sceneRouterTest=1');
-  const sceneRouterClean = url.includes('sceneRouterClean=1');
+  const sceneRouterLegacy = url.includes('sceneRouterLegacy=1');
+  const cleanDefault = !sceneRouterTest && !sceneRouterLegacy;
   const originalSend = res.send.bind(res);
   res.send = function sendWithBubbleController(body) {
-    if (typeof body === 'string') return originalSend(injectBubbleController(body, { sceneRouterTest, sceneRouterClean }));
+    if (typeof body === 'string') return originalSend(injectBubbleController(body, { sceneRouterTest, cleanDefault }));
     return originalSend(body);
   };
   return appAssetctl(req, res);
