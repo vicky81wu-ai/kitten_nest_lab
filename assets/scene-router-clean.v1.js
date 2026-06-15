@@ -1,9 +1,11 @@
 (function(){
-  var VERSION = 'scene-router-clean-v1-20260614-3-lap-bubble';
+  var VERSION = 'scene-router-clean-v1-20260615-home-name-test';
+  var qs = new URLSearchParams(location.search);
+  var HOME_SCENE_ID = qs.get('sceneNameHomeTest') === '1' ? 'home' : 'originalHome';
   var LAP_URL = 'https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/variants/lap-close-01.jpg?v=20260613-lap-close-1';
   var LAP_BUBBLE_TEXT = 'Come here, kitten. Stay on my lap for a minute.';
   var state = {
-    current: 'originalHome',
+    current: HOME_SCENE_ID,
     stack: [],
     lock: false,
     installed: false,
@@ -12,12 +14,11 @@
     debug: false
   };
 
-  var scenes = {
-    originalHome: { id: 'originalHome', leftDock: { action: 'go', target: 'nestAtlas' }, rightDock: { action: 'go', target: 'coffeeCorner' } },
-    coffeeCorner: { id: 'coffeeCorner', leftDock: { action: 'go', target: 'originalHome' }, rightDock: null },
-    lapClose: { id: 'lapClose', parent: 'coffeeCorner', leftDock: { action: 'back' }, rightDock: null },
-    nestAtlas: { id: 'nestAtlas', leftDock: null, rightDock: { action: 'go', target: 'originalHome' } }
-  };
+  var scenes = {};
+  scenes[HOME_SCENE_ID] = { id: HOME_SCENE_ID, displayName: 'original home', leftDock: { action: 'go', target: 'nestAtlas' }, rightDock: { action: 'go', target: 'coffeeCorner' } };
+  scenes.coffeeCorner = { id: 'coffeeCorner', leftDock: { action: 'go', target: HOME_SCENE_ID }, rightDock: null };
+  scenes.lapClose = { id: 'lapClose', parent: 'coffeeCorner', leftDock: { action: 'back' }, rightDock: null };
+  scenes.nestAtlas = { id: 'nestAtlas', leftDock: null, rightDock: { action: 'go', target: HOME_SCENE_ID } };
 
   function $(id){ return document.getElementById(id); }
   function home(){ return $('home'); }
@@ -77,7 +78,7 @@
     if($('sceneAtlasPlaceholder')) return;
     var el = document.createElement('div');
     el.id = 'sceneAtlasPlaceholder';
-    el.innerHTML = '<div class="box"><h2>Nest Atlas</h2><p>猫窝星图占位测试页</p><p>右下返回 Original Home</p><p>此入口只用于干净 sceneRouter 测试。</p></div>';
+    el.innerHTML = '<div class="box"><h2>Nest Atlas</h2><p>猫窝星图占位测试页</p><p>右下返回 home</p><p>此入口只用于干净 sceneRouter 测试。</p></div>';
     document.body.appendChild(el);
   }
 
@@ -122,7 +123,7 @@
     var h = home();
     var g = game();
     document.body.classList.remove('scene-atlas');
-    if(sceneId === 'originalHome'){
+    if(sceneId === HOME_SCENE_ID){
       if(h) h.classList.add('active');
       if(g) g.classList.remove('active');
     }else if(sceneId === 'nestAtlas'){
@@ -259,7 +260,7 @@
   function push(target){ setScene(target, 'push'); }
   function back(){
     if(state.lock) return;
-    var target = state.stack.length ? state.stack.pop() : (scenes[state.current] && scenes[state.current].parent) || 'originalHome';
+    var target = state.stack.length ? state.stack.pop() : (scenes[state.current] && scenes[state.current].parent) || HOME_SCENE_ID;
     setScene(target, 'back');
   }
   function jumpTo(target){ state.stack = []; setScene(target, 'jumpTo'); }
@@ -304,14 +305,15 @@
     state.debug = !!options.debug;
     document.body.classList.add('sceneRouterClean');
     document.body.classList.toggle('sceneRouterCleanDebug', state.debug);
+    document.body.setAttribute('data-clean-router-home-scene-id', HOME_SCENE_ID);
     ensureStyle();
     removeStatus();
     ensureStatus();
     ensureAtlasPlaceholder();
     ensureLapBubble();
     rememberCoffeeSrc();
-    setRoomActive('originalHome');
-    state.current = 'originalHome';
+    setRoomActive(HOME_SCENE_ID);
+    state.current = HOME_SCENE_ID;
     state.stack = [];
     refreshScene();
     if(!state.installed){
@@ -337,6 +339,7 @@
     jumpTo: jumpTo,
     state: state,
     scenes: scenes,
+    homeSceneId: HOME_SCENE_ID,
     refreshScene: refreshScene
   };
 })();
