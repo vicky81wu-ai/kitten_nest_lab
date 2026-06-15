@@ -224,3 +224,124 @@ Do not turn this shadow map into enforcement in the same step.
 Next safe step is read-only registry checking under a test-only query parameter.
 Only after that passes should future binders consult the registry before adding handlers.
 ```
+
+## 2026-06-15 clean router + scene manifest checkpoint
+
+High point:
+
+```text
+Vicky caught the real framework issue:
+push(lapClose) must isolate the parent scene instead of letting coffeeCorner hotspots leak through the lap image.
+```
+
+Final tested direction:
+
+```text
+sceneRouterClean owns navigation only:
+- go
+- push
+- back
+- jumpTo
+
+scene manifest owns scene/object relationship:
+- currentScene decides allowed objects
+- pushed child scene may use only its own objects plus explicit inherits
+- parent scene hotspots and panels must not stay clickable inside a child scene
+```
+
+Naming discipline:
+
+```text
+Use originalHome for the scene id.
+Use home.* for home-owned object ids.
+Do not casually mix PrettyHome / Home / originalHome as scene ids.
+Do not name home weather objects under coffeeCorner.
+```
+
+Current scene naming:
+
+```text
+originalHome = the first / default home scene
+coffeeCorner = right-dock scene from originalHome
+lapClose = pushed child scene under coffeeCorner
+nestAtlas = future world hub placeholder, not the current default
+```
+
+Current clean behavior verified by Vicky:
+
+```text
+originalHome <-> coffeeCorner is smooth.
+coffeeCorner -> push(lapClose) works.
+lapClose -> back() returns to coffeeCorner.
+lapClose no longer leaks coffeeCorner game console / photo wall / tattoo / weather / panel hotspots.
+lapClose bubble opens and closes correctly from its own scene-owned target.
+coffee steam / photoGlow are locked to coffeeCorner base image coordinates.
+Home window weather advice belongs to originalHome and opens correctly.
+```
+
+Scene manifest test files:
+
+```text
+data/scene-manifest.test.v1.json
+assets/scene-manifest-isolation-test.js
+```
+
+Manifest rule that must survive promotion:
+
+```text
+Parent scene owns the hotspot that enters a child scene.
+Child scene owns its own overlays and child-only hotspots.
+Child scene inherits only explicit navigation, such as dock.left.back.
+No selector blacklist is allowed as final architecture.
+```
+
+Object ownership lessons from today:
+
+```text
+1. Entry hotspot ownership:
+   coffeeCorner.lapCloseEnterHot.cleanRouter belongs to coffeeCorner, because it is clicked before entering lapClose.
+
+2. Child scene ownership:
+   coffeeCorner.lapCloseScene, coffeeCorner.lapCloseBubble.cleanRouter, and lapClose-only target belong to lapClose.
+
+3. Home weather ownership:
+   home.windowWeatherDisplay, home.windowWeatherAdviceHotspot, home.windowWeatherAdvicePanel belong to originalHome.
+
+4. Coffee scene ownership:
+   coffeeCorner.gameConsoleHotspot, photoWallHot, tattoo19_8, bubble, steamOverlay, photoGlowOverlay, setupPanel, setupToggleButton, gameMenu.panel, memories.panel belong to coffeeCorner.
+```
+
+Do not repeat these failed moves:
+
+```text
+- Do not test a framework issue with a hardcoded selector blacklist and call it architecture.
+- Do not leave parent-scene hotspots alive under a pushed child scene.
+- Do not put home weather objects under coffeeCorner just because the old controller name says windowWeather.
+- Do not put a child-entry hotspot inside the child scene owns list.
+- Do not promote test-only manifest enforcement into default /cloud until screen-home PWA and real /cloud both pass.
+```
+
+Current known tiny imperfection, not a current target:
+
+```text
+After using originalHome controls such as light switch or weather advice, entering coffeeCorner can make the 19.8 tattoo bubble hotspot slow to respond for about 2-3 seconds. Other hotspots are fine, and touching another hotspot appears to wake the bubble path. Do not chase this unless it becomes a repeatable blocker.
+```
+
+Current naming cleanup status:
+
+```text
+data/scene-manifest.test.v1.json is clean: home.windowWeather* is used.
+data/object-owner-runtime-shadow.v1.json records home.windowWeatherAdvice and forbids coffeeCorner naming for home weather.
+data/object-registry.v1.json is long and still needs a script-level safe rename pass if coffeeCorner.windowWeather* remains there. Do not hand-copy the 569-line registry file.
+```
+
+Promotion rule:
+
+```text
+Before any future scene group / nested scene / roleplay scene is added:
+1. create or update the scene card
+2. create object information cards
+3. declare ownerScene / selectors / panels / overlays / inherited navigation
+4. test with manifest isolation
+5. only then promote
+```
