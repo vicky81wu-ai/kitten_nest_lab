@@ -1,5 +1,5 @@
 (function(){
-  var VERSION = 'scene-router-v1-test-20260614-6';
+  var VERSION = 'scene-router-v1-test-20260614-7';
   var LAP_URL = 'https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/variants/lap-close-01.jpg?v=20260613-lap-close-1';
   var state = {
     current: 'originalHome',
@@ -41,6 +41,10 @@
       'body.sceneRouterLocked .toGameHot,body.sceneRouterLocked .toHomeHot,body.sceneRouterLocked .sceneRouterLapHot{pointer-events:none!important}',
       'body.sceneRouterLap #bubble,body.sceneRouterLocked #bubble{opacity:0!important;pointer-events:none!important}',
       'body.sceneRouterLap #gameRoom .steam,body.sceneRouterLap #gameRoom .photoGlow,body.sceneRouterLocked #gameRoom .photoGlow{display:none!important;opacity:0!important;pointer-events:none!important}',
+      'body.sceneRouterTest:not(.sceneRouterLap).leavingCoffeeCorner #gameRoom.active .steam,body.sceneRouterTest:not(.sceneRouterLap) #gameRoom.active.leavingCoffeeCorner .steam{display:block!important;opacity:.92!important;pointer-events:none!important}',
+      'body.sceneRouterTest #home.active .clock,body.sceneRouterTest #home.active .hand,body.sceneRouterTest #home.active .weather,body.sceneRouterTest #home.active .jarSparks,body.sceneRouterTest #gameRoom.active .steam,body.sceneRouterTest #gameRoom.active .photoGlow{-webkit-backface-visibility:hidden;backface-visibility:hidden;will-change:opacity,transform}',
+      'body.sceneRouterTest.overlayRepaintTick #home.active .clock{transform:rotate(7deg) translateZ(0.01px)}',
+      'body.sceneRouterTest.overlayRepaintTick #gameRoom.active .steam{transform:translateZ(0.01px)}',
       '#sceneRouterFade{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;z-index:58;pointer-events:none;opacity:0;transition:opacity 360ms cubic-bezier(.22,.8,.25,1);will-change:opacity;backface-visibility:hidden;-webkit-backface-visibility:hidden}'
     ].join('');
     document.head.appendChild(s);
@@ -82,6 +86,33 @@
     return state.mainCoffeeSrc || src || '/assets/rooms/coffee-corner/morning-evening.jpg';
   }
 
+  function clearLegacyLeaving(){
+    var g = game();
+    if(!g) return;
+    if(document.body.classList.contains('sceneRouterLap') || document.body.classList.contains('coffeeLapVariant')) return;
+    document.body.classList.remove('leavingCoffeeCorner');
+    g.classList.remove('leavingCoffeeCorner');
+  }
+
+  function repaintActiveOverlays(){
+    var nodes = [];
+    var h = home();
+    var g = game();
+    if(h && h.classList.contains('active')) nodes = nodes.concat(Array.prototype.slice.call(h.querySelectorAll('.clock,.hand,.weather,.jarSparks')));
+    if(g && g.classList.contains('active')) nodes = nodes.concat(Array.prototype.slice.call(g.querySelectorAll('.steam,.photoGlow')));
+    nodes.forEach(function(el){
+      try{
+        el.style.webkitBackfaceVisibility = 'hidden';
+        el.style.backfaceVisibility = 'hidden';
+        if(!el.style.willChange) el.style.willChange = 'opacity, transform';
+        void el.offsetHeight;
+        el.getBoundingClientRect();
+      }catch(e){}
+    });
+    document.body.classList.add('overlayRepaintTick');
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){ document.body.classList.remove('overlayRepaintTick'); }); });
+  }
+
   function setRoomActive(sceneId){
     var h = home();
     var g = game();
@@ -96,7 +127,10 @@
     }else{
       if(h) h.classList.remove('active');
       if(g) g.classList.add('active');
+      if(sceneId === 'coffeeCorner') clearLegacyLeaving();
     }
+    setTimeout(repaintActiveOverlays, 0);
+    setTimeout(repaintActiveOverlays, 120);
   }
 
   function coverBox(image){
@@ -158,6 +192,7 @@
   function ensureSteam(){
     var s = steam();
     if(!s || state.current !== 'coffeeCorner') return false;
+    clearLegacyLeaving();
     s.style.display = '';
     s.style.opacity = '';
     s.style.pointerEvents = '';
@@ -180,7 +215,7 @@
 
   function runLifecycle(sceneId, stage){
     if(sceneId === 'coffeeCorner'){
-      if(stage === 'afterEnter'){ ensureSteam(); restorePhotoGlow(); }
+      if(stage === 'afterEnter'){ ensureSteam(); restorePhotoGlow(); repaintActiveOverlays(); }
     }
     if(sceneId === 'originalHome'){
       if(stage === 'onEnter') hideLapHot();
@@ -233,6 +268,7 @@
       state.current = next;
       document.body.classList.toggle('sceneRouterLap', next === 'lapClose');
       document.body.classList.toggle('coffeeLapVariant', next === 'lapClose');
+      if(next === 'coffeeCorner') clearLegacyLeaving();
       setRoomActive(next);
       if(next === 'coffeeCorner') ensureSteam();
       if(next === 'coffeeCorner'){
@@ -289,12 +325,14 @@
   function refreshScene(){
     updateStatus();
     if(state.current === 'coffeeCorner'){
+      clearLegacyLeaving();
       placeLapHot();
       ensureSteam();
       if(!state.lock) restorePhotoGlow();
     }else{
       hideLapHot();
     }
+    repaintActiveOverlays();
   }
 
   function start(options){
@@ -317,7 +355,9 @@
       document.addEventListener('touchend', capture, {capture:true, passive:false});
       window.addEventListener('resize', refreshScene);
       window.addEventListener('orientationchange', refreshScene);
-      document.addEventListener('visibilitychange', function(){ if(!document.hidden) setTimeout(refreshScene, 80); });
+      window.addEventListener('pageshow', function(){ setTimeout(refreshScene, 80); setTimeout(refreshScene, 420); });
+      window.addEventListener('focus', function(){ setTimeout(refreshScene, 80); setTimeout(refreshScene, 420); });
+      document.addEventListener('visibilitychange', function(){ if(!document.hidden){ setTimeout(refreshScene, 80); setTimeout(refreshScene, 420); } });
       setTimeout(refreshScene, 250);
       setTimeout(refreshScene, 900);
       setTimeout(refreshScene, 1600);
