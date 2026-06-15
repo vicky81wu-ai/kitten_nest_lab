@@ -1,14 +1,50 @@
 (function(){
-  var VERSION = 'lap-close-bubble-clean-20260614-test-2';
+  var VERSION = 'lap-close-bubble-clean-20260614-test-3';
   var qs = new URLSearchParams(location.search);
-  if(qs.get('lapBubbleTest') !== '1') return;
+  var enabled = qs.get('lapBubbleTest') === '1';
+
+  function $(id){ return document.getElementById(id); }
+
+  function suppressLegacyBubble(){
+    var old = $('sceneRouterLapBubble');
+    if(old){
+      old.textContent = '';
+      old.setAttribute('data-has-text', '0');
+      old.style.setProperty('display', 'none', 'important');
+      old.style.setProperty('opacity', '0', 'important');
+      old.style.setProperty('pointer-events', 'none', 'important');
+    }
+  }
+
+  function installLegacySuppressStyle(){
+    if($('lapCloseLegacyBubbleSuppressStyle')) return;
+    var s = document.createElement('style');
+    s.id = 'lapCloseLegacyBubbleSuppressStyle';
+    s.textContent = '#sceneRouterLapBubble{display:none!important;opacity:0!important;pointer-events:none!important}';
+    document.head.appendChild(s);
+  }
+
+  function startSuppressor(){
+    installLegacySuppressStyle();
+    suppressLegacyBubble();
+    ['pageshow','focus','resize','orientationchange'].forEach(function(name){ window.addEventListener(name, suppressLegacyBubble); });
+    document.addEventListener('visibilitychange', function(){ if(!document.hidden) suppressLegacyBubble(); });
+    document.addEventListener('click', function(){ setTimeout(suppressLegacyBubble, 40); }, true);
+    document.addEventListener('touchend', function(){ setTimeout(suppressLegacyBubble, 40); }, true);
+    setTimeout(suppressLegacyBubble, 80);
+    setTimeout(suppressLegacyBubble, 250);
+    setTimeout(suppressLegacyBubble, 700);
+    setTimeout(suppressLegacyBubble, 1400);
+  }
+
+  startSuppressor();
+  if(!enabled) return;
 
   var text = qs.get('lapBubbleText') || '';
   var visible = false;
   var bubbleCard = { id:'coffeeCorner.lapCloseBubble.cleanRouter', selector:'#sceneRouterCleanLapBubble', coordinate:{ x:0.365, y:0.205, width:0.43 } };
   var bodyCard = { id:'coffeeCorner.lapBodyHot.cleanRouterTest', selector:'#sceneRouterCleanLapBodyHot', coordinate:{ x:0.60, y:0.665, width:0.42, height:0.22 } };
 
-  function $(id){ return document.getElementById(id); }
   function room(){ return $('gameRoom'); }
   function img(){ return $('gameBg'); }
   function activeLap(){ return document.body.classList.contains('sceneRouterCleanLap') && room() && room().classList.contains('active'); }
@@ -119,6 +155,7 @@
   }
 
   function sync(){
+    suppressLegacyBubble();
     if(!activeLap()) visible = false;
     ensureBubble();
     ensureBodyHot();
