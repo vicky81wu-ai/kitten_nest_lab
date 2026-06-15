@@ -1,5 +1,5 @@
 (function(){
-  var VERSION = 'coffee-corner-lap-clean-controller-20260614-4';
+  var VERSION = 'coffee-corner-lap-clean-controller-20260614-5';
   var LAP_URL = 'https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/variants/lap-close-01.jpg?v=20260613-lap-close-1';
   var DURATION = 420;
   var lock = false;
@@ -11,6 +11,8 @@
   var refreshTimer = null;
   var lastTouchAt = 0;
   var transitionToken = 0;
+  var wasCoffeeActive = false;
+  var lastSteamWakeAt = 0;
 
   var enterCard = { x: 0.275, y: 0.54, width: 0.39, height: 0.12 };
   var backCard = { x: 0.12, y: 0.86, width: 0.24, height: 0.20 };
@@ -56,7 +58,7 @@
     var style = document.createElement('style');
     style.id = 'lapCleanStyle';
     style.textContent = [
-      '#gameRoom:not(.active) .steam,#gameRoom:not(.active) .photoGlow,#gameRoom.leavingCoffeeCorner .steam,#gameRoom.leavingCoffeeCorner .photoGlow,body.leavingCoffeeCorner #gameRoom .steam,body.leavingCoffeeCorner #gameRoom .photoGlow{display:none!important;opacity:0!important;pointer-events:none!important;animation:none!important}',
+      '#gameRoom:not(.active) .steam,#gameRoom:not(.active) .photoGlow,#gameRoom.leavingCoffeeCorner .steam,#gameRoom.leavingCoffeeCorner .photoGlow,body.leavingCoffeeCorner #gameRoom .steam,body.leavingCoffeeCorner #gameRoom .photoGlow,body.lapCleanTransitioning #gameRoom .steam,body.lapCleanTransitioning #gameRoom .photoGlow,body.coffeeLapVariant #gameRoom .steam{display:none!important;opacity:0!important;pointer-events:none!important;animation:none!important}',
       'body.lapCleanTransitioning #gameRoom .hot{pointer-events:none!important}',
       'body.lapCleanTransitioning #bubble,body.coffeeLapVariant #bubble{opacity:0!important;pointer-events:none!important}',
       '#lapCleanOverlay{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;z-index:36;pointer-events:none;opacity:0;transition:opacity 420ms cubic-bezier(.22,.8,.25,1);will-change:opacity;backface-visibility:hidden;-webkit-backface-visibility:hidden}',
@@ -120,18 +122,22 @@
     return true;
   }
 
-  function ensureSteam(){
-    if(!isCoffeeActive() || mode !== 'main') return;
+  function wakeSteam(force){
+    if(!isCoffeeActive() || mode !== 'main' || lock) return;
     var steam = document.querySelector('#gameRoom .steam');
     if(!steam) return;
     steam.style.display = '';
     steam.style.opacity = '';
     steam.style.pointerEvents = '';
     steam.style.animation = '';
-    var ok = steam.querySelector('svg') && steam.getAttribute('data-steam-svg') === '2';
-    if(ok) return;
+    var hasSvg = !!steam.querySelector('svg');
+    var ok = hasSvg && steam.getAttribute('data-steam-svg') === '2';
+    if(ok && !force) return;
+    var now = Date.now();
+    if(now - lastSteamWakeAt < 500 && !force) return;
+    lastSteamWakeAt = now;
     steam.removeAttribute('data-steam-svg');
-    if(!steam.querySelector('svg')) steam.innerHTML = '';
+    steam.innerHTML = '';
     if(window.KittenNestCoffeeSteam && typeof window.KittenNestCoffeeSteam.install === 'function') window.KittenNestCoffeeSteam.install();
   }
 
@@ -145,7 +151,9 @@
   function updateHotspots(){
     ensureStyle(); ensureHotspots(); currentMainSrc(); updateBubbleVisibility();
     var active = isCoffeeActive();
-    if(active && mode === 'main' && !lock) ensureSteam();
+    if(active && !wasCoffeeActive && mode === 'main') setTimeout(function(){ wakeSteam(true); }, 40);
+    wasCoffeeActive = active;
+    if(active && mode === 'main' && !lock) wakeSteam(false);
     if(enterHot){
       placeHot(enterHot, enterCard);
       enterHot.style.display = active && mode === 'main' && !lock ? 'block' : 'none';
@@ -186,7 +194,7 @@
       clearVisual();
       lock = false;
       updateHotspots();
-      if(mode === 'main') ensureSteam();
+      if(mode === 'main') wakeSteam(true);
     }, 1800);
   }
 
@@ -197,7 +205,6 @@
     lock = true; ensureStyle(); clearVisual(); updateHotspots(); document.body.classList.add('lapCleanTransitioning'); forceUnlock(token);
     var target = kind === 'enter' ? LAP_URL : currentMainSrc();
     if(kind === 'enter') currentMainSrc();
-    if(kind === 'back'){ document.body.classList.remove('coffeeLapVariant'); ensureSteam(); }
     preload(target, function(){
       if(token !== transitionToken) return;
       overlay.src = target;
@@ -211,7 +218,11 @@
           if(kind === 'enter') document.body.classList.add('coffeeLapVariant');
           if(kind === 'back') document.body.classList.remove('coffeeLapVariant');
           requestAnimationFrame(function(){ requestAnimationFrame(function(){
-            clearVisual(); lock = false; updateHotspots(); if(mode === 'main') ensureSteam(); scheduleRefresh();
+            clearVisual();
+            lock = false;
+            updateHotspots();
+            if(mode === 'main') setTimeout(function(){ wakeSteam(true); }, 40);
+            scheduleRefresh();
           }); });
         });
       }, DURATION + 20);
@@ -229,7 +240,7 @@
 
   function start(options){
     options = options || {}; if(options.debug) document.body.classList.add('lapCleanDebug');
-    ensureStyle(); ensureOverlay(); ensureHotspots(); currentMainSrc(); updateHotspots(); ensureSteam(); scheduleRefresh();
+    ensureStyle(); ensureOverlay(); ensureHotspots(); currentMainSrc(); updateHotspots(); wakeSteam(true); scheduleRefresh();
     if(!installed){
       installed = true;
       window.addEventListener('resize', scheduleRefresh);
@@ -251,5 +262,5 @@
     enterHot = null; backHot = null; clearVisual(); document.body.classList.remove('coffeeLapVariant','lapCleanDebug'); mode = 'main'; lock = false;
   }
 
-  window.KittenNestLapClean = { version: VERSION, start: start, stop: stop, enterLap: enterLap, backMain: backMain, updateHotspots: updateHotspots, ensureSteam: ensureSteam };
+  window.KittenNestLapClean = { version: VERSION, start: start, stop: stop, enterLap: enterLap, backMain: backMain, updateHotspots: updateHotspots, wakeSteam: wakeSteam };
 })();
