@@ -234,8 +234,6 @@
     ensureStyle();
     var btn = document.getElementById('hubbyNoteButton');
     if(!btn){ btn = document.createElement('button'); btn.id = 'hubbyNoteButton'; btn.className = 'hubbyNoteButton'; btn.type = 'button'; btn.textContent = '粉本本'; btn.setAttribute('aria-label','Open hubby note notebook'); document.body.appendChild(btn); btn.addEventListener('click', open, true); btn.addEventListener('touchend', open, true); }
-    var bookHot = document.querySelector('.consoleHot');
-    if(bookHot && !bookHot.__hubbyNoteBound){ bookHot.__hubbyNoteBound = true; bookHot.setAttribute('data-note-hotspot','hubbyNote'); bookHot.addEventListener('click', open, true); bookHot.addEventListener('touchend', open, true); }
   }
   function setState(state){ currentState = state || currentState; if(document.getElementById('hubbyNotePanel') && document.getElementById('hubbyNotePanel').classList.contains('show')) render(currentState || {}); }
   function attach(stateClient){
@@ -245,7 +243,7 @@
     attached = true; ensureButton(); client.subscribe(function(payload){ setState(payload && payload.state); }); if(client.get) setState(client.get()); return true;
   }
 
-  window.KittenNestHubbyNote = { version:'hubby-note-notebook-20260613-archive-first-paw-key', attach:attach, open:open, close:close, render:render, setState:setState, saveCurrent:saveCurrent, renderAuth:renderAuth };
+  window.KittenNestHubbyNote = { version:'hubby-note-notebook-20260614-no-consolehot', attach:attach, open:open, close:close, render:render, setState:setState, saveCurrent:saveCurrent, renderAuth:renderAuth };
   window.addEventListener('load', ensureButton);
   setTimeout(ensureButton, 400);
   setTimeout(ensureButton, 1400);
