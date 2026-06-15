@@ -1,5 +1,5 @@
 {
-  "version": "0.1.0",
+  "version": "0.1.1",
   "status": "shadow-runtime-map",
   "createdAt": "2026-06-14",
   "stableBaseline": {
@@ -46,7 +46,7 @@
       "scope": "coffeeCorner only",
       "rules": [
         "#console must open gameMenu only.",
-        "#console must not open hubbyNote / 粉本本.",
+        "#console must not open hubbyNotePanel.",
         "Do not revive the full old console-hot-restore.js bundle just to fix console."
       ]
     },
@@ -99,12 +99,13 @@
       "owner": "hubbyNoteController",
       "file": "assets/hubby-note-controller.js / assets/hotspot-positioner.js",
       "selectors": ["#hubbyNoteButton", ".hubbyNoteButton"],
-      "displayName": "粉本本",
+      "displayNameEn": "Home notebook",
+      "displayNameZh": "粉本本",
       "action": "openHubbyNotePanel",
       "exclusive": true,
       "scope": "home only",
       "rules": [
-        "粉本本 belongs to home in the current art.",
+        "The home notebook art hotspot belongs to the home scene in the current art.",
         "It must not reuse #console / .consoleHot.",
         "It must not open from coffeeCorner unless a future coffeeCorner art object is explicitly approved."
       ]
