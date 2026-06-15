@@ -1,5 +1,5 @@
 (function(){
-  var VERSION = 'scene-router-v1-test-20260614-5';
+  var VERSION = 'scene-router-v1-test-20260614-6';
   var LAP_URL = 'https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/variants/lap-close-01.jpg?v=20260613-lap-close-1';
   var state = {
     current: 'originalHome',
@@ -40,7 +40,7 @@
       'body.sceneRouterDebug .sceneRouterLapHot{background:rgba(255,80,130,.18);outline:2px solid rgba(255,80,130,.85)}',
       'body.sceneRouterLocked .toGameHot,body.sceneRouterLocked .toHomeHot,body.sceneRouterLocked .sceneRouterLapHot{pointer-events:none!important}',
       'body.sceneRouterLap #bubble,body.sceneRouterLocked #bubble{opacity:0!important;pointer-events:none!important}',
-      'body.sceneRouterLap #gameRoom .steam,body.sceneRouterLocked #gameRoom .steam,body.sceneRouterLap #gameRoom .photoGlow,body.sceneRouterLocked #gameRoom .photoGlow{display:none!important;opacity:0!important;pointer-events:none!important}',
+      'body.sceneRouterLap #gameRoom .steam,body.sceneRouterLap #gameRoom .photoGlow,body.sceneRouterLocked #gameRoom .photoGlow{display:none!important;opacity:0!important;pointer-events:none!important}',
       '#sceneRouterFade{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;z-index:58;pointer-events:none;opacity:0;transition:opacity 360ms cubic-bezier(.22,.8,.25,1);will-change:opacity;backface-visibility:hidden;-webkit-backface-visibility:hidden}'
     ].join('');
     document.head.appendChild(s);
@@ -155,16 +155,15 @@
     if(hot){ hot.style.display = 'none'; hot.style.pointerEvents = 'none'; }
   }
 
-  function wakeSteam(force){
+  function ensureSteam(){
     var s = steam();
-    if(!s || state.current !== 'coffeeCorner' || state.lock) return false;
+    if(!s || state.current !== 'coffeeCorner') return false;
     s.style.display = '';
     s.style.opacity = '';
     s.style.pointerEvents = '';
     s.style.animation = '';
-    if(force || !s.querySelector('svg') || s.getAttribute('data-steam-svg') !== '2'){
+    if(!s.querySelector('svg') || s.getAttribute('data-steam-svg') !== '2'){
       s.removeAttribute('data-steam-svg');
-      s.innerHTML = '';
       if(window.KittenNestCoffeeSteam && window.KittenNestCoffeeSteam.install) window.KittenNestCoffeeSteam.install();
     }
     return true;
@@ -181,7 +180,7 @@
 
   function runLifecycle(sceneId, stage){
     if(sceneId === 'coffeeCorner'){
-      if(stage === 'afterEnter'){ wakeSteam(false); restorePhotoGlow(); }
+      if(stage === 'afterEnter'){ ensureSteam(); restorePhotoGlow(); }
     }
     if(sceneId === 'originalHome'){
       if(stage === 'onEnter') hideLapHot();
@@ -232,10 +231,10 @@
       runLifecycle(prev, 'onLeave');
       if(mode === 'push') state.stack.push(prev);
       state.current = next;
-      if(next === 'coffeeCorner') state.needsSteamWake = true;
       document.body.classList.toggle('sceneRouterLap', next === 'lapClose');
       document.body.classList.toggle('coffeeLapVariant', next === 'lapClose');
       setRoomActive(next);
+      if(next === 'coffeeCorner') ensureSteam();
       if(next === 'coffeeCorner'){
         transitionBg(currentCoffeeSrc(), function(){
           runLifecycle(next, 'onEnter');
@@ -291,16 +290,8 @@
     updateStatus();
     if(state.current === 'coffeeCorner'){
       placeLapHot();
-      if(state.lock){
-        setTimeout(refreshScene, 90);
-        return;
-      }
-      var forceSteam = !!state.needsSteamWake;
-      state.needsSteamWake = false;
-      setTimeout(function(){ wakeSteam(forceSteam); }, 30);
-      setTimeout(function(){ wakeSteam(false); }, 180);
-      setTimeout(function(){ wakeSteam(false); }, 420);
-      setTimeout(restorePhotoGlow, 60);
+      ensureSteam();
+      if(!state.lock) restorePhotoGlow();
     }else{
       hideLapHot();
     }
