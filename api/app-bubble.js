@@ -8,6 +8,8 @@ const bubbleControllerScript = '<script src="/assets/bubble-controller.js?v=2026
 const hubbyNoteControllerScript = '<script src="/assets/hubby-note-controller.js?v=20260613-archive-first-paw-1"></script>';
 const setupToggleScript = '<script src="/assets/setup-toggle.js?v=20260613-touchfix-1"></script>';
 const consoleRestoreScript = '<script src="/assets/console-hot-restore.js?v=20260610-1"></script>';
+const consoleCleanRestoreScript = '<script src="/assets/console-hot-clean-restore.js?v=20260614-clean-console-1"></script>';
+const coffeeCleanLeaveGuardScript = '<script src="/assets/coffee-clean-leave-guard.js?v=20260614-clean-leave-1"></script>';
 const sceneRouterScript = '<script src="/assets/scene-router.v1.js?v=20260614-router-5-rollback"></script>';
 const sceneRouterCleanScript = '<script src="/assets/scene-router-clean.v1.js?v=20260614-clean-1"></script>';
 const sceneRouterBootScript = `
@@ -91,7 +93,7 @@ function injectBubbleController(html, options = {}) {
   );
   if (!clean) scripts.push(consoleRestoreScript);
   if (options.sceneRouterTest) scripts.push(sceneRouterScript, sceneRouterBootScript);
-  if (clean) scripts.push(sceneRouterCleanScript, sceneRouterCleanBootScript);
+  if (clean) scripts.push(consoleCleanRestoreScript, coffeeCleanLeaveGuardScript, sceneRouterCleanScript, sceneRouterCleanBootScript);
 
   const bundle = scripts.join('\n');
   return String(html)
