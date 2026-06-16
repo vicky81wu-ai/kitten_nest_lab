@@ -7,26 +7,38 @@ This file is the top-level map for foundation-level achievements. It prevents on
 
 ## Foundation milestones
 
-### 1. Go-back / push scene isolation
+### 1. 场景框架结构 / navigation framework hook
 
-Status: **foundation-level milestone**  
-Role: scene navigation and return-flow safety
+Status: **foundation-level hook, needs source-backed detail**  
+Role: scene framework / navigation structure
 
-This milestone established that scene transitions, go-back behavior, and push-style scene changes must stay isolated instead of leaking state or breaking unrelated rooms. It is a foundation achievement on the same level as the text-target total key.
-
-Why it matters:
+Important correction:
 
 ```text
-Scene navigation must not become a muddy shared global side effect.
-A room transition should not accidentally corrupt another room.
-Go-back behavior needs its own clean route/stack logic.
+Do not use this index as the technical definition of the scene framework.
+The previous wording about “go-back / push scene isolation” was an unverified shorthand from conversation and has been removed to avoid misleading future construction windows.
 ```
 
-Current note:
+What this entry means:
 
 ```text
-Detailed standalone log still needs to be found or reconstructed if it was not previously committed.
-Do not let the newer text-target milestone hide this achievement.
+There is an important foundation-level scene framework / navigation structure achievement in the nest.
+Future construction wolves must locate the real source in code, JSON, or construction discipline before modifying scene routing, room transitions, go-back behavior, or push-like navigation.
+```
+
+What not to do:
+
+```text
+Do not infer implementation details from memory.
+Do not rename it casually.
+Do not copy this hook as a spec.
+Do not let the text-target milestone hide this scene-framework line.
+```
+
+Next cleanup task:
+
+```text
+Find the authoritative source for the scene framework structure and either link it here or write a verified standalone milestone log based on actual code/doc evidence.
 ```
 
 ### 2. textTargets registry + MCP total key
@@ -69,7 +81,7 @@ data/text-targets.v1.json
 api/mcp.js
 ```
 
-If working on navigation, go-back, push, or scene isolation, do not infer from the text-target milestone. Treat navigation isolation as its own foundation line.
+If working on scene framework, navigation, room transitions, go-back behavior, or push-like routing, first find the authoritative source in code/JSON/docs. This index intentionally does not define that system.
 
 If working on text writing, tags, bubbles, panels, notes, or room status, follow the textTargets registry + update_text_target route.
 
@@ -81,6 +93,7 @@ Use these labels:
 
 ```text
 foundation-level milestone
+foundation-level hook, needs source-backed detail
 current route
 archived test
 historical lesson
