@@ -156,7 +156,7 @@ function buildTextTargetPatch(target, text, state, mode) {
   throw new Error(`Unsupported text target: ${target.targetId}`);
 }
 
-function buildTextTargetDryRun(rawPatch, state) {
+function buildTextTargetEnvelope(rawPatch, state) {
   const request = parseTextTargetEnvelope(rawPatch);
   if (!request) return null;
 
@@ -282,6 +282,27 @@ function normalizePatch(rawPatch, state) {
   return patch;
 }
 
+async function writeState(base, key, value) {
+  const writeResponse = await fetch(`${base}/rest/v1/nest_state?key=eq.main`, {
+    method: 'PATCH',
+    headers: {
+      apikey: key,
+      authorization: `Bearer ${key}`,
+      'content-type': 'application/json',
+      prefer: 'return=representation'
+    },
+    body: JSON.stringify({ value })
+  });
+
+  const result = await writeResponse.json();
+  if (!writeResponse.ok) {
+    const error = new Error('Supabase write failed.');
+    error.result = result;
+    throw error;
+  }
+  return result;
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -302,38 +323,48 @@ module.exports = async function handler(req, res) {
     const rows = await readResponse.json();
     const state = rows[0] ? rows[0].value : {};
 
-    const textTargetDryRun = buildTextTargetDryRun(rawPatch, state);
-    if (textTargetDryRun) {
-      if (!textTargetDryRun.request.dryRun) {
-        return res.status(400).json({ ok: false, error: 'Text target envelope publish is not enabled yet. Use dryRun:true first.' });
+    const textTargetEnvelope = buildTextTargetEnvelope(rawPatch, state);
+    if (textTargetEnvelope) {
+      if (textTargetEnvelope.request.dryRun) {
+        return res.status(200).json({
+          ok: true,
+          dryRun: true,
+          writesState: false,
+          callsSupabaseWrite: false,
+          ...textTargetEnvelope
+        });
       }
+
+      if (textTargetEnvelope.request.targetId !== 'coffeeCornerBubble') {
+        return res.status(400).json({
+          ok: false,
+          error: 'Text target envelope publish is currently enabled only for coffeeCornerBubble. Use dryRun:true for other targets.'
+        });
+      }
+
+      const value = { ...state, ...textTargetEnvelope.patch, updatedAt: new Date().toISOString() };
+      await writeState(base, key, value);
       return res.status(200).json({
         ok: true,
-        dryRun: true,
-        writesState: false,
-        callsSupabaseWrite: false,
-        ...textTargetDryRun
+        dryRun: false,
+        writesState: true,
+        callsSupabaseWrite: true,
+        value,
+        textTarget: {
+          request: textTargetEnvelope.request,
+          target: textTargetEnvelope.target,
+          writtenFields: Object.keys(textTargetEnvelope.patch)
+        }
       });
     }
 
     const patch = normalizePatch(rawPatch, state);
     const value = { ...state, ...patch, updatedAt: new Date().toISOString() };
 
-    const writeResponse = await fetch(`${base}/rest/v1/nest_state?key=eq.main`, {
-      method: 'PATCH',
-      headers: {
-        apikey: key,
-        authorization: `Bearer ${key}`,
-        'content-type': 'application/json',
-        prefer: 'return=representation'
-      },
-      body: JSON.stringify({ value })
-    });
-
-    const result = await writeResponse.json();
-    if (!writeResponse.ok) return res.status(500).json(result);
+    await writeState(base, key, value);
     return res.status(200).json({ ok: true, value });
   } catch (error) {
+    if (error.result) return res.status(500).json(error.result);
     return res.status(400).json({ ok: false, error: error.message });
   }
 };
