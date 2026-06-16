@@ -19,7 +19,7 @@ For the full text-target milestone history and rules, read:
 docs/MAJOR_MILESTONE_TEXT_TARGETS_MCP_TOTAL_KEY_2026-06-16.md
 ```
 
-Do not let this newer text-target map hide other foundation work such as go-back / push scene isolation.
+Important: this file is only about the text-target writing system. It does not define the nest scene framework / navigation structure. If working on scene framework or room routing, find the authoritative source in code/JSON/docs first.
 
 ## Current correct route
 
