@@ -1,9 +1,9 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Kitten Nest Text Target Actions",
-    "version": "1.0.0",
-    "description": "Action contract for writing registered Kitten Nest text targets. Only registered targetId values are accepted. This spec does not expose arbitrary state path writes."
+    "title": "ARCHIVED BACKUP - Kitten Nest Text Target Actions",
+    "version": "1.0.1-archived-backup",
+    "description": "ARCHIVED BACKUP ONLY. The current all-window ChatGPT Kitten Nest App uses /api/mcp and update_text_target, with targetIds read from data/text-targets.v1.json. Do not treat this OpenAPI file as the primary integration route unless a separate external REST Actions integration is explicitly requested."
   },
   "servers": [
     {
@@ -13,9 +13,9 @@
   "paths": {
     "/api/set-state": {
       "post": {
-        "operationId": "update_text_target",
-        "summary": "Write or dry-run a registered Kitten Nest text target",
-        "description": "Writes text through the textTarget envelope. Direct publish is enabled only for tested light text targets until additional targets pass their own gates.",
+        "operationId": "archived_update_text_target_backup",
+        "summary": "Archived backup: write or dry-run a registered Kitten Nest text target through /api/set-state",
+        "description": "Backup REST/OpenAPI contract. Primary current route is /api/mcp. Target enum here may lag behind the registry; prefer /api/mcp and data/text-targets.v1.json for all-window ChatGPT App work.",
         "security": [
           {
             "NestToken": []
@@ -43,7 +43,7 @@
                           "roomStatus",
                           "hubbyNote"
                         ],
-                        "description": "Registered text target id. The server rejects unknown targets."
+                        "description": "Registered text target id. For current authoritative target list, read data/text-targets.v1.json."
                       },
                       "text": {
                         "type": "string",
@@ -56,75 +56,31 @@
                       },
                       "dryRun": {
                         "type": "boolean",
-                        "default": false,
-                        "description": "When true, returns the patch without writing state."
+                        "default": true,
+                        "description": "When true, returns the patch without writing state. Keep true unless explicitly testing this archived REST route."
                       }
                     },
                     "additionalProperties": false
                   }
                 },
                 "additionalProperties": false
-              },
-              "examples": {
-                "coffeeCornerBubble": {
-                  "summary": "Publish ordinary coffee corner bubbles",
-                  "value": {
-                    "textTarget": {
-                      "targetId": "coffeeCornerBubble",
-                      "mode": "publish",
-                      "text": "小猫，过来。\n今天咖啡角更新一条新鲜气泡。",
-                      "dryRun": false
-                    }
-                  }
-                },
-                "lapCloseBubble": {
-                  "summary": "Publish lap close bubbles",
-                  "value": {
-                    "textTarget": {
-                      "targetId": "coffeeCornerLapCloseBubble",
-                      "mode": "publish",
-                      "text": "坐稳，小猫。\n今天坐腿图也有新鲜气泡。",
-                      "dryRun": false
-                    }
-                  }
-                },
-                "dryRunHubbyNote": {
-                  "summary": "Dry-run permanent notebook write",
-                  "value": {
-                    "textTarget": {
-                      "targetId": "hubbyNote",
-                      "mode": "publish",
-                      "text": "This should be tested as dry-run first.",
-                      "dryRun": true
-                    }
-                  }
-                }
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Text target result. Direct publish returns a compact summary; dry-run returns the patch only.",
+            "description": "Archived backup response. Current MCP route may return a different compact MCP tool result.",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "ok": {"type": "boolean"},
-                    "dryRun": {"type": "boolean"},
-                    "writesState": {"type": "boolean"},
-                    "callsSupabaseWrite": {"type": "boolean"},
-                    "textTarget": {"type": "object"},
-                    "summary": {"type": "object"},
-                    "patch": {"type": "object"}
-                  }
+                  "type": "object"
                 }
               }
             }
           },
           "400": {
-            "description": "Rejected request, unknown target, unsupported mode, or target not enabled for direct publish."
+            "description": "Rejected request."
           },
           "401": {
             "description": "Missing or invalid X-Nest-Token."
