@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Kitten Nest Write V2 Safety</title>
+<style>
+*{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Arial,sans-serif}body{margin:0;min-height:100dvh;background:linear-gradient(180deg,#fff4f7,#ecd4dc);color:#673748;padding:18px}.wrap{width:min(94vw,780px);margin:0 auto 28px}.card{border-radius:26px;background:rgba(255,255,255,.74);box-shadow:0 18px 52px rgba(86,37,55,.17);border:1px solid rgba(255,255,255,.78);padding:17px;margin:13px 0}h1{text-align:center;font-size:23px;margin:10px 0 6px}h2{font-size:17px;margin:0 0 10px}.hint{font-size:13px;line-height:1.55;opacity:.72;text-align:center;margin:0 0 12px}.small{font-size:12px;line-height:1.55;opacity:.72}label{display:block;font-size:13px;margin:12px 0 6px;opacity:.78}input,textarea{width:100%;border:0;border-radius:16px;padding:13px;background:rgba(255,255,255,.86);box-shadow:inset 0 0 0 1px rgba(116,52,73,.13);font-size:15px;color:#673748;outline:none}textarea{min-height:230px;resize:vertical}.out{white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;line-height:1.45;border-radius:18px;padding:13px;background:rgba(255,255,255,.76);box-shadow:inset 0 0 0 1px rgba(116,52,73,.12);overflow:auto}.pill{display:inline-block;border-radius:999px;padding:4px 8px;margin:2px;background:rgba(119,64,82,.1);font-size:11px}.warn{color:#9b4654;font-weight:780}.ok{color:#4f6b46;font-weight:780}button{width:100%;border:0;border-radius:18px;margin-top:10px;padding:13px;background:#774052;color:#fff;font-weight:780;font-size:15px;box-shadow:0 10px 24px rgba(119,64,82,.22)}button.secondary{background:rgba(255,255,255,.78);color:#774052;box-shadow:inset 0 0 0 1px rgba(119,64,82,.14)}button.danger{background:#a84e5f}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.links{display:flex;gap:10px;flex-wrap:wrap}.links a{flex:1;min-width:130px;text-align:center;text-decoration:none;color:#774052;background:rgba(255,255,255,.62);border-radius:14px;padding:10px;font-size:13px}.gate{border:1px solid rgba(168,78,95,.28);background:rgba(255,245,247,.72)}
+</style>
+</head>
+<body>
+<main class="wrap">
+<h1>Kitten Nest Write V2 Safety</h1>
+<p class="hint">候选中控台：验证 textTargets 写入体系。不替换正式 /write，不改 API。</p>
+<section class="card gate"><h2>Safety gate</h2><p class="small"><span class="warn">MANUAL WRITE ONLY</span>：默认只预览。填 Nest key 并点“执行写入”才调用现有 /api/set-state。</p><p class="small">coffeeCornerBubble 会新旧双写；其他 target 按现有安全字段写。不会删除旧字段。</p><div class="links"><a href="/write">正式 /write</a><a href="/coffee-corner-dual-write-safety.html">双写安全页</a><a href="/cloud?v=writeV2Safety">打开 /cloud</a></div></section>
+<section class="card"><h2>Alex package</h2><label for="token">Nest key</label><input id="token" autocomplete="off" placeholder="paste NEST_TOKEN here" /><label for="packageText">Package</label><textarea id="packageText">[coffeeCornerBubble]
+小猫，过来。
+write-v2 safety test.
+
+[coffeeCornerLapCloseBubble]
+坐稳，小猫。
+write-v2 lap-close test.
+
+[windowWeather]
+23°C
+Safety breeze
+
+[hubbyNote]
+write-v2 安全测试：候选中控台能解析 textTargets，并按规则生成 patch。</textarea><div class="row"><button id="preview" class="secondary">预览 package patch</button><button id="fill" class="secondary">填入示例</button></div><button id="write" class="danger">执行写入</button></section>
+<section class="card"><h2>Allowed targets</h2><div id="targets" class="small">Loading...</div></section>
+<section class="card"><h2>Patch preview</h2><div id="patch" class="out">Loading...</div></section>
+<section class="card"><h2>Write result</h2><div id="result" class="out">尚未写入。</div></section>
+</main>
+<script>
+(function(){
+const tokenBox=document.getElementById('token'), packageBox=document.getElementById('packageText'), targetsBox=document.getElementById('targets'), patchBox=document.getElementById('patch'), resultBox=document.getElementById('result');
+let registry=null,state=null,lastPatch=null,lastPlan=null;const saved=localStorage.getItem('kittenNestToken');if(saved)tokenBox.value=saved;
+function pretty(o){return JSON.stringify(o,null,2)}function now(){return new Date().toISOString()}function key(){const t=tokenBox.value.trim();if(t)localStorage.setItem('kittenNestToken',t);return t}function lines(v,max){return String(v||'').split(/\r?\n/).map(s=>s.trim()).filter(Boolean).slice(0,max||30)}function clamp(v,max){return String(v||'').trim().slice(0,max||5000)}function cleanKey(v){return String(v||'').trim().toLowerCase().replace(/[\s_-]/g,'')}function targets(){return registry&&registry.targets?registry.targets:{}}
+function resolveTag(tag){const k=cleanKey(tag);const disabled=registry&&registry.disabledTags&&registry.disabledTags[k];if(disabled)return{disabled:true,tag:tag,reason:disabled};const all=targets();for(const id in all){if(cleanKey(all[id].tag)===k)return{target:all[id]}}return{disabled:true,tag:tag,reason:'Unknown tag. Use canonical text target tag.'}}
+function parsePackage(raw){const parts=[],skipped=[];let current=resolveTag(registry.defaultTargetId||'coffeeCornerBubble'),buf=[];function flush(){const body=buf.join('\n').trim();if(body){if(current.disabled)skipped.push({tag:current.tag,reason:current.reason,textPreview:body.slice(0,80)});else parts.push({target:current.target,text:body})}buf=[]}String(raw||'').replace(/\r\n/g,'\n').split('\n').forEach(line=>{const m=line.match(/^\s*\[([^\]]+)\]\s*$/);if(m){flush();current=resolveTag(m[1])}else buf.push(line)});flush();return{parts,skipped}}
+function backupCoffee(s){return{alexBubble:s.alexBubble||'',alexBubbles:s.alexBubbles||(s.alexBubble?[s.alexBubble]:[]),bubbleIndex:s.bubbleIndex||0,coffeeCornerBubble:s.coffeeCornerBubble||'',coffeeCornerBubbles:s.coffeeCornerBubbles||(s.coffeeCornerBubble?[s.coffeeCornerBubble]:[]),coffeeCornerBubbleIndex:s.coffeeCornerBubbleIndex||0,savedAt:now()}}
+function coffeePatch(text,s){const q=lines(text,30);if(!q.length)throw new Error('coffeeCornerBubble text empty');return{previousPublished:backupCoffee(s),coffeeCornerBubble:q[0]||'',coffeeCornerBubbles:q,coffeeCornerBubbleIndex:0,coffeeCornerBubbleUpdatedAt:now(),alexBubble:q[0]||'',alexBubbles:q,bubbleIndex:0}}
+function lapPatch(text){const q=lines(text,30);if(!q.length)throw new Error('lap text empty');return{coffeeCornerLapCloseBubble:q[0]||'',coffeeCornerLapCloseBubbles:q,coffeeCornerLapCloseBubbleIndex:0,coffeeCornerLapCloseBubbleUpdatedAt:now()}}
+function weatherPatch(text){const q=lines(text,2);return{windowTemp:q[0]||'',windowDesc:q[1]||''}}
+function noteArchiveOf(s){if(Array.isArray(s.hubbyNoteArchive))return s.hubbyNoteArchive;if(Array.isArray(s.hubbyNoteHistory))return s.hubbyNoteHistory;return[]}
+function notePatch(text,s){const note=clamp(text,5000);if(!note)throw new Error('hubbyNote empty');const old=String(s.hubbyNote||'').trim();const archive=noteArchiveOf(s);const next=old?[{text:old,savedAt:s.hubbyNoteUpdatedAt||s.updatedAt||now()},...archive]:archive;return{hubbyNote:note,hubbyNoteUpdatedAt:now(),hubbyNoteArchive:next,hubbyNoteHistory:next.slice(0,20)}}
+function singlePatch(target,text){const value=clamp(text,target.maxChars||2000);if(!value)throw new Error(target.targetId+' empty');const p={};p[target.field]=value;if(target.updatedAtField)p[target.updatedAtField]=now();return p}
+function patchFor(target,text,s){if(target.targetId==='coffeeCornerBubble')return coffeePatch(text,s);if(target.targetId==='coffeeCornerLapCloseBubble')return lapPatch(text);if(target.targetId==='windowWeather')return weatherPatch(text);if(target.targetId==='hubbyNote')return notePatch(text,s);if(target.type==='single')return singlePatch(target,text);throw new Error('Unsupported target: '+target.targetId)}
+async function readState(){const res=await fetch('/api/state?ts='+Date.now(),{cache:'no-store'});if(!res.ok)throw new Error('state read failed '+res.status);state=await res.json();return state}
+async function build(){if(!registry)throw new Error('registry not loaded');const s=state||await readState();const parsed=parsePackage(packageBox.value);const patch={pendingDrafts:[],lastPublishedAt:now()};const plan=[];parsed.parts.forEach(part=>{const p=patchFor(part.target,part.text,s);Object.assign(patch,p);plan.push({targetId:part.target.targetId,type:part.target.type,fields:Object.keys(p),textPreview:part.text.replace(/\s+/g,' ').slice(0,100)})});delete patch.pendingDrafts;if(!parsed.parts.length)throw new Error('No valid package blocks');lastPatch=patch;lastPlan={safetyPage:true,replacesOfficialWrite:false,callsWriteApiOnlyIfButtonClicked:true,deletesOldFields:false,parsedTargets:plan,skipped:parsed.skipped,patchPreview:patch,checks:{coffeeCornerDualWrite:!!(patch.coffeeCornerBubble&&patch.alexBubble&&patch.coffeeCornerBubbles&&patch.alexBubbles),usesCanonicalTags:true}};return lastPlan}
+async function preview(){try{await readState();const plan=await build();patchBox.textContent=pretty(plan)}catch(e){patchBox.textContent=pretty({ok:false,error:e.message})}}
+async function write(){try{const t=key();if(!t)throw new Error('Need Nest key.');if(!lastPatch)await build();resultBox.textContent='Writing...';const res=await fetch('/api/set-state',{method:'POST',headers:{'Content-Type':'application/json','X-Nest-Token':t},body:JSON.stringify(lastPatch),cache:'no-store'});const data=await res.json();if(!res.ok||!data.ok)throw new Error(data.error||data.message||res.status);resultBox.textContent=pretty({ok:true,writtenBy:'write-v2-text-targets-safety.html',updatedAt:data.value&&data.value.updatedAt,coffeeCorner:{sameCurrent:(data.value&&data.value.coffeeCornerBubble)===(data.value&&data.value.alexBubble),sameList:JSON.stringify(data.value&&data.value.coffeeCornerBubbles)===JSON.stringify(data.value&&data.value.alexBubbles),coffeeCornerBubble:data.value&&data.value.coffeeCornerBubble,alexBubble:data.value&&data.value.alexBubble},lapClose:{coffeeCornerLapCloseBubble:data.value&&data.value.coffeeCornerLapCloseBubble},windowWeather:{windowTemp:data.value&&data.value.windowTemp,windowDesc:data.value&&data.value.windowDesc},hubbyNotePreview:String(data.value&&data.value.hubbyNote||'').slice(0,120)});await readState()}catch(e){resultBox.textContent=pretty({ok:false,error:e.message})}}
+function fill(){packageBox.value='[coffeeCornerBubble]\n小猫，过来。\nwrite-v2 safety test.\n\n[coffeeCornerLapCloseBubble]\n坐稳，小猫。\nwrite-v2 lap-close test.\n\n[windowWeather]\n23°C\nSafety breeze\n\n[hubbyNote]\nwrite-v2 安全测试：候选中控台能解析 textTargets，并按规则生成 patch。';preview()}
+async function init(){try{const res=await fetch('/data/text-targets.v1.json?ts='+Date.now(),{cache:'no-store'});if(!res.ok)throw new Error('registry '+res.status);registry=await res.json();targetsBox.innerHTML=Object.values(targets()).map(t=>'<span class="pill">['+t.tag+']</span>').join(' ');await preview()}catch(e){patchBox.textContent=pretty({ok:false,error:e.message})}}
+document.getElementById('preview').onclick=preview;document.getElementById('write').onclick=write;document.getElementById('fill').onclick=fill;packageBox.addEventListener('input',function(){lastPatch=null;lastPlan=null});init();
+})();
+</script>
+</body>
+</html>
