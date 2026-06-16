@@ -3,30 +3,30 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>Text Target Envelope Status</title>
+<title>Kitten Nest Text Targets · Current Route</title>
 <style>
-*{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif}body{margin:0;min-height:100dvh;padding:18px;background:linear-gradient(180deg,#fff4f7,#ecd4dc);color:#673748}.wrap{width:min(94vw,760px);margin:0 auto}.card{border-radius:24px;background:rgba(255,255,255,.76);padding:16px;margin:13px 0;box-shadow:0 16px 44px rgba(86,37,55,.15)}h1{text-align:center;font-size:23px;margin:10px 0}.small{font-size:13px;line-height:1.55;opacity:.74}.pill{display:inline-block;border-radius:999px;padding:5px 9px;margin:4px;background:rgba(119,64,82,.1);font-size:12px}.ok{color:#4f6b46;font-weight:800}.warn{color:#9b4654;font-weight:800}.out{white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;line-height:1.45;border-radius:18px;padding:13px;background:rgba(255,255,255,.78);overflow:auto}.links{display:flex;gap:10px;flex-wrap:wrap}.links a{flex:1;min-width:145px;text-align:center;text-decoration:none;color:#774052;background:rgba(255,255,255,.62);border-radius:14px;padding:10px;font-size:13px}
-</style>
+*{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif}body{margin:0;min-height:100dvh;padding:18px;background:linear-gradient(180deg,#fff4f7,#ecd4dc);color:#673748}.wrap{width:min(94vw,820px);margin:0 auto}.card{border-radius:24px;background:rgba(255,255,255,.78);padding:16px;margin:13px 0;box-shadow:0 16px 44px rgba(86,37,55,.15)}h1{text-align:center;font-size:23px;margin:10px 0}.small{font-size:13px;line-height:1.6;opacity:.78}.pill{display:inline-block;border-radius:999px;padding:5px 9px;margin:4px;background:rgba(119,64,82,.1);font-size:12px}.ok{color:#4f6b46;font-weight:800}.warn{color:#9b4654;font-weight:800}.out{white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;line-height:1.45;border-radius:18px;padding:13px;background:rgba(255,255,255,.82);overflow:auto}.links{display:flex;gap:10px;flex-wrap:wrap}.links a{flex:1;min-width:160px;text-align:center;text-decoration:none;color:#774052;background:rgba(255,255,255,.64);border-radius:14px;padding:10px;font-size:13px}.main{border:1px solid rgba(79,107,70,.25);background:rgba(248,255,246,.74)}.archive{border:1px solid rgba(168,78,95,.18);background:rgba(255,247,249,.74)}</style>
 </head>
 <body>
 <main class="wrap">
-<h1>Text Target Envelope Status</h1>
-<section class="card"><p class="small">当前总钥匙 envelope 状态。这个页面只展示，不写 state。</p><div class="links"><a href="/text-target-envelope-dry-run.html">Envelope tester</a><a href="/lap-close-envelope-write-safety.html">Lap smoke page</a><a href="/write-v2-text-targets-safety.html">Write v2 safety</a></div></section>
-<section class="card"><h2>Publish enabled</h2><p><span class="pill ok">coffeeCornerBubble</span><span class="pill ok">coffeeCornerLapCloseBubble</span></p><p class="small">已真写验收，适合日常新鲜气泡。</p></section>
-<section class="card"><h2>Dry-run only</h2><p><span class="pill warn">windowWeather</span><span class="pill warn">moodNote</span><span class="pill warn">roomStatus</span><span class="pill warn">hubbyNote</span></p><p class="small">hubbyNote 是永久档案，保持锁定。moodNote / roomStatus 还在 draft/partial 状态。windowWeather 可后续单独打开。</p></section>
-<section class="card"><h2>Contract</h2><div class="out">POST /api/set-state
+<h1>Kitten Nest Text Targets · Current Route</h1>
+<section class="card main"><p class="small"><b>当前正确主线：</b>全窗猫窝 App 走 <code>/api/mcp</code>，MCP 工具 <code>update_text_target</code> 自动读取 <code>data/text-targets.v1.json</code> 户口本。这里是当前状态页，不写 state。</p><div class="links"><a href="/api/mcp">/api/mcp status</a><a href="/data/text-targets.v1.json">textTargets registry</a><a href="/docs/MAJOR_MILESTONE_TEXT_TARGETS_MCP_TOTAL_KEY_2026-06-16.md">major milestone log</a></div></section>
+<section class="card"><h2>Current write path</h2><div class="out">ChatGPT 全窗猫窝 App
+→ /api/mcp?t=&lt;private token&gt;
+→ tools/list exposes update_text_target
+→ update_text_target(targetId, text, mode)
+→ targetId must exist in data/text-targets.v1.json
+→ no arbitrary state path writes</div></section>
+<section class="card"><h2>Current registry targets</h2><p><span class="pill ok">coffeeCornerBubble</span><span class="pill ok">coffeeCornerLapCloseBubble</span><span class="pill ok">windowWeather</span><span class="pill ok">hubbyNote</span><span class="pill ok">moodNote</span><span class="pill ok">roomStatus</span></p><p class="small">以后新增 target 时，以 <code>data/text-targets.v1.json</code> 为准。刷新/重连猫窝 App 后，工具 schema 才会重新读到新 target。</p></section>
+<section class="card"><h2>Canonical package tags</h2><div class="out">[coffeeCornerBubble]
+[coffeeCornerLapCloseBubble]
+[windowWeather]
+[hubbyNote]
+[moodNote]
+[roomStatus]
 
-{
-  "textTarget": {
-    "targetId": "coffeeCornerBubble",
-    "mode": "publish",
-    "text": "line 1\nline 2",
-    "dryRun": false
-  }
-}
-
-No arbitrary state path. Only registered targetId.
-Compact response for envelope publish.</div></section>
+不要用 [coffee] / [lapClose] / [weather] / [note] / [status] 这类短别名。</div></section>
+<section class="card archive"><h2>Archived test pages</h2><p class="small">下面这些是今晚迁移时的安全测试页，只保留作历史验收记录。不要把它们当未来主线施工入口。</p><div class="links"><a href="/text-target-envelope-dry-run.html">archived envelope tester</a><a href="/lap-close-envelope-write-safety.html">archived lap smoke page</a><a href="/write-v2-text-targets-safety.html">archived write-v2 safety</a></div></section>
 </main>
 </body>
 </html>
