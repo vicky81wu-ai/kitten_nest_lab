@@ -1,9 +1,7 @@
 (function(){
-  var VERSION = 'scene-router-clean-v1-20260615-home-promoted-1';
-  var qs = new URLSearchParams(location.search);
+  var VERSION = 'scene-router-clean-v1-20260616-remove-legacy-lap-bubble-1';
   var HOME_SCENE_ID = 'home';
   var LAP_URL = 'https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/variants/lap-close-01.jpg?v=20260613-lap-close-1';
-  var LAP_BUBBLE_TEXT = '';
   var state = {
     current: HOME_SCENE_ID,
     stack: [],
@@ -43,10 +41,7 @@
       'body.sceneRouterCleanDebug .sceneRouterCleanLapHot{background:rgba(255,80,130,.18);outline:2px solid rgba(255,80,130,.85)}',
       'body.sceneRouterCleanLocked .toGameHot,body.sceneRouterCleanLocked .toHomeHot,body.sceneRouterCleanLocked .sceneRouterCleanLapHot{pointer-events:none!important}',
       'body.sceneRouterCleanLap #bubble{opacity:0!important;pointer-events:none!important}',
-      'body.sceneRouterCleanLap #gameRoom .steam,body.sceneRouterCleanLap #gameRoom .photoGlow{display:none!important;opacity:0!important;pointer-events:none!important}',
-      '#sceneRouterLapBubble{display:none;position:absolute;left:calc(max(18px,env(safe-area-inset-left)) + 22px);top:calc(max(18px,env(safe-area-inset-top)) + 52px);z-index:72;max-width:min(52vw,286px);padding:12px 14px;border-radius:21px;background:rgba(255,248,245,.88);border:1.4px solid rgba(255,255,255,.92);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);box-shadow:0 10px 28px rgba(83,38,51,.18),inset 0 0 0 1px rgba(120,50,70,.1);font-size:clamp(14px,3.45vw,19px);line-height:1.28;color:#733447;font-weight:540;text-shadow:0 1px rgba(255,255,255,.72);pointer-events:none}',
-      '#sceneRouterLapBubble:after{content:"";position:absolute;left:24px;bottom:-9px;border-width:10px 7px 0 7px;border-style:solid;border-color:rgba(255,248,245,.88) transparent transparent transparent}',
-      'body.sceneRouterCleanLap #sceneRouterLapBubble[data-has-text="1"]{display:block}'
+      'body.sceneRouterCleanLap #gameRoom .steam,body.sceneRouterCleanLap #gameRoom .photoGlow{display:none!important;opacity:0!important;pointer-events:none!important}'
     ].join('');
     document.head.appendChild(s);
   }
@@ -80,21 +75,6 @@
     el.id = 'sceneAtlasPlaceholder';
     el.innerHTML = '<div class="box"><h2>Nest Atlas</h2><p>猫窝星图占位测试页</p><p>右下返回 home</p><p>此入口只用于干净 sceneRouter 测试。</p></div>';
     document.body.appendChild(el);
-  }
-
-  function ensureLapBubble(){
-    var r = game();
-    if(!r) return null;
-    var el = $('sceneRouterLapBubble');
-    if(!el){
-      el = document.createElement('div');
-      el.id = 'sceneRouterLapBubble';
-      el.setAttribute('aria-hidden', 'true');
-      r.appendChild(el);
-    }
-    el.textContent = LAP_BUBBLE_TEXT;
-    el.setAttribute('data-has-text', LAP_BUBBLE_TEXT ? '1' : '0');
-    return el;
   }
 
   function rememberCoffeeSrc(){
@@ -250,7 +230,6 @@
         setTimeout(ensureCoffeeAmbient, 0);
       }else if(next === 'lapClose'){
         setLapSrc();
-        ensureLapBubble();
       }
       refreshScene();
     });
@@ -297,7 +276,6 @@
     }else{
       hideLapHot();
     }
-    if(state.current === 'lapClose') ensureLapBubble();
   }
 
   function start(options){
@@ -310,7 +288,6 @@
     removeStatus();
     ensureStatus();
     ensureAtlasPlaceholder();
-    ensureLapBubble();
     rememberCoffeeSrc();
     setRoomActive(HOME_SCENE_ID);
     state.current = HOME_SCENE_ID;
