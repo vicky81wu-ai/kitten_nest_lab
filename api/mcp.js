@@ -1,3 +1,5 @@
+const textTargetRegistry = require('../data/text-targets.v1.json');
+
 const TOOL_NAMES = [
   'read_nest_state',
   'update_alex_bubble',
@@ -13,53 +15,36 @@ const TOOL_NAMES = [
 const SESSION_ID = 'kitten-nest-session';
 const MCP_VERSION = '2025-06-18';
 const SERVER_NAME = 'kitten-nest-mcp';
-const SERVER_VERSION = '0.1.5-text-target';
+const SERVER_VERSION = '0.1.6-registry-targets';
 
-const TEXT_TARGETS = {
-  coffeeCornerBubble: {
-    targetId: 'coffeeCornerBubble',
-    label: '咖啡角气泡',
-    type: 'bubbleQueue',
-    maxLines: 30,
-    maxChars: 5000
-  },
-  coffeeCornerLapCloseBubble: {
-    targetId: 'coffeeCornerLapCloseBubble',
-    label: '坐腿近景气泡',
-    type: 'bubbleQueue',
-    maxLines: 30,
-    maxChars: 5000
-  },
-  windowWeather: {
-    targetId: 'windowWeather',
-    label: '窗户天气',
-    type: 'weatherText',
-    maxLines: 2,
-    maxChars: 800
-  },
-  hubbyNote: {
-    targetId: 'hubbyNote',
-    label: '粉本本永久档案',
-    type: 'note',
-    maxChars: 5000
-  },
-  moodNote: {
-    targetId: 'moodNote',
-    label: '心情短记',
-    type: 'single',
-    field: 'moodNote',
-    updatedAtField: 'moodNoteUpdatedAt',
-    maxChars: 2000
-  },
-  roomStatus: {
-    targetId: 'roomStatus',
-    label: '房间状态短句',
-    type: 'single',
-    field: 'roomStatus',
-    updatedAtField: 'roomStatusUpdatedAt',
-    maxChars: 2000
-  }
-};
+function normalizeTarget(targetId, target = {}) {
+  const id = String(target.targetId || targetId || '').trim();
+  return {
+    ...target,
+    targetId: id,
+    label: target.label || id,
+    textClass: target.textClass || 'Text',
+    type: target.type || 'single',
+    tag: target.tag || id,
+    maxLines: target.maxLines || (target.type === 'weatherText' ? 2 : 30),
+    maxChars: target.maxChars || 5000,
+    field: target.field || id,
+    currentField: target.currentField || target.field || id,
+    indexField: target.indexField || `${id}Index`,
+    updatedAtField: target.updatedAtField || `${id}UpdatedAt`
+  };
+}
+
+function loadTextTargets() {
+  const targets = textTargetRegistry && textTargetRegistry.targets ? textTargetRegistry.targets : {};
+  return Object.fromEntries(Object.entries(targets).map(([id, target]) => [id, normalizeTarget(id, target)]));
+}
+
+const TEXT_TARGETS = loadTextTargets();
+
+function targetSummary() {
+  return Object.values(TEXT_TARGETS).map(target => `${target.targetId} (${target.label}; ${target.type}; tag [${target.tag}])`).join('; ');
+}
 
 function cors(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -221,6 +206,17 @@ function previousCoffeeOf(state) {
   };
 }
 
+function buildBubbleQueuePatch(target, text) {
+  const list = normalizeBubbleQueue(text, target.maxLines);
+  if (!list.length) throw new Error(`Missing ${target.targetId} text`);
+  return {
+    [target.currentField]: list[0],
+    [target.field]: list,
+    [target.indexField]: 0,
+    [target.updatedAtField]: now()
+  };
+}
+
 function buildTextTargetPatch(targetId, text, state) {
   const target = TEXT_TARGETS[targetId];
   if (!target) throw new Error(`Unknown text target: ${targetId}`);
@@ -240,37 +236,31 @@ function buildTextTargetPatch(targetId, text, state) {
     };
   }
 
-  if (targetId === 'coffeeCornerLapCloseBubble') {
-    const list = normalizeBubbleQueue(text, target.maxLines);
-    if (!list.length) throw new Error('Missing coffeeCornerLapCloseBubble text');
+  if (target.type === 'bubbleQueue') {
+    return buildBubbleQueuePatch(target, text);
+  }
+
+  if (target.type === 'weatherText') {
+    const list = normalizeLines(text, target.maxLines || 2);
+    const fields = Array.isArray(target.fields) && target.fields.length >= 2 ? target.fields : ['windowTemp', 'windowDesc'];
     return {
-      coffeeCornerLapCloseBubble: list[0],
-      coffeeCornerLapCloseBubbles: list,
-      coffeeCornerLapCloseBubbleIndex: 0,
-      coffeeCornerLapCloseBubbleUpdatedAt: now()
+      [fields[0]]: list[0] || '',
+      [fields[1]]: list[1] || ''
     };
   }
 
-  if (targetId === 'windowWeather') {
-    const list = normalizeLines(text, 2);
-    return {
-      windowTemp: list[0] || '',
-      windowDesc: list[1] || ''
-    };
-  }
-
-  if (targetId === 'hubbyNote') {
+  if (target.type === 'note') {
     const note = clampText(text, target.maxChars);
-    if (!note) throw new Error('Missing hubbyNote text');
-    const old = String(state.hubbyNote || '').trim();
+    if (!note) throw new Error(`Missing ${targetId} text`);
+    const old = String(state[target.field] || '').trim();
     const archive = noteArchiveOf(state);
     const savedAt = now();
-    const nextArchive = old ? [{ text: old, savedAt: state.hubbyNoteUpdatedAt || state.updatedAt || savedAt }, ...archive] : archive;
+    const nextArchive = old ? [{ text: old, savedAt: state[target.updatedAtField] || state.updatedAt || savedAt }, ...archive] : archive;
     return {
-      hubbyNote: note,
-      hubbyNoteUpdatedAt: savedAt,
-      hubbyNoteArchive: nextArchive,
-      hubbyNoteHistory: nextArchive.slice(0, 20)
+      [target.field]: note,
+      [target.updatedAtField]: savedAt,
+      [target.archiveField || 'hubbyNoteArchive']: nextArchive,
+      [target.historyField || 'hubbyNoteHistory']: nextArchive.slice(0, target.maxArchiveItems || 20)
     };
   }
 
@@ -329,7 +319,7 @@ function textTargetSchema() {
     properties: {
       targetId: {
         type: 'string',
-        description: 'Registered Kitten Nest text target id.',
+        description: `Registered Kitten Nest text target id. Current registry: ${targetSummary()}`,
         enum: Object.keys(TEXT_TARGETS)
       },
       text: {
@@ -338,7 +328,7 @@ function textTargetSchema() {
       },
       mode: {
         type: 'string',
-        description: 'Currently publish or dryRun. dryRun returns the patch without writing.',
+        description: 'publish writes state. dryRun returns the patch without writing.',
         enum: ['publish', 'dryRun']
       }
     },
@@ -383,7 +373,7 @@ function toolList() {
     },
     {
       name: 'update_text_target',
-      description: 'Unified write key for registered Kitten Nest text targets. Use this for fresh bubbles, lap-close bubbles, window weather text, hubbyNote, moodNote, or roomStatus. Does not allow arbitrary state paths.',
+      description: 'Unified write key for registered Kitten Nest text targets. Reads allowed targets from data/text-targets.v1.json. Does not allow arbitrary state paths.',
       inputSchema: textTargetSchema()
     },
     {
@@ -503,6 +493,8 @@ module.exports = async function handler(req, res) {
       transport: 'streamable-http-jsonrpc',
       endpoint: '/api/mcp',
       tools: toolList().map(t => t.name),
+      textTargets: Object.keys(TEXT_TARGETS),
+      textTargetRegistryVersion: textTargetRegistry.version || null,
       note: 'POST JSON-RPC methods initialize, notifications/initialized, tools/list, tools/call here.'
     });
   }
