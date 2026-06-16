@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Text Target Total Key Dry Run</title>
+<style>
+  *{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Arial,sans-serif}
+  body{margin:0;min-height:100dvh;background:linear-gradient(180deg,#fff3f6,#f1d8df);color:#6b3d49;padding:18px}
+  .wrap{width:min(94vw,760px);margin:0 auto;padding-bottom:36px}.card{border-radius:26px;background:rgba(255,255,255,.76);box-shadow:0 18px 54px rgba(80,35,51,.16);border:1px solid rgba(255,255,255,.82);padding:18px;margin:14px 0}.primary{box-shadow:0 22px 66px rgba(88,35,54,.22)}
+  h1{font-size:24px;text-align:center;margin:10px 0 8px}h2{font-size:17px;margin:0 0 10px}.hint,.small{font-size:13px;line-height:1.55;opacity:.72}.hint{text-align:center;margin:0 0 14px}.badge{display:inline-block;border-radius:999px;background:#7b4054;color:white;font-size:12px;font-weight:800;padding:6px 10px;margin-bottom:10px}
+  label{display:block;font-size:13px;margin:12px 0 6px;opacity:.82}select,textarea,input{width:100%;border:0;border-radius:16px;padding:13px;background:rgba(255,255,255,.86);box-shadow:inset 0 0 0 1px rgba(115,52,71,.12);color:#6b3d49;font-size:16px;outline:none}textarea{min-height:140px;resize:vertical}
+  button{width:100%;border:0;border-radius:18px;margin-top:10px;padding:13px;background:#7b4054;color:white;font-weight:800;font-size:15px;box-shadow:0 10px 24px rgba(123,64,84,.22)}button.secondary{background:rgba(255,255,255,.78);color:#7b4054;box-shadow:inset 0 0 0 1px rgba(123,64,84,.12)}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.result{margin-top:12px;white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;line-height:1.5;background:rgba(255,255,255,.78);border-radius:18px;padding:12px;box-shadow:inset 0 0 0 1px rgba(123,64,84,.12);overflow:auto}.ok{color:#6b3d49}.warn{color:#a84e5f}.pill{display:inline-block;border-radius:999px;background:rgba(123,64,84,.1);padding:4px 8px;margin:2px;font-size:11px}.links{display:flex;gap:10px;flex-wrap:wrap}.links a{flex:1;min-width:140px;text-align:center;text-decoration:none;color:#7b4054;background:rgba(255,255,255,.68);border-radius:14px;padding:10px;font-size:13px}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <h1>Text Target Total Key Dry Run</h1>
+  <p class="hint">安全测试页：只预览 targetId + text 会生成什么，不调用 /api/set-state，不写 state，不需要 key。</p>
+
+  <section class="card primary">
+    <span class="badge">DRY RUN ONLY</span>
+    <h2>一把总钥匙预演</h2>
+    <p class="small">目标接口形状：<code>{ targetId, text, mode }</code>。这里先只做浏览器本地预演。</p>
+    <label for="targetId">targetId</label>
+    <select id="targetId"></select>
+    <label for="mode">mode</label>
+    <select id="mode"><option value="publish">publish</option><option value="draft">draft</option></select>
+    <label for="text">text</label>
+    <textarea id="text">坐过来，小猫。这里是总钥匙 dry-run 测试，不写 state，只看 patch。</textarea>
+    <div class="row"><button id="preview">预览总钥匙</button><button class="secondary" id="fillExamples">填入示例</button></div>
+    <div class="result" id="result">等待预览。</div>
+  </section>
+
+  <section class="card">
+    <h2>Allowed targets</h2>
+    <div id="targetList" class="small">Loading registry...</div>
+  </section>
+
+  <section class="card">
+    <h2>Links</h2>
+    <div class="links"><a href="/write">正式 /write</a><a href="/write-text-targets-test.html">旧 textTargets 测试页</a><a href="/data/text-targets.v1.json" target="_blank">textTargets registry</a></div>
+  </section>
+</main>
+<script>
+(function(){
+  let registry = null;
+  const targetId = document.getElementById('targetId');
+  const mode = document.getElementById('mode');
+  const text = document.getElementById('text');
+  const result = document.getElementById('result');
+  const targetList = document.getElementById('targetList');
+
+  function now(){ return new Date().toISOString(); }
+  function cleanLines(value, maxLines){ return String(value||'').split(/\r?\n/).map(s=>s.trim()).filter(Boolean).slice(0,maxLines||30); }
+  function clamp(value, max){ return String(value||'').trim().slice(0,max||5000); }
+  function targets(){ return registry && registry.targets ? registry.targets : {}; }
+  function target(){ return targets()[targetId.value]; }
+  function pretty(value){ return JSON.stringify(value, null, 2); }
+  function makeDraft(t, body){ const raw=clamp(body,t.maxChars||5000); if(!raw) throw new Error('Text is empty.'); return { id:'draft_PREVIEW_ONLY', source:'textTargetDryRun', targetId:t.targetId, targetRoom:t.targetRoom||t.targetId, type:t.draftType||'textTargetDraft', field:t.currentField||t.field||null, text:raw, status:'pending', createdAt:'PREVIEW_TIMESTAMP' }; }
+  function bubblePatch(t, body){ const lines=cleanLines(body,t.maxLines||30); if(!lines.length) throw new Error('Text is empty.'); const patch={}; if(t.previousField) patch[t.previousField]='PREVIEW_PREVIOUS_VALUE_SNAPSHOT'; patch[t.currentField]=lines[0]||''; patch[t.field]=lines; if(t.indexField) patch[t.indexField]=0; if(t.updatedAtField) patch[t.updatedAtField]='PREVIEW_TIMESTAMP'; return patch; }
+  function weatherPatch(t, body){ const lines=cleanLines(body,t.maxLines||2); const fields=Array.isArray(t.fields)?t.fields:[]; const patch={}; fields.forEach((field,i)=>patch[field]=lines[i]||''); return patch; }
+  function notePatch(t, body){ const note=clamp(body,t.maxChars||5000); if(!note) throw new Error('Text is empty.'); const patch={}; patch[t.field]=note; if(t.updatedAtField) patch[t.updatedAtField]='PREVIEW_TIMESTAMP'; if(t.archiveField) patch[t.archiveField]='PREVIEW_ARCHIVE_WITH_OLD_NOTE_FIRST'; if(t.historyField) patch[t.historyField]='PREVIEW_HISTORY_LIMITED_TO_'+(t.maxArchiveItems||20); return patch; }
+  function singlePatch(t, body){ const raw=clamp(body,t.maxChars||2000); if(!raw) throw new Error('Text is empty.'); const patch={}; patch[t.field]=raw; if(t.updatedAtField) patch[t.updatedAtField]='PREVIEW_TIMESTAMP'; return patch; }
+  function publishPatch(t, body){ if(t.type==='bubbleQueue') return bubblePatch(t,body); if(t.type==='weatherText') return weatherPatch(t,body); if(t.type==='note') return notePatch(t,body); if(t.type==='single') return singlePatch(t,body); throw new Error('Unsupported target type: '+t.type); }
+  function preview(){ try{ const t=target(); if(!t) throw new Error('Unknown targetId.'); const body=text.value; const m=mode.value; const envelope={ targetId:t.targetId, text:body, mode:m }; const out={ notice:'DRY RUN ONLY. This page does not call /api/set-state and does not write state.', requestShape:envelope, target:{ targetId:t.targetId, tag:t.tag, type:t.type, textClass:t.textClass, field:t.field||null, currentField:t.currentField||null, indexField:t.indexField||null, fields:t.fields||null }, wouldWrite:m==='draft'?{ pendingDrafts:[makeDraft(t,body)] }:publishPatch(t,body), generatedAt:now() }; result.textContent=pretty(out); }catch(e){ result.textContent='ERROR: '+e.message; } }
+  function fillExamples(){ const id=targetId.value; if(id==='coffeeCornerBubble') text.value='小猫，咖啡角收到总钥匙测试。\n这只是 dry-run，不会写窝。'; else if(id==='coffeeCornerLapCloseBubble') text.value='坐稳，小猫。\n总钥匙先在门口试锁，不直接开门。'; else if(id==='windowWeather') text.value='23°C\nSoft breeze'; else if(id==='hubbyNote') text.value='粉本本 dry-run：总钥匙测试只预览，不写永久档案。'; else text.value='总钥匙 dry-run 测试文本。'; preview(); }
+  async function init(){ try{ const res=await fetch('/data/text-targets.v1.json?ts='+Date.now(),{cache:'no-store'}); registry=await res.json(); targetId.innerHTML=Object.keys(targets()).map(id=>'<option value="'+id+'">'+id+'</option>').join(''); targetList.innerHTML=Object.keys(targets()).map(id=>{ const t=targets()[id]; return '<span class="pill">'+id+' · '+t.type+'</span>'; }).join(' '); preview(); }catch(e){ result.textContent='Failed to load registry: '+e.message; } }
+  document.getElementById('preview').onclick=preview;
+  document.getElementById('fillExamples').onclick=fillExamples;
+  targetId.onchange=fillExamples;
+  mode.onchange=preview;
+  init();
+})();
+</script>
+</body>
+</html>
