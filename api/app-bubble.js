@@ -83,8 +83,18 @@ const bubbleBootScript = `
 })();
 </script>`;
 
+function applySourceCleanupTest(html){
+  return String(html)
+    .replace('<div id="temp" class="temp">23°C</div>', '<div id="temp" class="temp" data-source-cleanup-test="weather"></div>')
+    .replace('<div id="desc" class="desc">Soft breeze</div>', '<div id="desc" class="desc" data-source-cleanup-test="weather"></div>')
+    .replace("$('moon').onclick=()=>{homeDim=!homeDim;body.classList.toggle('homeDim',homeDim);$('temp').textContent=homeDim?'22°C':'23°C';$('desc').textContent=homeDim?'Moonlit breeze':'Soft breeze'};", "$('moon').onclick=()=>{homeDim=!homeDim;body.classList.toggle('homeDim',homeDim)};")
+    .replace('.clock{position:absolute;left:6.15%;top:24.65%;width:31.2%;', '.clock{position:absolute;left:0;top:0;width:0;');
+}
+
 function injectBubbleController(html, options = {}) {
   const clean = !!options.cleanDefault;
+  let output = String(html);
+  if (options.sourceCleanupTest) output = applySourceCleanupTest(output);
   const scripts = [
     hotspotPositionerScript,
     coffeeSteamScript,
@@ -105,7 +115,7 @@ function injectBubbleController(html, options = {}) {
   if (clean) scripts.push(consoleCleanRestoreScript, coffeeCleanLeaveGuardScript, clockHandsGuardScript, sceneRouterCleanScript, sceneRouterCleanBootScript);
 
   const bundle = scripts.join('\n');
-  return String(html)
+  return output
     .replace('</head>', `${coffeeCornerPolishStyle}\n</head>`)
     .replace('</body>', `${bundle}</body>`);
 }
@@ -114,10 +124,11 @@ module.exports = async function handler(req, res) {
   const url = String(req.url || '');
   const sceneRouterTest = url.includes('sceneRouterTest=1');
   const sceneRouterLegacy = url.includes('sceneRouterLegacy=1');
+  const sourceCleanupTest = url.includes('sourceCleanupTest=1');
   const cleanDefault = !sceneRouterTest && !sceneRouterLegacy;
   const originalSend = res.send.bind(res);
   res.send = function sendWithBubbleController(body) {
-    if (typeof body === 'string') return originalSend(injectBubbleController(body, { sceneRouterTest, cleanDefault }));
+    if (typeof body === 'string') return originalSend(injectBubbleController(body, { sceneRouterTest, cleanDefault, sourceCleanupTest }));
     return originalSend(body);
   };
   return appAssetctl(req, res);
