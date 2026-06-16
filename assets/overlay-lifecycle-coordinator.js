@@ -1,5 +1,9 @@
 (function(){
-  var VERSION = 'overlay-lifecycle-coordinator-20260615-2';
+  var VERSION = 'overlay-lifecycle-coordinator-20260615-test-3';
+  var qs = new URLSearchParams(location.search);
+  var enabled = qs.get('sceneOverlayLifecycleTest') === '1';
+  if(!enabled) return;
+
   var items = [];
   var scheduled = false;
   var cycle = 0;
@@ -26,14 +30,48 @@
     return !!(img.complete && img.naturalWidth && img.naturalHeight);
   }
 
+  function coverBox(img){
+    if(!img || !imageReady(img)) return null;
+    var r = img.getBoundingClientRect();
+    var nw = img.naturalWidth || 0;
+    var nh = img.naturalHeight || 0;
+    if(!r.width || !r.height || !nw || !nh) return null;
+    var br = r.width / r.height;
+    var ir = nw / nh;
+    var w = r.width, h = r.height, x = 0, y = 0;
+    if(br > ir){ h = r.width / ir; y = (r.height - h) / 2; }
+    else{ w = r.height * ir; x = (r.width - w) / 2; }
+    if(!w || !h) return null;
+    return { left:r.left + x, top:r.top + y, width:w, height:h };
+  }
+
   function decodeImage(img){
-    if(!img || !img.decode || !imageReady(img)) return Promise.resolve();
-    try{ return img.decode().catch(function(){}); }
-    catch(e){ return Promise.resolve(); }
+    if(!img) return Promise.resolve();
+    if(img.tagName && img.tagName.toLowerCase() !== 'img') return Promise.resolve();
+    if(!imageReady(img)){
+      return new Promise(function(resolve){
+        var done = false;
+        function finish(){ if(done) return; done = true; resolve(); }
+        img.addEventListener('load', finish, { once:true });
+        img.addEventListener('error', finish, { once:true });
+        setTimeout(finish, 900);
+      });
+    }
+    if(img.decode){
+      try{ return img.decode().catch(function(){}); }
+      catch(e){ return Promise.resolve(); }
+    }
+    return Promise.resolve();
   }
 
   function raf(){
     return new Promise(function(resolve){ requestAnimationFrame(function(){ resolve(); }); });
+  }
+
+  function stateReady(){
+    return fetch('/api/state?ts=' + Date.now(), { cache:'no-store' })
+      .then(function(res){ return !!res.ok; })
+      .catch(function(){ return false; });
   }
 
   function findItem(id){
@@ -41,27 +79,40 @@
   }
 
   function register(item){
-    if(!item || !item.id || typeof item.place !== 'function') return;
+    if(!item || !item.id || typeof item.place !== 'function') return false;
     var old = findItem(item.id);
     if(old) Object.assign(old, item);
     else items.push(item);
     request('register:' + item.id);
+    return true;
   }
 
   function unregister(id){
     items = items.filter(function(item){ return item.id !== id; });
   }
 
-  function place(reason){
-    var scene = currentScene();
+  function mark(scene, ready, reason){
     document.body.setAttribute('data-overlay-lifecycle', VERSION);
     document.body.setAttribute('data-overlay-lifecycle-scene', scene);
-    document.body.setAttribute('data-overlay-lifecycle-cycle', String(++cycle));
+    document.body.setAttribute('data-overlay-lifecycle-cycle', String(cycle));
+    document.body.setAttribute('data-overlay-lifecycle-reason', String(reason || ''));
+    if(ready) document.body.setAttribute('data-overlay-lifecycle-ready-scene', scene);
+    else document.body.removeAttribute('data-overlay-lifecycle-ready-scene');
+  }
+
+  function place(reason){
+    var scene = currentScene();
+    cycle += 1;
+    mark(scene, true, reason);
     items.forEach(function(item){
       if(item.scene && item.scene !== scene) return;
-      try{ item.place({ scene: scene, reason: reason || '', cycle: cycle }); }
+      try{ item.place({ scene: scene, reason: reason || '', cycle: cycle, version: VERSION }); }
       catch(e){ console.warn('[overlayLifecycle] place failed:', item.id, e); }
     });
+  }
+
+  function sceneNeedsCover(scene){
+    return scene === 'coffeeCorner' || scene === 'lapClose';
   }
 
   function request(reason){
@@ -69,10 +120,22 @@
     scheduled = true;
     var requestedScene = currentScene();
     var img = imageForScene(requestedScene);
-    decodeImage(img).then(function(){ return raf(); }).then(raf).then(function(){
-      scheduled = false;
-      place(reason || 'request');
-    });
+    mark(requestedScene, false, reason || 'request');
+    decodeImage(img)
+      .then(raf)
+      .then(raf)
+      .then(stateReady)
+      .then(function(){
+        scheduled = false;
+        var scene = currentScene();
+        var currentImg = imageForScene(scene);
+        if(sceneNeedsCover(scene) && !coverBox(currentImg)){
+          setTimeout(function(){ request('cover-not-ready:' + (reason || 'request')); }, 120);
+          return;
+        }
+        place(reason || 'request');
+        setTimeout(function(){ place((reason || 'request') + ':settle'); }, 60);
+      });
   }
 
   function bindImage(img){
@@ -88,6 +151,7 @@
   }
 
   function start(){
+    document.body.setAttribute('data-overlay-lifecycle', VERSION);
     scanImages();
     if(document.body){
       var bodyObserver = new MutationObserver(function(){ request('body-class'); });
@@ -101,7 +165,7 @@
     document.addEventListener('visibilitychange', function(){ if(!document.hidden) request('visibilitychange'); });
     document.addEventListener('click', function(){ request('click'); }, true);
     document.addEventListener('touchend', function(){ request('touchend'); }, true);
-    window.dispatchEvent(new CustomEvent('overlayLifecycleReady'));
+    window.dispatchEvent(new CustomEvent('overlayLifecycleReady', { detail:{ version:VERSION } }));
     request('start');
   }
 
@@ -111,7 +175,9 @@
     unregister: unregister,
     request: request,
     place: place,
-    currentScene: currentScene
+    currentScene: currentScene,
+    coverBox: coverBox,
+    items: items
   };
 
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
