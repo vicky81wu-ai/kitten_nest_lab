@@ -2,6 +2,21 @@
    Scope: approved coffee steam, bubble placement, and coffeeCorner lap variant guard styles.
    Runtime only; image/asset bindings unchanged. */
 
+body.cloudDefaultAssets #gameRoom.active .bubble:not([data-positioner-applied="1"]){
+  display:none!important;
+  opacity:0!important;
+  pointer-events:none!important;
+  left:0!important;
+  top:0!important;
+  right:auto!important;
+  bottom:auto!important;
+}
+
+body.cloudDefaultAssets #gameRoom.active .bubble[data-coordinate-overlay="coffeeCorner.bubbleOverlay"]{
+  right:auto!important;
+  top:auto!important;
+}
+
 body.cloudDefaultAssets #gameRoom.active .bubble.hidden{
   transform:scale(.96) translateY(4px);
 }
