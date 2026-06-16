@@ -1,6 +1,7 @@
 (function(){
-  var VERSION = 'lap-close-bubble-clean-20260615-overlay-lifecycle-1';
+  var VERSION = 'lap-close-bubble-clean-20260615-overlay-lifecycle-test-2';
   var qs = new URLSearchParams(location.search);
+  var lifecycleTest = qs.get('sceneOverlayLifecycleTest') === '1';
 
   function $(id){ return document.getElementById(id); }
 
@@ -51,6 +52,7 @@
   function room(){ return $('gameRoom'); }
   function img(){ return $('gameBg'); }
   function activeLap(){ return document.body.classList.contains('sceneRouterCleanLap') && room() && room().classList.contains('active'); }
+  function lifecycleReady(){ return !lifecycleTest || document.body.getAttribute('data-overlay-lifecycle-ready-scene') === 'lapClose'; }
   function currentText(){
     if(!queue.length) return '';
     return queue[((index % queue.length) + queue.length) % queue.length] || '';
@@ -111,6 +113,8 @@
       '#sceneRouterCleanLapBubble{display:none;position:absolute;z-index:66;padding:12px 14px;border-radius:20px;background:rgba(255,248,245,.88);border:1.4px solid rgba(255,255,255,.92);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);box-shadow:0 10px 28px rgba(83,38,51,.18),inset 0 0 0 1px rgba(120,50,70,.1);font-size:clamp(14px,3.45vw,19px);line-height:1.28;color:#733447;font-weight:540;text-shadow:0 1px rgba(255,255,255,.72);pointer-events:none}',
       '#sceneRouterCleanLapBubble:after{content:"";position:absolute;left:24px;bottom:-9px;border-width:10px 7px 0 7px;border-style:solid;border-color:rgba(255,248,245,.88) transparent transparent transparent}',
       'body.sceneRouterCleanLap #sceneRouterCleanLapBubble[data-visible="1"][data-has-text="1"]{display:block}',
+      'body[data-scene-overlay-lifecycle-test] #sceneRouterCleanLapBubble{display:none!important}',
+      'body[data-scene-overlay-lifecycle-test][data-overlay-lifecycle-ready-scene="lapClose"].sceneRouterCleanLap #sceneRouterCleanLapBubble[data-visible="1"][data-has-text="1"]{display:block!important}',
       '#sceneRouterCleanLapBodyHot{display:none;position:absolute;z-index:67;border:0;padding:0;background:transparent;border-radius:24px;color:transparent;font-size:0;touch-action:manipulation;pointer-events:none}',
       'body.sceneRouterCleanLap #sceneRouterCleanLapBodyHot{display:block;pointer-events:auto}',
       'body[data-debug-lap-bubble="1"] #sceneRouterCleanLapBodyHot{background:rgba(255,80,130,.16);outline:2px solid rgba(255,80,130,.85)}'
@@ -134,8 +138,9 @@
     text = currentText();
     el.textContent = text;
     el.setAttribute('data-has-text', text ? '1' : '0');
-    el.setAttribute('data-visible', visible && text ? '1' : '0');
+    el.setAttribute('data-visible', visible && text && lifecycleReady() ? '1' : '0');
     el.setAttribute('data-coffee-corner-lap-close-bubble-queue', String(queue.length));
+    if(lifecycleTest) el.setAttribute('data-overlay-lifecycle-bound', '1');
     return el;
   }
 
@@ -214,7 +219,7 @@
     placeBubble();
     placeBodyHot();
     var el = $('sceneRouterCleanLapBubble');
-    if(el) el.setAttribute('data-visible', visible && currentText() ? '1' : '0');
+    if(el) el.setAttribute('data-visible', visible && currentText() && lifecycleReady() ? '1' : '0');
   }
 
   function registerOverlayLifecycle(){
@@ -230,6 +235,7 @@
   function start(){
     document.body.setAttribute('data-lap-bubble', VERSION);
     document.body.setAttribute('data-coffee-corner-lap-close-bubble-queue', '1');
+    if(lifecycleTest) document.body.setAttribute('data-lap-bubble-lifecycle-test', '1');
     if(qs.get('debugLapBubble') === '1') document.body.setAttribute('data-debug-lap-bubble', '1');
     refreshState();
     sync();
