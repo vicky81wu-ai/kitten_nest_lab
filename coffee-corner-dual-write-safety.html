@@ -1,79 +1,8 @@
 <!doctype html>
 <html lang="zh-CN">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>Coffee Corner Dual Write Safety</title>
-<style>
-  *{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Arial,sans-serif}
-  body{margin:0;min-height:100dvh;background:linear-gradient(180deg,#fff4f7,#ecd4dc);color:#673748;padding:18px}.wrap{width:min(94vw,780px);margin:0 auto 28px}.card{border-radius:26px;background:rgba(255,255,255,.74);box-shadow:0 18px 52px rgba(86,37,55,.17);border:1px solid rgba(255,255,255,.78);padding:17px;margin:13px 0}h1{text-align:center;font-size:23px;margin:10px 0 6px}h2{font-size:17px;margin:0 0 10px}.hint{font-size:13px;line-height:1.55;opacity:.72;text-align:center;margin:0 0 12px}.small{font-size:12px;line-height:1.55;opacity:.72}label{display:block;font-size:13px;margin:12px 0 6px;opacity:.78}input,textarea{width:100%;border:0;border-radius:16px;padding:13px;background:rgba(255,255,255,.86);box-shadow:inset 0 0 0 1px rgba(116,52,73,.13);font-size:15px;color:#673748;outline:none}textarea{min-height:150px;resize:vertical}.out{white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;line-height:1.45;border-radius:18px;padding:13px;background:rgba(255,255,255,.76);box-shadow:inset 0 0 0 1px rgba(116,52,73,.12);overflow:auto}.pill{display:inline-block;border-radius:999px;padding:4px 8px;margin:2px;background:rgba(119,64,82,.1);font-size:11px}.warn{color:#9b4654;font-weight:780}.ok{color:#4f6b46;font-weight:780}button{width:100%;border:0;border-radius:18px;margin-top:10px;padding:13px;background:#774052;color:#fff;font-weight:780;font-size:15px;box-shadow:0 10px 24px rgba(119,64,82,.22)}button.secondary{background:rgba(255,255,255,.78);color:#774052;box-shadow:inset 0 0 0 1px rgba(119,64,82,.14)}button.danger{background:#a84e5f}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.links{display:flex;gap:10px;flex-wrap:wrap}.links a{flex:1;min-width:130px;text-align:center;text-decoration:none;color:#774052;background:rgba(255,255,255,.62);border-radius:14px;padding:10px;font-size:13px}.gate{border:1px solid rgba(168,78,95,.28);background:rgba(255,245,247,.72)}
-</style>
-</head>
-<body>
-<main class="wrap">
-  <h1>Coffee Corner Dual Write Safety</h1>
-  <p class="hint">安全测试：未来 coffeeCornerBubble 写入应新旧字段双写。默认只预览，手动填 key 才写。</p>
-
-  <section class="card gate">
-    <h2>Safety gate</h2>
-    <p class="small"><span class="warn">MANUAL WRITE ONLY</span>：本页不改 /write、不改 /api/set-state、不删旧字段。点击“执行双写”才调用现有 /api/set-state。</p>
-    <div class="links"><a href="/coffee-corner-compat-read-dry-run.html">compat read dry-run</a><a href="/write">正式 /write</a><a href="/cloud?v=dualWriteSafety">打开 /cloud</a></div>
-  </section>
-
-  <section class="card">
-    <h2>Dual-write map</h2>
-    <div class="small"><span class="pill">coffeeCornerBubble</span><span class="pill">coffeeCornerBubbles</span><span class="pill">coffeeCornerBubbleIndex</span><span class="pill">alexBubble</span><span class="pill">alexBubbles</span><span class="pill">bubbleIndex</span></div>
-    <label for="token">Nest key</label>
-    <input id="token" autocomplete="off" placeholder="paste NEST_TOKEN here" />
-    <label for="text">coffeeCornerBubble text</label>
-    <textarea id="text">小猫，过来。
-这是 coffeeCornerBubble 双写安全测试。</textarea>
-    <div class="row"><button id="preview" class="secondary">预览双写 patch</button><button id="reload" class="secondary">刷新 state</button></div>
-    <button id="write" class="danger">执行双写</button>
-  </section>
-
-  <section class="card"><h2>Current state</h2><div id="snapshot" class="out">Loading...</div></section>
-  <section class="card"><h2>Dual-write patch preview</h2><div id="patch" class="out">Loading...</div></section>
-  <section class="card"><h2>Write result</h2><div id="result" class="out">尚未写入。</div></section>
-</main>
-<script>
-(function(){
-  const tokenBox=document.getElementById('token'), textBox=document.getElementById('text'), snapshotBox=document.getElementById('snapshot'), patchBox=document.getElementById('patch'), resultBox=document.getElementById('result');
-  let state=null, patch=null; const saved=localStorage.getItem('kittenNestToken'); if(saved) tokenBox.value=saved;
-  function pretty(o){return JSON.stringify(o,null,2)} function now(){return new Date().toISOString()} function key(){const t=tokenBox.value.trim(); if(t)localStorage.setItem('kittenNestToken',t); return t}
-  function lines(v){return String(v||'').split(/\r?\n/).map(s=>s.trim()).filter(Boolean).slice(0,30)}
-  function buildPatch(s){
-    const q=lines(textBox.value); if(!q.length) throw new Error('Text is empty.');
-    return {
-      previousPublished:{
-        alexBubble:s.alexBubble||'',
-        alexBubbles:s.alexBubbles||(s.alexBubble?[s.alexBubble]:[]),
-        bubbleIndex:s.bubbleIndex||0,
-        coffeeCornerBubble:s.coffeeCornerBubble||'',
-        coffeeCornerBubbles:s.coffeeCornerBubbles||(s.coffeeCornerBubble?[s.coffeeCornerBubble]:[]),
-        coffeeCornerBubbleIndex:s.coffeeCornerBubbleIndex||0,
-        savedAt:now()
-      },
-      coffeeCornerBubble:q[0]||'',
-      coffeeCornerBubbles:q,
-      coffeeCornerBubbleIndex:0,
-      coffeeCornerBubbleUpdatedAt:now(),
-      alexBubble:q[0]||'',
-      alexBubbles:q,
-      bubbleIndex:0
-    };
-  }
-  function show(){
-    try{
-      patch=buildPatch(state||{});
-      snapshotBox.textContent=pretty({safetyPage:true,current:{coffeeCornerBubble:state&&state.coffeeCornerBubble||null,coffeeCornerBubbles:state&&state.coffeeCornerBubbles||null,coffeeCornerBubbleIndex:state&&Object.prototype.hasOwnProperty.call(state,'coffeeCornerBubbleIndex')?state.coffeeCornerBubbleIndex:null,alexBubble:state&&state.alexBubble||null,alexBubbles:state&&state.alexBubbles||null,bubbleIndex:state&&Object.prototype.hasOwnProperty.call(state,'bubbleIndex')?state.bubbleIndex:null,updatedAt:state&&state.updatedAt||null}});
-      patchBox.textContent=pretty({safetyPage:true,writesOnlyIfButtonClicked:true,deletesOldFields:false,targetId:'coffeeCornerBubble',patchPreview:patch,checks:{writesCanonical:true,writesLegacy:true,backsUpBoth:true}});
-    }catch(e){patchBox.textContent=pretty({ok:false,error:e.message})}
-  }
-  async function load(){try{const res=await fetch('/api/state?ts='+Date.now(),{cache:'no-store'});if(!res.ok)throw new Error('state read failed '+res.status);state=await res.json();show()}catch(e){const err=pretty({ok:false,error:e.message});snapshotBox.textContent=err;patchBox.textContent=err}}
-  async function write(){try{if(!patch)show();const t=key();if(!t)throw new Error('Need Nest key.');resultBox.textContent='Writing dual fields...';const res=await fetch('/api/set-state',{method:'POST',headers:{'Content-Type':'application/json','X-Nest-Token':t},body:JSON.stringify(patch),cache:'no-store'});const data=await res.json();if(!res.ok||!data.ok)throw new Error(data.error||data.message||res.status);resultBox.textContent=pretty({ok:true,writtenBy:'coffee-corner-dual-write-safety.html',targetId:'coffeeCornerBubble',updatedAt:data.value&&data.value.updatedAt,canonical:{coffeeCornerBubble:data.value&&data.value.coffeeCornerBubble,coffeeCornerBubbles:data.value&&data.value.coffeeCornerBubbles,coffeeCornerBubbleIndex:data.value&&data.value.coffeeCornerBubbleIndex},legacy:{alexBubble:data.value&&data.value.alexBubble,alexBubbles:data.value&&data.value.alexBubbles,bubbleIndex:data.value&&data.value.bubbleIndex},sameList:JSON.stringify(data.value&&data.value.coffeeCornerBubbles)===JSON.stringify(data.value&&data.value.alexBubbles),sameCurrent:(data.value&&data.value.coffeeCornerBubble)===(data.value&&data.value.alexBubble)});await load()}catch(e){resultBox.textContent=pretty({ok:false,error:e.message})}}
-  document.getElementById('preview').onclick=show; document.getElementById('reload').onclick=load; document.getElementById('write').onclick=write; textBox.addEventListener('input',show); load();
-})();
-</script>
-</body>
-</html>
+<head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" /><title>Archived · Coffee Corner Dual Write Safety</title><style>*{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif}body{margin:0;min-height:100dvh;padding:18px;background:linear-gradient(180deg,#fff4f7,#ecd4dc);color:#673748}.wrap{width:min(94vw,820px);margin:0 auto}.card{border-radius:24px;background:rgba(255,255,255,.78);padding:16px;margin:13px 0;box-shadow:0 16px 44px rgba(86,37,55,.15)}h1{text-align:center;font-size:23px}.small{font-size:13px;line-height:1.6;opacity:.78}.code{white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;line-height:1.5;border-radius:18px;padding:13px;background:rgba(255,255,255,.82);overflow:auto}.links{display:flex;gap:10px;flex-wrap:wrap}.links a{flex:1;min-width:150px;text-align:center;text-decoration:none;color:#774052;background:rgba(255,255,255,.64);border-radius:14px;padding:10px;font-size:13px}.warn{color:#9b4654;font-weight:800}</style></head>
+<body><main class="wrap"><h1>Archived · Coffee Corner Dual Write Safety</h1><section class="card"><p class="small"><b class="warn">历史双写测试页，已瘦身。</b> 这页曾用于验证普通咖啡角气泡新旧字段双写。当前双写逻辑已经收进 <code>update_text_target</code> 的 <code>coffeeCornerBubble</code> target。</p><div class="links"><a href="/text-target-envelope-status.html">Current status</a><a href="/api/mcp">MCP endpoint</a><a href="/cloud">Open cloud</a></div></section><section class="card"><h2>Historical lesson kept</h2><div class="code">经验保留：
+- coffeeCornerBubble 需要同时维护 canonical 字段和 legacy 字段。
+- canonical: coffeeCornerBubble / coffeeCornerBubbles / coffeeCornerBubbleIndex
+- legacy: alexBubble / alexBubbles / bubbleIndex
+- 当前统一由 update_text_target(targetId="coffeeCornerBubble") 处理。</div></section></main></body></html>
