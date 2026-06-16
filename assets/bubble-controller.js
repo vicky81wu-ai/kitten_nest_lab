@@ -1,6 +1,4 @@
 (function(){
-  var qs = new URLSearchParams(location.search);
-  var lifecycleTest = qs.get('sceneOverlayLifecycleTest') === '1';
   var index = 0;
   var stamp = '';
   var hidden = false;
@@ -9,27 +7,6 @@
 
   function bubble(){ return document.getElementById('bubble'); }
   function tattoo(){ return document.querySelector('.tattooHot'); }
-  function currentScene(){
-    var game = document.getElementById('gameRoom');
-    if(document.body.classList.contains('sceneRouterCleanLap')) return 'lapClose';
-    if(game && game.classList.contains('active')) return 'coffeeCorner';
-    return 'other';
-  }
-  function lifecycleReady(){
-    if(!lifecycleTest || currentScene() !== 'coffeeCorner') return true;
-    return document.body.getAttribute('data-overlay-lifecycle-ready-scene') === 'coffeeCorner';
-  }
-
-  function ensureLifecycleStyle(){
-    if(!lifecycleTest || document.getElementById('coffeeCornerBubbleLifecycleStyle')) return;
-    var s = document.createElement('style');
-    s.id = 'coffeeCornerBubbleLifecycleStyle';
-    s.textContent = [
-      'body[data-scene-overlay-lifecycle-test] #bubble[data-bubble-controller="guarded"]{visibility:hidden!important}',
-      'body[data-scene-overlay-lifecycle-test][data-overlay-lifecycle-ready-scene="coffeeCorner"] #gameRoom.active #bubble[data-bubble-controller="guarded"]:not(.hidden){visibility:visible!important}'
-    ].join('');
-    document.head.appendChild(s);
-  }
 
   function list(state){
     if(!state) return [];
@@ -65,22 +42,15 @@
 
   function show(state, options){
     options = options || {};
-    ensureLifecycleStyle();
     var b = bubble();
     var text = current(state);
     if(!b || !text) return false;
     b.textContent = text;
     b.setAttribute('data-bubble-controller', 'guarded');
-    if(lifecycleTest) b.setAttribute('data-overlay-lifecycle-bound', 'coffeeCorner.bubble');
     if(isUserHidden() && !options.user){
       return true;
     }
     markHidden(false);
-    if(!lifecycleReady()){
-      b.classList.add('hidden');
-      if(window.KittenNestOverlayLifecycle) window.KittenNestOverlayLifecycle.request('coffee-corner-bubble-show-wait');
-      return true;
-    }
     b.classList.remove('hidden');
     return true;
   }
@@ -105,7 +75,6 @@
   }
 
   function sync(state){
-    ensureLifecycleStyle();
     var nextStamp = makeStamp(state);
     if(nextStamp && nextStamp !== stamp){
       stamp = nextStamp;
@@ -113,39 +82,19 @@
       show(state, { user:false });
       return true;
     }
-    if(lifecycleTest && lifecycleReady() && !isUserHidden()){
-      var b = bubble();
-      if(b) b.classList.remove('hidden');
-    }
     return false;
-  }
-
-  function registerOverlayLifecycle(){
-    if(!lifecycleTest || !window.KittenNestOverlayLifecycle) return false;
-    window.KittenNestOverlayLifecycle.register({
-      id: 'coffeeCorner.bubble',
-      scene: 'coffeeCorner',
-      place: function(){
-        var client = window.KittenNestState;
-        if(client && client.get) sync(client.get());
-      }
-    });
-    return true;
   }
 
   function attach(stateClient){
     var client = stateClient || window.KittenNestState;
     if(!client || typeof client.subscribe !== 'function') return false;
-    ensureLifecycleStyle();
     client.subscribe(function(payload){ sync(payload && payload.state); });
     if(client.get) sync(client.get());
-    registerOverlayLifecycle();
-    window.addEventListener('overlayLifecycleReady', registerOverlayLifecycle);
     return true;
   }
 
   window.KittenNestBubble = {
-    version: 'guarded-bubble-controller-20260615-overlay-lifecycle-test-1',
+    version: 'guarded-bubble-controller-20260616-clean-1',
     list: list,
     current: current,
     show: show,
