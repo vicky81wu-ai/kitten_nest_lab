@@ -5,10 +5,10 @@ const hotspotPositionerScript = '<script src="/assets/hotspot-positioner.js?v=20
 const coffeeSteamScript = '<script src="/assets/coffee-steam-svg.js?v=20260613-mist-1"></script>';
 const sourceOfTruthGateScript = '<script src="/assets/source-of-truth-gate.js?v=20260616-test-1"></script>';
 const overlayLockTestScript = '<script src="/assets/overlay-lock-test.js?v=20260614-overlay-lock-test-1"></script>';
-const lapCloseBubbleCleanScript = '<script src="/assets/lap-close-bubble-clean.js?v=20260615-lap-bubble-overlay-lifecycle-test-2"></script>';
+const lapCloseBubbleCleanScript = '<script src="/assets/lap-close-bubble-clean.js?v=20260616-clean-1"></script>';
 const sceneManifestIsolationTestScript = '<script src="/assets/scene-manifest-isolation-test.js?v=20260615-scene-manifest-promoted-1"></script>';
 const coffeeCornerVariantScript = '<script src="/assets/coffee-corner-variant.js?v=20260613-enter-canvas-verified-1"></script>';
-const bubbleControllerScript = '<script src="/assets/bubble-controller.js?v=20260615-coffee-corner-bubble-overlay-lifecycle-test-1"></script>';
+const bubbleControllerScript = '<script src="/assets/bubble-controller.js?v=20260616-clean-1"></script>';
 const hubbyNoteControllerScript = '<script src="/assets/hubby-note-controller.js?v=20260614-no-consolehot-1"></script>';
 const setupToggleScript = '<script src="/assets/setup-toggle.js?v=20260613-touchfix-1"></script>';
 const consoleRestoreScript = '<script src="/assets/console-hot-restore.js?v=20260610-1"></script>';
@@ -16,7 +16,7 @@ const consoleCleanRestoreScript = '<script src="/assets/console-hot-clean-restor
 const coffeeCleanLeaveGuardScript = '<script src="/assets/coffee-clean-leave-guard.js?v=20260614-clean-leave-1"></script>';
 const clockHandsGuardScript = '<script src="/assets/clock-hands-guard.js?v=20260614-clock-1"></script>';
 const sceneRouterScript = '<script src="/assets/scene-router.v1.js?v=20260614-router-5-rollback"></script>';
-const sceneRouterCleanScript = '<script src="/assets/scene-router-clean.v1.js?v=20260615-home-promoted-1"></script>';
+const sceneRouterCleanScript = '<script src="/assets/scene-router-clean.v1.js?v=20260616-remove-legacy-lap-bubble-1"></script>';
 const sceneRouterBootScript = `
 <script>
 (function(){
