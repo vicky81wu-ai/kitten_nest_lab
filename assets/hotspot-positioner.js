@@ -1,4 +1,7 @@
 (function(){
+  var qs = new URLSearchParams(location.search);
+  var overlayLifecycleTest = qs.get('sceneOverlayLifecycleTest') === '1';
+
   var hotspotCards = {
     'coffeeCorner.tattooHot': {
       id: 'coffeeCorner.tattooHot',
@@ -106,6 +109,18 @@
   function getCard(id){ return hotspotCards[id || defaultHotspotId] || null; }
   function getOverlayCard(id){ return overlayCards[id || defaultOverlayId] || null; }
 
+  function installOverlayCardGate(){
+    if(!overlayLifecycleTest || document.getElementById('overlayCardPositionerGateStyle')) return;
+    var selectors = Object.keys(overlayCards).map(function(id){
+      return overlayCards[id].selector + ':not([data-positioner-applied="1"])';
+    }).join(',');
+    if(!selectors) return;
+    var s = document.createElement('style');
+    s.id = 'overlayCardPositionerGateStyle';
+    s.textContent = selectors + '{opacity:0!important;pointer-events:none!important}';
+    document.head.appendChild(s);
+  }
+
   function coverBox(img){
     if(!img) return null;
     var rect = img.getBoundingClientRect();
@@ -143,6 +158,7 @@
       target.style.pointerEvents = 'none';
       target.style.opacity = '0';
       target.setAttribute('data-coordinate-inactive', '1');
+      if(target.getAttribute('data-coordinate-overlay') === card.id) target.removeAttribute('data-positioner-applied');
     }
   }
 
@@ -213,7 +229,7 @@
     if(card.visual === 'transparent') applyTransparentVisual(hot);
     applyRotation(hot, point);
 
-    if(new URLSearchParams(location.search).get('debugHotspot') === '1'){
+    if(qs.get('debugHotspot') === '1'){
       hot.style.background = 'rgba(255,80,130,.18)';
       hot.style.outline = '2px solid rgba(255,80,130,.85)';
       hot.style.borderRadius = '18px';
@@ -255,7 +271,6 @@
     var box = coverBox(img);
     if(!img || !box) return false;
 
-    showActiveTarget(overlay);
     var point = card.coordinate;
     var parent = overlay.offsetParent || document.body;
     var parentRect = parent.getBoundingClientRect();
@@ -278,8 +293,10 @@
 
     overlay.setAttribute('data-coordinate-overlay', card.id);
     overlay.setAttribute('data-overlay-label', card.label || card.id);
+    overlay.setAttribute('data-positioner-applied', '1');
+    showActiveTarget(overlay);
 
-    if(new URLSearchParams(location.search).get('debugOverlay') === '1'){
+    if(qs.get('debugOverlay') === '1'){
       overlay.style.outline = '2px solid rgba(80,160,255,.85)';
       overlay.style.background = 'rgba(80,160,255,.10)';
     }
@@ -298,6 +315,7 @@
   }
 
   function start(){
+    installOverlayCardGate();
     applyAll();
     window.addEventListener('resize', applyAll);
     window.addEventListener('orientationchange', applyAll);
@@ -311,7 +329,7 @@
   }
 
   window.KittenNestHotspots = {
-    version: 'coordinate-hotspot-overlay-card-20260614-steam-overlay-locked-1',
+    version: overlayLifecycleTest ? 'coordinate-hotspot-overlay-card-20260615-overlay-gated-test-1' : 'coordinate-hotspot-overlay-card-20260614-steam-overlay-locked-1',
     cards: hotspotCards,
     overlayCards: overlayCards,
     defaultHotspotId: defaultHotspotId,
