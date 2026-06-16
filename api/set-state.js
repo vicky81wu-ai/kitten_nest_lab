@@ -182,6 +182,30 @@ function buildTextTargetEnvelope(rawPatch, state) {
   };
 }
 
+function compactTextTargetValue(value, patch) {
+  const writtenFields = Object.keys(patch || {});
+  return {
+    updatedAt: value.updatedAt,
+    writtenFields,
+    coffeeCorner: {
+      sameCurrent: value.coffeeCornerBubble === value.alexBubble,
+      sameList: JSON.stringify(value.coffeeCornerBubbles || []) === JSON.stringify(value.alexBubbles || []),
+      coffeeCornerBubble: value.coffeeCornerBubble || '',
+      coffeeCornerBubbles: value.coffeeCornerBubbles || [],
+      alexBubble: value.alexBubble || '',
+      alexBubbles: value.alexBubbles || [],
+      coffeeCornerBubbleIndex: value.coffeeCornerBubbleIndex || 0,
+      bubbleIndex: value.bubbleIndex || 0
+    },
+    untouchedPreview: {
+      coffeeCornerLapCloseBubble: value.coffeeCornerLapCloseBubble || '',
+      windowTemp: value.windowTemp || '',
+      windowDesc: value.windowDesc || '',
+      hubbyNotePreview: String(value.hubbyNote || '').slice(0, 120)
+    }
+  };
+}
+
 function applyHubbyNotePackage(patch, state) {
   const bubbleLines = Array.isArray(patch.alexBubbles) ? patch.alexBubbles : (patch.alexBubble ? [patch.alexBubble] : []);
   const joined = bubbleLines.map((line) => String(line || '')).join('\n').trim();
@@ -349,12 +373,12 @@ module.exports = async function handler(req, res) {
         dryRun: false,
         writesState: true,
         callsSupabaseWrite: true,
-        value,
         textTarget: {
           request: textTargetEnvelope.request,
           target: textTargetEnvelope.target,
           writtenFields: Object.keys(textTargetEnvelope.patch)
-        }
+        },
+        summary: compactTextTargetValue(value, textTargetEnvelope.patch)
       });
     }
 
