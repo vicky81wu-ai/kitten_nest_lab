@@ -6,7 +6,7 @@ const coffeeSteamScript = '<script src="/assets/coffee-steam-svg.js?v=20260613-m
 const sourceOfTruthGateScript = '<script src="/assets/source-of-truth-gate.js?v=20260616-test-1"></script>';
 const overlayLockTestScript = '<script src="/assets/overlay-lock-test.js?v=20260614-overlay-lock-test-1"></script>';
 const lapCloseBubbleCleanScript = '<script src="/assets/lap-close-bubble-clean.js?v=20260616-clean-1"></script>';
-const sceneManifestIsolationTestScript = '<script src="/assets/scene-manifest-isolation-test.js?v=20260615-scene-manifest-promoted-1"></script>';
+const sceneManifestIsolationScript = '<script src="/assets/scene-manifest-isolation.js?v=20260616-promoted-1"></script>';
 const coffeeCornerVariantScript = '<script src="/assets/coffee-corner-variant.js?v=20260613-enter-canvas-verified-1"></script>';
 const bubbleControllerScript = '<script src="/assets/bubble-controller.js?v=20260616-clean-1"></script>';
 const hubbyNoteControllerScript = '<script src="/assets/hubby-note-controller.js?v=20260614-no-consolehot-1"></script>';
@@ -91,7 +91,7 @@ function injectBubbleController(html, options = {}) {
     sourceOfTruthGateScript,
     overlayLockTestScript,
     lapCloseBubbleCleanScript,
-    sceneManifestIsolationTestScript
+    sceneManifestIsolationScript
   ];
   if (!clean) scripts.push(coffeeCornerVariantScript);
   scripts.push(
