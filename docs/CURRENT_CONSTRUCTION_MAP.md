@@ -1,75 +1,35 @@
 # Current Construction Map · Kitten Nest Text Target System
 
-Status: current deployment map  
+Status: current deployment map
 Last updated: 2026-06-16
 
-## Read this first
+This file is only for the text writing system.
 
-This file is the short current-only map for the text writing system. It is not the only foundation milestone.
-
-For the top-level milestone map, read:
-
-```text
-docs/MAJOR_MILESTONES_INDEX.md
-```
-
-For the full text-target milestone history and rules, read:
+Full text-target milestone log:
 
 ```text
 docs/MAJOR_MILESTONE_TEXT_TARGETS_MCP_TOTAL_KEY_2026-06-16.md
 ```
 
-Important: this file is only about the text-target writing system. It does not define the nest scene framework / navigation structure. If working on scene framework or room routing, find the authoritative source in code/JSON/docs first.
-
-## Current correct route
+## Current route
 
 ```text
-ChatGPT all-window Kitten Nest App
-→ /api/mcp?t=<private token>
-→ tools/list
-→ update_text_target
-→ data/text-targets.v1.json
-→ Supabase nest_state
-→ /cloud / PWA display
+/api/mcp
+update_text_target
+data/text-targets.v1.json
 ```
-
-Do not start from My GPT Actions for normal Kitten Nest all-window work. The OpenAPI files are archived backup/reference only.
 
 ## Current authoritative files
 
 ```text
 api/mcp.js
-```
-
-The live all-window MCP tool server. It exposes `update_text_target` and reads the registry.
-
-```text
 data/text-targets.v1.json
-```
-
-The text target registry / 户口本. New text areas must be registered here first.
-
-```text
 api/set-state.js
-```
-
-The legacy/general state endpoint plus textTarget envelope support. Useful for web safety pages and direct REST tests, but not the primary ChatGPT all-window tool source.
-
-```text
 docs/MAJOR_MILESTONE_TEXT_TARGETS_MCP_TOTAL_KEY_2026-06-16.md
-```
-
-The full text-target milestone log and future construction rules.
-
-```text
 docs/TEXT_TARGET_ENVELOPE_CONTRACT.md
 ```
 
-Contract reference, now points back to the MCP route and registry-first rule.
-
-## Current live tool
-
-Use:
+## Tool
 
 ```text
 update_text_target(targetId, text, mode)
@@ -80,12 +40,6 @@ Modes:
 ```text
 publish
 dryRun
-```
-
-TargetIds come from:
-
-```text
-data/text-targets.v1.json
 ```
 
 Current registered targetIds:
@@ -99,9 +53,7 @@ moodNote
 roomStatus
 ```
 
-## Current canonical tags
-
-Use full tags only:
+## Canonical tags
 
 ```text
 [coffeeCornerBubble]
@@ -112,30 +64,16 @@ Use full tags only:
 [roomStatus]
 ```
 
-Do not use vague aliases:
-
-```text
-[coffee]
-[coffeeCorner]
-[lapClose]
-[weather]
-[note]
-[mood]
-[status]
-```
-
 ## New text target workflow
 
 1. Register the target in `data/text-targets.v1.json`.
 2. Make sure UI/runtime reads the registered fields.
 3. Deploy.
-4. Refresh/reconnect the ChatGPT Kitten Nest App so tool schema reloads.
-5. Test with `update_text_target(..., mode="dryRun")`.
+4. Refresh/reconnect the ChatGPT Kitten Nest App.
+5. Test with dryRun.
 6. Then publish.
 
-## Archive / old road notes
-
-These files/pages are historical or backup only:
+## Archived test pages
 
 ```text
 actions-setup.html
@@ -146,22 +84,8 @@ write-v2-text-targets-safety.html
 coffee-corner-dual-write-safety.html
 ```
 
-They are kept for lessons and past verification, not as the current route.
+These are kept for history only.
 
-## Non-negotiable rule
+## Boundary
 
-Never expose arbitrary state path writes.
-
-Allowed:
-
-```text
-update_text_target(targetId, text, mode)
-```
-
-Not allowed:
-
-```text
-update_state_path(path, value)
-```
-
-The registry is the permission boundary.
+Use registered targetId only. Do not expose free-form state path writes.
