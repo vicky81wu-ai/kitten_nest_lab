@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Kitten Nest Actions Setup</title>
+<style>
+*{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif}body{margin:0;min-height:100dvh;padding:18px;background:linear-gradient(180deg,#fff4f7,#ecd4dc);color:#673748}.wrap{width:min(94vw,820px);margin:0 auto}.card{border-radius:24px;background:rgba(255,255,255,.76);padding:16px;margin:13px 0;box-shadow:0 16px 44px rgba(86,37,55,.15)}h1{text-align:center;font-size:23px;margin:10px 0}.small{font-size:13px;line-height:1.6;opacity:.78}.code{white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;line-height:1.5;border-radius:18px;padding:13px;background:rgba(255,255,255,.82);overflow:auto}.pill{display:inline-block;border-radius:999px;padding:5px 9px;margin:4px;background:rgba(119,64,82,.1);font-size:12px}.ok{color:#4f6b46;font-weight:800}.warn{color:#9b4654;font-weight:800}.links{display:flex;gap:10px;flex-wrap:wrap}.links a{flex:1;min-width:150px;text-align:center;text-decoration:none;color:#774052;background:rgba(255,255,255,.62);border-radius:14px;padding:10px;font-size:13px}ol{padding-left:22px}.redline{border:1px solid rgba(168,78,95,.24);background:rgba(255,245,247,.7)}
+</style>
+</head>
+<body>
+<main class="wrap">
+<h1>Kitten Nest Actions Setup</h1>
+<section class="card"><p class="small">这是 ChatGPT Actions / MCP 连接层接入说明。猫窝 repo 已提供后端 envelope 与 OpenAPI spec；工具栏是否出现，需要在 Actions/MCP 层把 spec 导入并配置认证。</p><div class="links"><a href="/text-target-actions.openapi.json">OpenAPI spec</a><a href="/text-target-envelope-status.html">Envelope status</a><a href="/text-target-envelope-dry-run.html">Envelope tester</a></div></section>
+<section class="card"><h2>OpenAPI URL</h2><div class="code">https://kitten-nest-lab.vercel.app/text-target-actions.openapi.json</div></section>
+<section class="card"><h2>Auth</h2><p class="small">Authentication type: API Key / Custom header</p><div class="code">Header name: X-Nest-Token
+Header value: use the existing Nest write token</div><p class="small warn">不要把 token 写进 repo、聊天、截图或公开页面。</p></section>
+<section class="card"><h2>Tool</h2><div class="code">operationId: update_text_target
+method: POST
+path: /api/set-state</div></section>
+<section class="card"><h2>Request shape</h2><div class="code">{
+  "textTarget": {
+    "targetId": "coffeeCornerBubble",
+    "mode": "publish",
+    "text": "line 1\nline 2",
+    "dryRun": false
+  }
+}</div></section>
+<section class="card"><h2>Current publish gates</h2><p><span class="pill ok">coffeeCornerBubble</span><span class="pill ok">coffeeCornerLapCloseBubble</span></p><p class="small">这些已验收真写，适合日常新鲜气泡。</p><p><span class="pill warn">windowWeather dry-run only</span><span class="pill warn">moodNote dry-run only</span><span class="pill warn">roomStatus dry-run only</span><span class="pill warn">hubbyNote gated</span></p></section>
+<section class="card redline"><h2>Red lines</h2><ol class="small"><li>不要暴露任意 state path 写入。</li><li>只允许 text-target registry 里的 targetId。</li><li>粉本本 / archive / history / trash 需要单独动作，不混进日常气泡写入。</li><li>默认先 dry-run 再 publish，尤其是新 target。</li></ol></section>
+<section class="card"><h2>Expected result</h2><p class="small">Actions/MCP 成功接入后，隔壁工具栏应出现一个类似下面的 callable tool：</p><div class="code">update_text_target(targetId, text, mode="publish", dryRun=false)</div></section>
+</main>
+</body>
+</html>
