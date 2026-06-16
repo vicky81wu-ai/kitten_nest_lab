@@ -7,18 +7,34 @@
 
   function bubble(){ return document.getElementById('bubble'); }
   function tattoo(){ return document.querySelector('.tattooHot'); }
+  function cleanList(value){
+    return Array.isArray(value)
+      ? value.map(function(x){ return String(x || '').trim(); }).filter(Boolean)
+      : [];
+  }
 
   function list(state){
     if(!state) return [];
-    if(Array.isArray(state.alexBubbles)){
-      return state.alexBubbles.map(function(x){ return String(x || '').trim(); }).filter(Boolean);
-    }
+    var canonical = cleanList(state.coffeeCornerBubbles);
+    if(canonical.length) return canonical;
+    if(state.coffeeCornerBubble) return [String(state.coffeeCornerBubble).trim()].filter(Boolean);
+    var legacy = cleanList(state.alexBubbles);
+    if(legacy.length) return legacy;
     return state.alexBubble ? [String(state.alexBubble)] : [];
   }
 
   function makeStamp(state){
     var q = list(state);
-    return String(state && state.updatedAt || '') + '|' + JSON.stringify(q);
+    var canonicalIndex = state && Object.prototype.hasOwnProperty.call(state, 'coffeeCornerBubbleIndex') ? state.coffeeCornerBubbleIndex : '';
+    var legacyIndex = state && Object.prototype.hasOwnProperty.call(state, 'bubbleIndex') ? state.bubbleIndex : '';
+    return String(state && state.updatedAt || '') + '|' + String(canonicalIndex) + '|' + String(legacyIndex) + '|' + JSON.stringify(q);
+  }
+
+  function currentIndex(state){
+    if(state && Object.prototype.hasOwnProperty.call(state, 'coffeeCornerBubbleIndex')){
+      return Number(state.coffeeCornerBubbleIndex || 0) || 0;
+    }
+    return Number(state && state.bubbleIndex || 0) || 0;
   }
 
   function current(state){
@@ -47,6 +63,7 @@
     if(!b || !text) return false;
     b.textContent = text;
     b.setAttribute('data-bubble-controller', 'guarded');
+    b.setAttribute('data-bubble-source', cleanList(state && state.coffeeCornerBubbles).length || state && state.coffeeCornerBubble ? 'coffeeCornerBubble' : 'alexBubbleFallback');
     if(isUserHidden() && !options.user){
       return true;
     }
@@ -78,7 +95,7 @@
     var nextStamp = makeStamp(state);
     if(nextStamp && nextStamp !== stamp){
       stamp = nextStamp;
-      index = Number(state && state.bubbleIndex || 0) || 0;
+      index = currentIndex(state);
       show(state, { user:false });
       return true;
     }
@@ -94,7 +111,7 @@
   }
 
   window.KittenNestBubble = {
-    version: 'guarded-bubble-controller-20260616-clean-1',
+    version: 'guarded-bubble-controller-20260616-compat-read-1',
     list: list,
     current: current,
     show: show,
