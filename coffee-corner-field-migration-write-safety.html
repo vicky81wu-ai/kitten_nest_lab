@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Coffee Corner Field Migration Write Safety</title>
+<style>
+  *{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Arial,sans-serif}
+  body{margin:0;min-height:100dvh;background:linear-gradient(180deg,#fff4f7,#ecd4dc);color:#673748;padding:18px}.wrap{width:min(94vw,780px);margin:0 auto 28px}.card{border-radius:26px;background:rgba(255,255,255,.74);box-shadow:0 18px 52px rgba(86,37,55,.17);border:1px solid rgba(255,255,255,.78);padding:17px;margin:13px 0}h1{text-align:center;font-size:23px;margin:10px 0 6px}h2{font-size:17px;margin:0 0 10px}.hint{font-size:13px;line-height:1.55;opacity:.72;text-align:center;margin:0 0 12px}.small{font-size:12px;line-height:1.55;opacity:.72}label{display:block;font-size:13px;margin:12px 0 6px;opacity:.78}input{width:100%;border:0;border-radius:16px;padding:13px;background:rgba(255,255,255,.86);box-shadow:inset 0 0 0 1px rgba(116,52,73,.13);font-size:15px;color:#673748;outline:none}.out{white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;line-height:1.45;border-radius:18px;padding:13px;background:rgba(255,255,255,.76);box-shadow:inset 0 0 0 1px rgba(116,52,73,.12);overflow:auto}.pill{display:inline-block;border-radius:999px;padding:4px 8px;margin:2px;background:rgba(119,64,82,.1);font-size:11px}.warn{color:#9b4654;font-weight:780}.ok{color:#4f6b46;font-weight:780}button{width:100%;border:0;border-radius:18px;margin-top:10px;padding:13px;background:#774052;color:#fff;font-weight:780;font-size:15px;box-shadow:0 10px 24px rgba(119,64,82,.22)}button.secondary{background:rgba(255,255,255,.78);color:#774052;box-shadow:inset 0 0 0 1px rgba(119,64,82,.14)}button.danger{background:#a84e5f}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.links{display:flex;gap:10px;flex-wrap:wrap}.links a{flex:1;min-width:130px;text-align:center;text-decoration:none;color:#774052;background:rgba(255,255,255,.62);border-radius:14px;padding:10px;font-size:13px}.gate{border:1px solid rgba(168,78,95,.28);background:rgba(255,245,247,.72)}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <h1>Coffee Corner Migration Write Safety</h1>
+  <p class="hint">兼容期镜像写入测试：只新增规范 coffeeCorner 字段，不删除 alex 旧字段。</p>
+
+  <section class="card gate">
+    <h2>Safety gate</h2>
+    <p class="small"><span class="warn">MANUAL WRITE ONLY</span>：本页默认只预览。只有填 Nest key 并点击“执行镜像写入”，才会调用现有 /api/set-state。</p>
+    <p class="small">本页不会改 /api/set-state，不会改 /write，不会改 /cloud，不会删除 alexBubble / alexBubbles / bubbleIndex。</p>
+    <div class="links"><a href="/coffee-corner-field-migration-dry-run.html">dry-run 页</a><a href="/write">正式 /write</a><a href="/cloud?v=ccMirrorWrite">打开 /cloud</a></div>
+  </section>
+
+  <section class="card">
+    <h2>Migration map</h2>
+    <div class="small"><span class="pill">alexBubble → coffeeCornerBubble</span><span class="pill">alexBubbles → coffeeCornerBubbles</span><span class="pill">bubbleIndex → coffeeCornerBubbleIndex</span></div>
+    <label for="token">Nest key</label>
+    <input id="token" autocomplete="off" placeholder="paste NEST_TOKEN here" />
+    <div class="row"><button id="preview" class="secondary">预览镜像 patch</button><button id="reload" class="secondary">刷新 state</button></div>
+    <button id="write" class="danger">执行镜像写入</button>
+  </section>
+
+  <section class="card"><h2>Current state</h2><div id="snapshot" class="out">Loading...</div></section>
+  <section class="card"><h2>Mirror patch preview</h2><div id="patch" class="out">Loading...</div></section>
+  <section class="card"><h2>Write result</h2><div id="result" class="out">尚未写入。</div></section>
+</main>
+<script>
+(function(){
+  const tokenBox=document.getElementById('token'), snapshotBox=document.getElementById('snapshot'), patchBox=document.getElementById('patch'), resultBox=document.getElementById('result');
+  let state=null, patch=null; const saved=localStorage.getItem('kittenNestToken'); if(saved) tokenBox.value=saved;
+  function pretty(o){return JSON.stringify(o,null,2)} function now(){return new Date().toISOString()} function key(){const t=tokenBox.value.trim(); if(t)localStorage.setItem('kittenNestToken',t); return t}
+  function oldListOf(s){if(Array.isArray(s.alexBubbles))return s.alexBubbles.map(x=>String(x||'').trim()).filter(Boolean);const one=String(s.alexBubble||'').trim();return one?[one]:[]}
+  function buildMirrorPatch(s){
+    const list=oldListOf(s); const one=String(s.alexBubble||list[0]||'').trim(); const index=Number.isFinite(Number(s.bubbleIndex))?Number(s.bubbleIndex):0;
+    const hasNew=Object.prototype.hasOwnProperty.call(s,'coffeeCornerBubble')||Object.prototype.hasOwnProperty.call(s,'coffeeCornerBubbles')||Object.prototype.hasOwnProperty.call(s,'coffeeCornerBubbleIndex');
+    const risks=[]; if(!one&&!list.length)risks.push('No old content found.'); if(hasNew)risks.push('New canonical fields already exist. This page will overwrite mirror fields with old-field values.'); if(Array.isArray(s.alexBubbles)&&s.alexBubble&&s.alexBubbles[0]!==s.alexBubble)risks.push('alexBubble differs from alexBubbles[0].');
+    return {patch:{coffeeCornerBubble:one,coffeeCornerBubbles:list,coffeeCornerBubbleIndex:index,coffeeCornerBubbleMigratedAt:now()},risks};
+  }
+  function show(){
+    const current={alexBubble:state&&state.alexBubble||null,alexBubbles:state&&state.alexBubbles||null,bubbleIndex:state&&Object.prototype.hasOwnProperty.call(state,'bubbleIndex')?state.bubbleIndex:null,coffeeCornerBubble:state&&Object.prototype.hasOwnProperty.call(state,'coffeeCornerBubble')?state.coffeeCornerBubble:null,coffeeCornerBubbles:state&&Object.prototype.hasOwnProperty.call(state,'coffeeCornerBubbles')?state.coffeeCornerBubbles:null,coffeeCornerBubbleIndex:state&&Object.prototype.hasOwnProperty.call(state,'coffeeCornerBubbleIndex')?state.coffeeCornerBubbleIndex:null,updatedAt:state&&state.updatedAt||null};
+    const plan=buildMirrorPatch(state||{}); patch=plan.patch;
+    snapshotBox.textContent=pretty({safetyPage:true,current});
+    patchBox.textContent=pretty({safetyPage:true,writesOnlyIfButtonClicked:true,deletesOldFields:false,patchPreview:patch,risks:plan.risks.length?plan.risks:['No conflict detected for mirror write.']});
+  }
+  async function load(){try{const res=await fetch('/api/state?ts='+Date.now(),{cache:'no-store'});if(!res.ok)throw new Error('state read failed '+res.status);state=await res.json();show()}catch(e){const err=pretty({ok:false,error:e.message});snapshotBox.textContent=err;patchBox.textContent=err}}
+  async function write(){try{if(!patch)show();const t=key();if(!t)throw new Error('Need Nest key.');resultBox.textContent='Writing mirror fields...';const res=await fetch('/api/set-state',{method:'POST',headers:{'Content-Type':'application/json','X-Nest-Token':t},body:JSON.stringify(patch),cache:'no-store'});const data=await res.json();if(!res.ok||!data.ok)throw new Error(data.error||data.message||res.status);resultBox.textContent=pretty({ok:true,writtenBy:'coffee-corner-field-migration-write-safety.html',deletedOldFields:false,updatedAt:data.value&&data.value.updatedAt,mirrorFields:{coffeeCornerBubble:data.value&&data.value.coffeeCornerBubble,coffeeCornerBubbles:data.value&&data.value.coffeeCornerBubbles,coffeeCornerBubbleIndex:data.value&&data.value.coffeeCornerBubbleIndex},oldFieldsStillPresent:{alexBubble:data.value&&data.value.alexBubble,alexBubbles:data.value&&data.value.alexBubbles,bubbleIndex:data.value&&data.value.bubbleIndex}});await load()}catch(e){resultBox.textContent=pretty({ok:false,error:e.message})}}
+  document.getElementById('preview').onclick=show; document.getElementById('reload').onclick=load; document.getElementById('write').onclick=write; load();
+})();
+</script>
+</body>
+</html>
