@@ -1,5 +1,5 @@
 (function(){
-  var VERSION = 'overlay-lifecycle-coordinator-20260615-coffee-corner-bubble-test-1';
+  var VERSION = 'overlay-lifecycle-coordinator-20260615-coffee-corner-bubble-test-2';
   var qs = new URLSearchParams(location.search);
   var enabled = qs.get('sceneOverlayLifecycleTest') === '1';
   if(!enabled) return;
@@ -95,21 +95,29 @@
     if(scene !== 'coffeeCorner') return;
     var b = coffeeCornerBubble();
     if(!b) return;
-    b.setAttribute('data-coordinate-overlay', 'coffeeCorner.bubble');
+    b.setAttribute('data-coordinate-overlay', 'coffeeCorner.bubbleOverlay');
     b.setAttribute('data-scene', 'coffeeCorner');
     b.setAttribute('data-overlay-lifecycle-waiting', 'coffeeCorner');
+  }
+
+  function placeCoffeeCornerBubble(){
+    if(window.KittenNestHotspots && window.KittenNestHotspots.applyOverlay){
+      window.KittenNestHotspots.applyOverlay('coffeeCorner.bubbleOverlay');
+    }
   }
 
   function releaseCoffeeCornerBubble(scene){
     if(scene !== 'coffeeCorner') return;
     var b = coffeeCornerBubble();
     if(!b) return;
+    placeCoffeeCornerBubble();
     b.removeAttribute('data-overlay-lifecycle-waiting');
     if(window.KittenNestBubble){
       var st = stateNow();
       if(window.KittenNestBubble.sync) window.KittenNestBubble.sync(st);
       if(window.KittenNestBubble.show) window.KittenNestBubble.show(st, { user:false });
     }
+    placeCoffeeCornerBubble();
   }
 
   function findItem(id){
@@ -219,7 +227,8 @@
     place: place,
     currentScene: currentScene,
     coverBox: coverBox,
-    items: items
+    items: items,
+    placeCoffeeCornerBubble: placeCoffeeCornerBubble
   };
 
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
