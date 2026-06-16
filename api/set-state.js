@@ -36,6 +36,10 @@ function getTextTarget(targetId) {
   return textTargets()[id] || null;
 }
 
+function canPublishTextTarget(targetId) {
+  return ['coffeeCornerBubble', 'coffeeCornerLapCloseBubble'].includes(String(targetId || '').trim());
+}
+
 function parseTextTargetEnvelope(rawPatch) {
   const body = rawPatch && rawPatch.textTarget && typeof rawPatch.textTarget === 'object'
     ? rawPatch.textTarget
@@ -197,8 +201,12 @@ function compactTextTargetValue(value, patch) {
       coffeeCornerBubbleIndex: value.coffeeCornerBubbleIndex || 0,
       bubbleIndex: value.bubbleIndex || 0
     },
-    untouchedPreview: {
+    lapClose: {
       coffeeCornerLapCloseBubble: value.coffeeCornerLapCloseBubble || '',
+      coffeeCornerLapCloseBubbles: value.coffeeCornerLapCloseBubbles || [],
+      coffeeCornerLapCloseBubbleIndex: value.coffeeCornerLapCloseBubbleIndex || 0
+    },
+    untouchedPreview: {
       windowTemp: value.windowTemp || '',
       windowDesc: value.windowDesc || '',
       hubbyNotePreview: String(value.hubbyNote || '').slice(0, 120)
@@ -359,10 +367,10 @@ module.exports = async function handler(req, res) {
         });
       }
 
-      if (textTargetEnvelope.request.targetId !== 'coffeeCornerBubble') {
+      if (!canPublishTextTarget(textTargetEnvelope.request.targetId)) {
         return res.status(400).json({
           ok: false,
-          error: 'Text target envelope publish is currently enabled only for coffeeCornerBubble. Use dryRun:true for other targets.'
+          error: 'Text target envelope publish is currently enabled only for coffeeCornerBubble and coffeeCornerLapCloseBubble. Use dryRun:true for other targets.'
         });
       }
 
