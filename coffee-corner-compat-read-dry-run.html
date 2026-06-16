@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Coffee Corner Compat Read Dry Run</title>
+<style>
+  *{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Arial,sans-serif}
+  body{margin:0;min-height:100dvh;background:linear-gradient(180deg,#fff4f7,#ecd4dc);color:#673748;padding:18px}.wrap{width:min(94vw,780px);margin:0 auto 28px}.card{border-radius:26px;background:rgba(255,255,255,.74);box-shadow:0 18px 52px rgba(86,37,55,.17);border:1px solid rgba(255,255,255,.78);padding:17px;margin:13px 0}h1{text-align:center;font-size:23px;margin:10px 0 6px}h2{font-size:17px;margin:0 0 10px}.hint{font-size:13px;line-height:1.55;opacity:.72;text-align:center;margin:0 0 12px}.small{font-size:12px;line-height:1.55;opacity:.72}.out{white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;line-height:1.45;border-radius:18px;padding:13px;background:rgba(255,255,255,.76);box-shadow:inset 0 0 0 1px rgba(116,52,73,.12);overflow:auto}.pill{display:inline-block;border-radius:999px;padding:4px 8px;margin:2px;background:rgba(119,64,82,.1);font-size:11px}.warn{color:#9b4654;font-weight:780}.ok{color:#4f6b46;font-weight:780}button{width:100%;border:0;border-radius:18px;margin-top:10px;padding:13px;background:#774052;color:#fff;font-weight:780;font-size:15px;box-shadow:0 10px 24px rgba(119,64,82,.22)}.links{display:flex;gap:10px;flex-wrap:wrap}.links a{flex:1;min-width:130px;text-align:center;text-decoration:none;color:#774052;background:rgba(255,255,255,.62);border-radius:14px;padding:10px;font-size:13px}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <h1>Coffee Corner Compat Read Dry Run</h1>
+  <p class="hint">纯前端安全测试：模拟未来 /cloud 气泡读取逻辑，不写 state，不改真实显示层。</p>
+
+  <section class="card">
+    <h2>Safety status</h2>
+    <p class="small"><span class="warn">NO WRITE MODE</span>：本页只比较旧读法与新兼容读法。真实 /cloud 还没有切换。</p>
+    <div class="links"><a href="/coffee-corner-field-migration-write-safety.html">镜像写入页</a><a href="/write">正式 /write</a><a href="/cloud?v=compatReadDryRun">打开 /cloud</a></div>
+  </section>
+
+  <section class="card"><h2>Read rule under test</h2><div class="small"><span class="pill">1. prefer coffeeCornerBubbles</span><span class="pill">2. fallback coffeeCornerBubble</span><span class="pill">3. fallback alexBubbles</span><span class="pill">4. fallback alexBubble</span></div></section>
+  <section class="card"><h2>Current state fields</h2><div id="snapshot" class="out">Loading...</div><button id="reload">刷新 dry-run</button></section>
+  <section class="card"><h2>Comparison</h2><div id="compare" class="out">Loading...</div></section>
+  <section class="card"><h2>Decision</h2><div id="decision" class="out">Loading...</div></section>
+</main>
+<script>
+(function(){
+  const snapshotBox=document.getElementById('snapshot'), compareBox=document.getElementById('compare'), decisionBox=document.getElementById('decision');
+  function pretty(o){return JSON.stringify(o,null,2)}
+  function cleanList(value){return Array.isArray(value)?value.map(x=>String(x||'').trim()).filter(Boolean):[]}
+  function oldList(state){const list=cleanList(state.alexBubbles); if(list.length)return list; const one=String(state.alexBubble||'').trim(); return one?[one]:[]}
+  function compatList(state){const canonical=cleanList(state.coffeeCornerBubbles); if(canonical.length)return canonical; const canonicalOne=String(state.coffeeCornerBubble||'').trim(); if(canonicalOne)return [canonicalOne]; return oldList(state)}
+  function currentFrom(list,index){if(!list.length)return ''; const i=Number.isFinite(Number(index))?Number(index):0; return list[((i%list.length)+list.length)%list.length]}
+  async function run(){
+    try{
+      const res=await fetch('/api/state?ts='+Date.now(),{cache:'no-store'}); if(!res.ok)throw new Error('state read failed '+res.status); const state=await res.json();
+      const old=oldList(state); const compat=compatList(state); const oldIndex=state.bubbleIndex||0; const compatIndex=Object.prototype.hasOwnProperty.call(state,'coffeeCornerBubbleIndex')?state.coffeeCornerBubbleIndex:oldIndex;
+      const same=JSON.stringify(old)===JSON.stringify(compat);
+      snapshotBox.textContent=pretty({dryRunOnly:true,writesState:false,fields:{coffeeCornerBubble:state.coffeeCornerBubble||null,coffeeCornerBubbles:state.coffeeCornerBubbles||null,coffeeCornerBubbleIndex:Object.prototype.hasOwnProperty.call(state,'coffeeCornerBubbleIndex')?state.coffeeCornerBubbleIndex:null,alexBubble:state.alexBubble||null,alexBubbles:state.alexBubbles||null,bubbleIndex:Object.prototype.hasOwnProperty.call(state,'bubbleIndex')?state.bubbleIndex:null,updatedAt:state.updatedAt||null}});
+      compareBox.textContent=pretty({dryRunOnly:true,writesState:false,oldRead:{list:old,index:oldIndex,current:currentFrom(old,oldIndex)},compatRead:{list:compat,index:compatIndex,current:currentFrom(compat,compatIndex)},sameList:same,sameCurrent:currentFrom(old,oldIndex)===currentFrom(compat,compatIndex)});
+      decisionBox.textContent=pretty({safeCandidate:same && compat.length>0,nextStepIfApproved:'Patch assets/bubble-controller.js to prefer coffeeCornerBubbles/coffeeCornerBubble and fallback to alexBubbles/alexBubble. Do not delete old fields.',risk:same?'Low: canonical mirror equals old fields.':'Check mismatch before patching runtime.'});
+    }catch(e){const err=pretty({dryRunOnly:true,writesState:false,error:e.message}); snapshotBox.textContent=err; compareBox.textContent=err; decisionBox.textContent=err;}
+  }
+  document.getElementById('reload').onclick=run; run();
+})();
+</script>
+</body>
+</html>
