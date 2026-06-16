@@ -4,6 +4,7 @@ const coffeeCornerPolishStyle = '<link rel="stylesheet" href="/assets/coffee-cor
 const hotspotPositionerScript = '<script src="/assets/hotspot-positioner.js?v=20260614-steam-overlay-locked-1"></script>';
 const coffeeSteamScript = '<script src="/assets/coffee-steam-svg.js?v=20260613-mist-1"></script>';
 const overlayLifecycleCoordinatorScript = '<script src="/assets/overlay-lifecycle-coordinator.js?v=20260615-coffee-corner-bubble-test-2"></script>';
+const coffeeCornerBubbleCoordinateSourceTestScript = '<script src="/assets/coffee-corner-bubble-coordinate-source-test.js?v=20260616-1"></script>';
 const overlayLockTestScript = '<script src="/assets/overlay-lock-test.js?v=20260614-overlay-lock-test-1"></script>';
 const lapCloseBubbleCleanScript = '<script src="/assets/lap-close-bubble-clean.js?v=20260615-lap-bubble-overlay-lifecycle-test-2"></script>';
 const sceneManifestIsolationTestScript = '<script src="/assets/scene-manifest-isolation-test.js?v=20260615-scene-manifest-promoted-1"></script>';
@@ -89,6 +90,7 @@ function injectBubbleController(html, options = {}) {
     hotspotPositionerScript,
     coffeeSteamScript,
     overlayLifecycleCoordinatorScript,
+    coffeeCornerBubbleCoordinateSourceTestScript,
     overlayLockTestScript,
     lapCloseBubbleCleanScript,
     sceneManifestIsolationTestScript
