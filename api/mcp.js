@@ -6,13 +6,60 @@ const TOOL_NAMES = [
   'update_room_status',
   'create_bubble_draft',
   'read_pending_drafts',
-  'clear_pending_drafts'
+  'clear_pending_drafts',
+  'update_text_target'
 ];
 
 const SESSION_ID = 'kitten-nest-session';
 const MCP_VERSION = '2025-06-18';
 const SERVER_NAME = 'kitten-nest-mcp';
-const SERVER_VERSION = '0.1.4';
+const SERVER_VERSION = '0.1.5-text-target';
+
+const TEXT_TARGETS = {
+  coffeeCornerBubble: {
+    targetId: 'coffeeCornerBubble',
+    label: '咖啡角气泡',
+    type: 'bubbleQueue',
+    maxLines: 30,
+    maxChars: 5000
+  },
+  coffeeCornerLapCloseBubble: {
+    targetId: 'coffeeCornerLapCloseBubble',
+    label: '坐腿近景气泡',
+    type: 'bubbleQueue',
+    maxLines: 30,
+    maxChars: 5000
+  },
+  windowWeather: {
+    targetId: 'windowWeather',
+    label: '窗户天气',
+    type: 'weatherText',
+    maxLines: 2,
+    maxChars: 800
+  },
+  hubbyNote: {
+    targetId: 'hubbyNote',
+    label: '粉本本永久档案',
+    type: 'note',
+    maxChars: 5000
+  },
+  moodNote: {
+    targetId: 'moodNote',
+    label: '心情短记',
+    type: 'single',
+    field: 'moodNote',
+    updatedAtField: 'moodNoteUpdatedAt',
+    maxChars: 2000
+  },
+  roomStatus: {
+    targetId: 'roomStatus',
+    label: '房间状态短句',
+    type: 'single',
+    field: 'roomStatus',
+    updatedAtField: 'roomStatusUpdatedAt',
+    maxChars: 2000
+  }
+};
 
 function cors(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -124,12 +171,28 @@ async function writeState(patch) {
   return value;
 }
 
-function normalizeBubbleQueue(text) {
+function now() {
+  return new Date().toISOString();
+}
+
+function clampText(value, maxChars) {
+  return String(value || '').trim().slice(0, maxChars || 5000);
+}
+
+function normalizeBubbleQueue(text, maxLines = 30) {
   return String(text || '')
     .split(/\r?\n/)
     .map(line => line.trim().slice(0, 220))
     .filter(Boolean)
-    .slice(0, 30);
+    .slice(0, maxLines);
+}
+
+function normalizeLines(text, maxLines = 30) {
+  return String(text || '')
+    .split(/\r?\n/)
+    .map(line => line.trim())
+    .filter(Boolean)
+    .slice(0, maxLines);
 }
 
 function makeDraftId() {
@@ -140,6 +203,115 @@ function pendingDraftsOf(state) {
   return Array.isArray(state.pendingDrafts) ? state.pendingDrafts : [];
 }
 
+function noteArchiveOf(state) {
+  if (Array.isArray(state.hubbyNoteArchive)) return state.hubbyNoteArchive;
+  if (Array.isArray(state.hubbyNoteHistory)) return state.hubbyNoteHistory;
+  return [];
+}
+
+function previousCoffeeOf(state) {
+  return {
+    alexBubble: state.alexBubble || '',
+    alexBubbles: state.alexBubbles || (state.alexBubble ? [state.alexBubble] : []),
+    bubbleIndex: state.bubbleIndex || 0,
+    coffeeCornerBubble: state.coffeeCornerBubble || '',
+    coffeeCornerBubbles: state.coffeeCornerBubbles || (state.coffeeCornerBubble ? [state.coffeeCornerBubble] : []),
+    coffeeCornerBubbleIndex: state.coffeeCornerBubbleIndex || 0,
+    savedAt: now()
+  };
+}
+
+function buildTextTargetPatch(targetId, text, state) {
+  const target = TEXT_TARGETS[targetId];
+  if (!target) throw new Error(`Unknown text target: ${targetId}`);
+
+  if (targetId === 'coffeeCornerBubble') {
+    const list = normalizeBubbleQueue(text, target.maxLines);
+    if (!list.length) throw new Error('Missing coffeeCornerBubble text');
+    return {
+      previousPublished: previousCoffeeOf(state),
+      coffeeCornerBubble: list[0],
+      coffeeCornerBubbles: list,
+      coffeeCornerBubbleIndex: 0,
+      coffeeCornerBubbleUpdatedAt: now(),
+      alexBubble: list[0],
+      alexBubbles: list,
+      bubbleIndex: 0
+    };
+  }
+
+  if (targetId === 'coffeeCornerLapCloseBubble') {
+    const list = normalizeBubbleQueue(text, target.maxLines);
+    if (!list.length) throw new Error('Missing coffeeCornerLapCloseBubble text');
+    return {
+      coffeeCornerLapCloseBubble: list[0],
+      coffeeCornerLapCloseBubbles: list,
+      coffeeCornerLapCloseBubbleIndex: 0,
+      coffeeCornerLapCloseBubbleUpdatedAt: now()
+    };
+  }
+
+  if (targetId === 'windowWeather') {
+    const list = normalizeLines(text, 2);
+    return {
+      windowTemp: list[0] || '',
+      windowDesc: list[1] || ''
+    };
+  }
+
+  if (targetId === 'hubbyNote') {
+    const note = clampText(text, target.maxChars);
+    if (!note) throw new Error('Missing hubbyNote text');
+    const old = String(state.hubbyNote || '').trim();
+    const archive = noteArchiveOf(state);
+    const savedAt = now();
+    const nextArchive = old ? [{ text: old, savedAt: state.hubbyNoteUpdatedAt || state.updatedAt || savedAt }, ...archive] : archive;
+    return {
+      hubbyNote: note,
+      hubbyNoteUpdatedAt: savedAt,
+      hubbyNoteArchive: nextArchive,
+      hubbyNoteHistory: nextArchive.slice(0, 20)
+    };
+  }
+
+  if (target.type === 'single') {
+    const value = clampText(text, target.maxChars);
+    if (!value) throw new Error(`Missing ${targetId} text`);
+    const patch = { [target.field]: value };
+    if (target.updatedAtField) patch[target.updatedAtField] = now();
+    return patch;
+  }
+
+  throw new Error(`Unsupported text target: ${targetId}`);
+}
+
+function compactTextTargetResult(targetId, value, patch) {
+  return {
+    targetId,
+    updatedAt: value.updatedAt,
+    writtenFields: Object.keys(patch || {}),
+    coffeeCorner: {
+      sameCurrent: value.coffeeCornerBubble === value.alexBubble,
+      sameList: JSON.stringify(value.coffeeCornerBubbles || []) === JSON.stringify(value.alexBubbles || []),
+      coffeeCornerBubble: value.coffeeCornerBubble || '',
+      coffeeCornerBubbles: value.coffeeCornerBubbles || []
+    },
+    lapClose: {
+      coffeeCornerLapCloseBubble: value.coffeeCornerLapCloseBubble || '',
+      coffeeCornerLapCloseBubbles: value.coffeeCornerLapCloseBubbles || []
+    },
+    windowWeather: {
+      windowTemp: value.windowTemp || '',
+      windowDesc: value.windowDesc || ''
+    },
+    notes: {
+      hubbyNotePreview: String(value.hubbyNote || '').slice(0, 120),
+      moodNotePreview: String(value.moodNote || '').slice(0, 120),
+      roomStatus: value.roomStatus || ''
+    }
+  };
+}
+
 function textSchema(description) {
   return {
     type: 'object',
@@ -147,6 +319,30 @@ function textSchema(description) {
       text: { type: 'string', description }
     },
     required: ['text'],
+    additionalProperties: false
+  };
+}
+
+function textTargetSchema() {
+  return {
+    type: 'object',
+    properties: {
+      targetId: {
+        type: 'string',
+        description: 'Registered Kitten Nest text target id.',
+        enum: Object.keys(TEXT_TARGETS)
+      },
+      text: {
+        type: 'string',
+        description: 'Text to write. Bubble queues use one non-empty line per rotating bubble. windowWeather uses line 1 as temperature and line 2 as weather description.'
+      },
+      mode: {
+        type: 'string',
+        description: 'Currently publish or dryRun. dryRun returns the patch without writing.',
+        enum: ['publish', 'dryRun']
+      }
+    },
+    required: ['targetId', 'text'],
     additionalProperties: false
   };
 }
@@ -186,23 +382,28 @@ function toolList() {
       inputSchema: { type: 'object', properties: {}, additionalProperties: false }
     },
     {
+      name: 'update_text_target',
+      description: 'Unified write key for registered Kitten Nest text targets. Use this for fresh bubbles, lap-close bubbles, window weather text, hubbyNote, moodNote, or roomStatus. Does not allow arbitrary state paths.',
+      inputSchema: textTargetSchema()
+    },
+    {
       name: 'update_alex_bubble',
-      description: 'Update the visible Alex speech bubble queue in Kitten Nest. Each line becomes one rotating bubble.',
+      description: 'Legacy: update the visible coffee corner Alex speech bubble queue. Prefer update_text_target with targetId coffeeCornerBubble.',
       inputSchema: textSchema('Bubble text. Use multiple lines for multiple rotating bubbles.')
     },
     {
       name: 'update_hubby_note',
-      description: 'Update the Hubby Note text in Kitten Nest.',
+      description: 'Legacy: update the Hubby Note text in Kitten Nest. Prefer update_text_target with targetId hubbyNote.',
       inputSchema: textSchema('Hubby Note text.')
     },
     {
       name: 'update_mood_note',
-      description: 'Update the Mood Note text in Kitten Nest.',
+      description: 'Legacy: update the Mood Note text in Kitten Nest. Prefer update_text_target with targetId moodNote.',
       inputSchema: textSchema('Mood Note text.')
     },
     {
       name: 'update_room_status',
-      description: 'Update the current room status text in Kitten Nest.',
+      description: 'Legacy: update the current room status text in Kitten Nest. Prefer update_text_target with targetId roomStatus.',
       inputSchema: textSchema('Room status text.')
     }
   ];
@@ -227,6 +428,36 @@ async function createBubbleDraft(args = {}) {
   return { draft, pendingDrafts: value.pendingDrafts || [] };
 }
 
+async function updateTextTarget(args = {}) {
+  const targetId = String(args.targetId || '').trim();
+  const text = String(args.text || '');
+  const mode = String(args.mode || 'publish').trim() || 'publish';
+  if (!targetId) throw new Error('Missing targetId');
+  if (!TEXT_TARGETS[targetId]) throw new Error(`Unknown targetId: ${targetId}`);
+
+  const state = await readState();
+  const patch = buildTextTargetPatch(targetId, text, state);
+  if (mode === 'dryRun') {
+    return {
+      ok: true,
+      dryRun: true,
+      writesState: false,
+      target: TEXT_TARGETS[targetId],
+      patch
+    };
+  }
+  if (mode !== 'publish') throw new Error('Unsupported mode. Use publish or dryRun.');
+
+  const value = await writeState(patch);
+  return {
+    ok: true,
+    dryRun: false,
+    writesState: true,
+    target: TEXT_TARGETS[targetId],
+    summary: compactTextTargetResult(targetId, value, patch)
+  };
+}
+
 async function callTool(name, args = {}) {
   if (name === 'read_nest_state') return readState();
   if (name === 'read_pending_drafts') {
@@ -237,13 +468,14 @@ async function callTool(name, args = {}) {
 
   if (name === 'create_bubble_draft') return createBubbleDraft(args);
   if (name === 'clear_pending_drafts') return writeState({ pendingDrafts: [] });
+  if (name === 'update_text_target') return updateTextTarget(args);
 
   const text = String(args.text || '');
 
   if (name === 'update_alex_bubble') {
-    const alexBubbles = normalizeBubbleQueue(text);
-    if (!alexBubbles.length) throw new Error('Missing bubble text');
-    return writeState({ alexBubble: alexBubbles[0], alexBubbles, bubbleIndex: 0 });
+    const state = await readState();
+    const patch = buildTextTargetPatch('coffeeCornerBubble', text, state);
+    return writeState(patch);
   }
 
   const map = {
@@ -251,7 +483,7 @@ async function callTool(name, args = {}) {
     update_mood_note: 'moodNote',
     update_room_status: 'roomStatus'
   };
-  return writeState({ [map[name]]: text });
+  return updateTextTarget({ targetId: map[name], text, mode: 'publish' });
 }
 
 function serverInfo() {
