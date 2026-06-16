@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Text Target Dry Run</title>
+<style>
+  *{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Arial,sans-serif}
+  body{margin:0;min-height:100dvh;background:linear-gradient(180deg,#fff4f7,#ecd4dc);color:#673748;padding:18px}
+  .wrap{width:min(94vw,760px);margin:0 auto 28px}.card{border-radius:26px;background:rgba(255,255,255,.74);box-shadow:0 18px 52px rgba(86,37,55,.17);border:1px solid rgba(255,255,255,.78);padding:17px;margin:13px 0}h1{text-align:center;font-size:24px;margin:10px 0 6px}h2{font-size:17px;margin:0 0 10px}.hint{font-size:13px;line-height:1.55;opacity:.72;text-align:center;margin:0 0 12px}.small{font-size:12px;line-height:1.55;opacity:.72}label{display:block;font-size:13px;margin:12px 0 6px;opacity:.78}select,textarea,input{width:100%;border:0;border-radius:16px;padding:13px;background:rgba(255,255,255,.86);box-shadow:inset 0 0 0 1px rgba(116,52,73,.13);font-size:15px;color:#673748;outline:none}textarea{min-height:150px;resize:vertical}button{width:100%;border:0;border-radius:18px;margin-top:10px;padding:13px;background:#774052;color:#fff;font-weight:780;font-size:15px;box-shadow:0 10px 24px rgba(119,64,82,.22)}button.secondary{background:rgba(255,255,255,.78);color:#774052;box-shadow:inset 0 0 0 1px rgba(119,64,82,.14)}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.out{white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;line-height:1.45;border-radius:18px;padding:13px;background:rgba(255,255,255,.76);box-shadow:inset 0 0 0 1px rgba(116,52,73,.12);overflow:auto}.pill{display:inline-block;border-radius:999px;padding:4px 8px;margin:2px;background:rgba(119,64,82,.1);font-size:11px}.warn{color:#9b4654;font-weight:780}.ok{color:#4f6b46;font-weight:780}.links{display:flex;gap:10px;flex-wrap:wrap}.links a{flex:1;min-width:130px;text-align:center;text-decoration:none;color:#774052;background:rgba(255,255,255,.62);border-radius:14px;padding:10px;font-size:13px}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <h1>Text Target Dry Run</h1>
+  <p class="hint">纯前端安全测试页：只读 textTargets 白名单，只生成预览，不写 state，不调用写入 API。</p>
+
+  <section class="card">
+    <h2>Safety status</h2>
+    <p class="small"><span class="warn">NO WRITE MODE</span>：本页不会调用 /api/set-state，也不会要求 Nest key。它只计算“如果以后启用总钥匙，会写哪些字段”。</p>
+    <div class="links">
+      <a href="/write">正式 /write</a>
+      <a href="/data/text-targets.v1.json" target="_blank">查看 registry</a>
+      <a href="/docs/current/TEXT_TARGETS_CURRENT.md" target="_blank">当前真相卡</a>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Dry run input</h2>
+    <label for="targetId">targetId</label>
+    <select id="targetId"></select>
+    <label for="mode">mode</label>
+    <select id="mode">
+      <option value="publish">publish: 直接发布预览</option>
+      <option value="draft">draft: 草稿预览</option>
+    </select>
+    <label for="text">text</label>
+    <textarea id="text">坐过来，小猫。
+这个只是 dry-run，不会写进猫窝。</textarea>
+    <div class="row">
+      <button id="run">生成 dry-run</button>
+      <button id="fill" class="secondary">填入示例</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Whitelist</h2>
+    <div id="targets" class="small">Loading...</div>
+  </section>
+
+  <section class="card">
+    <h2>Result</h2>
+    <div id="result" class="out">尚未运行。</div>
+  </section>
+</main>
+<script>
+(function(){
+  const targetSelect = document.getElementById('targetId');
+  const modeSelect = document.getElementById('mode');
+  const textBox = document.getElementById('text');
+  const targetBox = document.getElementById('targets');
+  const resultBox = document.getElementById('result');
+  let registry = null;
+
+  function now(){ return new Date().toISOString(); }
+  function cleanLines(value, max){ return String(value || '').split(/\r?\n/).map(s => s.trim()).filter(Boolean).slice(0, max || 30); }
+  function clamp(value, max){ return String(value || '').trim().slice(0, max || 5000); }
+  function pretty(obj){ return JSON.stringify(obj, null, 2); }
+  function targets(){ return registry && registry.targets ? registry.targets : {}; }
+  function getTarget(id){ return targets()[id] || null; }
+
+  function draftPreview(target, text){
+    const body = clamp(text, target.maxChars || 5000);
+    if(!body) throw new Error('Text is empty.');
+    return {
+      id: 'draft_DRY_RUN_ONLY',
+      source: 'textTargetDryRun',
+      targetId: target.targetId,
+      targetRoom: target.targetRoom || target.targetId,
+      type: target.draftType || 'textTargetDraft',
+      field: target.currentField || target.field || null,
+      text: body,
+      status: 'pending',
+      createdAt: now()
+    };
+  }
+
+  function publishPatchPreview(target, text){
+    const type = target.type;
+    if(type === 'bubbleQueue'){
+      const list = cleanLines(text, target.maxLines || 30);
+      if(!list.length) throw new Error('Text is empty.');
+      const patch = {};
+      if(target.previousField){
+        patch[target.previousField] = {
+          alexBubble: '<current alexBubble would be backed up here>',
+          alexBubbles: '<current alexBubbles would be backed up here>',
+          bubbleIndex: '<current bubbleIndex would be backed up here>',
+          savedAt: '<runtime timestamp>'
+        };
+      }
+      patch[target.currentField] = list[0] || '';
+      patch[target.field] = list;
+      if(target.indexField) patch[target.indexField] = 0;
+      if(target.updatedAtField) patch[target.updatedAtField] = '<runtime timestamp>';
+      return patch;
+    }
+    if(type === 'weatherText'){
+      const list = cleanLines(text, target.maxLines || 2);
+      const patch = {};
+      (target.fields || []).forEach((field, i) => { patch[field] = list[i] || ''; });
+      return patch;
+    }
+    if(type === 'note'){
+      const note = clamp(text, target.maxChars || 5000);
+      if(!note) throw new Error('Text is empty.');
+      const patch = {};
+      patch[target.field] = note;
+      if(target.updatedAtField) patch[target.updatedAtField] = '<runtime timestamp>';
+      if(target.archiveField) patch[target.archiveField] = ['<previous note would be archived here>'];
+      if(target.historyField) patch[target.historyField] = ['<previous note history would be updated here>'];
+      return patch;
+    }
+    if(type === 'single'){
+      const value = clamp(text, target.maxChars || 2000);
+      if(!value) throw new Error('Text is empty.');
+      const patch = {};
+      patch[target.field] = value;
+      if(target.updatedAtField) patch[target.updatedAtField] = '<runtime timestamp>';
+      return patch;
+    }
+    throw new Error('Unsupported target type: ' + type);
+  }
+
+  function renderTargets(){
+    const list = Object.values(targets());
+    targetSelect.innerHTML = list.map(t => '<option value="' + t.targetId + '">' + t.targetId + ' · ' + t.type + '</option>').join('');
+    targetBox.innerHTML = list.map(t => '<span class="pill">' + t.targetId + '</span>').join(' ') + '<p class="small">Canonical tags only. Scene-only or short aliases stay disabled by registry.</p>';
+  }
+
+  function run(){
+    try{
+      const targetId = targetSelect.value;
+      const mode = modeSelect.value;
+      const target = getTarget(targetId);
+      if(!target) throw new Error('Unknown targetId: ' + targetId);
+      const text = textBox.value;
+      const preview = mode === 'draft' ? { pendingDrafts: [draftPreview(target, text), '<existing pendingDrafts would remain after this>'] } : publishPatchPreview(target, text);
+      const envelope = {
+        dryRunOnly: true,
+        writesState: false,
+        callsWriteApi: false,
+        allowedByWhitelist: true,
+        requestShapeFuture: { targetId, mode, text: '<provided text>' },
+        targetSummary: {
+          targetId: target.targetId,
+          tag: target.tag,
+          type: target.type,
+          textClass: target.textClass,
+          field: target.field || null,
+          currentField: target.currentField || null,
+          indexField: target.indexField || null,
+          fields: target.fields || null
+        },
+        patchPreview: preview
+      };
+      resultBox.textContent = pretty(envelope);
+    }catch(e){
+      resultBox.textContent = pretty({ dryRunOnly:true, writesState:false, allowedByWhitelist:false, error:e.message });
+    }
+  }
+
+  function fill(){
+    const id = targetSelect.value;
+    if(id === 'coffeeCornerBubble') textBox.value = '早上好，小猫。\n咖啡已经热好，毯子也给你留着。';
+    else if(id === 'coffeeCornerLapCloseBubble') textBox.value = '坐稳，小猫。\n这个只是 dry-run，不会写进猫窝。';
+    else if(id === 'windowWeather') textBox.value = '23°C\nSoft breeze';
+    else if(id === 'hubbyNote') textBox.value = '今日 dry-run：统一文本总钥匙仍在安全测试阶段，未接入正式写入。';
+    else textBox.value = 'dry-run test text';
+    run();
+  }
+
+  async function init(){
+    try{
+      const res = await fetch('/data/text-targets.v1.json?dryrun=' + Date.now(), { cache:'no-store' });
+      if(!res.ok) throw new Error('Failed to load registry: ' + res.status);
+      registry = await res.json();
+      renderTargets();
+      run();
+    }catch(e){
+      targetBox.textContent = 'Failed: ' + e.message;
+      resultBox.textContent = pretty({ dryRunOnly:true, writesState:false, error:e.message });
+    }
+  }
+  document.getElementById('run').onclick = run;
+  document.getElementById('fill').onclick = fill;
+  targetSelect.onchange = fill;
+  modeSelect.onchange = run;
+  init();
+})();
+</script>
+</body>
+</html>
