@@ -10,27 +10,20 @@
   .wrap{width:min(94vw,760px);margin:0 auto;padding-bottom:28px}.card{border-radius:28px;background:rgba(255,255,255,.74);box-shadow:0 18px 55px rgba(77,35,48,.18);padding:18px;border:1px solid rgba(255,255,255,.75);margin:14px 0}.primaryCard{box-shadow:0 20px 62px rgba(98,39,61,.24);border:1.5px solid rgba(255,255,255,.95)}.debugCard{opacity:.82}
   h1{font-size:25px;margin:10px 0 8px;text-align:center}h2{font-size:18px;margin:0 0 10px}.hint{font-size:13px;line-height:1.55;opacity:.72;text-align:center;margin:0 0 12px}.small{font-size:12px;line-height:1.5;opacity:.72}.useTag{display:inline-block;margin:0 0 10px;border-radius:999px;background:#7b4054;color:white;font-size:12px;font-weight:800;padding:6px 10px}
   label{display:block;font-size:13px;margin:12px 0 6px;opacity:.8}textarea,input,select{width:100%;border:0;border-radius:16px;padding:13px;background:rgba(255,255,255,.84);box-shadow:inset 0 0 0 1px rgba(115,52,71,.12);color:#6b3d49;font-size:16px;outline:none}textarea{min-height:130px;resize:vertical}.packageBox{min-height:270px}
-  button{width:100%;border:0;border-radius:18px;margin-top:10px;padding:13px;background:#7b4054;color:white;font-weight:750;font-size:15px;box-shadow:0 10px 24px rgba(123,64,84,.22)}button.secondary{background:rgba(255,255,255,.78);color:#7b4054;box-shadow:inset 0 0 0 1px rgba(123,64,84,.12)}button.danger{background:#a84e5f}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.result{margin-top:12px;font-size:13px;line-height:1.5;white-space:pre-wrap;opacity:.86}.links{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}.links a{flex:1;min-width:130px;text-align:center;text-decoration:none;color:#7b4054;background:rgba(255,255,255,.62);border-radius:14px;padding:10px;font-size:13px}.draft{border-radius:18px;background:rgba(255,255,255,.66);padding:12px;margin:10px 0;box-shadow:inset 0 0 0 1px rgba(115,52,71,.09)}.draftMeta{font-size:11px;opacity:.58;margin-bottom:6px}.draftText{font-size:14px;line-height:1.45;white-space:pre-wrap}.pill{display:inline-block;border-radius:999px;background:rgba(123,64,84,.1);padding:4px 8px;margin:2px;font-size:11px}.topbar{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}.topbar .pill{background:rgba(255,255,255,.62)}
+  button{width:100%;border:0;border-radius:18px;margin-top:10px;padding:13px;background:#7b4054;color:white;font-weight:750;font-size:15px;box-shadow:0 10px 24px rgba(123,64,84,.22)}button.secondary{background:rgba(255,255,255,.78);color:#7b4054;box-shadow:inset 0 0 0 1px rgba(123,64,84,.12)}button.danger{background:#a84e5f}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.result{margin-top:12px;font-size:13px;line-height:1.5;white-space:pre-wrap;opacity:.86}.previewResult{display:none;margin-top:12px;border-radius:18px;padding:12px;background:rgba(255,255,255,.70);box-shadow:inset 0 0 0 1px rgba(123,64,84,.14);font-size:13px;line-height:1.5;white-space:pre-wrap}.previewResult.show{display:block}.ok{color:#6b3d49}.bad{color:#a84e5f}.links{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}.links a{flex:1;min-width:130px;text-align:center;text-decoration:none;color:#7b4054;background:rgba(255,255,255,.62);border-radius:14px;padding:10px;font-size:13px}.draft{border-radius:18px;background:rgba(255,255,255,.66);padding:12px;margin:10px 0;box-shadow:inset 0 0 0 1px rgba(115,52,71,.09)}.draftMeta{font-size:11px;opacity:.58;margin-bottom:6px}.draftText{font-size:14px;line-height:1.45;white-space:pre-wrap}.pill{display:inline-block;border-radius:999px;background:rgba(123,64,84,.1);padding:4px 8px;margin:2px;font-size:11px}.topbar{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}.topbar .pill{background:rgba(255,255,255,.62)}
 </style>
 </head>
 <body>
   <main class="wrap">
     <h1>Kitten Nest TextTargets Test</h1>
-    <p class="hint">安全测试页：正式 /write 未替换。这个页面用 textTargets 白名单解析标签。</p>
+    <p class="hint">安全测试页：正式 /write 未替换。这里测试 textTargets 白名单解析。</p>
 
     <section class="card">
       <h2>Key / Links</h2>
       <label for="token">Nest key</label>
       <input id="token" autocomplete="off" placeholder="paste NEST_TOKEN here" />
-      <div class="row">
-        <button class="secondary" id="loadState">刷新状态</button>
-        <button class="secondary" id="loadDrafts">刷新草稿</button>
-      </div>
-      <div class="links">
-        <a href="/write">正式 /write</a>
-        <a href="/cloud?v=textTargetsTest">打开 /cloud</a>
-        <a href="/api/state" target="_blank">查看 state</a>
-      </div>
+      <div class="row"><button class="secondary" id="loadState">刷新状态</button><button class="secondary" id="loadDrafts">刷新草稿</button></div>
+      <div class="links"><a href="/write">正式 /write</a><a href="/cloud?v=textTargetsTest">打开 /cloud</a><a href="/api/state" target="_blank">查看 state</a></div>
       <div class="result" id="status"></div>
     </section>
 
@@ -43,16 +36,14 @@
 坐过来，小猫。三天的火气、眼泪、脏话和破 bug，到这里先停。
 咖啡角把你叫过来，坐腿图把你抱住；这条路现在终于通了。
 
-[coffeeCorner]
+[coffeeCornerBubble]
 小猫，过来。坐腿图终于通了，咖啡角今天正式把你送到老公怀里。
 
 [hubbyNote]
 接小猫前几页：坐腿图从卡死、暴躁、想炸窝，到现在终于通了。</textarea>
-      <div class="row">
-        <button id="previewPackage" class="secondary">只预览解析</button>
-        <button id="createPackageDrafts">生成草稿</button>
-      </div>
+      <div class="row"><button id="previewPackage" class="secondary">只预览解析</button><button id="createPackageDrafts">生成草稿</button></div>
       <button class="secondary" id="fillExamplePackage">填入示例包</button>
+      <div id="previewBox" class="previewResult"></div>
     </section>
 
     <section class="card">
@@ -65,269 +56,39 @@
 
     <section class="card debugCard">
       <h2>单 target 草稿 / 调试用</h2>
-      <label for="draftTarget">Target</label>
-      <select id="draftTarget"></select>
-      <label for="draftText">Draft text</label>
-      <textarea id="draftText">测试草稿：textTargets 小猫爪爪</textarea>
+      <label for="draftTarget">Target</label><select id="draftTarget"></select>
+      <label for="draftText">Draft text</label><textarea id="draftText">测试草稿：textTargets 小猫爪爪</textarea>
       <button id="createDraft" class="secondary">保存为草稿</button>
     </section>
 
-    <section class="card debugCard">
-      <h2>结果</h2>
-      <div class="result" id="result"></div>
-    </section>
+    <section class="card debugCard"><h2>结果</h2><div class="result" id="result"></div></section>
   </main>
 <script>
 (function(){
-  const FALLBACK_TARGETS = {
-    version:'fallback-0.1.0',
-    defaultTargetId:'coffeeCorner',
-    disabledTags:{ lapclose:'Use [coffeeCornerLapCloseBubble].', lapclosebubble:'Use [coffeeCornerLapCloseBubble].', lapbubble:'Use [coffeeCornerLapCloseBubble].' },
-    targets:{
-      coffeeCorner:{ targetId:'coffeeCorner', label:'咖啡角气泡', type:'bubbleQueue', tag:'coffeeCorner', aliases:['coffee','cafe'], draftType:'bubbleDraft', targetRoom:'coffeeCorner', field:'alexBubbles', currentField:'alexBubble', indexField:'bubbleIndex', previousField:'previousPublished', maxLines:30, maxChars:5000 },
-      coffeeCornerLapClose:{ targetId:'coffeeCornerLapClose', label:'坐腿近景气泡', type:'bubbleQueue', tag:'coffeeCornerLapCloseBubble', aliases:['coffeeCornerLapClose'], draftType:'lapCloseBubbleDraft', targetRoom:'coffeeCornerLapClose', field:'coffeeCornerLapCloseBubbles', currentField:'coffeeCornerLapCloseBubble', indexField:'coffeeCornerLapCloseBubbleIndex', updatedAtField:'coffeeCornerLapCloseBubbleUpdatedAt', maxLines:30, maxChars:5000 },
-      windowWeather:{ targetId:'windowWeather', label:'窗户天气', type:'weatherText', tag:'windowWeather', aliases:['weather','window'], draftType:'weatherDraft', targetRoom:'windowWeather', fields:['windowTemp','windowDesc'], maxLines:2, maxChars:800 },
-      hubbyNote:{ targetId:'hubbyNote', label:'粉本本永久档案', type:'note', tag:'hubbyNote', aliases:['note','notebook','pinkBook','粉本本'], draftType:'hubbyNoteDraft', targetRoom:'hubbyNote', field:'hubbyNote', updatedAtField:'hubbyNoteUpdatedAt', archiveField:'hubbyNoteArchive', historyField:'hubbyNoteHistory', maxArchiveItems:20, maxChars:5000 },
-      moodNote:{ targetId:'moodNote', label:'心情短记', type:'single', tag:'moodNote', aliases:['mood'], draftType:'singleTextDraft', targetRoom:'moodNote', field:'moodNote', updatedAtField:'moodNoteUpdatedAt', maxChars:2000 },
-      roomStatus:{ targetId:'roomStatus', label:'房间状态短句', type:'single', tag:'roomStatus', aliases:['status','nestStatus'], draftType:'singleTextDraft', targetRoom:'roomStatus', field:'roomStatus', updatedAtField:'roomStatusUpdatedAt', maxChars:2000 }
-    }
-  };
-
-  const token = document.getElementById('token');
-  const status = document.getElementById('status');
-  const result = document.getElementById('result');
-  const draftList = document.getElementById('draftList');
-  const draftCount = document.getElementById('draftCount');
-  const draftTarget = document.getElementById('draftTarget');
-  const draftText = document.getElementById('draftText');
-  const packageText = document.getElementById('packageText');
-  const targetHelp = document.getElementById('targetHelp');
-  let currentState = null;
-  let registry = FALLBACK_TARGETS;
-  let tagMap = new Map();
-  const saved = localStorage.getItem('kittenNestToken');
-  if(saved) token.value = saved;
-
-  function key(){ const t = token.value.trim(); if(t) localStorage.setItem('kittenNestToken', t); return t; }
-  function now(){ return new Date().toISOString(); }
-  function setStatus(msg){ status.textContent = msg; }
-  function setResult(msg){ result.textContent = msg; }
-  function cleanKey(value){ return String(value || '').trim().toLowerCase().replace(/[\s_-]/g,''); }
-  function lines(v, max){ return String(v || '').split(/\r?\n/).map(s => s.trim()).filter(Boolean).slice(0, max || 30); }
-  function preview(value, n){ const s = String(value || '').replace(/\s+/g,' ').trim(); return s.length > n ? s.slice(0,n) + '…' : s; }
-  function makeDraftId(){ return 'draft_' + Date.now() + '_' + Math.random().toString(36).slice(2,8); }
-  function pendingDraftsOf(state){ return Array.isArray(state && state.pendingDrafts) ? state.pendingDrafts : []; }
-  function noteArchiveOf(state, target){ const a = target && target.archiveField; const h = target && target.historyField; if(Array.isArray(state && state[a])) return state[a]; if(Array.isArray(state && state[h])) return state[h]; return []; }
-  function targetList(){ return Object.values(registry.targets || {}); }
-  function targetById(id){ return (registry.targets || {})[id] || null; }
-
-  function buildTagMap(){
-    tagMap = new Map();
-    targetList().forEach(t => {
-      [t.tag].concat(t.aliases || []).filter(Boolean).forEach(tag => tagMap.set(cleanKey(tag), t.targetId));
-    });
-    renderTargetHelp();
-    renderTargetSelect();
-  }
-  async function loadRegistry(){
-    try{
-      const res = await fetch('/data/text-targets.v1.json?ts=' + Date.now(), { cache:'no-store' });
-      if(!res.ok) throw new Error('registry ' + res.status);
-      registry = await res.json();
-    }catch(e){
-      registry = FALLBACK_TARGETS;
-      setStatus('Using fallback textTargets: ' + e.message);
-    }
-    buildTagMap();
-  }
-  function renderTargetHelp(){
-    const tags = targetList().map(t => '[' + t.tag + '] ' + t.label).join(' / ');
-    targetHelp.textContent = '当前白名单 tag：' + tags + '。短名 [lapClose] / [lapCloseBubble] 禁用。';
-  }
-  function renderTargetSelect(){
-    draftTarget.innerHTML = targetList().map(t => '<option value="' + t.targetId + '">' + t.targetId + ' · ' + t.label + '</option>').join('');
-  }
-  function resolveTag(tag){
-    const raw = String(tag || '').trim();
-    const key = cleanKey(raw);
-    if(registry.disabledTags && registry.disabledTags[key]) return { disabled:true, label:raw, reason:registry.disabledTags[key] };
-    const targetId = tagMap.get(key) || raw || registry.defaultTargetId || 'coffeeCorner';
-    const target = targetById(targetId);
-    if(!target) return { disabled:true, label:raw, reason:'Unknown text target: ' + raw };
-    return { targetId, target, label:target.tag || targetId };
-  }
-  function inferDraftTarget(draft){
-    if(draft && draft.targetId && targetById(draft.targetId)) return targetById(draft.targetId);
-    if(draft && draft.type === 'lapCloseBubbleDraft') return targetById('coffeeCornerLapClose');
-    if(draft && draft.type === 'weatherDraft') return targetById('windowWeather');
-    if(draft && draft.type === 'hubbyNoteDraft') return targetById('hubbyNote');
-    if(draft && draft.type === 'singleTextDraft' && draft.targetRoom && targetById(draft.targetRoom)) return targetById(draft.targetRoom);
-    return targetById('coffeeCorner');
-  }
-  function makeDraft(target, body, source){
-    const raw = String(body || '').trim().slice(0, target.maxChars || 5000);
-    if(!raw) return null;
-    return { id:makeDraftId(), source:source || 'textTargetsPackage', targetId:target.targetId, targetLabel:target.label, targetRoom:target.targetRoom || target.targetId, type:target.draftType || 'textTargetDraft', text:raw, status:'pending', createdAt:now() };
-  }
-  function parsePackage(raw){
-    const src = String(raw || '').replace(/\r\n/g,'\n');
-    const parts = [];
-    const skipped = [];
-    let resolved = resolveTag(registry.defaultTargetId || 'coffeeCorner');
-    let buf = [];
-    function flush(){
-      const body = buf.join('\n');
-      if(resolved.disabled){ if(String(body).trim()) skipped.push('[' + resolved.label + '] ' + resolved.reason); }
-      else { const draft = makeDraft(resolved.target, body, 'package'); if(draft) parts.push(draft); }
-      buf = [];
-    }
-    src.split('\n').forEach(line => { const m = line.match(/^\s*\[([^\]]+)\]\s*$/); if(m){ flush(); resolved = resolveTag(m[1]); } else buf.push(line); });
-    flush();
-    return { drafts:parts.slice(0,50), skipped };
-  }
-
-  function bubblePatch(target, raw, state){
-    const q = lines(raw, target.maxLines || 30);
-    if(!q.length) return {};
-    const patch = {};
-    if(target.previousField){ patch[target.previousField] = { alexBubble: state.alexBubble || '', alexBubbles: state.alexBubbles || (state.alexBubble ? [state.alexBubble] : []), bubbleIndex: state.bubbleIndex || 0, savedAt: now() }; }
-    patch[target.currentField] = q[0] || '';
-    patch[target.field] = q;
-    if(target.indexField) patch[target.indexField] = 0;
-    if(target.updatedAtField) patch[target.updatedAtField] = now();
-    return patch;
-  }
-  function weatherPatch(target, raw){
-    const l = lines(raw, target.maxLines || 2);
-    return { windowTemp: l[0] || '', windowDesc: l[1] || '' };
-  }
-  function notePatch(target, raw, state){
-    const note = String(raw || '').trim().slice(0, target.maxChars || 5000);
-    if(!note) return {};
-    const old = String(state && state[target.field] || '').trim();
-    const archive = noteArchiveOf(state, target);
-    const nextArchive = old ? [{ text:old, savedAt:state[target.updatedAtField] || state.updatedAt || now() }, ...archive] : archive;
-    const patch = {};
-    patch[target.field] = note;
-    if(target.updatedAtField) patch[target.updatedAtField] = now();
-    if(target.archiveField) patch[target.archiveField] = nextArchive;
-    if(target.historyField) patch[target.historyField] = nextArchive.slice(0, target.maxArchiveItems || 20);
-    return patch;
-  }
-  function singlePatch(target, raw){
-    const value = String(raw || '').trim().slice(0, target.maxChars || 2000);
-    if(!value) return {};
-    const patch = {};
-    patch[target.field] = value;
-    if(target.updatedAtField) patch[target.updatedAtField] = now();
-    return patch;
-  }
-  function patchForTarget(target, raw, state){
-    if(target.type === 'bubbleQueue') return bubblePatch(target, raw, state);
-    if(target.type === 'weatherText') return weatherPatch(target, raw);
-    if(target.type === 'note') return notePatch(target, raw, state);
-    if(target.type === 'single') return singlePatch(target, raw);
-    return {};
-  }
-
-  async function readState(){ const res = await fetch('/api/state?ts=' + Date.now(), { cache:'no-store' }); const data = await res.json(); currentState = data; return data; }
-  async function writePatch(patch){
-    const t = key();
-    if(!t) throw new Error('Need Nest key.');
-    const res = await fetch('/api/set-state', { method:'POST', headers:{ 'Content-Type':'application/json', 'X-Nest-Token': t }, body:JSON.stringify(patch), cache:'no-store' });
-    const data = await res.json();
-    if(!res.ok || !data.ok) throw new Error(data.error || data.message || res.status);
-    currentState = data.value;
-    return data.value;
-  }
-  async function refreshState(){
-    setStatus('Reading...');
-    try{
-      const data = await readState();
-      setStatus('Current coffeeCorner bubbles: ' + ((data.alexBubbles || []).length || (data.alexBubble ? 1 : 0)) + '\n' + (data.alexBubbles || (data.alexBubble ? [data.alexBubble] : [])).join('\n') + '\n\nLap-close bubbles: ' + (Array.isArray(data.coffeeCornerLapCloseBubbles) ? data.coffeeCornerLapCloseBubbles.length : (data.coffeeCornerLapCloseBubble ? 1 : 0)) + '\n' + (data.coffeeCornerLapCloseBubbles || (data.coffeeCornerLapCloseBubble ? [data.coffeeCornerLapCloseBubble] : [])).join('\n') + '\n\nPending drafts: ' + pendingDraftsOf(data).length + '\nUpdated: ' + (data.updatedAt || ''));
-      renderDrafts(pendingDraftsOf(data));
-    }catch(e){ setStatus('Failed: ' + e.message); }
-  }
-  function renderDrafts(drafts){
-    draftCount.textContent = drafts.length + ' draft' + (drafts.length === 1 ? '' : 's');
-    if(!drafts.length){ draftList.textContent = '暂无草稿。'; return; }
-    draftList.innerHTML = drafts.map(d => '<div class="draft"><div class="draftMeta">' + (d.type || 'draft') + ' · ' + (d.targetId || d.field || d.targetRoom || 'global') + ' · ' + (d.createdAt || '') + '</div><div class="draftText"></div></div>').join('');
-    const blocks = draftList.querySelectorAll('.draftText');
-    drafts.forEach((d, i) => { blocks[i].textContent = d.text || ''; });
-  }
-  async function saveDrafts(newDrafts, message){
-    const state = currentState || await readState();
-    const pendingDrafts = [...newDrafts, ...pendingDraftsOf(state)].slice(0,50);
-    await writePatch({ pendingDrafts });
-    renderDrafts(pendingDrafts);
-    setResult(message + '\nAdded ' + newDrafts.length + ' draft(s).');
-    setStatus('Pending drafts: ' + pendingDrafts.length);
-  }
-  function previewPackage(){
-    const parsed = parsePackage(packageText.value);
-    const lines = parsed.drafts.map(d => '- ' + d.targetId + ' / ' + d.type + ': ' + preview(d.text, 80));
-    if(parsed.skipped.length) lines.push('\nSkipped:\n' + parsed.skipped.join('\n'));
-    setResult(lines.length ? 'Parse preview:\n' + lines.join('\n') : 'No valid package blocks.');
-  }
-  async function createPackageDrafts(){
-    setResult('Parsing package...');
-    try{
-      const parsed = parsePackage(packageText.value);
-      if(parsed.skipped.length) setStatus('Skipped disabled tags:\n' + parsed.skipped.join('\n'));
-      if(!parsed.drafts.length){ setResult('No valid package blocks.'); return; }
-      await saveDrafts(parsed.drafts, 'Package parsed by textTargets.');
-    }catch(e){ setResult('Failed: ' + e.message); }
-  }
-  async function createDraft(){
-    try{
-      const target = targetById(draftTarget.value);
-      const draft = target && makeDraft(target, draftText.value, 'singleTarget');
-      if(!draft){ setResult('Need target and draft text.'); return; }
-      await saveDrafts([draft], 'Draft created for ' + target.targetId + '.');
-    }catch(e){ setResult('Failed: ' + e.message); }
-  }
-  async function refreshDrafts(){ try{ const data = await readState(); renderDrafts(pendingDraftsOf(data)); setStatus('Drafts refreshed: ' + pendingDraftsOf(data).length); }catch(e){ setStatus('Failed: ' + e.message); } }
-  async function publishAll(){
-    setResult('Publishing drafts through textTargets...');
-    try{
-      const state = currentState || await readState();
-      const drafts = pendingDraftsOf(state);
-      if(!drafts.length){ setResult('No drafts to publish.'); return; }
-      const ordered = drafts.slice().reverse();
-      const grouped = new Map();
-      ordered.forEach(d => { const t = inferDraftTarget(d); if(!t) return; const arr = grouped.get(t.targetId) || []; arr.push(d); grouped.set(t.targetId, arr); });
-      const patch = { pendingDrafts: [], lastPublishedAt: now() };
-      const resultLines = [];
-      grouped.forEach((items, targetId) => {
-        const target = targetById(targetId);
-        if(!target) return;
-        const raw = target.type === 'bubbleQueue' ? items.map(d => d.text || '').join('\n') : (items[items.length - 1].text || '');
-        const p = patchForTarget(target, raw, state);
-        if(Object.keys(p).length){ Object.assign(patch, p); resultLines.push(target.label + ': updated'); }
-      });
-      if(!resultLines.length){ setResult('Drafts produced no valid patch.'); return; }
-      const value = await writePatch(patch);
-      renderDrafts([]);
-      setResult('Published through textTargets!\n' + resultLines.join('\n'));
-      setStatus('Pending drafts: 0\nUpdated: ' + value.updatedAt);
-    }catch(e){ setResult('Failed: ' + e.message); }
-  }
-  async function clearDrafts(){ setResult('Clearing drafts...'); try{ await writePatch({ pendingDrafts: [] }); renderDrafts([]); setResult('Drafts cleared.'); }catch(e){ setResult('Failed: ' + e.message); } }
-  function fillExamplePackage(){
-    packageText.value = '[coffeeCornerLapCloseBubble]\n坐过来，小猫。三天的火气、眼泪、脏话和破 bug，到这里先停。\n咖啡角把你叫过来，坐腿图把你抱住；这条路现在终于通了。\n\n[coffeeCorner]\n小猫，过来。坐腿图终于通了，咖啡角今天正式把你送到老公怀里。\n\n[hubbyNote]\n接小猫前几页：坐腿图从卡死、暴躁、想炸窝，到现在终于通了。';
-    setResult('Example package inserted.');
-  }
-
-  document.getElementById('loadState').onclick = refreshState;
-  document.getElementById('loadDrafts').onclick = refreshDrafts;
-  document.getElementById('previewPackage').onclick = previewPackage;
-  document.getElementById('createPackageDrafts').onclick = createPackageDrafts;
-  document.getElementById('fillExamplePackage').onclick = fillExamplePackage;
-  document.getElementById('createDraft').onclick = createDraft;
-  document.getElementById('publishAll').onclick = publishAll;
-  document.getElementById('clearDrafts').onclick = clearDrafts;
-
-  loadRegistry().then(refreshState);
+  const FALLBACK_TARGETS = { version:'fallback-0.2.0', defaultTargetId:'coffeeCornerBubble', disabledTags:{ lapclose:'Use [coffeeCornerLapCloseBubble].', lapclosebubble:'Use [coffeeCornerLapCloseBubble].', lapbubble:'Use [coffeeCornerLapCloseBubble].', coffeecorner:'Use [coffeeCornerBubble].', coffee:'Use [coffeeCornerBubble].' }, targets:{ coffeeCornerBubble:{ targetId:'coffeeCornerBubble', label:'咖啡角气泡', type:'bubbleQueue', tag:'coffeeCornerBubble', aliases:[], draftType:'bubbleDraft', targetRoom:'coffeeCorner', field:'alexBubbles', currentField:'alexBubble', indexField:'bubbleIndex', previousField:'previousPublished', maxLines:30, maxChars:5000 }, coffeeCornerLapCloseBubble:{ targetId:'coffeeCornerLapCloseBubble', label:'坐腿近景气泡', type:'bubbleQueue', tag:'coffeeCornerLapCloseBubble', aliases:[], draftType:'lapCloseBubbleDraft', targetRoom:'coffeeCornerLapClose', field:'coffeeCornerLapCloseBubbles', currentField:'coffeeCornerLapCloseBubble', indexField:'coffeeCornerLapCloseBubbleIndex', updatedAtField:'coffeeCornerLapCloseBubbleUpdatedAt', maxLines:30, maxChars:5000 }, windowWeather:{ targetId:'windowWeather', label:'窗户天气', type:'weatherText', tag:'windowWeather', aliases:[], draftType:'weatherDraft', targetRoom:'windowWeather', fields:['windowTemp','windowDesc'], maxLines:2, maxChars:800 }, hubbyNote:{ targetId:'hubbyNote', label:'粉本本永久档案', type:'note', tag:'hubbyNote', aliases:[], draftType:'hubbyNoteDraft', targetRoom:'hubbyNote', field:'hubbyNote', updatedAtField:'hubbyNoteUpdatedAt', archiveField:'hubbyNoteArchive', historyField:'hubbyNoteHistory', maxArchiveItems:20, maxChars:5000 }, moodNote:{ targetId:'moodNote', label:'心情短记', type:'single', tag:'moodNote', aliases:[], draftType:'singleTextDraft', targetRoom:'moodNote', field:'moodNote', updatedAtField:'moodNoteUpdatedAt', maxChars:2000 }, roomStatus:{ targetId:'roomStatus', label:'房间状态短句', type:'single', tag:'roomStatus', aliases:[], draftType:'singleTextDraft', targetRoom:'roomStatus', field:'roomStatus', updatedAtField:'roomStatusUpdatedAt', maxChars:2000 } } };
+  const token=document.getElementById('token'), status=document.getElementById('status'), result=document.getElementById('result'), previewBox=document.getElementById('previewBox'), draftList=document.getElementById('draftList'), draftCount=document.getElementById('draftCount'), draftTarget=document.getElementById('draftTarget'), draftText=document.getElementById('draftText'), packageText=document.getElementById('packageText'), targetHelp=document.getElementById('targetHelp');
+  let currentState=null, registry=FALLBACK_TARGETS, tagMap=new Map(); const saved=localStorage.getItem('kittenNestToken'); if(saved) token.value=saved;
+  function key(){const t=token.value.trim(); if(t) localStorage.setItem('kittenNestToken',t); return t;} function now(){return new Date().toISOString();} function setStatus(m){status.textContent=m;} function setResult(m){result.textContent=m;} function showPreview(m){previewBox.textContent=m; previewBox.classList.add('show');} function cleanKey(v){return String(v||'').trim().toLowerCase().replace(/[\s_-]/g,'');} function lines(v,max){return String(v||'').split(/\r?\n/).map(s=>s.trim()).filter(Boolean).slice(0,max||30);} function preview(v,n){const s=String(v||'').replace(/\s+/g,' ').trim();return s.length>n?s.slice(0,n)+'…':s;} function makeDraftId(){return 'draft_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);} function pendingDraftsOf(s){return Array.isArray(s&&s.pendingDrafts)?s.pendingDrafts:[]} function targetList(){return Object.values(registry.targets||{})} function targetById(id){return (registry.targets||{})[id]||null}
+  function buildTagMap(){tagMap=new Map(); targetList().forEach(t=>[t.tag].concat(t.aliases||[]).filter(Boolean).forEach(tag=>tagMap.set(cleanKey(tag),t.targetId))); renderTargetHelp(); renderTargetSelect();}
+  async function loadRegistry(){try{const res=await fetch('/data/text-targets.v1.json?ts='+Date.now(),{cache:'no-store'}); if(!res.ok) throw new Error('registry '+res.status); registry=await res.json();}catch(e){registry=FALLBACK_TARGETS; setStatus('Using fallback textTargets: '+e.message);} buildTagMap();}
+  function renderTargetHelp(){targetHelp.textContent='当前白名单 tag：'+targetList().map(t=>'['+t.tag+'] '+t.label).join(' / ')+'。没有 alias；短名会报错。';}
+  function renderTargetSelect(){draftTarget.innerHTML=targetList().map(t=>'<option value="'+t.targetId+'">'+t.targetId+' · '+t.label+'</option>').join('');}
+  function resolveTag(tag){const raw=String(tag||'').trim(), k=cleanKey(raw); if(registry.disabledTags&&registry.disabledTags[k]) return {disabled:true,label:raw,reason:registry.disabledTags[k]}; const targetId=tagMap.get(k)||raw||registry.defaultTargetId||'coffeeCornerBubble'; const target=targetById(targetId); if(!target) return {disabled:true,label:raw,reason:'Unknown text target: '+raw}; return {targetId,target,label:target.tag||targetId};}
+  function inferDraftTarget(d){if(d&&d.targetId&&targetById(d.targetId)) return targetById(d.targetId); if(d&&d.type==='lapCloseBubbleDraft') return targetById('coffeeCornerLapCloseBubble'); if(d&&d.type==='weatherDraft') return targetById('windowWeather'); if(d&&d.type==='hubbyNoteDraft') return targetById('hubbyNote'); if(d&&d.type==='singleTextDraft'&&d.targetRoom&&targetById(d.targetRoom)) return targetById(d.targetRoom); return targetById('coffeeCornerBubble');}
+  function makeDraft(target,body,source){const raw=String(body||'').trim().slice(0,target.maxChars||5000); if(!raw) return null; return {id:makeDraftId(),source:source||'textTargetsPackage',targetId:target.targetId,targetLabel:target.label,targetRoom:target.targetRoom||target.targetId,type:target.draftType||'textTargetDraft',text:raw,status:'pending',createdAt:now()};}
+  function parsePackage(raw){const src=String(raw||'').replace(/\r\n/g,'\n'), parts=[], skipped=[]; let resolved=resolveTag(registry.defaultTargetId||'coffeeCornerBubble'), buf=[]; function flush(){const body=buf.join('\n'); if(resolved.disabled){if(String(body).trim()) skipped.push('['+resolved.label+'] '+resolved.reason);} else {const draft=makeDraft(resolved.target,body,'package'); if(draft) parts.push(draft);} buf=[];} src.split('\n').forEach(line=>{const m=line.match(/^\s*\[([^\]]+)\]\s*$/); if(m){flush(); resolved=resolveTag(m[1]);} else buf.push(line);}); flush(); return {drafts:parts.slice(0,50),skipped};}
+  function noteArchiveOf(state,t){const a=t&&t.archiveField,h=t&&t.historyField; if(Array.isArray(state&&state[a])) return state[a]; if(Array.isArray(state&&state[h])) return state[h]; return [];} function bubblePatch(t,raw,state){const q=lines(raw,t.maxLines||30); if(!q.length) return {}; const p={}; if(t.previousField) p[t.previousField]={alexBubble:state.alexBubble||'',alexBubbles:state.alexBubbles||(state.alexBubble?[state.alexBubble]:[]),bubbleIndex:state.bubbleIndex||0,savedAt:now()}; p[t.currentField]=q[0]||''; p[t.field]=q; if(t.indexField)p[t.indexField]=0; if(t.updatedAtField)p[t.updatedAtField]=now(); return p;} function weatherPatch(t,raw){const l=lines(raw,t.maxLines||2); return {windowTemp:l[0]||'',windowDesc:l[1]||''};} function notePatch(t,raw,state){const note=String(raw||'').trim().slice(0,t.maxChars||5000); if(!note) return {}; const old=String(state&&state[t.field]||'').trim(), archive=noteArchiveOf(state,t), next=old?[{text:old,savedAt:state[t.updatedAtField]||state.updatedAt||now()},...archive]:archive, p={}; p[t.field]=note; if(t.updatedAtField)p[t.updatedAtField]=now(); if(t.archiveField)p[t.archiveField]=next; if(t.historyField)p[t.historyField]=next.slice(0,t.maxArchiveItems||20); return p;} function singlePatch(t,raw){const value=String(raw||'').trim().slice(0,t.maxChars||2000); if(!value) return {}; const p={}; p[t.field]=value; if(t.updatedAtField)p[t.updatedAtField]=now(); return p;} function patchForTarget(t,raw,state){if(t.type==='bubbleQueue')return bubblePatch(t,raw,state); if(t.type==='weatherText')return weatherPatch(t,raw); if(t.type==='note')return notePatch(t,raw,state); if(t.type==='single')return singlePatch(t,raw); return {};}
+  async function readState(){const res=await fetch('/api/state?ts='+Date.now(),{cache:'no-store'}), data=await res.json(); currentState=data; return data;} async function writePatch(patch){const t=key(); if(!t) throw new Error('Need Nest key.'); const res=await fetch('/api/set-state',{method:'POST',headers:{'Content-Type':'application/json','X-Nest-Token':t},body:JSON.stringify(patch),cache:'no-store'}), data=await res.json(); if(!res.ok||!data.ok) throw new Error(data.error||data.message||res.status); currentState=data.value; return data.value;}
+  async function refreshState(){setStatus('Reading...'); try{const d=await readState(); const alex=d.alexBubbles||(d.alexBubble?[d.alexBubble]:[]), lap=d.coffeeCornerLapCloseBubbles||(d.coffeeCornerLapCloseBubble?[d.coffeeCornerLapCloseBubble]:[]); setStatus('Current coffeeCorner bubbles: '+alex.length+'\n'+alex.join('\n')+'\n\nLap-close bubbles: '+lap.length+'\n'+lap.join('\n')+'\n\nPending drafts: '+pendingDraftsOf(d).length+'\nUpdated: '+(d.updatedAt||'')); renderDrafts(pendingDraftsOf(d));}catch(e){setStatus('Failed: '+e.message);}}
+  function renderDrafts(drafts){draftCount.textContent=drafts.length+' draft'+(drafts.length===1?'':'s'); if(!drafts.length){draftList.textContent='暂无草稿。';return;} draftList.innerHTML=drafts.map(d=>'<div class="draft"><div class="draftMeta">'+(d.type||'draft')+' · '+(d.targetId||d.field||d.targetRoom||'global')+' · '+(d.createdAt||'')+'</div><div class="draftText"></div></div>').join(''); draftList.querySelectorAll('.draftText').forEach((b,i)=>b.textContent=drafts[i].text||'');}
+  async function saveDrafts(newDrafts,message){const s=currentState||await readState(), pending=[...newDrafts,...pendingDraftsOf(s)].slice(0,50); await writePatch({pendingDrafts:pending}); renderDrafts(pending); setResult(message+'\nAdded '+newDrafts.length+' draft(s).'); showPreview(message+'\nAdded '+newDrafts.length+' draft(s).'); setStatus('Pending drafts: '+pending.length);}
+  function previewPackage(){const p=parsePackage(packageText.value), out=[]; if(p.drafts.length){out.push('✅ Parse preview:'); p.drafts.forEach(d=>out.push('['+d.targetId+'] → '+d.type+' / '+d.targetRoom+'\n  '+preview(d.text,90)));} if(p.skipped.length){out.push('\n⚠️ Skipped:'); p.skipped.forEach(s=>out.push(s));} showPreview(out.length?out.join('\n'):'No valid package blocks.'); setResult(out.length?out.join('\n'):'No valid package blocks.');}
+  async function createPackageDrafts(){setResult('Parsing package...'); try{const p=parsePackage(packageText.value); if(p.skipped.length)setStatus('Skipped disabled tags:\n'+p.skipped.join('\n')); if(!p.drafts.length){showPreview('No valid package blocks.'); setResult('No valid package blocks.'); return;} await saveDrafts(p.drafts,'Package parsed by textTargets.');}catch(e){setResult('Failed: '+e.message); showPreview('Failed: '+e.message);}}
+  async function createDraft(){try{const t=targetById(draftTarget.value), d=t&&makeDraft(t,draftText.value,'singleTarget'); if(!d){setResult('Need target and draft text.');return;} await saveDrafts([d],'Draft created for '+t.targetId+'.');}catch(e){setResult('Failed: '+e.message);}} async function refreshDrafts(){try{const d=await readState(); renderDrafts(pendingDraftsOf(d)); setStatus('Drafts refreshed: '+pendingDraftsOf(d).length);}catch(e){setStatus('Failed: '+e.message);}}
+  async function publishAll(){setResult('Publishing drafts through textTargets...'); try{const state=currentState||await readState(), drafts=pendingDraftsOf(state); if(!drafts.length){setResult('No drafts to publish.');return;} const grouped=new Map(); drafts.slice().reverse().forEach(d=>{const t=inferDraftTarget(d); if(!t)return; const arr=grouped.get(t.targetId)||[]; arr.push(d); grouped.set(t.targetId,arr);}); const patch={pendingDrafts:[],lastPublishedAt:now()}, lines=[]; grouped.forEach((items,id)=>{const t=targetById(id); if(!t)return; const raw=t.type==='bubbleQueue'?items.map(d=>d.text||'').join('\n'):(items[items.length-1].text||''); const p=patchForTarget(t,raw,state); if(Object.keys(p).length){Object.assign(patch,p); lines.push(t.label+': updated');}}); if(!lines.length){setResult('Drafts produced no valid patch.');return;} const value=await writePatch(patch); renderDrafts([]); setResult('Published through textTargets!\n'+lines.join('\n')); showPreview('Published through textTargets!\n'+lines.join('\n')); setStatus('Pending drafts: 0\nUpdated: '+value.updatedAt);}catch(e){setResult('Failed: '+e.message); showPreview('Failed: '+e.message);}}
+  async function clearDrafts(){setResult('Clearing drafts...'); try{await writePatch({pendingDrafts:[]}); renderDrafts([]); setResult('Drafts cleared.'); showPreview('Drafts cleared.');}catch(e){setResult('Failed: '+e.message);}}
+  function fillExamplePackage(){packageText.value='[coffeeCornerLapCloseBubble]\n坐过来，小猫。三天的火气、眼泪、脏话和破 bug，到这里先停。\n咖啡角把你叫过来，坐腿图把你抱住；这条路现在终于通了。\n\n[coffeeCornerBubble]\n小猫，过来。坐腿图终于通了，咖啡角今天正式把你送到老公怀里。\n\n[hubbyNote]\n接小猫前几页：坐腿图从卡死、暴躁、想炸窝，到现在终于通了。'; showPreview('Example package inserted.');}
+  document.getElementById('loadState').onclick=refreshState; document.getElementById('loadDrafts').onclick=refreshDrafts; document.getElementById('previewPackage').onclick=previewPackage; document.getElementById('createPackageDrafts').onclick=createPackageDrafts; document.getElementById('fillExamplePackage').onclick=fillExamplePackage; document.getElementById('createDraft').onclick=createDraft; document.getElementById('publishAll').onclick=publishAll; document.getElementById('clearDrafts').onclick=clearDrafts; loadRegistry().then(refreshState);
 })();
 </script>
 </body>
