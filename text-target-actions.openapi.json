@@ -1,0 +1,145 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Kitten Nest Text Target Actions",
+    "version": "1.0.0",
+    "description": "Action contract for writing registered Kitten Nest text targets. Only registered targetId values are accepted. This spec does not expose arbitrary state path writes."
+  },
+  "servers": [
+    {
+      "url": "https://kitten-nest-lab.vercel.app"
+    }
+  ],
+  "paths": {
+    "/api/set-state": {
+      "post": {
+        "operationId": "update_text_target",
+        "summary": "Write or dry-run a registered Kitten Nest text target",
+        "description": "Writes text through the textTarget envelope. Direct publish is enabled only for tested light text targets until additional targets pass their own gates.",
+        "security": [
+          {
+            "NestToken": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["textTarget"],
+                "properties": {
+                  "textTarget": {
+                    "type": "object",
+                    "required": ["targetId", "text"],
+                    "properties": {
+                      "targetId": {
+                        "type": "string",
+                        "enum": [
+                          "coffeeCornerBubble",
+                          "coffeeCornerLapCloseBubble",
+                          "windowWeather",
+                          "moodNote",
+                          "roomStatus",
+                          "hubbyNote"
+                        ],
+                        "description": "Registered text target id. The server rejects unknown targets."
+                      },
+                      "text": {
+                        "type": "string",
+                        "description": "Text to write. Bubble queues use one non-empty line per bubble. windowWeather uses line 1 as temperature and line 2 as description."
+                      },
+                      "mode": {
+                        "type": "string",
+                        "enum": ["publish", "draft"],
+                        "default": "publish"
+                      },
+                      "dryRun": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "When true, returns the patch without writing state."
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "additionalProperties": false
+              },
+              "examples": {
+                "coffeeCornerBubble": {
+                  "summary": "Publish ordinary coffee corner bubbles",
+                  "value": {
+                    "textTarget": {
+                      "targetId": "coffeeCornerBubble",
+                      "mode": "publish",
+                      "text": "小猫，过来。\n今天咖啡角更新一条新鲜气泡。",
+                      "dryRun": false
+                    }
+                  }
+                },
+                "lapCloseBubble": {
+                  "summary": "Publish lap close bubbles",
+                  "value": {
+                    "textTarget": {
+                      "targetId": "coffeeCornerLapCloseBubble",
+                      "mode": "publish",
+                      "text": "坐稳，小猫。\n今天坐腿图也有新鲜气泡。",
+                      "dryRun": false
+                    }
+                  }
+                },
+                "dryRunHubbyNote": {
+                  "summary": "Dry-run permanent notebook write",
+                  "value": {
+                    "textTarget": {
+                      "targetId": "hubbyNote",
+                      "mode": "publish",
+                      "text": "This should be tested as dry-run first.",
+                      "dryRun": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Text target result. Direct publish returns a compact summary; dry-run returns the patch only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {"type": "boolean"},
+                    "dryRun": {"type": "boolean"},
+                    "writesState": {"type": "boolean"},
+                    "callsSupabaseWrite": {"type": "boolean"},
+                    "textTarget": {"type": "object"},
+                    "summary": {"type": "object"},
+                    "patch": {"type": "object"}
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Rejected request, unknown target, unsupported mode, or target not enabled for direct publish."
+          },
+          "401": {
+            "description": "Missing or invalid X-Nest-Token."
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "NestToken": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Nest-Token"
+      }
+    }
+  }
+}
