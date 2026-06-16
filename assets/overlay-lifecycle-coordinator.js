@@ -1,7 +1,8 @@
 (function(){
-  var VERSION = 'overlay-lifecycle-coordinator-20260615-coffee-corner-bubble-test-2';
+  var VERSION = 'overlay-lifecycle-coordinator-20260615-coffee-corner-bubble-css-neutral-test-1';
   var qs = new URLSearchParams(location.search);
   var enabled = qs.get('sceneOverlayLifecycleTest') === '1';
+  var cssNeutralTest = qs.get('coffeeCornerBubbleCssNeutralTest') === '1';
   if(!enabled) return;
 
   var items = [];
@@ -82,10 +83,15 @@
     if(document.getElementById('coffeeCornerBubbleOverlayLifecycleGateStyle')) return;
     var s = document.createElement('style');
     s.id = 'coffeeCornerBubbleOverlayLifecycleGateStyle';
-    s.textContent = [
+    var rules = [
       'body[data-overlay-lifecycle][data-overlay-lifecycle-scene="coffeeCorner"]:not([data-overlay-lifecycle-ready-scene="coffeeCorner"]) #bubble{display:none!important;opacity:0!important;pointer-events:none!important}',
       'body[data-overlay-lifecycle][data-overlay-lifecycle-scene="coffeeCorner"][data-overlay-lifecycle-ready-scene="coffeeCorner"] #bubble[data-overlay-lifecycle-waiting="coffeeCorner"]{display:block!important;opacity:1!important;pointer-events:auto!important}'
-    ].join('');
+    ];
+    if(cssNeutralTest){
+      rules.push('body[data-coffee-corner-bubble-css-neutral-test="1"] #bubble{left:0!important;top:0!important;right:auto!important;bottom:auto!important;opacity:0!important;pointer-events:none!important}');
+      rules.push('body[data-coffee-corner-bubble-css-neutral-test="1"][data-overlay-lifecycle-ready-scene="coffeeCorner"] #bubble[data-coordinate-overlay="coffeeCorner.bubbleOverlay"]{opacity:1!important;pointer-events:auto!important}');
+    }
+    s.textContent = rules.join('');
     document.head.appendChild(s);
   }
 
@@ -142,6 +148,7 @@
     document.body.setAttribute('data-overlay-lifecycle-scene', scene);
     document.body.setAttribute('data-overlay-lifecycle-cycle', String(cycle));
     document.body.setAttribute('data-overlay-lifecycle-reason', String(reason || ''));
+    if(cssNeutralTest) document.body.setAttribute('data-coffee-corner-bubble-css-neutral-test', '1');
     if(ready) document.body.setAttribute('data-overlay-lifecycle-ready-scene', scene);
     else document.body.removeAttribute('data-overlay-lifecycle-ready-scene');
     if(!ready) markCoffeeCornerBubbleWaiting(scene);
@@ -202,6 +209,7 @@
   function start(){
     installCoffeeCornerBubbleGate();
     document.body.setAttribute('data-overlay-lifecycle', VERSION);
+    if(cssNeutralTest) document.body.setAttribute('data-coffee-corner-bubble-css-neutral-test', '1');
     scanImages();
     if(document.body){
       var bodyObserver = new MutationObserver(function(){ request('body-class'); });
