@@ -2,6 +2,16 @@
 
 This document records the stable write contract for Kitten Nest text targets.
 
+> **重大提示 / must read:** 2026-06-16 已完成 textTargets 户口本总钥匙与 MCP 全窗写入口里程碑。未来施工狼/导演狼必须先读：
+>
+> ```text
+> docs/MAJOR_MILESTONE_TEXT_TARGETS_MCP_TOTAL_KEY_2026-06-16.md
+> data/text-targets.v1.json
+> api/mcp.js
+> ```
+>
+> The ChatGPT all-window Kitten Nest App is powered by `/api/mcp`, not by a My GPT Action. Do not route future work through Custom GPT Actions unless explicitly requested.
+
 ## Endpoint
 
 POST `/api/set-state`
@@ -28,25 +38,24 @@ Auth uses the existing nest write header. Do not put secrets in repo docs.
 - `mode: publish`: publish directly into the target state fields.
 - `mode: draft`: generate a pending draft patch in dry-run; publish support should stay disabled unless separately tested.
 
+## Registry-first rule
+
+All writable text targets should be registered in:
+
+```text
+data/text-targets.v1.json
+```
+
+MCP now reads this registry for `update_text_target` targetIds. Do not create one-off MCP tools for every new room/panel/bubble. New text areas should be added to the registry first, then consumed by UI/runtime code.
+
 ## Enabled publish targets
 
-Currently verified for direct envelope publish:
+Verified direct publish targets include:
 
 - `coffeeCornerBubble`
 - `coffeeCornerLapCloseBubble`
 
-These are light text targets: no permanent archive and no notebook/trash/history mutation.
-
-## Dry-run only targets
-
-Currently dry-run only:
-
-- `windowWeather`
-- `moodNote`
-- `roomStatus`
-- `hubbyNote`
-
-`hubbyNote` is permanent notebook content. It must not be mixed into routine bubble/panel updates. If it is ever enabled, it needs an explicit confirm gate and separate testing.
+MCP `update_text_target` reads the registry and supports all registered targetIds. Permanent archive-style targets, especially `hubbyNote`, must still be handled intentionally and should not be mixed into routine bubble test packages.
 
 ## Never allowed
 
@@ -89,14 +98,21 @@ It should not return the full `nest_state.value` for text-target envelope publis
 - `coffeeCornerBubble` envelope publish writes canonical fields and legacy compatibility fields together.
 - `coffeeCornerLapCloseBubble` envelope publish writes only lap-close bubble fields.
 - Full state is not returned for envelope publish responses.
-- `hubbyNote` remains locked for direct envelope publish.
+- `/api/mcp` exposes `update_text_target` for the all-window Kitten Nest App.
+- `/api/mcp` reads targetIds from `data/text-targets.v1.json`.
 
 ## Connector / MCP layer note
 
-The repo endpoint alone does not make a ChatGPT tool appear. A separate actions/MCP connector must expose a callable tool, for example:
+The all-window ChatGPT Kitten Nest App uses:
 
 ```text
-update_text_target(targetId, text, mode="publish", dryRun=false)
+/api/mcp?t=<private token>
 ```
 
-That connector must pass through only registered target ids and should reuse this envelope contract.
+Expected tool:
+
+```text
+update_text_target(targetId, text, mode="publish" | "dryRun")
+```
+
+Refresh/reconnect the ChatGPT App after changing the registry so cached tool schemas reload.
