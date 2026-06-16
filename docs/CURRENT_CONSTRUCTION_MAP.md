@@ -5,11 +5,21 @@ Last updated: 2026-06-16
 
 ## Read this first
 
-This is the short, current-only map. For the full milestone history and rules, read:
+This file is the short current-only map for the text writing system. It is not the only foundation milestone.
+
+For the top-level milestone map, read:
+
+```text
+docs/MAJOR_MILESTONES_INDEX.md
+```
+
+For the full text-target milestone history and rules, read:
 
 ```text
 docs/MAJOR_MILESTONE_TEXT_TARGETS_MCP_TOTAL_KEY_2026-06-16.md
 ```
+
+Do not let this newer text-target map hide other foundation work such as go-back / push scene isolation.
 
 ## Current correct route
 
@@ -49,7 +59,7 @@ The legacy/general state endpoint plus textTarget envelope support. Useful for w
 docs/MAJOR_MILESTONE_TEXT_TARGETS_MCP_TOTAL_KEY_2026-06-16.md
 ```
 
-The full milestone log and future construction rules.
+The full text-target milestone log and future construction rules.
 
 ```text
 docs/TEXT_TARGET_ENVELOPE_CONTRACT.md
@@ -69,7 +79,7 @@ Modes:
 
 ```text
 publish
- dryRun
+dryRun
 ```
 
 TargetIds come from:
