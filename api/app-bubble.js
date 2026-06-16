@@ -8,7 +8,7 @@ const overlayLockTestScript = '<script src="/assets/overlay-lock-test.js?v=20260
 const lapCloseBubbleCleanScript = '<script src="/assets/lap-close-bubble-clean.js?v=20260615-lap-bubble-overlay-lifecycle-test-2"></script>';
 const sceneManifestIsolationTestScript = '<script src="/assets/scene-manifest-isolation-test.js?v=20260615-scene-manifest-promoted-1"></script>';
 const coffeeCornerVariantScript = '<script src="/assets/coffee-corner-variant.js?v=20260613-enter-canvas-verified-1"></script>';
-const bubbleControllerScript = '<script src="/assets/bubble-controller.js?v=20260614-guard-1"></script>';
+const bubbleControllerScript = '<script src="/assets/bubble-controller.js?v=20260615-coffee-corner-bubble-overlay-lifecycle-test-1"></script>';
 const hubbyNoteControllerScript = '<script src="/assets/hubby-note-controller.js?v=20260614-no-consolehot-1"></script>';
 const setupToggleScript = '<script src="/assets/setup-toggle.js?v=20260613-touchfix-1"></script>';
 const consoleRestoreScript = '<script src="/assets/console-hot-restore.js?v=20260610-1"></script>';
