@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<title>coffeeCornerBubble runtime parity test</title>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+  html,body{margin:0;width:100%;min-height:100%;background:#120b12;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC",sans-serif;color:#fff}
+  body{overflow-x:hidden}
+  .wrap{width:min(430px,100vw);margin:0 auto;padding:12px 10px 28px}
+  .note{margin:0 0 10px;padding:11px 12px;border-radius:18px;background:rgba(255,255,255,.09);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);font-size:12px;line-height:1.45;color:rgba(255,255,255,.78)}
+  .note b{color:#fff}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-all}
+  #gameRoom{position:relative;width:100%;aspect-ratio:9/16;border-radius:28px;overflow:hidden;background:#1b0f16;box-shadow:0 18px 55px rgba(0,0,0,.34),inset 0 0 0 1px rgba(255,255,255,.12)}
+  #gameBg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+  .shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.04),rgba(0,0,0,.10));pointer-events:none}
+  .bubble{position:absolute;z-index:22;max-width:45%;width:max-content;min-width:120px;padding:12px 14px;border-radius:20px;background:rgba(255,248,245,.86);border:1.4px solid rgba(255,255,255,.92);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);box-shadow:0 10px 28px rgba(83,38,51,.18),inset 0 0 0 1px rgba(120,50,70,.1);font-size:clamp(14px,3.5vw,20px);line-height:1.28;color:#733447;font-weight:540;text-shadow:0 1px rgba(255,255,255,.72);transition:opacity .18s ease,transform .18s ease;pointer-events:auto;touch-action:manipulation;white-space:pre-line}
+  .bubble.hidden{opacity:0;transform:scale(.96);pointer-events:none}
+  .bubble:after{content:"";position:absolute;right:22px;bottom:-9px;border-width:10px 7px 0 7px;border-style:solid;border-color:rgba(255,248,245,.86) transparent transparent transparent}
+  .hot{position:absolute;border:0;background:transparent;z-index:30;touch-action:manipulation;color:transparent;font-size:0;padding:0}
+  .tattooHot{border-radius:999px;background:rgba(255,80,130,.035);outline:1.5px solid rgba(255,80,130,.22)}
+  .tattooHot:active{background:rgba(255,80,130,.16)}
+  .debug{margin-top:10px;padding:12px;border-radius:18px;background:rgba(255,255,255,.09);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);font-size:12px;line-height:1.5;color:rgba(255,255,255,.78)}
+  .ok{color:#b8ffd8}.warn{color:#ffd59f}.bad{color:#ffb8c0}
+  .buttons{display:flex;gap:8px;margin-top:10px}.buttons button{flex:1;border:0;border-radius:14px;padding:10px 8px;background:rgba(255,255,255,.88);color:#733447;font-weight:800}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="note">
+    <b>coffeeCornerBubble runtime parity test</b><br>
+    独立测试页：使用正式 selector 名 <span class="mono">#bubble</span> / <span class="mono">.tattooHot</span> / <span class="mono">#gameBg</span>，但不加载 <span class="mono">/cloud</span> wrapper、不加载 app-q bridge、不加载 cloudTextPatch、不写 state。
+  </div>
+  <div id="gameRoom" class="room active" data-scene="coffeeCorner">
+    <img id="gameBg" class="bg" alt="coffee corner" src="/assets/rooms/coffee-corner/morning-evening.jpg?v=clean-runtime-test-20260617">
+    <div class="shade"></div>
+    <div id="bubble" class="bubble" data-owner="coffeeCornerBubbleCleanController"></div>
+    <button class="hot tattooHot" type="button" aria-label="19.8 bubble hotspot" data-owner="coffeeCornerBubbleCleanController"></button>
+  </div>
+  <div id="debug" class="debug"></div>
+  <div class="buttons">
+    <button id="resetBtn" type="button">Reset</button>
+    <button id="longBtn" type="button">Long text</button>
+  </div>
+</div>
+<script>
+(function(){
+  var VERSION = 'coffee-corner-bubble-clean-runtime-test-20260617-1';
+  var cards = {
+    bubble: {
+      id:'coffeeCorner.bubble.cleanRuntimeTest',
+      productionObjectId:'coffeeCorner.bubble',
+      selector:'#bubble',
+      canonicalTag:'[coffeeCornerBubble]',
+      owner:'coffeeCornerBubbleCleanController',
+      coordinate:{ x:0.905, y:0.23, width:0.48, anchor:'bottomRight', heightMode:'auto', growthDirection:'upward' }
+    },
+    tattoo: {
+      id:'coffeeCorner.tattoo19_8.cleanRuntimeTest',
+      productionObjectId:'coffeeCorner.tattoo19_8',
+      selector:'.tattooHot',
+      owner:'coffeeCornerBubbleCleanController',
+      coordinate:{ x:0.73, y:0.345, width:0.15, height:0.08 }
+    }
+  };
+  var state = null;
+  var queue = ['come here, kitten.','coffee is warm. sit.'];
+  var index = 0;
+  var visible = true;
+  var lastPointerAt = 0;
+  var logItems = [];
+
+  function $(sel){ return document.querySelector(sel); }
+  function log(x){ logItems.unshift(new Date().toLocaleTimeString() + ' ' + x); logItems = logItems.slice(0,7); renderDebug(); }
+  function cleanList(value){ return Array.isArray(value) ? value.map(function(x){ return String(x||'').trim(); }).filter(Boolean) : []; }
+  function readQueue(s){
+    var canonical = cleanList(s && s.coffeeCornerBubbles);
+    if(canonical.length) return { source:'coffeeCornerBubbles', items:canonical, index:Number(s.coffeeCornerBubbleIndex||0)||0 };
+    if(s && s.coffeeCornerBubble) return { source:'coffeeCornerBubble', items:[String(s.coffeeCornerBubble).trim()].filter(Boolean), index:Number(s.coffeeCornerBubbleIndex||0)||0 };
+    var legacy = cleanList(s && s.alexBubbles);
+    if(legacy.length) return { source:'alexBubbles fallback', items:legacy, index:Number(s.bubbleIndex||0)||0 };
+    if(s && s.alexBubble) return { source:'alexBubble fallback', items:[String(s.alexBubble).trim()].filter(Boolean), index:Number(s.bubbleIndex||0)||0 };
+    return { source:'test defaults', items:queue, index:0 };
+  }
+  function current(){ return queue[((index % queue.length) + queue.length) % queue.length] || ''; }
+  function coverBox(){
+    var img = $('#gameBg');
+    var r = img.getBoundingClientRect();
+    var nw = img.naturalWidth || r.width;
+    var nh = img.naturalHeight || r.height;
+    if(!r.width || !r.height || !nw || !nh) return null;
+    var br = r.width / r.height, ir = nw / nh;
+    var w = r.width, h = r.height, x = 0, y = 0;
+    if(br > ir){ h = r.width / ir; y = (r.height - h) / 2; }
+    else{ w = r.height * ir; x = (r.width - w) / 2; }
+    return { left:r.left+x, top:r.top+y, width:w, height:h };
+  }
+  function placeBubble(){
+    var el = $('#bubble');
+    var box = coverBox();
+    if(!el || !box) return;
+    var parent = $('#gameRoom').getBoundingClientRect();
+    var c = cards.bubble.coordinate;
+    var w = box.width * c.width;
+    el.style.width = w + 'px';
+    el.style.maxWidth = w + 'px';
+    el.style.height = 'auto';
+    var right = box.left + box.width * c.x;
+    var bottom = box.top + box.height * c.y;
+    var h = el.offsetHeight || el.getBoundingClientRect().height || 0;
+    el.style.left = (right - w - parent.left) + 'px';
+    el.style.top = (bottom - h - parent.top) + 'px';
+  }
+  function placeTattoo(){
+    var hot = $('.tattooHot');
+    var box = coverBox();
+    if(!hot || !box) return;
+    var parent = $('#gameRoom').getBoundingClientRect();
+    var c = cards.tattoo.coordinate;
+    var w = box.width * c.width;
+    var h = box.height * c.height;
+    var cx = box.left + box.width * c.x;
+    var cy = box.top + box.height * c.y;
+    hot.style.left = (cx - w/2 - parent.left) + 'px';
+    hot.style.top = (cy - h/2 - parent.top) + 'px';
+    hot.style.width = w + 'px';
+    hot.style.height = h + 'px';
+  }
+  function render(){
+    var b = $('#bubble');
+    b.textContent = current();
+    b.setAttribute('data-owner', cards.bubble.owner);
+    b.setAttribute('data-canonical-tag', cards.bubble.canonicalTag);
+    b.classList.toggle('hidden', !visible);
+    placeBubble();
+    placeTattoo();
+    renderDebug();
+  }
+  function hide(){ visible = false; render(); log('bubble.hide'); }
+  function showNext(){ if(queue.length > 1) index = (index + 1) % queue.length; visible = true; render(); log('tattoo.showNext'); }
+  function tattooToggle(){ visible ? hide() : showNext(); }
+  function guard(e, action){
+    e.preventDefault();
+    e.stopPropagation();
+    if(e.stopImmediatePropagation) e.stopImmediatePropagation();
+    var now = Date.now();
+    if(now - lastPointerAt < 260) return;
+    lastPointerAt = now;
+    action();
+  }
+  function renderDebug(){
+    var parsed = readQueue(state);
+    $('#debug').innerHTML = [
+      '<b>status</b>: <span class="ok">isolated runtime-parity test</span>',
+      '<b>version</b>: <span class="mono">' + VERSION + '</span>',
+      '<b>route isolation</b>: <span class="ok">no /cloud wrapper, no app-q bridge, no cloudTextPatch</span>',
+      '<b>production selector names</b>: <span class="mono">#bubble / .tattooHot / #gameBg</span>',
+      '<b>single owner</b>: <span class="mono">' + cards.bubble.owner + '</span>',
+      '<b>canonical tag</b>: <span class="mono">' + cards.bubble.canonicalTag + '</span>',
+      '<b>state source</b>: <span class="mono">' + parsed.source + '</span>',
+      '<b>visible</b>: ' + (visible ? 'yes' : 'no') + ' / <b>index</b>: ' + index + ' / <b>queue</b>: ' + queue.length,
+      '<b>cycle</b>: bubble tap hides; tattoo tap hides if visible, shows next if hidden.',
+      '<b>events</b>: <span class="mono">' + (logItems.join(' | ') || 'none') + '</span>'
+    ].join('<br>');
+  }
+  async function loadState(){
+    try{
+      var res = await fetch('/api/state?t=' + Date.now(), { cache:'no-store' });
+      if(!res.ok) throw new Error('state http ' + res.status);
+      state = await res.json();
+      var parsed = readQueue(state);
+      queue = parsed.items.length ? parsed.items : queue;
+      index = parsed.index || 0;
+      visible = true;
+      log('state.loaded.' + parsed.source);
+      render();
+    }catch(e){ log('state.fallback'); render(); }
+  }
+  $('#bubble').addEventListener('pointerup', function(e){ guard(e, hide); }, true);
+  $('.tattooHot').addEventListener('pointerup', function(e){ guard(e, tattooToggle); }, true);
+  $('#resetBtn').addEventListener('click', function(){ visible = true; index = 0; render(); log('reset'); });
+  $('#longBtn').addEventListener('click', function(){ queue = ['This long coffeeCornerBubble text is running under exact production selector names.\nOnly one clean owner controls hide/show/next, so no bridge or refresh patch can reopen it.']; index = 0; visible = true; render(); log('long.text'); });
+  window.addEventListener('resize', render);
+  window.addEventListener('orientationchange', function(){ setTimeout(render, 120); });
+  $('#gameBg').addEventListener('load', render);
+  if($('#gameBg').complete) render();
+  loadState();
+})();
+</script>
+</body>
+</html>
