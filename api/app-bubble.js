@@ -5,7 +5,6 @@ const hotspotPositionerScript = '<script src="/assets/hotspot-positioner.js?v=20
 const coffeeSteamScript = '<script src="/assets/coffee-steam-svg.js?v=20260613-mist-1"></script>';
 const sourceOfTruthGateScript = '<script src="/assets/source-of-truth-gate.js?v=20260616-test-1"></script>';
 const overlayLockTestScript = '<script src="/assets/overlay-lock-test.js?v=20260614-overlay-lock-test-1"></script>';
-const overlayLifecycleCoordinatorScript = '<script src="/assets/overlay-lifecycle-coordinator.js?v=20260617-safety-test-1"></script>';
 const lapCloseBubbleCleanScript = '<script src="/assets/lap-close-bubble-clean.js?v=20260616-clean-1"></script>';
 const sceneManifestIsolationScript = '<script src="/assets/scene-manifest-isolation.js?v=20260616-promoted-1"></script>';
 const coffeeCornerVariantScript = '<script src="/assets/coffee-corner-variant.js?v=20260613-enter-canvas-verified-1"></script>';
@@ -99,13 +98,10 @@ function injectBubbleController(html, options = {}) {
     hotspotPositionerScript,
     coffeeSteamScript,
     sourceOfTruthGateScript,
-    overlayLockTestScript
-  ];
-  if (options.overlayLifecycleTest) scripts.push(overlayLifecycleCoordinatorScript);
-  scripts.push(
+    overlayLockTestScript,
     lapCloseBubbleCleanScript,
     sceneManifestIsolationScript
-  );
+  ];
   if (!clean) scripts.push(coffeeCornerVariantScript);
   scripts.push(
     bubbleControllerScript,
@@ -127,11 +123,10 @@ module.exports = async function handler(req, res) {
   const url = String(req.url || '');
   const sceneRouterTest = url.includes('sceneRouterTest=1');
   const sceneRouterLegacy = url.includes('sceneRouterLegacy=1');
-  const overlayLifecycleTest = url.includes('sceneOverlayLifecycleTest=1');
   const cleanDefault = !sceneRouterTest && !sceneRouterLegacy;
   const originalSend = res.send.bind(res);
   res.send = function sendWithBubbleController(body) {
-    if (typeof body === 'string') return originalSend(injectBubbleController(body, { sceneRouterTest, overlayLifecycleTest, cleanDefault }));
+    if (typeof body === 'string') return originalSend(injectBubbleController(body, { sceneRouterTest, cleanDefault }));
     return originalSend(body);
   };
   return appAssetctl(req, res);
