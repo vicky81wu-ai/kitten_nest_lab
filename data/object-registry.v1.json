@@ -1,5 +1,5 @@
 {
-  "version": "0.1.12",
+  "version": "0.1.13",
   "status": "foundation-current-identities",
   "note": "Static object and hotspot identity registry for Kitten Nest. This file is not wired into runtime enforcement yet. It exists to prevent selector reuse, hotspot ownership conflicts, decorative overlay drift, and rough patching. Detailed director writing guidance lives in docs/DIRECTOR_GUIDE.md.",
   "principles": [
@@ -98,6 +98,54 @@
       "implementationFile": "assets/scene-router-clean.v1.js",
       "runtimeNote": "Current official lap entry hotspot. It replaces the old coffeeCornerVariantController lapEnterHot path in production /cloud.",
       "directorTags": ["lapClose", "sceneVariant", "cleanRouter", "baseImageCoordinate"],
+      "protected": true
+    },
+    {
+      "id": "coffeeCorner.lapCloseBubble.cleanRouter",
+      "roomId": "coffeeCorner",
+      "sceneVariantId": "coffeeCorner.lapClose",
+      "kind": "textPort",
+      "selector": "#sceneRouterCleanLapBubble",
+      "owner": "sceneRouterClean",
+      "role": "lapCloseBubbleDisplay",
+      "action": "showCoffeeCornerLapCloseBubbleQueue",
+      "exclusive": true,
+      "runtimeStatus": "active",
+      "coordinateStatus": "baseImageLocked",
+      "versionStatus": "canonicalCurrent",
+      "changePolicy": "mutableWithVersion",
+      "imageId": "gameBg",
+      "roomElementId": "gameRoom",
+      "approvedCoordinate": {
+        "x": 0.332,
+        "y": 0.116,
+        "width": 0.43,
+        "anchor": "bottomFromBaseline",
+        "heightMode": "auto",
+        "growthDirection": "upward",
+        "baselineText": "坐稳，小猫。\nStop wriggling in my lap."
+      },
+      "approvedBy": "Vicky adjusted in lap-close bubble position sandbox",
+      "textClass": "Bubble",
+      "implementationType": "lapCloseBubbleQueue",
+      "implementationFile": "assets/lap-close-bubble-clean.js",
+      "stateFields": [
+        "coffeeCornerLapCloseBubble",
+        "coffeeCornerLapCloseBubbles",
+        "coffeeCornerLapCloseBubbleIndex",
+        "coffeeCornerLapCloseBubbleUpdatedAt"
+      ],
+      "directorRef": "director.textPorts.coffeeCornerLapCloseBubble",
+      "directorTags": [
+        "lapClose",
+        "coffeeCorner",
+        "textPort",
+        "bubble",
+        "baseImageCoordinate",
+        "bottomLocked",
+        "growthUpward"
+      ],
+      "runtimeNote": "Approved coordinate is locked to the lap-close base image. The baseline two-line bubble keeps its approved lower edge; taller text grows upward instead of pushing downward.",
       "protected": true
     },
     {
