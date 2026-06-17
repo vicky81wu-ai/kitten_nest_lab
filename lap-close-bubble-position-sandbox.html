@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Lap Close Bubble Position Sandbox</title>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;min-height:100%;background:#1a1219;color:#fff6f8;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Arial,sans-serif}
+  body{padding:14px;overflow:auto}
+  .wrap{width:min(100%,980px);margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) min(360px,38vw);gap:14px;align-items:start}
+  .stageCard,.panel{border-radius:24px;background:rgba(255,255,255,.08);box-shadow:0 18px 54px rgba(0,0,0,.26),inset 0 0 0 1px rgba(255,255,255,.12);padding:12px}
+  .top{grid-column:1/-1;display:flex;justify-content:space-between;gap:12px;align-items:end;padding:4px 2px 0}
+  h1{margin:0;font-size:clamp(22px,4vw,42px);letter-spacing:-.045em}.sub{margin:6px 0 0;color:rgba(255,246,248,.68);font-size:13px;line-height:1.45}.badge{display:inline-flex;border-radius:999px;background:#ffd5df;color:#4a2432;font-weight:800;font-size:12px;padding:6px 9px;white-space:nowrap}
+  .stage{position:relative;width:min(100%,430px);margin:0 auto;aspect-ratio:707/1536;overflow:hidden;border-radius:22px;background:#09070a;box-shadow:0 14px 38px rgba(0,0,0,.3);touch-action:none}
+  .stage img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;user-select:none;-webkit-user-drag:none}
+  .bubble{position:absolute;left:0;top:0;z-index:5;padding:12px 14px;border-radius:20px;background:rgba(255,248,245,.88);border:1.4px solid rgba(255,255,255,.92);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);box-shadow:0 10px 28px rgba(83,38,51,.18),inset 0 0 0 1px rgba(120,50,70,.1);font-size:clamp(14px,3.45vw,19px);line-height:1.28;color:#733447;font-weight:540;text-shadow:0 1px rgba(255,255,255,.72);cursor:grab;touch-action:none;white-space:normal}
+  .bubble:active{cursor:grabbing}.bubble:after{content:"";position:absolute;left:24px;bottom:-9px;border-width:10px 7px 0 7px;border-style:solid;border-color:rgba(255,248,245,.88) transparent transparent transparent}.stage.debug:before{content:"";position:absolute;inset:0;z-index:4;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.15) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.15) 1px,transparent 1px);background-size:10% 10%}.stage.debug .bubble{outline:2px solid rgba(255,70,130,.8)}
+  .panel{position:sticky;top:12px}.section{padding:10px 0;border-bottom:1px solid rgba(255,255,255,.1)}.section:last-child{border-bottom:0}h2{font-size:15px;margin:0 0 10px}.row{display:grid;grid-template-columns:1fr 82px;gap:8px;align-items:center;margin:9px 0}label{font-size:12px;color:rgba(255,246,248,.66)}input[type=range]{width:100%}input[type=number],textarea{width:100%;border:0;border-radius:14px;background:rgba(255,255,255,.12);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);color:#fff6f8;padding:9px;outline:none}textarea{min-height:78px;resize:vertical}.buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}button{border:0;border-radius:14px;padding:10px 9px;background:rgba(255,255,255,.13);color:#fff6f8;font-weight:760;box-shadow:inset 0 0 0 1px rgba(255,255,255,.13)}button.main{background:linear-gradient(135deg,#ffd5df,#ffdca4);color:#472432}.code{white-space:pre-wrap;word-break:break-word;background:rgba(0,0,0,.28);border-radius:16px;padding:11px;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:rgba(255,246,248,.82)}.note{font-size:12px;color:rgba(255,246,248,.65);line-height:1.5;margin:0}
+  @media(max-width:860px){.wrap{display:block}.top{display:block}.panel{position:static;margin-top:12px}.stage{width:min(100%,430px)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>lap-close bubble position sandbox</h1>
+      <p class="sub">独立调参页：只模拟坐腿图气泡位置，不读写 state，不碰 /cloud 正式 runtime。拖动气泡或按按钮，复制输出坐标。</p>
+    </div>
+    <span class="badge">safe sandbox · no write</span>
+  </header>
+
+  <section class="stageCard">
+    <div id="stage" class="stage debug">
+      <img id="lapImg" alt="lap close scene" src="https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/variants/lap-close-01.jpg?v=20260613-lap-close-1" />
+      <div id="bubble" class="bubble">坐稳，小猫。<br>Stop wriggling in my lap.</div>
+    </div>
+  </section>
+
+  <aside class="panel">
+    <section class="section">
+      <h2>坐标</h2>
+      <div class="row"><label for="x">x</label><input id="xNum" type="number" step="0.001" /></div>
+      <input id="x" type="range" min="0" max="1" step="0.001" />
+      <div class="row"><label for="y">y</label><input id="yNum" type="number" step="0.001" /></div>
+      <input id="y" type="range" min="0" max="1" step="0.001" />
+      <div class="row"><label for="w">width</label><input id="wNum" type="number" step="0.001" /></div>
+      <input id="w" type="range" min="0.22" max="0.70" step="0.001" />
+      <div class="buttons">
+        <button id="up1" class="main" type="button">上移 1cm</button>
+        <button id="down1" type="button">下移 1cm</button>
+        <button id="left5" type="button">左移 5px</button>
+        <button id="right5" type="button">右移 5px</button>
+        <button id="reset" type="button">恢复当前正式值</button>
+        <button id="debug" type="button">网格开关</button>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>气泡文字</h2>
+      <textarea id="text">坐稳，小猫。
+Stop wriggling in my lap.</textarea>
+    </section>
+
+    <section class="section">
+      <h2>输出</h2>
+      <pre id="out" class="code"></pre>
+      <div class="buttons"><button id="copy" class="main" type="button">复制坐标</button><button id="copyPatch" type="button">复制替换片段</button></div>
+      <p class="note">正式文件当前坐标来自 <code>assets/lap-close-bubble-clean.js</code>：x 0.365 / y 0.205 / width 0.43。这里只给验收坐标，不自动写正式文件。</p>
+    </section>
+  </aside>
+</div>
+<script>
+(function(){
+  var initial = { x:0.365, y:0.205, width:0.43 };
+  var c = { x:initial.x, y:initial.y, width:initial.width };
+  var stage = document.getElementById('stage');
+  var bubble = document.getElementById('bubble');
+  var text = document.getElementById('text');
+  var x = document.getElementById('x'), y = document.getElementById('y'), w = document.getElementById('w');
+  var xNum = document.getElementById('xNum'), yNum = document.getElementById('yNum'), wNum = document.getElementById('wNum');
+  var out = document.getElementById('out');
+  var drag = null;
+  function cmPx(){ return 37.7952755906; }
+  function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+  function syncInputs(){ x.value = xNum.value = c.x.toFixed(3); y.value = yNum.value = c.y.toFixed(3); w.value = wNum.value = c.width.toFixed(3); }
+  function place(){
+    var r = stage.getBoundingClientRect();
+    bubble.style.left = (r.width * c.x) + 'px';
+    bubble.style.top = (r.height * c.y) + 'px';
+    bubble.style.width = (r.width * c.width) + 'px';
+    bubble.style.maxWidth = (r.width * c.width) + 'px';
+    bubble.innerHTML = String(text.value || '').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+    syncInputs();
+    out.textContent = 'bubbleCard.coordinate = ' + JSON.stringify({ x:+c.x.toFixed(3), y:+c.y.toFixed(3), width:+c.width.toFixed(3) }) + '\n\n' +
+      'full line:\n' +
+      "var bubbleCard = { id:'coffeeCorner.lapCloseBubble.cleanRouter', selector:'#sceneRouterCleanLapBubble', coordinate:{ x:" + c.x.toFixed(3) + ', y:' + c.y.toFixed(3) + ', width:' + c.width.toFixed(3) + ' } };';
+  }
+  function setFromInputs(){ c.x = clamp(Number(xNum.value || x.value),0,1); c.y = clamp(Number(yNum.value || y.value),0,1); c.width = clamp(Number(wNum.value || w.value),0.22,0.70); place(); }
+  [x,y,w].forEach(function(el){ el.addEventListener('input', function(){ if(el===x) xNum.value=x.value; if(el===y) yNum.value=y.value; if(el===w) wNum.value=w.value; setFromInputs(); }); });
+  [xNum,yNum,wNum].forEach(function(el){ el.addEventListener('input', setFromInputs); });
+  text.addEventListener('input', place);
+  bubble.addEventListener('pointerdown', function(e){ drag = { id:e.pointerId, sx:e.clientX, sy:e.clientY, ox:c.x, oy:c.y }; bubble.setPointerCapture(e.pointerId); e.preventDefault(); });
+  bubble.addEventListener('pointermove', function(e){ if(!drag) return; var r=stage.getBoundingClientRect(); c.x=clamp(drag.ox+(e.clientX-drag.sx)/r.width,0,1); c.y=clamp(drag.oy+(e.clientY-drag.sy)/r.height,0,1); place(); });
+  bubble.addEventListener('pointerup', function(e){ drag=null; try{bubble.releasePointerCapture(e.pointerId)}catch(_){} });
+  bubble.addEventListener('pointercancel', function(){ drag=null; });
+  document.getElementById('up1').onclick = function(){ var r=stage.getBoundingClientRect(); c.y=clamp(c.y-cmPx()/r.height,0,1); place(); };
+  document.getElementById('down1').onclick = function(){ var r=stage.getBoundingClientRect(); c.y=clamp(c.y+cmPx()/r.height,0,1); place(); };
+  document.getElementById('left5').onclick = function(){ var r=stage.getBoundingClientRect(); c.x=clamp(c.x-5/r.width,0,1); place(); };
+  document.getElementById('right5').onclick = function(){ var r=stage.getBoundingClientRect(); c.x=clamp(c.x+5/r.width,0,1); place(); };
+  document.getElementById('reset').onclick = function(){ c = { x:initial.x, y:initial.y, width:initial.width }; place(); };
+  document.getElementById('debug').onclick = function(){ stage.classList.toggle('debug'); };
+  document.getElementById('copy').onclick = function(){ navigator.clipboard.writeText(JSON.stringify({ x:+c.x.toFixed(3), y:+c.y.toFixed(3), width:+c.width.toFixed(3) })); };
+  document.getElementById('copyPatch').onclick = function(){ navigator.clipboard.writeText("var bubbleCard = { id:'coffeeCorner.lapCloseBubble.cleanRouter', selector:'#sceneRouterCleanLapBubble', coordinate:{ x:" + c.x.toFixed(3) + ', y:' + c.y.toFixed(3) + ', width:' + c.width.toFixed(3) + ' } };'); };
+  window.addEventListener('resize', place);
+  place();
+})();
+</script>
+</body>
+</html>
