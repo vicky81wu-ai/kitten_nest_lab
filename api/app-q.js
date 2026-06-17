@@ -27,8 +27,12 @@ async function readPublicState(req) {
 }
 
 function hydrateHtml(html, state) {
-  const queue = Array.isArray(state.alexBubbles) && state.alexBubbles.length ? state.alexBubbles : [];
-  const bubbleText = queue[0] || state.alexBubble || 'come here, kitten.';
+  const queue = Array.isArray(state.coffeeCornerBubbles) && state.coffeeCornerBubbles.length
+    ? state.coffeeCornerBubbles
+    : Array.isArray(state.alexBubbles) && state.alexBubbles.length
+      ? state.alexBubbles
+      : [];
+  const bubbleText = queue[0] || state.coffeeCornerBubble || state.alexBubble || 'come here, kitten.';
   const bubbleHtml = escapeHtml(bubbleText);
   const bubbleJs = escapeJs(bubbleText);
 
@@ -42,17 +46,16 @@ function hydrateHtml(html, state) {
 const bridge = `
 <script>
 (function(){
-  window.__kittenNestBridge = 'cloud-bridge-q5-touch-click-guard';
+  window.__kittenNestBridge = 'cloud-bridge-q6-interaction-only';
 
   const STATE_URL = '/api/state';
   const ADVANCE_GUARD_MS = 720;
-  const TOUCH_CLICK_GUARD_MS = 1200;
+  const POINTER_CLICK_GUARD_MS = 1600;
   let cloudState = null;
   let queueIndex = 0;
   let lastStateStamp = '';
-  let applying = false;
   let manualHidden = false;
-  let lastTouchAt = 0;
+  let lastPointerAt = 0;
   let lastAdvanceAt = 0;
 
   const css = document.createElement('style');
@@ -77,7 +80,10 @@ const bridge = `
 
   function currentText(){
     const q = queue();
-    if(!q.length) return '';
+    if(!q.length){
+      const b = bubbleEl();
+      return b ? String(b.textContent || '').trim() : '';
+    }
     return q[((queueIndex % q.length) + q.length) % q.length];
   }
 
@@ -107,56 +113,39 @@ const bridge = `
     }
   }
 
-  function apply(reason){
-    const b = bubbleEl();
-    const text = currentText();
-    if(!b || !text) return;
-    if(panelOpen() && reason !== 'user') return;
-    if(userHidden() && reason !== 'user'){
-      b.textContent = text;
-      b.setAttribute('data-cloud','1');
-      return;
-    }
-    applying = true;
-    if(reason === 'user') markHidden(false);
-    b.textContent = text;
-    b.setAttribute('data-cloud','1');
-    b.classList.remove('hidden');
-    setTimeout(function(){ applying = false; }, 40);
-  }
-
   function hideBubble(e){
     const b = bubbleEl();
     if(!b || panelOpen()) return false;
     stop(e);
     markHidden(true);
-    applying = true;
     b.classList.add('hidden');
-    setTimeout(function(){ applying = false; }, 40);
     return true;
   }
 
   function showNext(e){
+    const b = bubbleEl();
     const q = queue();
-    if(!q.length || panelOpen()) return false;
+    if(!b || panelOpen()) return false;
     stop(e);
     const now = Date.now();
     if(now - lastAdvanceAt < ADVANCE_GUARD_MS) return true;
     lastAdvanceAt = now;
     if(q.length > 1) queueIndex = (queueIndex + 1) % q.length;
+    const text = currentText();
+    if(text) b.textContent = text;
+    b.setAttribute('data-cloud','1');
     markHidden(false);
-    apply('user');
+    b.classList.remove('hidden');
     return true;
   }
 
-  async function load(reason){
+  async function loadState(){
     try{
       const res = await fetch(STATE_URL + '?t=' + Date.now(), { cache:'no-store' });
       if(!res.ok) return;
       cloudState = await res.json();
       window.kittenNestCloudState = cloudState;
       syncQueueIndex();
-      apply(reason || 'refresh');
     }catch(e){ console.log('cloud state unavailable', e); }
   }
 
@@ -187,8 +176,8 @@ const bridge = `
   function capture(e){
     const kind = hitKind(e);
     if(!kind) return;
-    if(e.type === 'click' && Date.now() - lastTouchAt < TOUCH_CLICK_GUARD_MS){ stop(e); return; }
-    if(e.type === 'touchend') lastTouchAt = Date.now();
+    if(e.type === 'click' && Date.now() - lastPointerAt < POINTER_CLICK_GUARD_MS){ stop(e); return; }
+    if(e.type === 'pointerup' || e.type === 'touchend') lastPointerAt = Date.now();
 
     const b = bubbleEl();
     const isHidden = userHidden() || (b && b.classList.contains('hidden'));
@@ -196,28 +185,14 @@ const bridge = `
     else if(kind === 'tattoo') isHidden ? showNext(e) : hideBubble(e);
   }
 
-  function observe(){
-    const b = bubbleEl();
-    if(!b || b.__qObserve) return;
-    b.__qObserve = true;
-    const mo = new MutationObserver(function(){
-      if(applying || userHidden()) return;
-      const text = currentText();
-      if(text && b.textContent !== text && !panelOpen()) setTimeout(function(){ apply('refresh'); }, 150);
-    });
-    mo.observe(b, { childList:true, characterData:true, subtree:true, attributes:true, attributeFilter:['class'] });
-  }
-
-  function tick(reason){ observe(); load(reason || 'refresh'); }
-
-  document.addEventListener('click', capture, true);
+  document.addEventListener('pointerup', capture, true);
   document.addEventListener('touchend', capture, true);
-  window.addEventListener('load', function(){ tick('refresh'); setInterval(function(){ tick('refresh'); }, 4000); });
-  window.addEventListener('focus', function(){ tick('refresh'); });
-  document.addEventListener('visibilitychange', function(){ if(!document.hidden) tick('refresh'); });
-  setTimeout(function(){ tick('refresh'); }, 250);
-  setTimeout(function(){ tick('refresh'); }, 900);
-  setTimeout(function(){ tick('refresh'); }, 1800);
+  document.addEventListener('click', capture, true);
+  window.addEventListener('load', loadState);
+  window.addEventListener('focus', loadState);
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) loadState(); });
+  setTimeout(loadState, 250);
+  setTimeout(loadState, 900);
 })();
 </script>`;
 
