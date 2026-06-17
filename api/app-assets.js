@@ -185,65 +185,17 @@ const dynamicAssetResolverScript = `
 })();
 </script>`;
 
-const cloudTextPatchScript = `
-<script>
-(function(){
-  window.__kittenNestTextPatch = 'text-patch-20260614-guard-1';
-  var lastStamp = '';
-  var index = 0;
-  function bubble(){ return document.getElementById('bubble'); }
-  function items(state){
-    if(!state) return [];
-    if(Array.isArray(state.alexBubbles)) return state.alexBubbles.map(function(x){ return String(x||'').trim(); }).filter(Boolean);
-    return state.alexBubble ? [String(state.alexBubble)] : [];
-  }
-  function userHidden(b){
-    return !!(b && b.getAttribute('data-bubble-user-hidden') === '1');
-  }
-  function show(text){
-    var b = bubble();
-    if(!b || !text) return;
-    b.textContent = text;
-    b.setAttribute('data-cloud-refresh','1');
-    if(userHidden(b)) return;
-    b.classList.remove('hidden');
-  }
-  async function refresh(force){
-    try{
-      var res = await fetch('/api/state?t=' + Date.now(), { cache:'no-store' });
-      if(!res.ok) return;
-      var state = await res.json();
-      var q = items(state);
-      if(!q.length) return;
-      var stamp = String(state.updatedAt || '') + '|' + JSON.stringify(q);
-      if(stamp !== lastStamp){
-        lastStamp = stamp;
-        index = Number(state.bubbleIndex || 0) || 0;
-        show(q[index % q.length]);
-      }else if(force){
-        show(q[index % q.length]);
-      }
-    }catch(e){}
-  }
-  window.addEventListener('load', function(){ refresh(true); setInterval(function(){ refresh(false); }, 2500); });
-  window.addEventListener('focus', function(){ refresh(true); });
-  document.addEventListener('visibilitychange', function(){ if(!document.hidden) refresh(true); });
-  setTimeout(function(){ refresh(true); }, 200);
-  setTimeout(function(){ refresh(true); }, 1000);
-})();
-</script>`;
-
 function injectDefaultAssets(html) {
   return String(html)
     .replace('<body>', '<body class="cloudDefaultAssets">')
     .replace('</head>', `${canvasFillCss}\n${setupPatchStyle}\n</head>`)
     .replace('<div id="setup" class="setup">', '<div id="setup" class="setup hidden">')
     .replace('<div id="miscPage" class="setupPage"><div class="tiny">', '<div id="miscPage" class="setupPage"><a class="assetAdminLink" href="/assets-admin/?v=from-cloud-setup">素材库后台</a><a class="assetAdminLink" href="/local-reset/?v=from-cloud-setup">撤下本地图</a><div class="tiny">')
-    .replace("function say(t){$('bubble').textContent=t}", "function say(t){bubbleOn=true;$('bubble').textContent=t;syncBubble()}")
+    .replace("function say(t){$('bubble').textContent=t}", "function say(t){if(window.__coffeeCornerBubbleClean&&window.__coffeeCornerBubbleClean.setQueue){window.__coffeeCornerBubbleClean.setQueue([t],0).show();return;}$('bubble').textContent=t}")
     .replace('<img id="homeOn" class="bg home-on">', `<img id="homeOn" class="bg home-on" src="${homeDay}">`)
     .replace('<img id="homeOff" class="bg home-off">', `<img id="homeOff" class="bg home-off" src="${homeNight}">`)
     .replace('<img id="gameBg" class="bg">', `<img id="gameBg" class="bg" src="${coffeeCorner}">`)
-    .replace('</body>', `${assetResolverLibScript}\n${defaultAssetScript}\n${dynamicAssetResolverScript}\n${cloudTextPatchScript}\n</body>`);
+    .replace('</body>', `${assetResolverLibScript}\n${defaultAssetScript}\n${dynamicAssetResolverScript}\n</body>`);
 }
 
 module.exports = async function handler(req, res) {
