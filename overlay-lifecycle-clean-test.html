@@ -22,30 +22,28 @@
 </div>
 <script>
 (function(){
- var VERSION='overlay-lifecycle-clean-test-20260617-2';
+ var VERSION='overlay-lifecycle-clean-test-20260617-3';
  var ASSET='https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/';
- var local={home:'/assets/rooms/home/day.jpg?v=overlay-life-test-20260617-2',coffeeCorner:'/assets/rooms/coffee-corner/morning-evening.jpg?v=overlay-life-test-20260617-2'};
- var api={home:'/api/room-asset?room=home&slot=background.day&t=overlay-life-test-20260617-2',coffeeCorner:'/api/room-asset?room=coffeeCorner&slot=background.main&t=overlay-life-test-20260617-2'};
  var scenes={
-  home:{id:'home',img:ASSET+'home/day.jpg?v=overlay-life-test-20260617-2',fallbacks:[api.home,local.home],overlays:['home.clockHandsOverlay']},
-  coffeeCorner:{id:'coffeeCorner',img:ASSET+'coffee-corner/morning-evening.jpg?v=overlay-life-test-20260617-2',fallbacks:[api.coffeeCorner,local.coffeeCorner],overlays:['coffeeCorner.steamOverlay','coffeeCorner.photoGlowOverlay']}
+  home:{id:'home',sources:['/assets/rooms/home/day.jpg?v=overlay-life-test-20260617-3','/api/room-asset?room=home&slot=background.day&t=overlay-life-test-20260617-3',ASSET+'home/day.jpg?v=overlay-life-test-20260617-3'],overlays:['home.clockHandsOverlay']},
+  coffeeCorner:{id:'coffeeCorner',sources:['/assets/rooms/coffee-corner/morning-evening.jpg?v=overlay-life-test-20260617-3','/api/room-asset?room=coffeeCorner&slot=background.main&t=overlay-life-test-20260617-3',ASSET+'coffee-corner/morning-evening.jpg?v=overlay-life-test-20260617-3'],overlays:['coffeeCorner.steamOverlay','coffeeCorner.photoGlowOverlay']}
  };
  var cards={
   'home.clockHandsOverlay':{scene:'home',el:'#clockOverlay',coord:{x:.2108,y:.3353,width:.312,aspectRatio:1}},
   'coffeeCorner.steamOverlay':{scene:'coffeeCorner',el:'#steamOverlay',coord:{x:.503,y:.313,width:.086,height:.132}},
   'coffeeCorner.photoGlowOverlay':{scene:'coffeeCorner',el:'#photoGlowOverlay',coord:{x:.280,y:.225,width:.440,height:.250}}
  };
- var current='coffeeCorner',gates={},events=[],fallbackIndex=0;
+ var current='coffeeCorner',gates={},events=[],runId=0;
  var img=document.getElementById('sceneImg'),stage=document.getElementById('stage'),debug=document.getElementById('debug');
  function log(x){events.unshift(new Date().toLocaleTimeString()+' '+x);events=events.slice(0,8);draw()}
  function resetGates(){gates={sceneResolved:false,imagePresent:false,imageDecoded:false,coverBoxReady:false,transitionSettled:false,manifestOwnershipResolved:false,placed:false,staleHidden:false,imageSource:''}}
- function setImageForScene(scene){fallbackIndex=0;img.onerror=function(){var next=scene.fallbacks&&scene.fallbacks[fallbackIndex++];if(next){gates.imageSource=next;img.src=next;draw()}};gates.imageSource=scene.img;img.src=scene.img}
  function coverBox(){var r=img.getBoundingClientRect(),nw=img.naturalWidth||r.width,nh=img.naturalHeight||r.height;if(!r.width||!r.height||!nw||!nh)return null;var br=r.width/r.height,ir=nw/nh,w=r.width,h=r.height,x=0,y=0;if(br>ir){h=r.width/ir;y=(r.height-h)/2}else{w=r.height*ir;x=(r.width-w)/2}return{left:r.left+x,top:r.top+y,width:w,height:h}}
  function hideAll(){Object.keys(cards).forEach(function(id){var el=document.querySelector(cards[id].el);if(el){el.dataset.active='0';el.removeAttribute('data-positioner-applied')}});gates.staleHidden=true}
  function placeCard(id,box){var c=cards[id],el=document.querySelector(c.el);if(!c||!el||c.scene!==current)return false;var p=stage.getBoundingClientRect(),pt=c.coord,w=box.width*pt.width,h=pt.height!=null?box.height*pt.height:w/(pt.aspectRatio||1);var cx=box.left+pt.x*box.width,cy=box.top+pt.y*box.height;el.style.left=(cx-p.left-w/2)+'px';el.style.top=(cy-p.top-h/2)+'px';el.style.width=w+'px';el.style.height=h+'px';el.dataset.active='1';el.dataset.positionerApplied='1';return true}
- async function waitImage(){gates.imagePresent=!!img;if(!img.complete){await new Promise(function(res){img.onload=res;var old=img.onerror;img.onerror=function(){if(old)old();res()}})}if(img.decode){try{await img.decode()}catch(e){}}gates.imageDecoded=img.naturalWidth>0;}
+ function loadOne(src){return new Promise(function(resolve){img.onload=function(){resolve(img.naturalWidth>0)};img.onerror=function(){resolve(false)};gates.imageSource=src;img.src=src;draw()})}
+ async function loadSceneImage(scene,token){gates.imagePresent=!!img;for(var i=0;i<scene.sources.length;i++){if(token!==runId)return false;var ok=await loadOne(scene.sources[i]);if(token!==runId)return false;if(ok){if(img.decode){try{await img.decode()}catch(e){}}gates.imageDecoded=img.naturalWidth>0;return gates.imageDecoded}}gates.imageDecoded=false;return false}
  function waitFrame(){return new Promise(function(res){requestAnimationFrame(function(){requestAnimationFrame(res)})})}
- async function reconcile(reason){var scene=scenes[current];resetGates();gates.sceneResolved=!!scene;hideAll();if(!scene){draw();return}setImageForScene(scene);gates.imagePresent=true;draw();await waitImage();await waitFrame();var box=coverBox();gates.coverBoxReady=!!box;await waitFrame();gates.transitionSettled=true;gates.manifestOwnershipResolved=scene.overlays.every(function(id){return cards[id]&&cards[id].scene===current});if(box&&gates.manifestOwnershipResolved){scene.overlays.forEach(function(id){placeCard(id,box)});gates.placed=true}log('reconcile.'+(reason||'manual')+'.'+current)}
+ async function reconcile(reason){var token=++runId,scene=scenes[current],sceneAtStart=current;resetGates();gates.sceneResolved=!!scene;hideAll();if(!scene){draw();return}gates.imagePresent=true;draw();await loadSceneImage(scene,token);if(token!==runId||sceneAtStart!==current)return;await waitFrame();var box=coverBox();gates.coverBoxReady=!!box;await waitFrame();if(token!==runId||sceneAtStart!==current)return;gates.transitionSettled=true;gates.manifestOwnershipResolved=scene.overlays.every(function(id){return cards[id]&&cards[id].scene===current});if(box&&gates.manifestOwnershipResolved){scene.overlays.forEach(function(id){placeCard(id,box)});gates.placed=true}log('reconcile.'+(reason||'manual')+'.'+current)}
  function switchScene(id){current=id;reconcile('switch')}
  function draw(){var active=Object.keys(cards).filter(function(id){var el=document.querySelector(cards[id].el);return el&&el.dataset.active==='1'}).join(', ')||'none';debug.innerHTML=[
   '<b>version</b>: <span class="mono">'+VERSION+'</span>',
