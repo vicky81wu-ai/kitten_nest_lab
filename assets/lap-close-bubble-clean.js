@@ -1,5 +1,5 @@
 (function(){
-  var VERSION = 'lap-close-bubble-clean-20260616-clean-1';
+  var VERSION = 'lap-close-bubble-clean-20260617-bottom-anchor-1';
   var qs = new URLSearchParams(location.search);
 
   function $(id){ return document.getElementById(id); }
@@ -45,7 +45,19 @@
   var stamp = '';
   var lastToggleAt = 0;
   var TOGGLE_GUARD_MS = 520;
-  var bubbleCard = { id:'coffeeCorner.lapCloseBubble.cleanRouter', selector:'#sceneRouterCleanLapBubble', coordinate:{ x:0.365, y:0.205, width:0.43 } };
+  var bubbleCard = {
+    id:'coffeeCorner.lapCloseBubble.cleanRouter',
+    selector:'#sceneRouterCleanLapBubble',
+    coordinate:{
+      x:0.332,
+      y:0.116,
+      width:0.43,
+      anchor:'bottomFromBaseline',
+      heightMode:'auto',
+      growthDirection:'upward',
+      baselineText:'坐稳，小猫。\nStop wriggling in my lap.'
+    }
+  };
   var bodyCard = { id:'coffeeCorner.lapBodyHot.cleanRouter', selector:'#sceneRouterCleanLapBodyHot', coordinate:{ x:0.60, y:0.695, width:0.42, height:0.22 } };
 
   function room(){ return $('gameRoom'); }
@@ -108,7 +120,7 @@
     var s = document.createElement('style');
     s.id = 'lapCloseBubbleCleanStyle';
     s.textContent = [
-      '#sceneRouterCleanLapBubble{display:none;position:absolute;z-index:66;padding:12px 14px;border-radius:20px;background:rgba(255,248,245,.88);border:1.4px solid rgba(255,255,255,.92);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);box-shadow:0 10px 28px rgba(83,38,51,.18),inset 0 0 0 1px rgba(120,50,70,.1);font-size:clamp(14px,3.45vw,19px);line-height:1.28;color:#733447;font-weight:540;text-shadow:0 1px rgba(255,255,255,.72);pointer-events:none}',
+      '#sceneRouterCleanLapBubble{display:none;position:absolute;z-index:66;padding:12px 14px;border-radius:20px;background:rgba(255,248,245,.88);border:1.4px solid rgba(255,255,255,.92);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);box-shadow:0 10px 28px rgba(83,38,51,.18),inset 0 0 0 1px rgba(120,50,70,.1);font-size:clamp(14px,3.45vw,19px);line-height:1.28;color:#733447;font-weight:540;text-shadow:0 1px rgba(255,255,255,.72);pointer-events:none;white-space:pre-line}',
       '#sceneRouterCleanLapBubble:after{content:"";position:absolute;left:24px;bottom:-9px;border-width:10px 7px 0 7px;border-style:solid;border-color:rgba(255,248,245,.88) transparent transparent transparent}',
       'body.sceneRouterCleanLap #sceneRouterCleanLapBubble[data-visible="1"][data-has-text="1"]{display:block}',
       '#sceneRouterCleanLapBodyHot{display:none;position:absolute;z-index:67;border:0;padding:0;background:transparent;border-radius:24px;color:transparent;font-size:0;touch-action:manipulation;pointer-events:none}',
@@ -159,6 +171,26 @@
     return hot;
   }
 
+  function measureBubbleHeight(el, value){
+    var oldText = el.textContent;
+    var oldDisplay = el.style.getPropertyValue('display');
+    var oldVisibility = el.style.getPropertyValue('visibility');
+    var oldHeight = el.style.getPropertyValue('height');
+    el.textContent = String(value || '');
+    el.style.setProperty('display', 'block', 'important');
+    el.style.setProperty('visibility', 'hidden', 'important');
+    el.style.setProperty('height', 'auto', 'important');
+    var height = el.offsetHeight || el.getBoundingClientRect().height || 0;
+    el.textContent = oldText;
+    if(oldDisplay) el.style.setProperty('display', oldDisplay, 'important');
+    else el.style.removeProperty('display');
+    if(oldVisibility) el.style.setProperty('visibility', oldVisibility, 'important');
+    else el.style.removeProperty('visibility');
+    if(oldHeight) el.style.setProperty('height', oldHeight, 'important');
+    else el.style.removeProperty('height');
+    return height;
+  }
+
   function placeBubble(){
     var el = ensureBubble();
     var b = box();
@@ -166,11 +198,16 @@
     var pr = (el.offsetParent || document.body).getBoundingClientRect();
     var c = bubbleCard.coordinate;
     var w = b.width * c.width;
+    var current = currentText();
     el.style.setProperty('left', (b.left + b.width * c.x - pr.left) + 'px', 'important');
-    el.style.setProperty('top', (b.top + b.height * c.y - pr.top) + 'px', 'important');
     el.style.setProperty('width', w + 'px', 'important');
     el.style.setProperty('max-width', w + 'px', 'important');
     el.style.setProperty('height', 'auto', 'important');
+    var baselineHeight = measureBubbleHeight(el, c.baselineText || current);
+    var currentHeight = measureBubbleHeight(el, current);
+    var fixedBottom = b.top + b.height * c.y + baselineHeight;
+    el.style.setProperty('top', (fixedBottom - currentHeight - pr.top) + 'px', 'important');
+    el.textContent = current;
   }
 
   function placeBodyHot(){
