@@ -1,5 +1,5 @@
 (function(){
-  var VERSION = 'scene-text-port-clean-controller-20260617-test-1';
+  var VERSION = 'scene-text-port-clean-controller-20260617-test-2';
 
   function cleanList(value){
     return Array.isArray(value)
@@ -69,6 +69,15 @@
       return queue[((index % queue.length) + queue.length) % queue.length] || '';
     }
 
+    function prepareAttrs(){
+      textEl = textEl || qs(root, config.textPort.selector);
+      if(!textEl) return false;
+      textEl.setAttribute('data-owner', config.owner || 'sceneTextPortCleanController');
+      textEl.setAttribute('data-text-port-id', config.id || 'textPort.clean');
+      if(config.canonicalTag) textEl.setAttribute('data-canonical-tag', config.canonicalTag);
+      return true;
+    }
+
     function placeText(){
       textEl = textEl || qs(root, config.textPort.selector);
       imageEl = imageEl || qs(root, config.imageSelector || '#gameBg');
@@ -131,10 +140,8 @@
     function render(){
       textEl = textEl || qs(root, config.textPort.selector);
       if(!textEl) return false;
+      prepareAttrs();
       textEl.textContent = current();
-      textEl.setAttribute('data-owner', config.owner || 'sceneTextPortCleanController');
-      textEl.setAttribute('data-text-port-id', config.id || 'textPort.clean');
-      if(config.canonicalTag) textEl.setAttribute('data-canonical-tag', config.canonicalTag);
       textEl.classList.toggle(config.hiddenClass || 'hidden', !visible);
       placeText();
       placeTrigger();
@@ -231,8 +238,19 @@
     };
 
     bind();
-    render();
-    if(config.autoLoadState !== false) loadState();
+    prepareAttrs();
+    if(config.deferInitialRenderUntilState && config.autoLoadState !== false){
+      if(textEl){
+        textEl.textContent = '';
+        textEl.classList.add(config.hiddenClass || 'hidden');
+      }
+      placeTrigger();
+      if(onRender) onRender(api);
+      loadState();
+    }else{
+      render();
+      if(config.autoLoadState !== false) loadState();
+    }
     return api;
   }
 
