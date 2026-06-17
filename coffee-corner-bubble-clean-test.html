@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>coffeeCornerBubble clean architecture test</title>
+<style>
+  :root{--bg:#21151b;--panel:rgba(255,248,245,.9);--ink:#703044;--muted:#8a5b6a;--line:rgba(255,255,255,.55)}
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;background:linear-gradient(180deg,#261620,#120b10);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC",sans-serif;color:#fff;overflow-x:hidden}
+  .wrap{width:min(430px,100vw);margin:0 auto;padding:14px 12px 28px}
+  .top{padding:12px 12px 10px;border-radius:18px;background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);margin-bottom:12px}
+  h1{font-size:15px;margin:0 0 6px;font-weight:800;letter-spacing:.01em}
+  .sub{font-size:12px;line-height:1.45;color:rgba(255,255,255,.72)}
+  .stage{position:relative;width:100%;aspect-ratio:9/16;border-radius:28px;overflow:hidden;background:#1c1016;box-shadow:0 18px 55px rgba(0,0,0,.34),inset 0 0 0 1px rgba(255,255,255,.12)}
+  #gameBg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+  .veil{position:absolute;inset:0;background:radial-gradient(circle at 65% 24%,rgba(255,235,210,.12),transparent 22%),linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.12));pointer-events:none}
+  #coffeeCornerBubbleClean{display:block;position:absolute;z-index:5;padding:12px 14px;border-radius:20px;background:rgba(255,248,245,.88);border:1.4px solid rgba(255,255,255,.92);box-shadow:0 10px 28px rgba(83,38,51,.18),inset 0 0 0 1px rgba(120,50,70,.10);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);font-size:clamp(14px,3.45vw,19px);line-height:1.28;color:#733447;font-weight:540;text-shadow:0 1px rgba(255,255,255,.72);white-space:pre-line;pointer-events:auto;touch-action:manipulation;transition:opacity .16s ease,transform .16s ease}
+  #coffeeCornerBubbleClean:after{content:"";position:absolute;right:24px;bottom:-9px;border-width:10px 7px 0 7px;border-style:solid;border-color:rgba(255,248,245,.88) transparent transparent transparent}
+  #coffeeCornerBubbleClean[data-visible="0"]{opacity:0;transform:translateY(3px) scale(.985);pointer-events:none}
+  #coffeeCornerTattooCleanHot{position:absolute;z-index:6;border:0;border-radius:999px;background:rgba(255,80,130,.05);outline:1.5px solid rgba(255,80,130,.25);touch-action:manipulation;color:transparent;font-size:0}
+  #coffeeCornerTattooCleanHot:active{background:rgba(255,80,130,.16)}
+  .mark{position:absolute;z-index:4;right:17%;top:29%;font-weight:900;font-size:20px;letter-spacing:.02em;color:rgba(20,12,16,.8);text-shadow:0 1px rgba(255,255,255,.35);transform:rotate(-8deg);pointer-events:none}
+  .debug{margin-top:12px;padding:12px;border-radius:18px;background:rgba(255,255,255,.09);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);font-size:12px;line-height:1.5;color:rgba(255,255,255,.78)}
+  .debug b{color:#fff}.ok{color:#b8ffd8}.warn{color:#ffd59f}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-all}
+  .btns{display:flex;gap:8px;margin-top:10px}.btns button{flex:1;border:0;border-radius:14px;padding:10px 8px;background:rgba(255,255,255,.88);color:#733447;font-weight:800}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <h1>coffeeCornerBubble clean architecture test</h1>
+    <div class="sub">独立测试页。只测 clean textPort owner，不加载 /cloud wrapper，不加载 app-q bridge，不加载 cloudTextPatch，不写 state。</div>
+  </div>
+  <div id="stage" class="stage">
+    <img id="gameBg" alt="coffee corner" src="/assets/rooms/coffee-corner/morning-evening.jpg?v=clean-bubble-test-20260617">
+    <div class="veil"></div>
+    <div class="mark">19.8</div>
+    <div id="coffeeCornerBubbleClean" data-visible="1"></div>
+    <button id="coffeeCornerTattooCleanHot" type="button" aria-label="19.8 bubble toggle"></button>
+  </div>
+  <div class="debug" id="debug"></div>
+  <div class="btns">
+    <button id="resetBtn" type="button">Reset visible</button>
+    <button id="longBtn" type="button">Use long text</button>
+  </div>
+</div>
+<script>
+(function(){
+  var VERSION = 'coffee-corner-bubble-clean-test-20260617-1';
+  var bubbleCard = {
+    id:'coffeeCornerBubble.cleanTest',
+    productionObjectId:'coffeeCorner.bubble',
+    selector:'#coffeeCornerBubbleClean',
+    canonicalTag:'[coffeeCornerBubble]',
+    owner:'coffeeCornerBubbleCleanController',
+    coordinate:{ x:0.905, y:0.23, width:0.48, anchor:'bottomRight', heightMode:'auto', growthDirection:'upward' }
+  };
+  var tattooCard = {
+    id:'coffeeCornerTattooCleanHot.cleanTest',
+    productionObjectId:'coffeeCorner.tattoo19_8',
+    selector:'#coffeeCornerTattooCleanHot',
+    owner:'coffeeCornerBubbleCleanController',
+    coordinate:{ x:0.73, y:0.345, width:0.15, height:0.08 }
+  };
+  var state = null;
+  var queue = ['come here, kitten.','coffee is warm. sit.'];
+  var index = 0;
+  var visible = true;
+  var lastPointerAt = 0;
+  var events = [];
+
+  function $(id){ return document.getElementById(id); }
+  function log(name){ events.unshift(new Date().toLocaleTimeString() + ' ' + name); events = events.slice(0,6); renderDebug(); }
+  function cleanList(value){ return Array.isArray(value) ? value.map(function(x){ return String(x||'').trim(); }).filter(Boolean) : []; }
+  function readQueue(s){
+    var canonical = cleanList(s && s.coffeeCornerBubbles);
+    if(canonical.length) return {source:'coffeeCornerBubbles',items:canonical,index:Number(s.coffeeCornerBubbleIndex||0)||0};
+    if(s && s.coffeeCornerBubble) return {source:'coffeeCornerBubble',items:[String(s.coffeeCornerBubble).trim()].filter(Boolean),index:Number(s.coffeeCornerBubbleIndex||0)||0};
+    var legacy = cleanList(s && s.alexBubbles);
+    if(legacy.length) return {source:'alexBubbles fallback',items:legacy,index:Number(s.bubbleIndex||0)||0};
+    if(s && s.alexBubble) return {source:'alexBubble fallback',items:[String(s.alexBubble).trim()].filter(Boolean),index:Number(s.bubbleIndex||0)||0};
+    return {source:'test defaults',items:queue,index:0};
+  }
+  function current(){ return queue[((index % queue.length)+queue.length)%queue.length] || ''; }
+  function coverBox(){
+    var img = $('gameBg');
+    var r = img.getBoundingClientRect();
+    var nw = img.naturalWidth || r.width;
+    var nh = img.naturalHeight || r.height;
+    if(!r.width || !r.height || !nw || !nh) return null;
+    var br = r.width / r.height, ir = nw / nh;
+    var w = r.width, h = r.height, x = 0, y = 0;
+    if(br > ir){ h = r.width / ir; y = (r.height - h) / 2; }
+    else{ w = r.height * ir; x = (r.width - w) / 2; }
+    return {left:r.left+x,top:r.top+y,width:w,height:h};
+  }
+  function placeBubble(){
+    var el = $('coffeeCornerBubbleClean');
+    var b = coverBox();
+    if(!el || !b) return;
+    var p = $('stage').getBoundingClientRect();
+    var c = bubbleCard.coordinate;
+    var w = b.width * c.width;
+    el.style.width = w + 'px';
+    el.style.maxWidth = w + 'px';
+    el.style.height = 'auto';
+    var right = b.left + b.width * c.x;
+    var bottom = b.top + b.height * c.y;
+    var h = el.offsetHeight || el.getBoundingClientRect().height || 0;
+    el.style.left = (right - w - p.left) + 'px';
+    el.style.top = (bottom - h - p.top) + 'px';
+  }
+  function placeTattoo(){
+    var hot = $('coffeeCornerTattooCleanHot');
+    var b = coverBox();
+    if(!hot || !b) return;
+    var p = $('stage').getBoundingClientRect();
+    var c = tattooCard.coordinate;
+    var w = b.width * c.width;
+    var h = b.height * c.height;
+    var cx = b.left + b.width * c.x;
+    var cy = b.top + b.height * c.y;
+    hot.style.left = (cx - w/2 - p.left) + 'px';
+    hot.style.top = (cy - h/2 - p.top) + 'px';
+    hot.style.width = w + 'px';
+    hot.style.height = h + 'px';
+  }
+  function render(){
+    var el = $('coffeeCornerBubbleClean');
+    el.textContent = current();
+    el.setAttribute('data-visible', visible ? '1' : '0');
+    placeBubble();
+    placeTattoo();
+    renderDebug();
+  }
+  function hide(){ visible = false; render(); log('bubble.hide'); }
+  function showNext(){ if(queue.length > 1) index = (index + 1) % queue.length; visible = true; render(); log('tattoo.showNext'); }
+  function tattooToggle(){ visible ? hide() : showNext(); }
+  function onPointer(e, action){
+    e.preventDefault();
+    e.stopPropagation();
+    var now = Date.now();
+    if(now - lastPointerAt < 260) return;
+    lastPointerAt = now;
+    action();
+  }
+  function renderDebug(){
+    var source = readQueue(state).source;
+    $('debug').innerHTML = [
+      '<b>status</b>: <span class="ok">isolated static test route</span>',
+      '<b>version</b>: <span class="mono">' + VERSION + '</span>',
+      '<b>canonical tag</b>: <span class="mono">' + bubbleCard.canonicalTag + '</span>',
+      '<b>single interaction owner</b>: <span class="mono">' + bubbleCard.owner + '</span>',
+      '<b>not loaded here</b>: <span class="mono">app-q bridge / cloudTextPatch / /cloud wrapper</span>',
+      '<b>state source</b>: <span class="mono">' + source + '</span>',
+      '<b>queue size</b>: ' + queue.length + ' / <b>visible</b>: ' + (visible ? 'yes' : 'no') + ' / <b>index</b>: ' + index,
+      '<b>expected cycle</b>: bubble tap hides; 19.8 tap hides when visible, shows next when hidden.',
+      '<b>events</b>: <span class="mono">' + (events.join(' | ') || 'none') + '</span>'
+    ].join('<br>');
+  }
+  async function loadState(){
+    try{
+      var res = await fetch('/api/state?t=' + Date.now(), {cache:'no-store'});
+      if(!res.ok) throw new Error('state http ' + res.status);
+      state = await res.json();
+      var parsed = readQueue(state);
+      queue = parsed.items.length ? parsed.items : queue;
+      index = parsed.index || 0;
+      visible = true;
+      log('state.loaded.' + parsed.source);
+      render();
+    }catch(e){ log('state.fallback'); render(); }
+  }
+  $('coffeeCornerBubbleClean').addEventListener('pointerup', function(e){ onPointer(e, hide); }, true);
+  $('coffeeCornerTattooCleanHot').addEventListener('pointerup', function(e){ onPointer(e, tattooToggle); }, true);
+  $('resetBtn').addEventListener('click', function(){ visible = true; index = 0; render(); log('reset.visible'); });
+  $('longBtn').addEventListener('click', function(){ queue = ['This is a longer coffeeCornerBubble clean text line.\nIt should stay under one clean owner, grow upward by placement math, and not get reopened by another controller.']; index = 0; visible = true; render(); log('long.text'); });
+  window.addEventListener('resize', render);
+  window.addEventListener('orientationchange', function(){ setTimeout(render, 120); });
+  $('gameBg').addEventListener('load', function(){ render(); });
+  if($('gameBg').complete) render();
+  loadState();
+})();
+</script>
+</body>
+</html>
