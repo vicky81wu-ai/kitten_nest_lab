@@ -8,7 +8,7 @@ const overlayLockTestScript = '<script src="/assets/overlay-lock-test.js?v=20260
 const lapCloseBubbleCleanScript = '<script src="/assets/lap-close-bubble-clean.js?v=20260616-clean-1"></script>';
 const sceneManifestIsolationScript = '<script src="/assets/scene-manifest-isolation.js?v=20260616-promoted-1"></script>';
 const coffeeCornerVariantScript = '<script src="/assets/coffee-corner-variant.js?v=20260613-enter-canvas-verified-1"></script>';
-const bubbleControllerScript = '<script src="/assets/bubble-controller.js?v=20260616-clean-1"></script>';
+const sceneTextPortCleanScript = '<script src="/assets/scene-text-port-clean-controller.js?v=20260617-test-2"></script>';
 const hubbyNoteControllerScript = '<script src="/assets/hubby-note-controller.js?v=20260614-no-consolehot-1"></script>';
 const setupToggleScript = '<script src="/assets/setup-toggle.js?v=20260613-touchfix-1"></script>';
 const consoleRestoreScript = '<script src="/assets/console-hot-restore.js?v=20260610-1"></script>';
@@ -52,6 +52,23 @@ const sceneRouterCleanBootScript = `
 const bubbleBootScript = `
 <script>
 (function(){
+  function attachCoffeeCornerBubbleClean(){
+    if(!window.KittenNestSceneTextPortClean || window.__coffeeCornerBubbleClean) return;
+    window.__coffeeCornerBubbleClean = window.KittenNestSceneTextPortClean.create({
+      id:'coffeeCorner.bubble',
+      owner:'sceneTextPortCleanController',
+      canonicalTag:'[coffeeCornerBubble]',
+      rootSelector:'#gameRoom',
+      containerSelector:'#gameRoom',
+      imageSelector:'#gameBg',
+      textPort:{ selector:'#bubble', coordinate:{ x:0.905, y:0.23, width:0.48, anchor:'bottomRight', heightMode:'auto', growthDirection:'upward' } },
+      trigger:{ selector:'.tattooHot', coordinate:{ x:0.73, y:0.345, width:0.15, height:0.08 } },
+      stateFields:{ single:'coffeeCornerBubble', queue:'coffeeCornerBubbles', index:'coffeeCornerBubbleIndex' },
+      fallbackStateFields:{ single:'alexBubble', queue:'alexBubbles', index:'bubbleIndex' },
+      deferInitialRenderUntilState:true,
+      initialQueue:[]
+    });
+  }
   function boot(){
     if(window.KittenNestHotspots && window.KittenNestHotspots.start && !window.__kittenNestHotspotsStarted){
       window.__kittenNestHotspotsStarted = true;
@@ -63,17 +80,16 @@ const bubbleBootScript = `
     if(window.KittenNestCoffeeCornerVariant && window.KittenNestCoffeeCornerVariant.boot){
       window.KittenNestCoffeeCornerVariant.boot();
     }
-    if(!window.KittenNestState || !window.KittenNestBubble) return;
-    if(!window.__kittenNestBubbleAttached){
-      window.__kittenNestBubbleAttached = window.KittenNestBubble.attach(window.KittenNestState);
-    }
-    if(window.KittenNestHubbyNote && !window.__kittenNestHubbyNoteAttached){
+    attachCoffeeCornerBubbleClean();
+    if(window.KittenNestHubbyNote && window.KittenNestState && !window.__kittenNestHubbyNoteAttached){
       window.__kittenNestHubbyNoteAttached = window.KittenNestHubbyNote.attach(window.KittenNestState);
     }
     if(window.KittenNestHubbyNote && window.KittenNestHubbyNote.renderAuth){
       window.KittenNestHubbyNote.renderAuth();
     }
-    window.KittenNestState.refresh('bubble').catch(function(){});
+    if(window.KittenNestState && window.KittenNestState.refresh){
+      window.KittenNestState.refresh('bubble').catch(function(){});
+    }
   }
   window.addEventListener('load', boot);
   window.addEventListener('focus', boot);
@@ -104,7 +120,7 @@ function injectBubbleController(html, options = {}) {
   ];
   if (!clean) scripts.push(coffeeCornerVariantScript);
   scripts.push(
-    bubbleControllerScript,
+    sceneTextPortCleanScript,
     hubbyNoteControllerScript,
     setupToggleScript,
     bubbleBootScript
