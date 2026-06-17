@@ -2,7 +2,7 @@
 
 Updated: 2026-06-17
 
-Status: current tested direction, not promoted into `/cloud` runtime.
+Status: current global pattern. `coffeeCornerBubble` is now promoted into `/cloud`; future scene text surfaces should follow this framework unless Vicky explicitly approves a different owner plan.
 
 ## Purpose
 
@@ -17,30 +17,24 @@ scene-scoped textPort
 + no stale first-paint fallback
 ```
 
-This pattern is now being generalized for future bubbles, panels, notes, captions, hints, and other text surfaces in the Kitten Nest world.
+This pattern is now the accepted global direction for future bubbles, panels, notes, captions, hints, and other text surfaces in the Kitten Nest world.
 
-## Current tested files
+## Current framework files
 
 ```text
 assets/scene-text-port-clean-controller.js
 ```
 
-Reusable test-stage controller. It is not loaded by `/cloud`.
+Reusable clean scene textPort controller. It has been independently tested and then promoted for `coffeeCornerBubble` in `/cloud`.
 
 ```text
 scene-text-port-clean-framework-test.html
-```
-
-Independent test route for the reusable framework.
-
-Earlier isolated test routes:
-
-```text
 coffee-corner-bubble-clean-test.html
 coffee-corner-bubble-clean-runtime-test.html
+cloud-clean-text-port-promotion-test.html
 ```
 
-These proved the clean owner pattern for `coffeeCornerBubble`, first with isolated selectors and then with production selector names.
+Independent routes that proved the clean owner pattern before promotion.
 
 ## Verified independent test URLs
 
@@ -48,9 +42,23 @@ These proved the clean owner pattern for `coffeeCornerBubble`, first with isolat
 https://kitten-nest-lab.vercel.app/coffee-corner-bubble-clean-test.html
 https://kitten-nest-lab.vercel.app/coffee-corner-bubble-clean-runtime-test.html
 https://kitten-nest-lab.vercel.app/scene-text-port-clean-framework-test.html
+https://kitten-nest-lab.vercel.app/cloud-clean-text-port-promotion-test.html
 ```
 
-Vicky verified the first two coffeeCornerBubble clean tests and verified the generic framework test after the first-paint fallback flash was fixed.
+Vicky verified the coffeeCornerBubble clean tests, the generic framework test after the first-paint fallback flash was fixed, and the final promotion test with old owners absent.
+
+## First promoted production use
+
+```text
+coffeeCorner.bubble
+selector: #bubble
+trigger: .tattooHot
+canonicalTag: [coffeeCornerBubble]
+owner: sceneTextPortCleanController
+runtime route: /cloud
+```
+
+`coffeeCornerBubble` promotion retired the old app-q bridge / cloudTextPatch / bubbleController attachment as interaction owners for `#bubble` and `.tattooHot`.
 
 ## Core rules
 
@@ -114,7 +122,7 @@ Correct split:
 
 ```text
 sceneRouterClean = navigation only
-sceneTextPortCleanController = textPort interaction + configured placement for this test phase
+sceneTextPortCleanController = textPort interaction + configured placement for this phase
 future overlay lifecycle coordinator = placement readiness and scene-level overlay scheduling only
 ```
 
@@ -147,7 +155,7 @@ This rule prevents flashes like `come here, kitten.` before the current coffeeCo
 
 ### 6. State-backed surfaces should prefer canonical fields
 
-`coffeeCornerBubble` should read:
+`coffeeCornerBubble` reads:
 
 ```text
 coffeeCornerBubble
@@ -193,24 +201,9 @@ deferInitialRenderUntilState
 onRender diagnostics
 ```
 
-## Current limitations
-
-This framework is not promoted into `/cloud`.
-
-It does not yet replace:
-
-```text
-api/app-q.js bridge
-app-assets cloudTextPatch
-index.html native bubbleOn / say
-assets/bubble-controller.js production behavior
-```
-
-It must not be wired into `/cloud` until an explicit promotion plan is written and independently tested.
-
 ## Promotion requirements
 
-Before any promotion into `/cloud`, write a staged plan naming:
+Before any future promotion into `/cloud`, write a staged plan naming:
 
 ```text
 exact files to change
@@ -240,19 +233,6 @@ independent test route or test branch
 Vicky verification
 then explicit merge/promote into /cloud
 ```
-
-## Rollback for current test-stage work
-
-Current test-stage work can be removed without touching `/cloud` by deleting:
-
-```text
-assets/scene-text-port-clean-controller.js
-scene-text-port-clean-framework-test.html
-coffee-corner-bubble-clean-test.html
-coffee-corner-bubble-clean-runtime-test.html
-```
-
-Do not delete these during normal cleanup unless they are replaced by a newer accepted test route or promoted implementation.
 
 ## Accepted direction
 
