@@ -42,10 +42,11 @@ function hydrateHtml(html, state) {
 const bridge = `
 <script>
 (function(){
-  window.__kittenNestBridge = 'cloud-bridge-q4-bubble-guard';
+  window.__kittenNestBridge = 'cloud-bridge-q5-touch-click-guard';
 
   const STATE_URL = '/api/state';
   const ADVANCE_GUARD_MS = 720;
+  const TOUCH_CLICK_GUARD_MS = 1200;
   let cloudState = null;
   let queueIndex = 0;
   let lastStateStamp = '';
@@ -64,6 +65,10 @@ const bridge = `
 
   function queue(){
     if(!cloudState) return [];
+    if(Array.isArray(cloudState.coffeeCornerBubbles) && cloudState.coffeeCornerBubbles.length){
+      return cloudState.coffeeCornerBubbles.map(function(x){ return String(x || '').trim(); }).filter(Boolean);
+    }
+    if(cloudState.coffeeCornerBubble) return [String(cloudState.coffeeCornerBubble).trim()].filter(Boolean);
     if(Array.isArray(cloudState.alexBubbles)){
       return cloudState.alexBubbles.map(function(x){ return String(x || '').trim(); }).filter(Boolean);
     }
@@ -91,10 +96,14 @@ const bridge = `
 
   function syncQueueIndex(){
     if(!cloudState) return;
-    const stamp = String(cloudState.updatedAt || '') + '|' + JSON.stringify(cloudState.alexBubbles || cloudState.alexBubble || '');
+    const q = queue();
+    const canonicalIndex = Object.prototype.hasOwnProperty.call(cloudState, 'coffeeCornerBubbleIndex') ? cloudState.coffeeCornerBubbleIndex : '';
+    const legacyIndex = Object.prototype.hasOwnProperty.call(cloudState, 'bubbleIndex') ? cloudState.bubbleIndex : '';
+    const stamp = String(cloudState.updatedAt || '') + '|' + String(canonicalIndex) + '|' + String(legacyIndex) + '|' + JSON.stringify(q);
     if(stamp !== lastStateStamp){
       lastStateStamp = stamp;
-      queueIndex = Number(cloudState.bubbleIndex || 0) || 0;
+      if(Object.prototype.hasOwnProperty.call(cloudState, 'coffeeCornerBubbleIndex')) queueIndex = Number(cloudState.coffeeCornerBubbleIndex || 0) || 0;
+      else queueIndex = Number(cloudState.bubbleIndex || 0) || 0;
     }
   }
 
@@ -178,7 +187,7 @@ const bridge = `
   function capture(e){
     const kind = hitKind(e);
     if(!kind) return;
-    if(e.type === 'click' && Date.now() - lastTouchAt < 450){ stop(e); return; }
+    if(e.type === 'click' && Date.now() - lastTouchAt < TOUCH_CLICK_GUARD_MS){ stop(e); return; }
     if(e.type === 'touchend') lastTouchAt = Date.now();
 
     const b = bubbleEl();
