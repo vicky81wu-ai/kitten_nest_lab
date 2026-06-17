@@ -1,0 +1,101 @@
+{
+  "version": "0.1.0",
+  "status": "supplemental-current-identity-card",
+  "note": "Supplemental identity card for the coffeeCornerBubble clean owner promotion. This records the accepted runtime owner change without reshaping data/object-registry.v1.json in the same high-risk runtime step.",
+  "objects": [
+    {
+      "id": "coffeeCorner.bubble",
+      "roomId": "coffeeCorner",
+      "kind": "textPort",
+      "selector": "#bubble",
+      "owner": "sceneTextPortCleanController",
+      "previousOwner": "bubbleController",
+      "role": "rotatingBubbleDisplay",
+      "action": "showCoffeeCornerBubbleQueue",
+      "exclusive": true,
+      "runtimeStatus": "active",
+      "coordinateStatus": "baseImageLocked",
+      "versionStatus": "canonicalCurrent",
+      "changePolicy": "mutableWithVersion",
+      "imageId": "gameBg",
+      "roomElementId": "gameRoom",
+      "approvedCoordinate": {
+        "x": 0.905,
+        "y": 0.23,
+        "width": 0.48,
+        "anchor": "bottomRight",
+        "heightMode": "auto",
+        "growthDirection": "upward"
+      },
+      "textClass": "Bubble",
+      "implementationType": "sceneTextPortClean",
+      "implementationFile": "assets/scene-text-port-clean-controller.js",
+      "stateFields": [
+        "coffeeCornerBubble",
+        "coffeeCornerBubbles",
+        "coffeeCornerBubbleIndex"
+      ],
+      "migrationFallbackStateFields": [
+        "alexBubble",
+        "alexBubbles",
+        "bubbleIndex"
+      ],
+      "directorRef": "director.textPorts.coffeeCornerBubble",
+      "directorTags": [
+        "coffeeCornerBubble",
+        "textPort",
+        "bubble",
+        "singleOwner",
+        "baseImageCoordinate",
+        "noStaleFirstPaintFallback"
+      ],
+      "runtimeNote": "coffeeCornerBubble is promoted to the clean scene textPort owner. app-q bridge and cloudTextPatch no longer own #bubble; production /cloud boot attaches sceneTextPortCleanController to #bubble and .tattooHot.",
+      "protected": true
+    },
+    {
+      "id": "coffeeCorner.tattoo19_8",
+      "roomId": "coffeeCorner",
+      "kind": "hotspot",
+      "selector": ".tattooHot",
+      "owner": "sceneTextPortCleanController",
+      "previousOwner": "bubbleController",
+      "role": "bubbleQueueTriggerHotspot",
+      "action": "toggleOrAdvanceCoffeeCornerBubble",
+      "exclusive": true,
+      "runtimeStatus": "active",
+      "coordinateStatus": "baseImageLocked",
+      "versionStatus": "canonicalCurrent",
+      "changePolicy": "mutableWithVersion",
+      "imageId": "gameBg",
+      "roomElementId": "gameRoom",
+      "approvedCoordinate": {
+        "x": 0.73,
+        "y": 0.345,
+        "width": 0.15,
+        "height": 0.08
+      },
+      "textClass": "Bubble",
+      "implementationType": "sceneTextPortCleanTrigger",
+      "implementationFile": "assets/scene-text-port-clean-controller.js + assets/hotspot-positioner.js",
+      "directorRef": "director.hotspots.tattoo19_8",
+      "directorTags": [
+        "coffeeCornerBubble",
+        "flirt",
+        "relationshipAnchor",
+        "leftShoulderTattoo",
+        "baseImageCoordinate",
+        "singleOwnerTrigger"
+      ],
+      "runtimeNote": "19.8 remains a relationship-anchor hotspot but its bubble interaction is now owned by sceneTextPortCleanController, not app-q bridge, cloudTextPatch, or bubbleController.",
+      "protected": true
+    }
+  ],
+  "followup": {
+    "required": "Fold this supplemental card into data/object-registry.v1.json in a dedicated registry-only cleanup step.",
+    "doNotCombineWith": [
+      "runtime promotion",
+      "state cleanup",
+      "write tag cleanup"
+    ]
+  }
+}
