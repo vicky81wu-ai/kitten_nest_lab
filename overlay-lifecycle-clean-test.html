@@ -22,11 +22,11 @@
 </div>
 <script>
 (function(){
- var VERSION='overlay-lifecycle-clean-test-20260617-3';
+ var VERSION='overlay-lifecycle-clean-test-20260617-4';
  var ASSET='https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/';
  var scenes={
-  home:{id:'home',sources:['/assets/rooms/home/day.jpg?v=overlay-life-test-20260617-3','/api/room-asset?room=home&slot=background.day&t=overlay-life-test-20260617-3',ASSET+'home/day.jpg?v=overlay-life-test-20260617-3'],overlays:['home.clockHandsOverlay']},
-  coffeeCorner:{id:'coffeeCorner',sources:['/assets/rooms/coffee-corner/morning-evening.jpg?v=overlay-life-test-20260617-3','/api/room-asset?room=coffeeCorner&slot=background.main&t=overlay-life-test-20260617-3',ASSET+'coffee-corner/morning-evening.jpg?v=overlay-life-test-20260617-3'],overlays:['coffeeCorner.steamOverlay','coffeeCorner.photoGlowOverlay']}
+  home:{id:'home',sources:[ASSET+'home/day.jpg?v=overlay-life-test-20260617-4','/api/room-asset?room=home&slot=background.day&t=overlay-life-test-20260617-4','/assets/rooms/home/day.jpg?v=overlay-life-test-20260617-4'],overlays:['home.clockHandsOverlay']},
+  coffeeCorner:{id:'coffeeCorner',sources:[ASSET+'coffee-corner/morning-evening.jpg?v=overlay-life-test-20260617-4','/api/room-asset?room=coffeeCorner&slot=background.main&t=overlay-life-test-20260617-4','/assets/rooms/coffee-corner/morning-evening.jpg?v=overlay-life-test-20260617-4'],overlays:['coffeeCorner.steamOverlay','coffeeCorner.photoGlowOverlay']}
  };
  var cards={
   'home.clockHandsOverlay':{scene:'home',el:'#clockOverlay',coord:{x:.2108,y:.3353,width:.312,aspectRatio:1}},
