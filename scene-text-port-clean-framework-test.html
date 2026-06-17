@@ -30,7 +30,7 @@
   <div id="gameRoom" class="room active" data-scene="coffeeCorner">
     <img id="gameBg" class="bg" alt="coffee corner" src="/assets/rooms/coffee-corner/morning-evening.jpg?v=text-port-framework-test-20260617">
     <div class="shade"></div>
-    <div id="bubble" class="bubble"></div>
+    <div id="bubble" class="bubble hidden"></div>
     <button class="hot tattooHot" type="button" aria-label="19.8 bubble hotspot"></button>
     <div id="frameworkPanelText" class="panelText hidden"></div>
     <button id="frameworkPanelHot" class="panelHot" type="button" aria-label="panel text hotspot"></button>
@@ -42,7 +42,7 @@
     <button id="panelBtn" type="button">Panel next</button>
   </div>
 </div>
-<script src="/assets/scene-text-port-clean-controller.js?v=20260617-test-1"></script>
+<script src="/assets/scene-text-port-clean-controller.js?v=20260617-test-2"></script>
 <script>
 (function(){
   var bubbleApi = null;
@@ -76,6 +76,7 @@
       stateFields:{ single:'coffeeCornerBubble', queue:'coffeeCornerBubbles', index:'coffeeCornerBubbleIndex' },
       fallbackStateFields:{ single:'alexBubble', queue:'alexBubbles', index:'bubbleIndex' },
       initialQueue:['come here, kitten.','coffee is warm. sit.'],
+      deferInitialRenderUntilState:true,
       onRender:renderDebug
     });
     panelApi = window.KittenNestSceneTextPortClean.create({
