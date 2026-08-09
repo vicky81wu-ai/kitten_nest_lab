@@ -1,6 +1,6 @@
 {
   "schemaVersion": "nest-manifest.v2",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "status": "isolated-preview",
   "promoted": false,
   "route": "/v2/index.html",
@@ -112,17 +112,29 @@
     },
     "home.day": {
       "sources": [
-        { "url": "/assets/rooms/home/day.jpg", "role": "staticCanonical" }
+        {
+          "url": "https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/home/day.jpg",
+          "role": "supabaseCanonical"
+        },
+        { "url": "/assets/rooms/home/day.jpg", "role": "staticFallback" }
       ]
     },
     "home.night": {
       "sources": [
-        { "url": "/assets/rooms/home/night.jpg", "role": "staticCanonical" }
+        {
+          "url": "https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/home/night.jpg",
+          "role": "supabaseCanonical"
+        },
+        { "url": "/assets/rooms/home/night.jpg", "role": "staticFallback" }
       ]
     },
     "coffeeCorner.main": {
       "sources": [
-        { "url": "/assets/rooms/coffee-corner/morning-evening.jpg", "role": "staticCanonical" }
+        {
+          "url": "https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/morning-evening.jpg",
+          "role": "supabaseCanonical"
+        },
+        { "url": "/assets/rooms/coffee-corner/morning-evening.jpg", "role": "staticFallback" }
       ]
     },
     "coffeeCorner.lapClose": {

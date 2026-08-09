@@ -75,7 +75,7 @@ The protected preview was opened on iPhone Safari. The runtime reached the home 
 Asset timeout: /assets/rooms/home/day.jpg
 ```
 
-The canonical image blob is present on the remote branch. The false failure came from treating `HTMLImageElement.decode()` as part of the same hard eight-second network deadline. Safari can leave that optional decode promise pending after the load event, so v2 now separates the two gates:
+The canonical image blob is present on the remote branch. The first fix removed a real readiness bug: `HTMLImageElement.decode()` had been coupled to the same hard eight-second network deadline. Safari can leave that optional decode promise pending after the load event, so v2 now separates the two gates:
 
 ```text
 network load: required, explicit 20 second deadline
@@ -83,7 +83,15 @@ decode hint: best effort, bounded at 1.2 seconds
 natural image dimensions: required before Layout readiness
 ```
 
-This fix remains isolated and requires a fresh deployed iPhone pass before the home step is accepted.
+The second iPhone pass displayed `asset · loading` and then the new, more precise `Asset network timeout` message. That proves the image request itself never completed behind Vercel Deployment Protection. Direct checks showed:
+
+```text
+production-domain static image: available
+protected branch static image: redirected to Vercel login
+public Supabase image: available
+```
+
+The three top-level room images now use their verified public Supabase objects as canonical sources and retain the same-repository paths as production fallbacks. No Storage object, bucket policy, or live state was changed. This source fix remains isolated and requires one fresh deployed iPhone pass before the home step is accepted.
 
 ## Automated acceptance
 
