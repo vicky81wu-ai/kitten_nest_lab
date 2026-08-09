@@ -228,3 +228,5 @@ state fields preserved
 full /cloud acceptance URL
 rollback commit
 ```
+
+The exact route, ownership, state-preservation, production acceptance, and rollback procedure is recorded in `docs/v2/PROMOTION_PLAN.md`. It remains gated: the document does not change `/cloud` by itself.
