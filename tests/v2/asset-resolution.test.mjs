@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import {
+  AssetController,
+  fetchWarmImageBlob,
   loadStageImage,
   localImageSource,
   nextToggleAssetKey,
@@ -103,10 +105,111 @@ test('asset loading uses the retained stage image instead of a detached preloade
   );
 });
 
-test('room images use the public asset library before the protected-preview fallback', async () => {
+test('asset warming fetches and consumes image bytes without a detached Image element', async () => {
+  const calls = [];
+  const blob = await fetchWarmImageBlob('/assets/rooms/home/day.webp', {
+    fetchImpl: async (url, options) => {
+      calls.push({ url, options });
+      return {
+        ok: true,
+        status: 200,
+        blob: async () => new Blob(['webp-bytes'], { type: 'image/webp' })
+      };
+    }
+  });
+  assert.equal(blob.type, 'image/webp');
+  assert.equal(blob.size, 10);
+  assert.equal(calls[0].url, '/assets/rooms/home/day.webp');
+  assert.equal(calls[0].options.cache, 'force-cache');
+
+  const source = await readFile(new URL('../../v2/runtime/controllers/asset-controller.mjs', import.meta.url), 'utf8');
+  assert.doesNotMatch(source, /new Image\s*\(/);
+  assert.match(source, /role:\s*'warmedStaticCache'/);
+});
+
+test('a first scene tap consumes one in-flight warm request instead of starting a second image load', async () => {
+  const originalFetch = globalThis.fetch;
+  let fetchCalls = 0;
+  let releaseFetch;
+  globalThis.fetch = (_url, options) => {
+    fetchCalls += 1;
+    return new Promise((resolve, reject) => {
+      options.signal?.addEventListener('abort', () => reject(new Error('aborted')), { once: true });
+      releaseFetch = () => resolve({
+        ok: true,
+        status: 200,
+        blob: async () => new Blob(['beach'], { type: 'image/webp' })
+      });
+    });
+  };
+  const controller = new AssetController({
+    manifest: {
+      assets: {
+        beach: {
+          sources: [{ url: '/assets/beach.webp', role: 'staticOptimized', networkTimeoutMs: 1000 }]
+        }
+      }
+    },
+    setControllerStatus: () => {}
+  });
+
+  try {
+    controller.scheduleWarmAsset('beach', 10_000);
+    const consumed = controller.consumeWarmSource('beach', 200);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assert.equal(fetchCalls, 1);
+    releaseFetch();
+    const source = await consumed;
+    assert.equal(source.role, 'warmedStaticCache');
+    assert.equal(fetchCalls, 1);
+    assert.equal(controller.warmEntries.has('beach'), false);
+    controller.revokeLocalUrl(source.url);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('a stalled warm request is aborted before direct scene loading can continue', async () => {
+  const originalFetch = globalThis.fetch;
+  let aborted = false;
+  globalThis.fetch = (_url, options) => new Promise((_resolve, reject) => {
+    options.signal?.addEventListener('abort', () => {
+      aborted = true;
+      reject(new Error('aborted'));
+    }, { once: true });
+  });
+  const controller = new AssetController({
+    manifest: {
+      assets: {
+        beach: {
+          sources: [{ url: '/assets/beach.webp', role: 'staticOptimized', networkTimeoutMs: 1000 }]
+        }
+      }
+    },
+    setControllerStatus: () => {}
+  });
+
+  try {
+    controller.scheduleWarmAsset('beach', 10_000);
+    const source = await controller.consumeWarmSource('beach', 5);
+    assert.equal(source, null);
+    assert.equal(aborted, true);
+    assert.equal(controller.warmEntries.has('beach'), false);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('production room images use small same-origin WebP delivery before Storage originals', async () => {
   const manifest = await readJson('../../v2/data/nest-manifest.v2.json');
   for (const key of ['home.day', 'home.night', 'coffeeCorner.main']) {
-    const [canonical, fallback] = manifest.assets[key].sources;
+    const [delivery, canonical, fallback] = manifest.assets[key].sources;
+    assert.equal(delivery.role, 'staticOptimized');
+    assert.match(delivery.url, /^\/assets\/rooms\/.+\.webp$/);
+    const bytes = await readFile(new URL(`../../${delivery.url.slice(1)}`, import.meta.url));
+    assert.ok(bytes.length < 300_000, `${key} should stay below 300 KB`);
+    assert.equal(bytes.subarray(0, 4).toString('ascii'), 'RIFF');
+    assert.equal(bytes.subarray(8, 12).toString('ascii'), 'WEBP');
     assert.equal(canonical.role, 'supabaseCanonical');
     assert.match(canonical.url, /^https:\/\/pmkxzmogolxllijzqnfr\.supabase\.co\/storage\/v1\/object\/public\/nest-public-assets\//);
     assert.equal(fallback.role, 'staticFallback');

@@ -87,16 +87,29 @@ export function loadStageImage(image, url, timeoutMs = 20000, decodeTimeoutMs = 
   });
 }
 
+export async function fetchWarmImageBlob(url, options = {}) {
+  const fetchImpl = options.fetchImpl || globalThis.fetch;
+  if (typeof fetchImpl !== 'function') throw new Error('Asset warming requires fetch');
+  const response = await fetchImpl(url, {
+    cache: 'force-cache',
+    credentials: 'same-origin',
+    signal: options.signal
+  });
+  if (!response.ok) throw new Error(`Asset warm failed: ${url} returned HTTP ${response.status}`);
+  const blob = await response.blob();
+  if (!blob?.size) throw new Error(`Asset warm failed: ${url} returned an empty body`);
+  if (blob.type && !blob.type.startsWith('image/')) {
+    throw new Error(`Asset warm failed: ${url} returned ${blob.type}`);
+  }
+  return blob;
+}
+
 export class AssetController extends BaseController {
   constructor(context) {
     super('asset', context);
     this.current = null;
     this.loading = false;
-    this.warmTimer = null;
-    this.warmImage = null;
-    this.hintWarmTimer = null;
-    this.hintWarmImage = null;
-    this.hintWarmKey = null;
+    this.warmEntries = new Map();
     this.localObjectUrl = null;
   }
 
@@ -120,44 +133,112 @@ export class AssetController extends BaseController {
     return presentation;
   }
 
+  settleWarmEntry(entry, value) {
+    if (entry.settled) return;
+    entry.settled = true;
+    clearTimeout(entry.timer);
+    clearTimeout(entry.timeout);
+    entry.timer = null;
+    entry.timeout = null;
+    entry.resolve(value);
+  }
+
+  async startWarmEntry(entry) {
+    if (entry.settled) return;
+    entry.timer = null;
+    entry.controller = new AbortController();
+    const sourceTimeout = Number(entry.source.networkTimeoutMs ?? 8000);
+    const timeoutMs = Math.max(1000, Math.min(sourceTimeout, 8000));
+    entry.timeout = setTimeout(() => entry.controller.abort(), timeoutMs);
+    try {
+      const blob = await fetchWarmImageBlob(entry.source.url, { signal: entry.controller.signal });
+      if (this.warmEntries.get(entry.key) !== entry) {
+        this.settleWarmEntry(entry, null);
+        return;
+      }
+      const url = globalThis.URL?.createObjectURL?.(blob);
+      if (!url) throw new Error('Asset warming could not create a local URL');
+      const warmedSource = {
+        url,
+        role: 'warmedStaticCache',
+        ownedLocalUrl: true,
+        networkTimeoutMs: 3000
+      };
+      this.settleWarmEntry(entry, warmedSource);
+      this.mark('ready', `${this.current?.key || 'scene'}; warmed ${entry.key}`);
+    } catch {
+      if (this.warmEntries.get(entry.key) === entry) this.warmEntries.delete(entry.key);
+      this.settleWarmEntry(entry, null);
+    }
+  }
+
+  scheduleWarmAsset(key, delayMs = 120) {
+    const source = this.context.manifest.assets?.[key]?.sources?.[0];
+    if (!key || !source?.url || typeof globalThis.fetch !== 'function' || key === this.current?.key) return;
+    if (this.warmEntries.has(key)) return;
+    let resolve;
+    const entry = {
+      key,
+      source,
+      timer: null,
+      timeout: null,
+      controller: null,
+      settled: false,
+      resolve: null,
+      promise: null
+    };
+    entry.promise = new Promise((done) => { resolve = done; });
+    entry.resolve = resolve;
+    entry.timer = setTimeout(() => this.startWarmEntry(entry), delayMs);
+    this.warmEntries.set(key, entry);
+  }
+
+  async cancelWarmEntry(key, entry = this.warmEntries.get(key)) {
+    if (!entry) return;
+    if (this.warmEntries.get(key) === entry) this.warmEntries.delete(key);
+    if (entry.timer) {
+      clearTimeout(entry.timer);
+      entry.timer = null;
+      this.settleWarmEntry(entry, null);
+    } else if (!entry.settled) {
+      entry.controller?.abort();
+    }
+    const source = await entry.promise.catch(() => null);
+    if (source?.ownedLocalUrl) this.revokeLocalUrl(source.url);
+  }
+
+  async consumeWarmSource(key, waitMs = 900) {
+    const entry = this.warmEntries.get(key);
+    if (!entry) return null;
+    if (entry.timer) {
+      clearTimeout(entry.timer);
+      entry.timer = null;
+      this.startWarmEntry(entry);
+    }
+    let timeout;
+    const source = await Promise.race([
+      entry.promise,
+      new Promise((resolve) => { timeout = setTimeout(() => resolve(null), waitMs); })
+    ]);
+    clearTimeout(timeout);
+    if (source) {
+      if (this.warmEntries.get(key) === entry) this.warmEntries.delete(key);
+      return source;
+    }
+    await this.cancelWarmEntry(key, entry);
+    return null;
+  }
+
   warmTimeOfDayAlternate(requestedKey, resolvedKey) {
     const strategy = this.context.manifest.assets?.[requestedKey];
-    if (strategy?.strategy !== 'timeOfDay' || typeof Image === 'undefined') return;
+    if (strategy?.strategy !== 'timeOfDay') return;
     const alternateKey = resolvedKey === strategy.dayAsset ? strategy.nightAsset : strategy.dayAsset;
-    const source = this.context.manifest.assets?.[alternateKey]?.sources?.[0];
-    if (!source?.url) return;
-    clearTimeout(this.warmTimer);
-    this.warmTimer = setTimeout(() => {
-      const image = new Image();
-      image.decoding = 'async';
-      image.src = source.url;
-      this.warmImage = image;
-    }, 80);
+    this.scheduleWarmAsset(alternateKey, 80);
   }
 
   warmSceneHint(scene) {
     const key = Array.isArray(scene?.warmAssetKeys) ? scene.warmAssetKeys[0] : null;
-    const source = this.context.manifest.assets?.[key]?.sources?.[0];
-    if (!key || !source?.url || typeof Image === 'undefined' || key === this.current?.key) return;
-    clearTimeout(this.hintWarmTimer);
-    this.hintWarmImage = null;
-    this.hintWarmKey = key;
-    this.hintWarmTimer = setTimeout(() => {
-      const image = new Image();
-      image.decoding = 'async';
-      image.onload = () => {
-        if (this.hintWarmKey !== key) return;
-        this.mark('ready', `${this.current?.key || 'scene'}; warmed ${key}`);
-      };
-      image.onerror = () => {
-        if (this.hintWarmKey === key) {
-          this.hintWarmImage = null;
-          this.hintWarmKey = null;
-        }
-      };
-      image.src = source.url;
-      this.hintWarmImage = image;
-    }, 120);
+    this.scheduleWarmAsset(key, 120);
   }
 
   async resolveLocalSource(card) {
@@ -178,8 +259,10 @@ export class AssetController extends BaseController {
     const resolvedKey = resolveAssetKey(assets, requestedKey);
     const card = assets[resolvedKey];
     const localSource = await this.resolveLocalSource(card).catch(() => null);
+    const warmSource = await this.consumeWarmSource(resolvedKey, localSource ? 0 : 900);
     const sources = [
       ...(localSource ? [localSource] : []),
+      ...(warmSource ? [warmSource] : []),
       ...(Array.isArray(card.sources) ? card.sources : [])
     ];
     const networkTimeoutMs = Number(card.networkTimeoutMs ?? 20000);
@@ -199,7 +282,8 @@ export class AssetController extends BaseController {
     try {
       for (const source of sources) {
         try {
-          await loadStageImage(this.image, source.url, networkTimeoutMs, decodeTimeoutMs);
+          const sourceNetworkTimeoutMs = Number(source.networkTimeoutMs ?? networkTimeoutMs);
+          await loadStageImage(this.image, source.url, sourceNetworkTimeoutMs, decodeTimeoutMs);
           this.image.alt = scene.alt || `Kitten Nest ${scene.id}`;
           this.image.dataset.assetKey = resolvedKey;
           this.image.dataset.assetRole = source.role || 'source';
@@ -219,10 +303,6 @@ export class AssetController extends BaseController {
           this.stage.setAttribute('aria-busy', 'false');
           this.context.currentAsset = this.current;
           this.mark('ready', resolvedKey);
-          if (this.hintWarmKey === resolvedKey) {
-            this.hintWarmImage = null;
-            this.hintWarmKey = null;
-          }
           this.warmTimeOfDayAlternate(requestedKey, resolvedKey);
           this.warmSceneHint(scene);
           return { ok: true, ...this.current };
@@ -299,11 +379,10 @@ export class AssetController extends BaseController {
   }
 
   async destroy() {
-    clearTimeout(this.warmTimer);
-    clearTimeout(this.hintWarmTimer);
-    this.warmImage = null;
-    this.hintWarmImage = null;
-    this.hintWarmKey = null;
+    await Promise.all(
+      [...this.warmEntries.entries()].map(([key, entry]) => this.cancelWarmEntry(key, entry))
+    );
+    this.warmEntries.clear();
     this.revokeLocalUrl(this.localObjectUrl);
     this.localObjectUrl = null;
     this.image?.removeAttribute('src');
