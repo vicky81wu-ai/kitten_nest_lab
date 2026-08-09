@@ -69,6 +69,8 @@ test('room navigation is invisible and stays in the lower corner hit zones', asy
   assert.doesNotMatch(html, />[‹›]<\/button>/);
   assert.match(css, /\.v2-controls\s*\{[^}]*bottom:\s*0;[^}]*height:\s*max\(22%,\s*160px\)/s);
   assert.match(css, /\.v2-control\s*\{[^}]*width:\s*min\(34vw,\s*180px\);[^}]*border:\s*0;[^}]*background:\s*transparent;[^}]*color:\s*transparent;/s);
+  assert.match(css, /#v2-dock-left\s*\{[^}]*grid-column:\s*1;[^}]*grid-row:\s*1;/s);
+  assert.match(css, /#v2-dock-right\s*\{[^}]*grid-column:\s*2;[^}]*grid-row:\s*1;/s);
 });
 
 test('weather advice is a compact floating card instead of the generic bottom sheet', async () => {
