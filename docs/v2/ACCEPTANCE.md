@@ -1,6 +1,6 @@
 # Kitten Nest v2 Independent Preview Acceptance
 
-Status: pre-promotion device acceptance passed; production `/cloud` smoke check pending
+Status: pre-promotion device acceptance and production `/cloud` smoke check passed
 
 ## Production route
 
@@ -97,6 +97,21 @@ optimized beach delivery without an asset timeout
 ```
 
 Remaining sparkle/light-point tuning is non-blocking visual polish and is not part of the production route-switch commit.
+
+## Production smoke result · 2026-08-09
+
+After merge commit `b6dbf054746e70e87551d39f51c31cf829c46771` reached Vercel `success`, the official production origin returned:
+
+```text
+/cloud: HTTP 200, Kitten Nest production document
+/v2/data/nest-manifest.v2.json: status=production, promoted=true, route=/cloud
+/api/state: HTTP 200 application/json
+beach-handhold-sunset.webp: HTTP 200 image/webp
+beach-bracelet-promise.webp: HTTP 200 image/webp
+beach-stall-order.webp: HTTP 200 image/webp
+```
+
+This was a read-only smoke check. It did not publish a text target, mutate `nest_state`, write browser-local media, or change any Supabase object.
 
 ## Failure rule
 

@@ -1,6 +1,20 @@
 # Kitten Nest v2 `/cloud` promotion plan
 
-Status: exact route-switch diff staged on the isolated branch; production deployment pending
+Status: completed; production deployment and read-only smoke check passed
+
+## Closeout · 2026-08-09
+
+```text
+promotion source commit: b1867dcce2ec31ce65c2d3f27dc894fbbf874fb0
+production merge commit: b6dbf054746e70e87551d39f51c31cf829c46771
+Vercel production status: success
+production /cloud: HTTP 200
+production manifest: status=production, promoted=true, route=/cloud
+production /api/state: HTTP 200
+three optimized beach assets: HTTP 200 image/webp
+```
+
+The smoke check was read-only. The rollback route and baseline below remain retained for the first post-promotion observation window.
 
 ## Readiness evidence · 2026-08-09
 

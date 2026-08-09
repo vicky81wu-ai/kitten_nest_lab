@@ -382,3 +382,24 @@ Promote through one isolated /cloud route-switch commit with the documented roll
 Tune sparkle/light-point timing afterward in a separate reversible polish batch.
 Do not hold the functional release open for subjective effect tuning.
 ```
+
+## 2026-08-09 v2 production promotion closeout
+
+The promotion-ready branch was merged without squashing so the route switch remains independently reversible:
+
+```text
+promotion source commit: b1867dcce2ec31ce65c2d3f27dc894fbbf874fb0
+production merge commit: b6dbf054746e70e87551d39f51c31cf829c46771
+Vercel production deployment: success
+```
+
+Read-only production smoke result:
+
+```text
+/cloud: HTTP 200, Kitten Nest document
+manifest: status=production, promoted=true, route=/cloud
+/api/state: HTTP 200
+three optimized beach WebP assets: HTTP 200 image/webp
+```
+
+No text target, `nest_state` value, archive item, local-media slot, Storage object, policy, or schema was changed during promotion verification. Sparkle/light-point tuning begins only as a later independent visual-polish batch.

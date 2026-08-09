@@ -1,13 +1,15 @@
 # Kitten Nest v2 Status
 
 Updated: 2026-08-09
-Status: isolated `/cloud` route-switch commit prepared; production deployment smoke check pending
+Status: promoted to production `/cloud`; deployment and read-only smoke check passed
 
-## Promotion package
+## Production route
 
 ```text
-branch: agent/v2-runtime-foundation
-production route in this source state: /cloud -> /v2/index.html
+production branch: main
+production merge: b6dbf054746e70e87551d39f51c31cf829c46771
+isolated promotion source: b1867dcce2ec31ce65c2d3f27dc894fbbf874fb0
+production route: /cloud -> /v2/index.html
 direct compatibility route: /v2/index.html
 legacy rollback route: /cloud-coords -> /api/app-coords
 live nest_state: unchanged
@@ -158,6 +160,8 @@ restoration batch 0.2.0: Vercel Ready
 cloud-browser self-check: Vercel Protection login wall; the active Work client exposed no user login surface
 local mobile-browser acceptance: passed with the optimized static delivery assets and canonical read-only fallbacks
 final Home-right first-tap correction: accepted on Vicky's iPhone
+production Vercel deployment: success
+production /cloud read-only smoke check: passed
 ```
 
 Deployment success is not visual acceptance. The concise iPhone promotion pass is recorded below and closes the remaining device gate.
@@ -245,11 +249,12 @@ The local 393 × 852 mobile-browser pass uses an in-memory fake `/api/set-state`
 
 ## Production activation and rollback
 
-This source state contains only the documented route-switch product diff. It becomes the live nest only after the branch is merged and Vercel reports success.
+The documented route-switch diff is live. Vercel reported success and the production route completed its read-only smoke check.
 
 ```text
 production acceptance URL: https://kitten-nest-lab.vercel.app/cloud
-promotion source: isolated commit named "Promote v2 runtime to cloud route"
+promotion source: b1867dcce2ec31ce65c2d3f27dc894fbbf874fb0
+production merge: b6dbf054746e70e87551d39f51c31cf829c46771
 pre-promotion production baseline: 5723fd592188583e3d366cf3550882f8c04d3927
 rollback: revert the isolated promotion commit and redeploy main
 ```
