@@ -1,5 +1,6 @@
 import { BaseController } from '../core/base-controller.mjs';
 import { resolveWeatherState, weatherAdvice } from '../core/weather-state.mjs';
+import { NotebookWriteClient } from '../core/notebook-write-client.mjs';
 import { GomokuPanelSession } from '../panels/gomoku-panel.mjs';
 import { MemoriesPanelSession } from '../panels/memories-panel.mjs';
 import { NotebookPanelSession } from '../panels/notebook-panel.mjs';
@@ -29,12 +30,18 @@ export class PanelController extends BaseController {
     this.title = this.layer.querySelector('[data-panel-title]');
     this.body = this.layer.querySelector('[data-panel-body]');
     this.closeButton = this.layer.querySelector('[data-panel-close]');
+    this.notebookWriter = new NotebookWriteClient({
+      config: this.context.manifest.runtime.stateWrites
+    });
     this.layer.addEventListener('click', this.boundClick);
     this.unsubscribeState = this.context.events.on('state:change', () => {
       const object = this.context.manifest.objects[this.openId];
       if (!object) return;
       if (this.interactiveSession?.update) {
-        this.interactiveSession.update(this.context.controllers.get('state').get() || {});
+        const stateController = this.context.controllers.get('state');
+        this.interactiveSession.update(stateController.get() || {}, {
+          canWrite: stateController.source === 'live'
+        });
       } else if (!this.interactiveSession) {
         this.render(object);
       }
@@ -119,10 +126,14 @@ export class PanelController extends BaseController {
     }
 
     if (object.variant === 'notebookArchive') {
+      const stateController = this.context.controllers.get('state');
       this.interactiveSession = new NotebookPanelSession({
         body: this.body,
         object,
-        state: this.context.controllers.get('state').get() || {}
+        state: stateController.get() || {},
+        writer: this.notebookWriter,
+        canWrite: stateController.source === 'live',
+        onCommit: (value) => stateController.commit(value, 'live', null, 'notebook-write')
       });
       this.interactiveSession.mount();
       return;

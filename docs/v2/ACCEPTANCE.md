@@ -10,7 +10,7 @@ Status: framework regression and automated mobile-browser route passed; no devic
 
 ## Restoration acceptance loop
 
-1. Home opens normally; open the powder notebook and move from the current page to a permanent archive page when one exists. Confirm there is no editor, key field, or mutation button.
+1. Home opens normally; open the powder notebook. On a live-state run, write and save one disposable page, read it back from the first archive tab, favorite/unfavorite it, then delete it and confirm the UI says it moved to the recycle bin. On a degraded preview-copy run, confirm the notebook is explicitly read-only.
 2. Tap the moon lamp twice and confirm day → night → day uses two real images.
 3. Confirm the window shows temperature/description; tap it and close the single shared “窗边叮嘱” panel.
 4. Enter coffeeCorner and confirm the main bubble has rounded corners with no triangle tail.
@@ -29,7 +29,8 @@ Passed at a 393 × 852 touch viewport using the exact existing public image byte
 
 ```text
 home night -> day -> night
-powder notebook current page -> favorited archive page -> close
+powder notebook write -> save -> archive readback
+favorite -> unfavorite -> soft delete -> trash
 weather text -> shared advice panel -> close
 home -> coffeeCorner -> six-slot readonly memories carousel -> close
 game menu -> Gomoku
@@ -43,11 +44,14 @@ stall -> bracelet -> handhold -> coffeeCorner
 coffeeCorner -> lapClose hide/show-next -> coffeeCorner -> home
 zero page errors, console errors, or failed requests
 no runtime inspector, status ticker, or hotspot debug switch in the product DOM
+four notebook POSTs, each carrying only registered notebook fields and a QA-only token
 ```
 
 This pass caught and fixed panorama dialogue clipping. Newly revealed bubbles now wait for their measured layout and adjust only the horizontal scene viewport before the browser paints them. Cover rooms and manifest coordinates are unchanged.
 
 The memories checkpoint seeded two photos into a disposable browser profile, verified a filled slot → empty slot → filled slot sequence, then closed the panel and completed every later route. The application itself performed only IndexedDB enumeration and a `readonly` transaction.
+
+The notebook checkpoint used an in-memory fake state endpoint and disposable QA token. It did not call Supabase or the deployed `/api/set-state`, and it confirmed that delete removed the test page from the archive while preserving it in `hubbyNoteTrash`.
 
 ## iPhone checkpoint
 

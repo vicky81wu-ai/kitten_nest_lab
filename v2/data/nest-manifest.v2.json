@@ -1,6 +1,6 @@
 {
   "schemaVersion": "nest-manifest.v2",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "status": "isolated-preview",
   "promoted": false,
   "route": "/v2/index.html",
@@ -9,7 +9,10 @@
     "noIdentityNoBinding": true,
     "childIsolation": true,
     "baseImageCoordinatesOnly": true,
-    "stateWritesAllowed": false,
+    "stateWritesAllowed": {
+      "mode": "registeredTargetOnly",
+      "targetIds": ["hubbyNote"]
+    },
     "stableRouteUntouched": "/cloud"
   },
   "runtime": {
@@ -58,6 +61,11 @@
       "fallbackUrl": "/v2/data/preview-state.v2.json",
       "timeoutMs": 4500,
       "refreshOn": ["pageshow", "focus", "visibilitychange"]
+    },
+    "stateWrites": {
+      "endpoint": "/api/set-state",
+      "authHeader": "X-Nest-Token",
+      "tokenStorageKeys": ["kittenNestToken", "nestToken"]
     },
     "textTargetRegistryUrl": "/data/text-targets.v1.json"
   },
@@ -429,7 +437,10 @@
       "updatedAtField": "hubbyNoteUpdatedAt",
       "favoriteField": "hubbyNoteFavorite",
       "archiveFields": ["hubbyNoteArchive", "hubbyNoteHistory"],
+      "trashField": "hubbyNoteTrash",
       "maxArchiveItems": 20,
+      "maxChars": 5000,
+      "writeMode": "archiveWithSoftDelete",
       "emptyText": "本本正在等云端醒来。",
       "exclusive": true,
       "runtimeStatus": "active",

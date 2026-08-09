@@ -2,7 +2,7 @@ function text(value) {
   return typeof value === 'string' ? value.trim() : '';
 }
 
-function firstArray(state, fields) {
+export function notebookArchive(state, fields = ['hubbyNoteArchive', 'hubbyNoteHistory']) {
   for (const field of fields) {
     if (Array.isArray(state?.[field])) return state[field];
   }
@@ -17,18 +17,27 @@ function dateLabel(value) {
   return new Date(timestamp).toISOString().slice(0, 10);
 }
 
+export function notebookArchiveKey(item, index) {
+  const value = typeof item === 'string' ? { text: item } : item || {};
+  const id = text(value.id);
+  if (id) return `id:${id}`;
+  const rawDate = text(value.savedAt || value.createdAt || value.updatedAt);
+  return rawDate ? `date:${rawDate}:${index}` : `archive:${index}`;
+}
+
 function archivePage(item, index) {
   const value = typeof item === 'string' ? { text: item } : item || {};
   const body = text(value.text || value.note);
   if (!body) return null;
   const rawDate = value.savedAt || value.createdAt || value.updatedAt || '';
   return {
-    key: text(value.id) || text(rawDate) || `archive-${index}`,
+    key: notebookArchiveKey(value, index),
     kind: 'archive',
     label: `档案 ${index + 1}`,
     text: body,
     date: dateLabel(rawDate),
-    favorite: Boolean(value.favorite)
+    favorite: Boolean(value.favorite),
+    archiveIndex: index
   };
 }
 
@@ -50,7 +59,7 @@ export function resolveNotebookState(state = {}, config = {}) {
     favorite: Boolean(state?.[favoriteField]),
     empty: !currentText
   };
-  const archive = firstArray(state, archiveFields)
+  const archive = notebookArchive(state, archiveFields)
     .map(archivePage)
     .filter(Boolean)
     .slice(0, maxArchiveItems);

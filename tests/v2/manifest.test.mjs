@@ -12,7 +12,10 @@ test('v2 manifest is an isolated, registry-backed single source', async () => {
   assert.deepEqual(result.errors, []);
   assert.equal(result.ok, true);
   assert.equal(manifest.promoted, false);
-  assert.equal(manifest.rules.stateWritesAllowed, false);
+  assert.deepEqual(manifest.rules.stateWritesAllowed, {
+    mode: 'registeredTargetOnly',
+    targetIds: ['hubbyNote']
+  });
   assert.equal(Object.keys(manifest.controllers).length, 8);
 });
 
@@ -85,16 +88,38 @@ test('the memories panel can only read the six explicit legacy photo slots', asy
   ]);
 });
 
-test('the powder notebook reads current and archive fields without a write action', async () => {
+test('the powder notebook owns one registry-scoped soft-delete write surface', async () => {
   const manifest = await readJson('../../v2/data/nest-manifest.v2.json');
   const notebook = manifest.objects['home.hubbyNotePanel'];
   assert.equal(notebook.variant, 'notebookArchive');
   assert.equal(notebook.targetId, 'hubbyNote');
   assert.equal(notebook.currentField, 'hubbyNote');
   assert.deepEqual(notebook.archiveFields, ['hubbyNoteArchive', 'hubbyNoteHistory']);
+  assert.equal(notebook.favoriteField, 'hubbyNoteFavorite');
+  assert.equal(notebook.trashField, 'hubbyNoteTrash');
   assert.equal(notebook.maxArchiveItems, 20);
+  assert.equal(notebook.maxChars, 5000);
+  assert.equal(notebook.writeMode, 'archiveWithSoftDelete');
   assert.equal(notebook.action, undefined);
-  assert.equal(manifest.rules.stateWritesAllowed, false);
+  assert.deepEqual(manifest.rules.stateWritesAllowed.targetIds, ['hubbyNote']);
+  assert.equal(manifest.runtime.stateWrites.endpoint, '/api/set-state');
+  assert.equal(manifest.runtime.stateWrites.authHeader, 'X-Nest-Token');
   const session = await readFile(new URL('../../v2/runtime/panels/notebook-panel.mjs', import.meta.url), 'utf8');
-  assert.doesNotMatch(session, /fetch\s*\(|localStorage|\/api\/set-state|createElement\(['"](?:input|textarea)/);
+  assert.doesNotMatch(session, /fetch\s*\(|localStorage|\/api\/set-state/);
+  assert.match(session, /buildNotebookSavePatch/);
+  assert.match(session, /buildNotebookFavoritePatch/);
+  assert.match(session, /buildNotebookDeletePatch/);
+});
+
+test('manifest validation rejects broad or unregistered state-write targets', async () => {
+  const manifest = await readJson('../../v2/data/nest-manifest.v2.json');
+  const textTargets = await readJson('../../data/text-targets.v1.json');
+  manifest.rules.stateWritesAllowed = {
+    mode: 'registeredTargetOnly',
+    targetIds: ['hubbyNote', 'notARealTarget']
+  };
+  const result = validateManifest(manifest, textTargets);
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join('\n'), /unregistered target notARealTarget/);
+  assert.match(result.errors.join('\n'), /Writable target notARealTarget must have exactly one/);
 });

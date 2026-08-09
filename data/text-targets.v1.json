@@ -99,6 +99,8 @@
       "updatedAtField": "hubbyNoteUpdatedAt",
       "archiveField": "hubbyNoteArchive",
       "historyField": "hubbyNoteHistory",
+      "favoriteField": "hubbyNoteFavorite",
+      "trashField": "hubbyNoteTrash",
       "maxArchiveItems": 20,
       "maxChars": 5000,
       "runtimeStatus": "active",

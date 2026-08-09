@@ -1,7 +1,7 @@
 # Kitten Nest v2 Status
 
 Updated: 2026-08-09
-Status: framework regression passed; home/weather, beach, Gomoku, memories, and read-only notebook restoration implemented, not promoted
+Status: framework regression passed; home/weather, beach, Gomoku, memories, and scoped powder-notebook write closure implemented, not promoted
 
 ## Isolation
 
@@ -10,7 +10,7 @@ branch: agent/v2-runtime-foundation
 route: /v2/index.html
 stable /cloud injection chain: unchanged
 live nest_state: unchanged
-/api/state and /api/set-state: unchanged
+/api/state and /api/set-state implementations: unchanged
 /write: unchanged
 ```
 
@@ -20,7 +20,7 @@ Included:
 
 ```text
 home -> coffeeCorner -> push(lapClose) -> back()
-home hubbyNote current page and read-only permanent archive
+home hubbyNote current page, permanent archive, editor, favorite, and soft-delete trash
 coffeeCorner 19.8 rotating bubble
 coffeeCorner lap entry
 coffeeCorner read-only six-slot memories panel
@@ -97,11 +97,23 @@ The temporary runtime inspector has been retired at code level. Its manifest obj
 
 Internal lifecycle status remains available to the runtime and automated tests. The only passive source disclosure is `PREVIEW COPY`, shown when and only when StateController is actually serving the explicit degraded fixture. Asset, runtime, and fatal cards remain because they fail closed instead of presenting the wrong room.
 
-## Read-only powder notebook batch
+## Scoped powder notebook batch 0.3.0
 
-The home notebook hotspot now opens the current `hubbyNote` page plus the registered permanent archive fields `hubbyNoteArchive` / `hubbyNoteHistory`. Current and archive items are normalized into one horizontal page strip, favorite flags remain visible, and later state refreshes update the open session without adding another panel owner.
+The home notebook now closes its full MVP loop under the existing PanelController: write a separate new page, save it as both current and permanent archive, load an archive page into the editor, favorite/unfavorite an archive row, and soft-delete a row into `hubbyNoteTrash`. Current-page preview and editor draft stay separate, and saving identical text does not duplicate the permanent archive.
 
-This is intentionally a reading restoration. The notebook session contains no input, textarea, local token storage, fetch call, or write action. Editing, favorite mutation, deletion, trash, and Nest-key authorization remain on the stable write-capable path until v2 receives a separate privacy and mutation plan.
+The write boundary is explicit rather than global:
+
+```text
+manifest policy: registeredTargetOnly -> hubbyNote
+endpoint: existing /api/set-state
+browser credential: X-Nest-Token only
+allowed fields: hubbyNote, hubbyNoteUpdatedAt, hubbyNoteFavorite,
+                hubbyNoteArchive, hubbyNoteHistory, hubbyNoteTrash
+delete meaning: remove from archive and prepend to trash
+degraded preview: read-only; mutation controls disabled
+```
+
+The Supabase service credential remains server-side. The device Nest key is accepted only by the existing server endpoint and is remembered locally after a successful response; an unauthorized response forgets the local copy and asks for a replacement. The stable `/write`, `/cloud`, and `/api/set-state` implementations were not edited.
 
 ## State of external dependencies
 
@@ -201,9 +213,9 @@ Run:
 npm run check:v2
 ```
 
-This currently runs 45 checks covering controller contracts, one-manifest ownership, registered or explicitly static text ports, selector exclusivity, child isolation, portrait and panorama navigation, approved beach order, failed-asset rollback, projection math, panorama bubble reveal, text mutation layout invalidation, fallback refresh serialization, weather state/advice, time-of-day and manual asset resolution, connected stage-image loading, loading-veil presence, bounded best-effort image decode behavior, Gomoku legality/wins/undo and all three AI difficulty paths, absent/unsupported/existing legacy-photo database behavior, read-only notebook normalization and registry binding, and the absence of product-facing inspector/debug controls.
+This currently runs 54 checks covering controller contracts, one-manifest ownership, registered or explicitly static text ports, selector exclusivity, child isolation, portrait and panorama navigation, approved beach order, failed-asset rollback, projection math, panorama bubble reveal, text mutation layout invalidation, fallback refresh serialization, weather state/advice, time-of-day and manual asset resolution, connected stage-image loading, loading-veil presence, bounded best-effort image decode behavior, Gomoku legality/wins/undo and all three AI difficulty paths, absent/unsupported/existing legacy-photo database behavior, notebook normalization, save/deduplication, favorite, soft delete, request allowlisting, Nest-key failure handling, and the absence of product-facing inspector/debug controls.
 
-The local 393 × 852 mobile-browser pass additionally exercised the real UI route: current notebook page, favorited archive page, moon round-trip, weather panel, coffeeCorner, a seeded six-slot read-only memories carousel including an empty slot, game menu, a 225-cell Gomoku board, kitten/Alex turns, whole-round undo, difficulty reset, nested panel back, beach entry, 885 px of horizontal pan range, both-character dialogue, all three beach scenes, the three-level back chain, lapClose hide/show-next, and the final return home. It found one panorama-only defect: a newly opened dialogue could be clipped after its character hotspot moved the viewport. TextPort now waits for Layout readiness and adjusts horizontal scroll before paint; the rerun measured every sampled beach bubble at `visibleRatio: 1` with zero console, page, or request errors.
+The local 393 × 852 mobile-browser pass uses an in-memory fake `/api/set-state`; it never contacts the real state project. It exercised new page -> save -> current page -> archive readback -> favorite -> unfavorite -> delete -> trash, and inspected all four requests. Every request used the QA-only token and only the six registered notebook fields. The same run then completed moon/weather, coffeeCorner, a seeded six-slot read-only memories carousel, Gomoku, all three beach scenes and dialogue, lapClose, and the final home return with zero console, page, or request errors.
 
 ## Promotion stop condition
 

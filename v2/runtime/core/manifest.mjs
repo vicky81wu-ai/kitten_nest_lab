@@ -17,7 +17,26 @@ export function validateManifest(manifest, textTargetRegistry = null) {
 
   if (manifest?.schemaVersion !== 'nest-manifest.v2') errors.push('schemaVersion must be nest-manifest.v2');
   if (manifest?.promoted !== false) errors.push('v2 preview manifest must keep promoted:false');
-  if (manifest?.rules?.stateWritesAllowed !== false) errors.push('v2 preview must keep stateWritesAllowed:false');
+
+  const writePolicy = manifest?.rules?.stateWritesAllowed;
+  const writeTargetIds = Array.isArray(writePolicy?.targetIds) ? writePolicy.targetIds : [];
+  const allowedWriteTargets = new Set(writeTargetIds);
+  if (writePolicy?.mode !== 'registeredTargetOnly' || !writeTargetIds.length) {
+    errors.push('v2 state writes require a non-empty registeredTargetOnly allowlist');
+  }
+  if (allowedWriteTargets.size !== writeTargetIds.length) {
+    errors.push('v2 state write targetIds must be unique');
+  }
+  const stateWrites = manifest?.runtime?.stateWrites;
+  if (stateWrites?.endpoint !== '/api/set-state') {
+    errors.push('v2 scoped writes must use the existing /api/set-state endpoint');
+  }
+  if (stateWrites?.authHeader !== 'X-Nest-Token') {
+    errors.push('v2 scoped writes must use X-Nest-Token');
+  }
+  if (!Array.isArray(stateWrites?.tokenStorageKeys) || !stateWrites.tokenStorageKeys.length) {
+    errors.push('v2 scoped writes require explicit local token storage keys');
+  }
 
   const controllers = manifest?.controllers || {};
   REQUIRED_CONTROLLERS.forEach((id) => {
@@ -36,6 +55,12 @@ export function validateManifest(manifest, textTargetRegistry = null) {
   const objects = manifest?.objects || {};
   const supportedActions = new Set(manifest?.runtime?.supportedActionTypes || []);
   const activeSelectors = new Map();
+
+  writeTargetIds.forEach((targetId) => {
+    if (!textTargetRegistry?.targets?.[targetId]) {
+      errors.push(`State write allowlist references unregistered target ${targetId}`);
+    }
+  });
 
   if (!scenes[manifest?.runtime?.entryScene]) errors.push('runtime.entryScene must identify a scene');
 
@@ -93,8 +118,23 @@ export function validateManifest(manifest, textTargetRegistry = null) {
             errors.push(`Notebook panel ${id} is missing registered archive field ${field}`);
           }
         });
+        if (object.favoriteField !== target.favoriteField) {
+          errors.push(`Notebook panel ${id} favorite field does not match ${object.targetId}`);
+        }
+        if (object.trashField !== target.trashField) {
+          errors.push(`Notebook panel ${id} trash field does not match ${object.targetId}`);
+        }
+        if (object.maxChars !== target.maxChars) {
+          errors.push(`Notebook panel ${id} maxChars does not match ${object.targetId}`);
+        }
       }
-      if (object.action) errors.push(`Notebook panel ${id} must stay read-only`);
+      if (!allowedWriteTargets.has(object.targetId)) {
+        errors.push(`Notebook panel ${id} target is not in the state write allowlist`);
+      }
+      if (object.writeMode !== 'archiveWithSoftDelete') {
+        errors.push(`Notebook panel ${id} must use archiveWithSoftDelete`);
+      }
+      if (object.action) errors.push(`Notebook panel ${id} mutations must stay inside its panel session`);
     }
     if (object?.coordinate && object.coordinateStatus !== 'baseImageLocked' && !String(object.coordinateStatus || '').startsWith('candidate')) {
       warnings.push(`Object ${id} has coordinates without a recognized coordinateStatus`);
@@ -141,6 +181,17 @@ export function validateManifest(manifest, textTargetRegistry = null) {
   (manifest?.globalObjects || []).forEach((id) => {
     if (!objects[id]) errors.push(`Unknown global object ${id}`);
     else if (objects[id].ownerScene !== '*') errors.push(`Global object ${id} must use ownerScene:*`);
+  });
+
+  writeTargetIds.forEach((targetId) => {
+    const owners = Object.values(objects).filter((object) => (
+      object?.variant === 'notebookArchive'
+      && object?.targetId === targetId
+      && object?.writeMode === 'archiveWithSoftDelete'
+    ));
+    if (owners.length !== 1) {
+      errors.push(`Writable target ${targetId} must have exactly one notebook panel owner`);
+    }
   });
 
   const reconcileOrder = manifest?.runtime?.reconcileOrder || [];

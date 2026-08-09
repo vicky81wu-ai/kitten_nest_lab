@@ -72,11 +72,21 @@ The memories panel may read the six blobs created by the old stable page in `kit
 
 This bridge is intentionally not a new asset pipeline. It has no picker, `put`, delete, upload, or cloud fallback. Blob object URLs belong to the scoped memories session and are revoked at teardown. Same-origin isolation remains authoritative, and the manifest-owned card content is the no-data fallback.
 
-## Read-only notebook compatibility
+## Scoped notebook mutation boundary
 
-`home.hubbyNotePanel` is bound back to the registered `hubbyNote` target card, including its current, updated-at, archive, and history field names. A pure resolver normalizes string or object archive entries, dates, and favorite flags; a scoped notebook session renders those pages under the existing PanelController and preserves the selected page across state refreshes.
+`home.hubbyNotePanel` is bound to the registered `hubbyNote` target card, including its current, updated-at, favorite, archive, history, and trash fields. A pure resolver normalizes string or object archive entries, dates, and favorite flags; pure mutation builders produce save, favorite, and soft-delete patches. A scoped notebook session renders and edits those pages under the existing PanelController and preserves the selected page across state refreshes.
 
-The session is intentionally incapable of mutation. It contains no editor, credential storage, endpoint call, or archive action. PanelController may pass it newly read state through `update()`, but the session cannot reach StateController or dispatch a write. The manifest validator rejects an unregistered note target, mismatched current field, missing registered archive fields, or a notebook action envelope.
+The session does not own a general write client. PanelController injects one client configured by `runtime.stateWrites`; the client rejects every patch key outside the six fields derived from the notebook card. Successful responses are committed through StateController so the open panel and all other readers receive one `state:change` event. The notebook still has no generic action envelope or second controller.
+
+The manifest write rule is an allowlist, not a boolean escape hatch:
+
+```text
+stateWritesAllowed.mode = registeredTargetOnly
+stateWritesAllowed.targetIds = [hubbyNote]
+writeMode = archiveWithSoftDelete
+```
+
+The validator rejects an unregistered target, multiple panel owners, mismatched field names, a different endpoint/header, or a delete mode without trash. When StateController is serving the degraded preview fixture, PanelController passes `canWrite:false`; the editor and mutation actions disappear rather than writing preview text into the real archive.
 
 ## Atomic scene transition
 
@@ -102,7 +112,7 @@ If the next scene asset fails, SceneRuntime does not commit the candidate naviga
 
 ## State and MCP boundary
 
-v2 is read-only:
+Most v2 surfaces remain read-only. The powder notebook has one registered write exception:
 
 ```text
 GPT / ChatGPT App
@@ -113,7 +123,16 @@ GPT / ChatGPT App
 -> TextPort or Panel
 ```
 
-v2 contains no call to `/api/set-state` and no write credential handling. If `/api/state` fails, the isolated preview may use `preview-state.v2.json` only for surfaces that explicitly set `allowDegradedFallback:true`. The UI labels this source `preview copy`. Recovered beach dialogue is declared `staticText` with a manifest-owned fallback queue; it does not invent a writable registry target.
+```text
+NotebookPanelSession
+-> pure notebook patch builder
+-> allowlisted NotebookWriteClient
+-> existing /api/set-state with X-Nest-Token
+-> complete returned state
+-> StateController.commit()
+```
+
+No Supabase service or secret key is present in browser code. `/api/set-state` retains its existing server-side Supabase credential and authorization behavior. If `/api/state` fails, the isolated preview may use `preview-state.v2.json` only for surfaces that explicitly set `allowDegradedFallback:true`; the UI labels this source `preview copy` and disables notebook mutation. Recovered beach dialogue remains `staticText` with a manifest-owned fallback queue and does not invent a writable registry target.
 
 ## Product surface boundary
 
