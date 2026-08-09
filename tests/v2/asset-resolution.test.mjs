@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import {
+  loadStageImage,
   resolveAssetKey,
   waitForBestEffortDecode
 } from '../../v2/runtime/controllers/asset-controller.mjs';
@@ -20,6 +21,35 @@ const assets = {
 
 const readJson = async (path) => JSON.parse(await readFile(new URL(path, import.meta.url), 'utf8'));
 
+class FakeStageImage extends EventTarget {
+  constructor(result = 'load') {
+    super();
+    this.result = result;
+    this.complete = false;
+    this.naturalWidth = 0;
+    this.naturalHeight = 0;
+  }
+
+  set src(value) {
+    this.currentSrc = value;
+    if (this.result === 'pending') return;
+    queueMicrotask(() => {
+      this.complete = true;
+      if (this.result === 'load') {
+        this.naturalWidth = 852;
+        this.naturalHeight = 1846;
+      }
+      this.dispatchEvent(new Event(this.result));
+    });
+  }
+
+  get src() {
+    return this.currentSrc || '';
+  }
+
+  async decode() {}
+}
+
 test('time-of-day asset selection stays inside AssetController', () => {
   assert.equal(resolveAssetKey(assets, 'home.auto', 9), 'home.day');
   assert.equal(resolveAssetKey(assets, 'home.auto', 22), 'home.night');
@@ -30,6 +60,23 @@ test('image decode is a bounded best-effort readiness hint', async () => {
   assert.equal(await waitForBestEffortDecode({ decode: async () => {} }, 5), 'decoded');
   assert.equal(await waitForBestEffortDecode({ decode: async () => { throw new Error('decode failed'); } }, 5), 'failed');
   assert.equal(await waitForBestEffortDecode({ decode: () => new Promise(() => {}) }, 5), 'timeout');
+});
+
+test('asset loading uses the retained stage image instead of a detached preloader', async () => {
+  const stageImage = new FakeStageImage('load');
+  const loaded = await loadStageImage(stageImage, 'https://assets.example/home.jpg', 20, 5);
+  assert.equal(loaded, stageImage);
+  assert.equal(stageImage.src, 'https://assets.example/home.jpg');
+  assert.equal(stageImage.naturalWidth, 852);
+
+  await assert.rejects(
+    loadStageImage(new FakeStageImage('error'), 'https://assets.example/broken.jpg', 20, 5),
+    /Asset failed/
+  );
+  await assert.rejects(
+    loadStageImage(new FakeStageImage('pending'), 'https://assets.example/pending.jpg', 5, 5),
+    /Asset network timeout/
+  );
 });
 
 test('room images use the public asset library before the protected-preview fallback', async () => {

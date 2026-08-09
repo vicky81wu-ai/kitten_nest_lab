@@ -27,45 +27,7 @@ export function waitForBestEffortDecode(image, timeoutMs = 1200) {
   });
 }
 
-function loadImage(url, timeoutMs = 20000, decodeTimeoutMs = 1200) {
-  return new Promise((resolve, reject) => {
-    const image = new Image();
-    let done = false;
-    const cleanup = () => {
-      image.onload = null;
-      image.onerror = null;
-    };
-    const finish = (callback, value) => {
-      if (done) return;
-      done = true;
-      clearTimeout(timer);
-      cleanup();
-      callback(value);
-    };
-    const timer = setTimeout(() => {
-      finish(reject, new Error(`Asset network timeout: ${url}`));
-      image.src = '';
-    }, timeoutMs);
-    image.decoding = 'async';
-    image.onload = () => {
-      if (done) return;
-      done = true;
-      clearTimeout(timer);
-      cleanup();
-      waitForBestEffortDecode(image, decodeTimeoutMs).then(() => resolve(image));
-    };
-    image.onerror = () => finish(reject, new Error(`Asset failed: ${url}`));
-    image.src = url;
-  });
-}
-
-function waitForStageImage(image, timeoutMs = 20000, decodeTimeoutMs = 1200) {
-  if (image.complete && image.naturalWidth && image.naturalHeight) {
-    return waitForBestEffortDecode(image, decodeTimeoutMs).then(() => {});
-  }
-  if (image.complete && image.src) {
-    return Promise.reject(new Error(`Stage image failed: ${image.src}`));
-  }
+export function loadStageImage(image, url, timeoutMs = 20000, decodeTimeoutMs = 1200) {
   return new Promise((resolve, reject) => {
     let done = false;
     const cleanup = () => {
@@ -79,17 +41,27 @@ function waitForStageImage(image, timeoutMs = 20000, decodeTimeoutMs = 1200) {
       cleanup();
       callback(value);
     };
-    const onLoad = () => {
+    const onLoad = async () => {
       if (done) return;
       done = true;
       clearTimeout(timer);
       cleanup();
-      waitForBestEffortDecode(image, decodeTimeoutMs).then(() => resolve());
+      if (!image.naturalWidth || !image.naturalHeight) {
+        reject(new Error(`Asset has no dimensions: ${url}`));
+        return;
+      }
+      await waitForBestEffortDecode(image, decodeTimeoutMs);
+      resolve(image);
     };
-    const onError = () => finish(reject, new Error(`Stage image failed: ${image.src}`));
-    const timer = setTimeout(() => finish(reject, new Error(`Stage image network timeout: ${image.src}`)), timeoutMs);
+    const onError = () => finish(reject, new Error(`Asset failed: ${url}`));
+    const timer = setTimeout(() => finish(reject, new Error(`Asset network timeout: ${url}`)), timeoutMs);
     image.addEventListener('load', onLoad, { once: true });
     image.addEventListener('error', onError, { once: true });
+    image.decoding = 'async';
+    image.src = url;
+    if (image.complete && image.naturalWidth && image.naturalHeight) {
+      queueMicrotask(onLoad);
+    }
   });
 }
 
@@ -120,12 +92,16 @@ export class AssetController extends BaseController {
     this.errorBox.hidden = true;
     document.body.dataset.assetStatus = 'loading';
 
+    const previous = {
+      src: this.image.getAttribute('src'),
+      alt: this.image.alt,
+      assetKey: this.image.dataset.assetKey,
+      assetRole: this.image.dataset.assetRole
+    };
     const failures = [];
     for (const source of sources) {
       try {
-        const loaded = await loadImage(source.url, networkTimeoutMs, decodeTimeoutMs);
-        this.image.src = loaded.src;
-        await waitForStageImage(this.image, networkTimeoutMs, decodeTimeoutMs);
+        const loaded = await loadStageImage(this.image, source.url, networkTimeoutMs, decodeTimeoutMs);
         this.image.alt = scene.id === 'home'
           ? 'Kitten Nest home'
           : scene.id === 'coffeeCorner'
@@ -144,6 +120,13 @@ export class AssetController extends BaseController {
     }
 
     const message = failures.join(' · ') || `No sources for ${resolvedKey}`;
+    if (previous.src) this.image.src = previous.src;
+    else this.image.removeAttribute('src');
+    this.image.alt = previous.alt;
+    if (previous.assetKey) this.image.dataset.assetKey = previous.assetKey;
+    else delete this.image.dataset.assetKey;
+    if (previous.assetRole) this.image.dataset.assetRole = previous.assetRole;
+    else delete this.image.dataset.assetRole;
     document.body.dataset.assetStatus = 'error';
     this.errorBox.hidden = false;
     this.errorBox.querySelector('[data-asset-error-message]').textContent = message;

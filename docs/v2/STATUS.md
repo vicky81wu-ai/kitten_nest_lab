@@ -83,7 +83,7 @@ decode hint: best effort, bounded at 1.2 seconds
 natural image dimensions: required before Layout readiness
 ```
 
-The second iPhone pass displayed `asset · loading` and then the new, more precise `Asset network timeout` message. That proves the image request itself never completed behind Vercel Deployment Protection. Direct checks showed:
+The second iPhone pass displayed `asset · loading` and then the new, more precise `Asset network timeout` message. Direct checks showed:
 
 ```text
 production-domain static image: available
@@ -91,7 +91,11 @@ protected branch static image: redirected to Vercel login
 public Supabase image: available
 ```
 
-The three top-level room images now use their verified public Supabase objects as canonical sources and retain the same-repository paths as production fallbacks. No Storage object, bucket policy, or live state was changed. This source fix remains isolated and requires one fresh deployed iPhone pass before the home step is accepted.
+The three top-level room images now use their verified public Supabase objects as canonical sources and retain the same-repository paths as production fallbacks. No Storage object, bucket policy, or live state was changed.
+
+A third iPhone pass then timed out on both the public Supabase URL and the repository fallback even though both objects were independently readable. The shared failure point was the detached `new Image()` preloader. AssetController now loads exactly once through the retained, connected stage `<img>`, validates its natural dimensions, and treats decode as a bounded optional hint. The detached preload plus second stage assignment has been removed.
+
+This loader simplification remains isolated and requires one fresh deployed iPhone pass before the home step is accepted.
 
 ## Automated acceptance
 
