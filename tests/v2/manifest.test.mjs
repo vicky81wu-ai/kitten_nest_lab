@@ -50,6 +50,17 @@ test('the generic v2 bubble no longer draws the legacy triangle tail', async () 
   assert.match(css, /\.v2-text-port\s*\{[^}]*border-radius:\s*22px;/s);
 });
 
+test('the product surface contains no runtime inspector or hotspot debug switch', async () => {
+  const manifest = await readJson('../../v2/data/nest-manifest.v2.json');
+  const html = await readFile(new URL('../../v2/index.html', import.meta.url), 'utf8');
+  const css = await readFile(new URL('../../v2/styles/nest-v2.css', import.meta.url), 'utf8');
+  assert.equal(manifest.globalObjects.some((id) => id.includes('inspector')), false);
+  assert.equal(Object.keys(manifest.objects).some((id) => id.includes('inspector')), false);
+  assert.doesNotMatch(html, /v2-(?:runtime|state)-badge|v2-inspector-hot|data-debug-hotspots/);
+  assert.doesNotMatch(css, /data-debug-hotspots|v2-diagnostics|v2-control--inspector/);
+  assert.match(html, /id="v2-source-notice"[^>]*hidden>Preview copy<\/div>/);
+});
+
 test('the game console opens a manifest-owned interactive gomoku panel', async () => {
   const manifest = await readJson('../../v2/data/nest-manifest.v2.json');
   const menu = manifest.objects['gameMenu.panel'];

@@ -177,9 +177,7 @@
   },
   "globalObjects": [
     "system.dockLeft",
-    "system.dockRight",
-    "system.inspectorHot",
-    "system.inspectorPanel"
+    "system.dockRight"
   ],
   "scenes": {
     "home": {
@@ -317,30 +315,6 @@
       "selector": "#v2-dock-right",
       "mount": "existing",
       "action": { "type": "scene.dock", "side": "right" },
-      "exclusive": true,
-      "runtimeStatus": "active",
-      "versionStatus": "canonicalV2Preview"
-    },
-    "system.inspectorHot": {
-      "id": "system.inspectorHot",
-      "kind": "hotspot",
-      "ownerScene": "*",
-      "controller": "hotspot",
-      "selector": "#v2-inspector-hot",
-      "mount": "existing",
-      "action": { "type": "panel.open", "target": "system.inspectorPanel" },
-      "exclusive": true,
-      "runtimeStatus": "active",
-      "versionStatus": "canonicalV2Preview"
-    },
-    "system.inspectorPanel": {
-      "id": "system.inspectorPanel",
-      "kind": "panel",
-      "ownerScene": "*",
-      "controller": "panel",
-      "selector": "[data-panel-id=\"system.inspectorPanel\"]",
-      "variant": "diagnostics",
-      "title": "v2 Runtime Inspector",
       "exclusive": true,
       "runtimeStatus": "active",
       "versionStatus": "canonicalV2Preview"

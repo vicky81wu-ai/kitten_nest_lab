@@ -7,7 +7,7 @@
   <title>Kitten Nest v2 · Isolated Preview</title>
   <link rel="stylesheet" href="/v2/styles/nest-v2.css">
 </head>
-<body data-v2-status="booting" data-debug-hotspots="0">
+<body data-v2-status="booting">
   <main id="v2-shell" aria-label="Kitten Nest v2 isolated preview">
     <section id="v2-stage" class="v2-stage" data-layout-status="waiting" data-transitioning="0">
       <div id="v2-scene-viewport" class="v2-scene-viewport">
@@ -20,10 +20,7 @@
         </div>
       </div>
 
-      <div class="v2-status" aria-live="polite">
-        <span id="v2-runtime-badge" class="v2-status__pill">v2 booting</span>
-        <span id="v2-state-badge" class="v2-status__pill">state loading</span>
-      </div>
+      <div id="v2-source-notice" class="v2-source-notice" aria-live="polite" hidden>Preview copy</div>
 
       <div id="v2-asset-error" class="v2-error-card" hidden>
         <strong>Scene asset unavailable</strong>
@@ -38,7 +35,6 @@
 
       <nav id="v2-controls" class="v2-controls" aria-label="Scene controls">
         <button id="v2-dock-left" class="v2-control v2-control--dock" type="button" aria-label="左侧场景入口">‹</button>
-        <button id="v2-inspector-hot" class="v2-control v2-control--inspector" type="button" aria-label="打开 v2 诊断面板">v2</button>
         <button id="v2-dock-right" class="v2-control v2-control--dock" type="button" aria-label="右侧场景入口">›</button>
       </nav>
 

@@ -120,12 +120,6 @@ export class PanelController extends BaseController {
         'v2-panel__note',
         String(state[object.stateField] || object.emptyText || '')
       );
-      appendText(
-        this.body,
-        'p',
-        'v2-panel__meta',
-        `source: ${this.context.controllers.get('state').source}`
-      );
       return;
     }
 
@@ -138,35 +132,6 @@ export class PanelController extends BaseController {
       appendText(meta, 'span', 'v2-weather-panel__pill', weather.description);
       this.body.appendChild(meta);
       appendText(this.body, 'p', 'v2-panel__note', weatherAdvice(weather));
-      appendText(
-        this.body,
-        'p',
-        'v2-panel__meta',
-        `source: ${this.context.controllers.get('state').source}`
-      );
-      return;
-    }
-
-    if (object.variant === 'diagnostics') {
-      const scene = this.context.currentSnapshot?.sceneId || 'booting';
-      const asset = this.context.currentAsset?.key || 'none';
-      const state = this.context.controllers.get('state');
-      appendText(this.body, 'p', 'v2-panel__meta', `scene ${scene} · asset ${asset} · state ${state.source}`);
-      const list = document.createElement('dl');
-      list.className = 'v2-diagnostics';
-      for (const [id, status] of this.context.controllerStatuses) {
-        appendText(list, 'dt', '', id);
-        appendText(list, 'dd', '', `${status.status}${status.detail ? ` · ${status.detail}` : ''}`);
-      }
-      this.body.appendChild(list);
-      const debug = document.createElement('button');
-      debug.type = 'button';
-      debug.className = 'v2-panel__action';
-      debug.dataset.panelCommand = 'toggle-debug';
-      debug.textContent = document.body.dataset.debugHotspots === '1'
-        ? 'Hide hotspot outlines'
-        : 'Show hotspot outlines';
-      this.body.appendChild(debug);
       return;
     }
 
@@ -200,11 +165,6 @@ export class PanelController extends BaseController {
     }
     if (this.interactiveSession?.handleClick(event.target)) {
       event.preventDefault();
-      return;
-    }
-    if (event.target.matches('[data-panel-command="toggle-debug"]')) {
-      document.body.dataset.debugHotspots = document.body.dataset.debugHotspots === '1' ? '0' : '1';
-      this.render(this.context.manifest.objects[this.openId]);
       return;
     }
     const itemButton = event.target.closest?.('[data-panel-item-index]');

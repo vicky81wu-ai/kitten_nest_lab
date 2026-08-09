@@ -20,6 +20,7 @@ Status: framework regression and automated mobile-browser route passed; no devic
 8. In each beach scene, tap Alex and Vicky to show/hide/advance their separate dialogue.
 9. Advance handhold → bracelet → stall, then walk the left/back path to coffeeCorner.
 10. Confirm the previously accepted notebook, 19.8, panels, lapClose, and home back path still work.
+11. Confirm there is no center `V2` button or engineering-source line; `PREVIEW COPY` appears only on a degraded-state run.
 
 ## Automated mobile-browser checkpoint
 
@@ -39,6 +40,7 @@ handhold -> bracelet -> stall
 stall -> bracelet -> handhold -> coffeeCorner
 coffeeCorner -> lapClose hide/show-next -> coffeeCorner -> home
 zero page errors, console errors, or failed requests
+no runtime inspector, status ticker, or hotspot debug switch in the product DOM
 ```
 
 This pass caught and fixed panorama dialogue clipping. Newly revealed bubbles now wait for their measured layout and adjust only the horizontal scene viewport before the browser paints them. Cover rooms and manifest coordinates are unchanged.

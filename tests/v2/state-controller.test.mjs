@@ -21,7 +21,7 @@ test('preview fallback refreshes coalesce and never masquerade as stale live sta
 
   try {
     const statuses = [];
-    const badge = { dataset: {}, textContent: '', title: '' };
+    const sourceNotice = { hidden: true };
     const context = {
       manifest: {
         runtime: {
@@ -32,7 +32,7 @@ test('preview fallback refreshes coalesce and never masquerade as stale live sta
           }
         }
       },
-      elements: { stateBadge: badge },
+      elements: { sourceNotice },
       events: { emit: () => {} },
       setControllerStatus: (_id, status, detail) => statuses.push({ status, detail })
     };
@@ -40,7 +40,8 @@ test('preview fallback refreshes coalesce and never masquerade as stale live sta
 
     await controller.ready();
     assert.equal(controller.source, 'degradedFallback');
-    assert.equal(badge.textContent, 'preview copy');
+    assert.equal(sourceNotice.hidden, false);
+    assert.equal(globalThis.document.body.dataset.stateSource, 'degradedFallback');
     assert.equal(fetchCalls, 2);
 
     await Promise.all([
@@ -51,7 +52,7 @@ test('preview fallback refreshes coalesce and never masquerade as stale live sta
     assert.equal(fetchCalls, 3);
     assert.equal(controller.source, 'degradedFallback');
     assert.equal(controller.status, 'ready');
-    assert.equal(badge.textContent, 'preview copy');
+    assert.equal(sourceNotice.hidden, false);
     assert.equal(statuses.at(-1).detail, 'degradedFallback');
   } finally {
     globalThis.document = originalDocument;

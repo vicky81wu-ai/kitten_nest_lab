@@ -113,14 +113,9 @@ export class StateController extends BaseController {
 
   paintStatus() {
     document.body.dataset.stateSource = this.source;
-    const badge = this.context.elements.stateBadge;
-    if (!badge) return;
-    badge.dataset.source = this.source;
-    if (this.source === 'live') badge.textContent = 'cloud live';
-    else if (this.source === 'degradedFallback') badge.textContent = 'preview copy';
-    else if (this.value) badge.textContent = 'cloud stale';
-    else badge.textContent = 'state loading';
-    badge.title = this.error?.message || this.source;
+    const notice = this.context.elements.sourceNotice;
+    if (!notice) return;
+    notice.hidden = this.source !== 'degradedFallback';
   }
 
   get() {

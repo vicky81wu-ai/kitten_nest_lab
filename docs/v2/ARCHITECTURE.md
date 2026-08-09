@@ -109,6 +109,12 @@ GPT / ChatGPT App
 
 v2 contains no call to `/api/set-state` and no write credential handling. If `/api/state` fails, the isolated preview may use `preview-state.v2.json` only for surfaces that explicitly set `allowDegradedFallback:true`. The UI labels this source `preview copy`. Recovered beach dialogue is declared `staticText` with a manifest-owned fallback queue; it does not invent a writable registry target.
 
+## Product surface boundary
+
+Controller lifecycle states stay internal. They may feed automated assertions and fail-closed error handling, but they do not own a product-facing inspector, status ticker, hotspot-outline switch, or diagnostic panel. Those temporary construction surfaces were removed from the manifest, DOM, PanelController, and CSS together.
+
+Source disclosure is deliberately narrower than diagnostics. StateController reveals one passive `PREVIEW COPY` notice only while the explicit degraded fixture is active; normal live and loading states add no badge. User panels render their content rather than internal source names. Safety cards remain stage-owned and appear only when an asset, runtime action, or boot transaction cannot complete safely.
+
 ## Source-of-truth gate
 
 Any object with base-image coordinates starts hidden. It becomes visible only after:

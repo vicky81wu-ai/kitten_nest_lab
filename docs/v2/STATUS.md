@@ -28,7 +28,7 @@ coffeeCorner game menu and interactive Gomoku panel
 lapClose rotating bubble
 home clock hands and sparkles
 coffeeCorner steam
-explicit state-source and asset-failure diagnostics
+degraded-preview disclosure and fail-closed asset handling
 ```
 
 The lap-close body trigger coordinate is imported as a preview candidate and remains visually unverified. It is marked `candidateFromLegacyCard`, not `baseImageLocked`.
@@ -91,6 +91,12 @@ revokes temporary object URLs when the panel closes
 
 Browser same-origin rules still apply. If the old photos live under another origin, or the browser does not support safe enumeration, v2 leaves them untouched and shows the existing three memory cards instead.
 
+## Product-surface cleanup
+
+The temporary runtime inspector has been retired at code level. Its manifest objects, center `V2` control, controller-status pills, hotspot-outline switch, diagnostic panel branch, and diagnostic-only styles no longer ship in the preview. Weather and notebook panels also no longer expose internal `source:` metadata.
+
+Internal lifecycle status remains available to the runtime and automated tests. The only passive source disclosure is `PREVIEW COPY`, shown when and only when StateController is actually serving the explicit degraded fixture. Asset, runtime, and fatal cards remain because they fail closed instead of presenting the wrong room.
+
 ## State of external dependencies
 
 At implementation start, both Supabase projects were `INACTIVE`:
@@ -127,7 +133,7 @@ cloud-browser self-check: Vercel Protection login wall; the active Work client e
 local mobile-browser acceptance: passed with the exact public asset bytes cached read-only
 ```
 
-Deployment success is not visual acceptance. Each restoration batch still receives one consolidated device pass behind the existing preview login.
+Deployment success is not visual acceptance. Continued branch construction receives automated mobile-browser acceptance; one concise iPhone pass is reserved for the eventual promotion checkpoint.
 
 ## First iPhone checkpoint
 
@@ -189,7 +195,7 @@ Run:
 npm run check:v2
 ```
 
-This currently runs 40 checks covering controller contracts, one-manifest ownership, registered or explicitly static text ports, selector exclusivity, child isolation, portrait and panorama navigation, approved beach order, failed-asset rollback, projection math, panorama bubble reveal, text mutation layout invalidation, fallback refresh serialization, weather state/advice, time-of-day and manual asset resolution, connected stage-image loading, loading-veil presence, bounded best-effort image decode behavior, Gomoku legality/wins/undo and all three AI difficulty paths, plus absent/unsupported/existing legacy-photo database behavior.
+This currently runs 41 checks covering controller contracts, one-manifest ownership, registered or explicitly static text ports, selector exclusivity, child isolation, portrait and panorama navigation, approved beach order, failed-asset rollback, projection math, panorama bubble reveal, text mutation layout invalidation, fallback refresh serialization, weather state/advice, time-of-day and manual asset resolution, connected stage-image loading, loading-veil presence, bounded best-effort image decode behavior, Gomoku legality/wins/undo and all three AI difficulty paths, absent/unsupported/existing legacy-photo database behavior, and the absence of product-facing inspector/debug controls.
 
 The local 393 × 852 mobile-browser pass additionally exercised the real UI route: moon round-trip, weather panel, coffeeCorner, a seeded six-slot read-only memories carousel including an empty slot, game menu, a 225-cell Gomoku board, kitten/Alex turns, whole-round undo, difficulty reset, nested panel back, beach entry, 885 px of horizontal pan range, both-character dialogue, all three beach scenes, the three-level back chain, lapClose hide/show-next, and the final return home. It found one panorama-only defect: a newly opened dialogue could be clipped after its character hotspot moved the viewport. TextPort now waits for Layout readiness and adjusts horizontal scroll before paint; the rerun measured every sampled beach bubble at `visibleRatio: 1` with zero console, page, or request errors.
 

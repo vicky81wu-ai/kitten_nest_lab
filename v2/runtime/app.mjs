@@ -23,8 +23,7 @@ function collectElements() {
     textLayer: byId('v2-text-layer'),
     panelLayer: byId('v2-panel-layer'),
     controls: byId('v2-controls'),
-    stateBadge: byId('v2-state-badge'),
-    runtimeBadge: byId('v2-runtime-badge'),
+    sourceNotice: byId('v2-source-notice'),
     assetError: byId('v2-asset-error'),
     runtimeError: byId('v2-runtime-error')
   };
@@ -54,8 +53,6 @@ async function boot() {
     isReconcilingScene: false,
     setControllerStatus(id, status, detail = '') {
       controllerStatuses.set(id, { status, detail, at: Date.now() });
-      elements.runtimeBadge.textContent = `${id} · ${status}`;
-      elements.runtimeBadge.dataset.status = status;
     },
     reportError(scope, error) {
       console.error(`[v2:${scope}]`, error);
@@ -90,8 +87,6 @@ async function boot() {
 
   const bootReady = Boolean(context.currentSnapshot && context.currentAsset);
   document.body.dataset.v2Status = bootReady ? 'ready' : 'blocked';
-  elements.runtimeBadge.textContent = bootReady ? 'v2 ready' : 'v2 blocked';
-  elements.runtimeBadge.dataset.status = bootReady ? 'ready' : 'blocked';
 
   window.KittenNestV2 = Object.freeze({
     version: manifest.version,
