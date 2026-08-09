@@ -46,3 +46,33 @@ test('a changed text port stays hidden from layout until its new height is place
   controller.render(port);
   assert.equal(schedules, 1);
 });
+
+test('an initially hidden beach bubble shows its first line before advancing', () => {
+  const context = {
+    isReconcilingScene: true,
+    controllers: new Map([
+      ['state', { source: 'degradedFallback' }],
+      ['layout', { schedule: () => {} }]
+    ])
+  };
+  const controller = new TextPortController(context);
+  const port = {
+    object: { initiallyVisible: false },
+    element: createElement(),
+    queue: ['first', 'second'],
+    index: 0,
+    visible: false,
+    sourceField: 'manifest:fallbackQueue',
+    hasShown: false
+  };
+  controller.ports.set('beach', port);
+
+  controller.toggleNext('beach');
+  assert.equal(port.visible, true);
+  assert.equal(port.index, 0);
+  controller.toggleNext('beach');
+  assert.equal(port.visible, false);
+  controller.toggleNext('beach');
+  assert.equal(port.visible, true);
+  assert.equal(port.index, 1);
+});

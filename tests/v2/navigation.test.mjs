@@ -26,3 +26,21 @@ test('jumpTo clears nested history', () => {
   );
   assert.deepEqual(state, { current: 'home', stack: [] });
 });
+
+test('the three beach scenes use the same push/back stack owner', () => {
+  const beachScenes = {
+    coffeeCorner: { id: 'coffeeCorner', parent: null },
+    handhold: { id: 'handhold', parent: 'coffeeCorner' },
+    bracelet: { id: 'bracelet', parent: 'handhold' },
+    stall: { id: 'stall', parent: 'bracelet' }
+  };
+  let state = createNavigationState('coffeeCorner');
+  state = reduceNavigation(state, { type: 'scene.push', target: 'handhold' }, beachScenes);
+  state = reduceNavigation(state, { type: 'scene.push', target: 'bracelet' }, beachScenes);
+  state = reduceNavigation(state, { type: 'scene.push', target: 'stall' }, beachScenes);
+  assert.deepEqual(state, { current: 'stall', stack: ['coffeeCorner', 'handhold', 'bracelet'] });
+  state = reduceNavigation(state, { type: 'scene.back' }, beachScenes);
+  state = reduceNavigation(state, { type: 'scene.back' }, beachScenes);
+  state = reduceNavigation(state, { type: 'scene.back' }, beachScenes);
+  assert.deepEqual(state, { current: 'coffeeCorner', stack: [] });
+});

@@ -30,6 +30,14 @@ export function resolveTextPortState(state, object) {
   }
 
   const single = String(singleHit.value ?? '').trim();
+  const fallbackQueue = cleanQueue(object?.fallbackQueue);
+  if (!single && fallbackQueue.length) {
+    return {
+      queue: fallbackQueue,
+      index: Number(object?.fallbackIndex || 0) || 0,
+      sourceField: 'manifest:fallbackQueue'
+    };
+  }
   return {
     queue: single ? [single] : [],
     index: Number(indexHit.value || 0) || 0,

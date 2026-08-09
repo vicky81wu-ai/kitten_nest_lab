@@ -56,12 +56,21 @@ export function validateManifest(manifest, textTargetRegistry = null) {
     }
     if (object?.kind === 'textPort' && textTargetRegistry) {
       const targets = textTargetRegistry.targets || {};
-      if (!targets[object.targetId]) errors.push(`TextPort ${id} references unregistered targetId ${object.targetId}`);
+      if (object.staticText) {
+        if (!Array.isArray(object.fallbackQueue) || !object.fallbackQueue.length) {
+          errors.push(`Static TextPort ${id} requires a non-empty fallbackQueue`);
+        }
+      } else if (!targets[object.targetId]) {
+        errors.push(`TextPort ${id} references unregistered targetId ${object.targetId}`);
+      }
     }
   });
 
   Object.entries(scenes).forEach(([sceneId, scene]) => {
     if (scene?.id !== sceneId) errors.push(`Scene key/id mismatch: ${sceneId}`);
+    if (scene?.presentation && !['cover', 'panorama'].includes(scene.presentation)) {
+      errors.push(`Scene ${sceneId} uses unsupported presentation ${scene.presentation}`);
+    }
     if (!manifest?.assets?.[scene?.assetKey]) errors.push(`Scene ${sceneId} references unknown asset ${scene?.assetKey}`);
     (scene?.objects || []).forEach((objectId) => {
       const object = objects[objectId];

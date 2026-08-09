@@ -35,3 +35,15 @@ test('baselineTop keeps baseline copy fixed while taller text grows upward', () 
   });
   assert.equal(placement.top, 40);
 });
+
+test('content-sized panorama bubbles center from their measured width', () => {
+  const placement = projectCoordinate({
+    imageBox: { left: 0, top: 0, width: 1200, height: 800 },
+    stageRect: { left: 0, top: 0 },
+    coordinate: { anchor: 'center', x: 0.6, y: 0.3 },
+    elementSize: { width: 300, height: 80 }
+  });
+  assert.equal(placement.left, 570);
+  assert.equal(placement.top, 200);
+  assert.equal(placement.width, 0);
+});

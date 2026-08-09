@@ -38,12 +38,16 @@ export function projectCoordinate({
   if (!imageBox || !stageRect || !coordinate) return null;
 
   const anchor = coordinate.anchor || 'center';
-  const width = imageBox.width * Number(coordinate.width || 0);
+  const explicitWidth = coordinate.width == null
+    ? null
+    : imageBox.width * Number(coordinate.width || 0);
+  const measuredWidth = Number(elementSize.width || 0);
+  const anchorWidth = explicitWidth ?? measuredWidth;
   const explicitHeight = coordinate.height == null
     ? null
     : imageBox.height * Number(coordinate.height || 0);
-  const aspectHeight = coordinate.aspectRatio && width
-    ? width / Number(coordinate.aspectRatio)
+  const aspectHeight = coordinate.aspectRatio && explicitWidth
+    ? explicitWidth / Number(coordinate.aspectRatio)
     : null;
   const measuredHeight = Number(elementSize.height || 0);
   const height = explicitHeight ?? aspectHeight ?? measuredHeight;
@@ -53,10 +57,10 @@ export function projectCoordinate({
   let top = imageY;
 
   if (anchor === 'center') {
-    left -= width / 2;
+    left -= anchorWidth / 2;
     top -= height / 2;
   } else if (anchor === 'bottomRight') {
-    left -= width;
+    left -= anchorWidth;
     top -= height;
   } else if (anchor === 'bottomLeft') {
     top -= height;
@@ -67,7 +71,7 @@ export function projectCoordinate({
   return {
     left: left - Number(stageRect.left || 0),
     top: top - Number(stageRect.top || 0),
-    width,
+    width: explicitWidth ?? 0,
     height: explicitHeight ?? aspectHeight,
     rotation: Number(coordinate.rotation || 0)
   };

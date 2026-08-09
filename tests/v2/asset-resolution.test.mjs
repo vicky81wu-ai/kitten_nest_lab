@@ -3,7 +3,9 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import {
   loadStageImage,
+  nextToggleAssetKey,
   resolveAssetKey,
+  resolveScenePresentation,
   waitForBestEffortDecode
 } from '../../v2/runtime/controllers/asset-controller.mjs';
 
@@ -55,6 +57,13 @@ test('time-of-day asset selection stays inside AssetController', () => {
   assert.equal(resolveAssetKey(assets, 'home.auto', 22), 'home.night');
 });
 
+test('manual moon toggles and scene presentation remain pure manifest decisions', () => {
+  assert.equal(nextToggleAssetKey('home.day', ['home.day', 'home.night']), 'home.night');
+  assert.equal(nextToggleAssetKey('home.night', ['home.day', 'home.night']), 'home.day');
+  assert.equal(resolveScenePresentation({ presentation: 'panorama' }), 'panorama');
+  assert.equal(resolveScenePresentation({}), 'cover');
+});
+
 test('image decode is a bounded best-effort readiness hint', async () => {
   assert.equal(await waitForBestEffortDecode({}, 5), 'unsupported');
   assert.equal(await waitForBestEffortDecode({ decode: async () => {} }, 5), 'decoded');
@@ -96,4 +105,5 @@ test('asset loading hides progressive image paint behind the loading veil', asyn
     css,
     /body\[data-asset-status="loading"\]\s+\.v2-stage\[data-transitioning="1"\]\s+\.v2-stage__image\s*\{[^}]*opacity:\s*0/s
   );
+  assert.match(css, /body\[data-scene-presentation="panorama"\]\s+\.v2-scene-viewport\s*\{[^}]*overflow-x:\s*auto/s);
 });

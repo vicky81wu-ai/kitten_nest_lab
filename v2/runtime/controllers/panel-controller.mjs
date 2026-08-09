@@ -1,4 +1,5 @@
 import { BaseController } from '../core/base-controller.mjs';
+import { resolveWeatherState, weatherAdvice } from '../core/weather-state.mjs';
 
 function appendText(parent, tag, className, text) {
   const element = document.createElement(tag);
@@ -74,6 +75,24 @@ export class PanelController extends BaseController {
         'v2-panel__note',
         String(state[object.stateField] || object.emptyText || '')
       );
+      appendText(
+        this.body,
+        'p',
+        'v2-panel__meta',
+        `source: ${this.context.controllers.get('state').source}`
+      );
+      return;
+    }
+
+    if (object.variant === 'weatherAdvice') {
+      const state = this.context.controllers.get('state').get() || {};
+      const weather = resolveWeatherState(state, object);
+      const meta = document.createElement('div');
+      meta.className = 'v2-weather-panel__meta';
+      appendText(meta, 'span', 'v2-weather-panel__pill', weather.temperature);
+      appendText(meta, 'span', 'v2-weather-panel__pill', weather.description);
+      this.body.appendChild(meta);
+      appendText(this.body, 'p', 'v2-panel__note', weatherAdvice(weather));
       appendText(
         this.body,
         'p',

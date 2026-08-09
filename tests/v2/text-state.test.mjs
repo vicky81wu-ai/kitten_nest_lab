@@ -26,3 +26,15 @@ test('migration fallback remains readable without becoming a second owner', () =
   assert.deepEqual(resolved.queue, ['legacy']);
   assert.equal(resolved.sourceField, 'alexBubbles');
 });
+
+test('static beach dialogue uses its manifest fallback without inventing a registry target', () => {
+  const resolved = resolveTextPortState({}, {
+    staticText: true,
+    fallbackQueue: ['牵手优先。', '手不准松。']
+  });
+  assert.deepEqual(resolved, {
+    queue: ['牵手优先。', '手不准松。'],
+    index: 0,
+    sourceField: 'manifest:fallbackQueue'
+  });
+});

@@ -10,11 +10,15 @@
 <body data-v2-status="booting" data-debug-hotspots="0">
   <main id="v2-shell" aria-label="Kitten Nest v2 isolated preview">
     <section id="v2-stage" class="v2-stage" data-layout-status="waiting" data-transitioning="0">
-      <img id="v2-scene-image" class="v2-stage__image" alt="" decoding="async">
+      <div id="v2-scene-viewport" class="v2-scene-viewport">
+        <div id="v2-scene-world" class="v2-scene-world">
+          <img id="v2-scene-image" class="v2-stage__image" alt="" decoding="async">
 
-      <div id="v2-effect-layer" class="v2-layer v2-layer--effects" aria-hidden="true"></div>
-      <div id="v2-text-layer" class="v2-layer v2-layer--text"></div>
-      <div id="v2-hotspot-layer" class="v2-layer v2-layer--hotspots"></div>
+          <div id="v2-effect-layer" class="v2-layer v2-layer--effects" aria-hidden="true"></div>
+          <div id="v2-text-layer" class="v2-layer v2-layer--text"></div>
+          <div id="v2-hotspot-layer" class="v2-layer v2-layer--hotspots"></div>
+        </div>
+      </div>
 
       <div class="v2-status" aria-live="polite">
         <span id="v2-runtime-badge" class="v2-status__pill">v2 booting</span>

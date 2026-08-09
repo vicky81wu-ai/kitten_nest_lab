@@ -1,6 +1,6 @@
 # Kitten Nest v2 Independent Preview Acceptance
 
-Status: iPhone vertical slice passed; post-fix regression pass pending
+Status: framework regression passed; restoration batch pending one consolidated device pass
 
 ## Visual route
 
@@ -8,17 +8,16 @@ Status: iPhone vertical slice passed; post-fix regression pass pending
 /v2/index.html
 ```
 
-## Short acceptance loop
+## Restoration acceptance loop
 
-1. Home opens with the correct day/night image and no overlay jump.
-2. Tap the pink notebook; one panel opens and closes cleanly.
-3. Tap the right dock to enter coffeeCorner.
-4. Tap 19.8: visible bubble hides. Tap 19.8 again: the next line appears.
-5. Tap the photo wall and game console; both use the same panel behavior and do not steal each other.
-6. Tap Alex's lap to push `lapClose`.
-7. Confirm no coffeeCorner photo wall, console, 19.8, or steam remains interactive in `lapClose`.
-8. Tap the lap bubble to hide it, then the registered lap trigger to show the next line.
-9. Tap the left dock; it returns to coffeeCorner, then left dock returns home.
+1. Home opens normally; tap the moon lamp twice and confirm day → night → day uses two real images.
+2. Confirm the window shows temperature/description; tap it and close the single shared “窗边叮嘱” panel.
+3. Enter coffeeCorner and confirm the main bubble has rounded corners with no triangle tail.
+4. Tap the top-row beach photo to enter the first seaside panorama.
+5. Drag the panorama horizontally; fixed v2 controls must stay put while the scene moves.
+6. In each beach scene, tap Alex and Vicky to show/hide/advance their separate dialogue.
+7. Advance handhold → bracelet → stall, then walk the left/back path to coffeeCorner.
+8. Confirm the previously accepted notebook, 19.8, panels, lapClose, and home back path still work.
 
 ## iPhone checkpoint
 
@@ -43,7 +42,7 @@ coffeeCorner bubble briefly reused its prior layout position after a text-height
 preview fallback lifecycle refresh briefly surfaced a stale diagnostic status
 ```
 
-The framework fixes for these observations are implemented in the isolated branch. The lap bubble hide/next cycle and the full `lapClose -> coffeeCorner -> home` back chain remain in the final short device pass.
+The framework fixes for these observations passed on iPhone. The next device pass is only for the restored moon/weather/beach batch and one regression sweep of the accepted chain.
 
 ## Failure rule
 

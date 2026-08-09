@@ -5,6 +5,9 @@ export async function dispatchAction(context, action) {
   if (type.startsWith('scene.')) {
     return context.controllers.get('sceneRuntime').navigate(action);
   }
+  if (type === 'asset.toggle') {
+    return context.controllers.get('asset').toggle(action);
+  }
   if (type === 'text.toggleNext') {
     return context.controllers.get('textPort').toggleNext(action.target);
   }

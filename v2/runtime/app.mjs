@@ -15,6 +15,8 @@ function collectElements() {
   return {
     shell: byId('v2-shell'),
     stage: byId('v2-stage'),
+    sceneViewport: byId('v2-scene-viewport'),
+    sceneWorld: byId('v2-scene-world'),
     sceneImage: byId('v2-scene-image'),
     effectLayer: byId('v2-effect-layer'),
     hotspotLayer: byId('v2-hotspot-layer'),

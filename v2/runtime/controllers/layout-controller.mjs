@@ -17,6 +17,7 @@ export class LayoutController extends BaseController {
   async mount() {
     await super.mount();
     this.stage = this.context.elements.stage;
+    this.world = this.context.elements.sceneWorld;
     this.image = this.context.elements.sceneImage;
     window.addEventListener('resize', this.boundSchedule);
     window.addEventListener('orientationchange', this.boundSchedule);
@@ -54,7 +55,7 @@ export class LayoutController extends BaseController {
     clone.style.width = `${width}px`;
     clone.style.maxWidth = `${width}px`;
     clone.style.height = 'auto';
-    this.stage.appendChild(clone);
+    this.world.appendChild(clone);
     const height = clone.getBoundingClientRect().height;
     clone.remove();
     return height;
@@ -68,7 +69,13 @@ export class LayoutController extends BaseController {
     await nextFrame();
     if (expectedEpoch !== this.epoch || passId !== this.passId) return;
 
-    const imageRect = this.image.getBoundingClientRect();
+    const worldRect = this.world.getBoundingClientRect();
+    const imageRect = {
+      left: worldRect.left + this.image.offsetLeft,
+      top: worldRect.top + this.image.offsetTop,
+      width: this.image.offsetWidth,
+      height: this.image.offsetHeight
+    };
     const imageBox = coverBox(imageRect, {
       width: this.image.naturalWidth,
       height: this.image.naturalHeight
@@ -79,7 +86,7 @@ export class LayoutController extends BaseController {
       return;
     }
 
-    const stageRect = this.stage.getBoundingClientRect();
+    const stageRect = worldRect;
     for (const objectId of snapshot.allowedObjectIds) {
       const object = this.context.manifest.objects[objectId];
       if (!object?.coordinate || !object.selector) continue;
@@ -135,7 +142,7 @@ export class LayoutController extends BaseController {
     this.passId += 1;
     if (this.frameId != null) cancelAnimationFrame(this.frameId);
     this.frameId = null;
-    this.stage.querySelectorAll('[data-requires-layout="1"]').forEach((element) => {
+    this.world.querySelectorAll('[data-requires-layout="1"]').forEach((element) => {
       element.removeAttribute('data-layout-ready');
     });
     this.context.currentLayout = null;

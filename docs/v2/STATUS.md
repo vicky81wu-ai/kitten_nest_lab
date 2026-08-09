@@ -1,7 +1,7 @@
 # Kitten Nest v2 Status
 
 Updated: 2026-08-09
-Status: first iPhone vertical slice passed; framework polish implemented, not promoted
+Status: framework regression passed; home/weather and beach restoration implemented, not promoted
 
 ## Isolation
 
@@ -33,6 +33,34 @@ explicit state-source and asset-failure diagnostics
 
 The lap-close body trigger coordinate is imported as a preview candidate and remains visually unverified. It is marked `candidateFromLegacyCard`, not `baseImageLocked`.
 
+## Framework regression result
+
+Vicky accepted all four post-fix checks on iPhone Safari:
+
+```text
+room image waits behind the loading veil
+coffeeCorner bubble changes height without a one-frame position jump
+lapClose bubble hide/show-next cycle
+lapClose -> coffeeCorner -> home full back chain
+```
+
+## Restoration batch 0.2.0
+
+Implemented inside the isolated v2 runtime:
+
+```text
+home moon lamp toggles the canonical day/night asset pair
+home weather reads windowTemp/windowDesc and opens the shared weather-advice panel
+preview weather is explicitly marked 28℃ / Cloudy · preview when private state is asleep
+generic bubble triangle tail removed
+coffeeCorner top-photo beach entry restored
+three approved beach panoramas restored in handhold -> bracelet -> stall order
+approved beach talk/next/back coordinates and both dialogue queues restored
+one scene world now supports portrait cover and horizontal panorama presentation
+```
+
+The beach assets were verified read-only in the existing public asset bucket. No bucket, policy, database row, or state value was changed.
+
 ## State of external dependencies
 
 At implementation start, both Supabase projects were `INACTIVE`:
@@ -62,10 +90,12 @@ The preview therefore uses its explicit read-only fixture path and labels it `pr
 ```text
 draft PR: #4
 Vercel branch deployment: Ready
-browser acceptance: blocked by Vercel Deployment Protection login
+protected preview login: completed on Vicky's iPhone
+framework browser acceptance: passed
+restoration batch 0.2.0: not yet deployed
 ```
 
-Deployment success is not visual acceptance. The branch must still be opened behind the preview login and walked through the acceptance loop.
+Deployment success is not visual acceptance. Each restoration batch still receives one consolidated device pass behind the existing preview login.
 
 ## First iPhone checkpoint
 
@@ -127,7 +157,7 @@ Run:
 npm run check:v2
 ```
 
-This validates controller contracts, one-manifest ownership, registered text targets, selector exclusivity, child isolation, navigation stack behavior, failed-asset rollback, cover math, text mutation layout invalidation, fallback refresh serialization, text-field precedence, time-of-day asset resolution, connected stage-image loading, loading-veil presence, and bounded best-effort image decode behavior.
+This currently runs 26 checks covering controller contracts, one-manifest ownership, registered or explicitly static text ports, selector exclusivity, child isolation, portrait and panorama navigation, approved beach order, failed-asset rollback, projection math, text mutation layout invalidation, fallback refresh serialization, weather state/advice, time-of-day and manual asset resolution, connected stage-image loading, loading-veil presence, and bounded best-effort image decode behavior.
 
 ## Promotion stop condition
 

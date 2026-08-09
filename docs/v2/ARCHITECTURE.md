@@ -27,9 +27,9 @@ The v2 manifest may describe read compatibility fields, but it cannot create a w
 | Controller | Owns | Must not own |
 |---|---|---|
 | State | Read, cache, refresh, degraded-state labeling | DOM placement, navigation, writes |
-| Asset | Resolve `assetKey`, preload, decode, source fallback | Scene choice, hotspots |
+| Asset | Resolve/toggle `assetKey`, decode, source fallback, cover/panorama presentation | Scene choice, hotspots |
 | SceneRuntime | `go`, `push`, `back`, `jumpTo`, stack, atomic scene transition | Text queue logic, panel content |
-| Layout | One cover-box calculation and all base-image projection | Click results, scene stack |
+| Layout | One base-image calculation and all cover/panorama projection | Click results, scene stack |
 | Hotspot | One pointer delegation path and standard action dispatch | Private navigation or panel logic |
 | TextPort | Queue, index, show, hide, next, canonical/fallback reads | State fetching, coordinate math |
 | Panel | Open, close, layer, scene-exit cleanup | Hotspot placement, navigation |
@@ -51,6 +51,7 @@ scene.push
 scene.back
 scene.jumpTo
 scene.dock
+asset.toggle
 text.toggleNext
 text.hide
 panel.open
@@ -75,6 +76,8 @@ lock input
 
 `lapClose` owns only its two registered objects plus global controls. It does not inherit `coffeeCorner` hotspots, panels, effects, or text ports.
 
+The three beach scenes use the same transaction and stack. Their wide base images live in the same retained scene world as portrait rooms; only the manifest presentation changes from `cover` to `panorama`. The viewport may scroll horizontally, while controls and panels remain stage-level UI.
+
 If the next scene asset fails, SceneRuntime does not commit the candidate navigation state. It reconciles the prior snapshot, restores Layout readiness for the prior owner set, emits `scene:didFail`, and leaves the scene stack unchanged.
 
 ## State and MCP boundary
@@ -90,7 +93,7 @@ GPT / ChatGPT App
 -> TextPort or Panel
 ```
 
-v2 contains no call to `/api/set-state` and no write credential handling. If `/api/state` fails, the isolated preview may use `preview-state.v2.json` only for surfaces that explicitly set `allowDegradedFallback:true`. The UI labels this source `preview copy`.
+v2 contains no call to `/api/set-state` and no write credential handling. If `/api/state` fails, the isolated preview may use `preview-state.v2.json` only for surfaces that explicitly set `allowDegradedFallback:true`. The UI labels this source `preview copy`. Recovered beach dialogue is declared `staticText` with a manifest-owned fallback queue; it does not invent a writable registry target.
 
 ## Source-of-truth gate
 
@@ -100,7 +103,7 @@ Any object with base-image coordinates starts hidden. It becomes visible only af
 asset loaded / decoded
 -> scene ownership resolved
 -> object DOM mounted
--> coverBox available
+-> cover or panorama base-image box available
 -> Layout applies registered coordinate
 -> data-layout-ready=1
 ```
