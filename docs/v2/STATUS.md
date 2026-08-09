@@ -42,7 +42,30 @@ kitten-nest-mcp
 kitten-nest-lab-assets
 ```
 
-The preview therefore has an explicit read-only fixture path. This does not replace the requirement to restore and verify real cloud state and the lap-close asset before visual acceptance.
+The public asset project was restored separately after the foundation commit:
+
+```text
+kitten-nest-lab-assets: ACTIVE_HEALTHY
+lap-close-01.jpg: verified public image, 853 x 1844
+```
+
+The private text/state project remains intentionally inactive:
+
+```text
+kitten-nest-mcp: INACTIVE
+```
+
+The preview therefore uses its explicit read-only fixture path and labels it `preview copy`. This avoids re-exposing notebook/history state through the currently public `/api/state` read path before a separate privacy plan is approved.
+
+## Deployment checkpoint
+
+```text
+draft PR: #4
+Vercel branch deployment: Ready
+browser acceptance: blocked by Vercel Deployment Protection login
+```
+
+Deployment success is not visual acceptance. The branch must still be opened behind the preview login and walked through the acceptance loop.
 
 ## Automated acceptance
 
