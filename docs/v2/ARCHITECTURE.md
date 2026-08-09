@@ -1,0 +1,110 @@
+# Kitten Nest v2 Architecture
+
+Status: isolated preview architecture  
+Route: `/v2/index.html`  
+Stable route: `/cloud` remains untouched
+
+## Single machine truth
+
+The v2 runtime reads one canonical manifest:
+
+```text
+v2/data/nest-manifest.v2.json
+```
+
+It owns v2 scene identity, asset keys, object identity, selector ownership, actions, coordinates, text ports, panels, and effects. The legacy registries remain historical input for migration; v2 does not load them as competing runtime truth.
+
+The existing text-target registry remains authoritative for writable `targetId` registration:
+
+```text
+data/text-targets.v1.json
+```
+
+The v2 manifest may describe read compatibility fields, but it cannot create a writable text target that is absent from that registry.
+
+## Eight controller contracts
+
+| Controller | Owns | Must not own |
+|---|---|---|
+| State | Read, cache, refresh, degraded-state labeling | DOM placement, navigation, writes |
+| Asset | Resolve `assetKey`, preload, decode, source fallback | Scene choice, hotspots |
+| SceneRuntime | `go`, `push`, `back`, `jumpTo`, stack, atomic scene transition | Text queue logic, panel content |
+| Layout | One cover-box calculation and all base-image projection | Click results, scene stack |
+| Hotspot | One pointer delegation path and standard action dispatch | Private navigation or panel logic |
+| TextPort | Queue, index, show, hide, next, canonical/fallback reads | State fetching, coordinate math |
+| Panel | Open, close, layer, scene-exit cleanup | Hotspot placement, navigation |
+| Effect | Sparkles, steam, clock hands, pause/destroy | Click binding, scene mutation |
+
+Every controller exposes the same lifecycle:
+
+```text
+mount -> ready -> reconcile -> suspend -> destroy
+```
+
+## Standard actions
+
+All pointer actions use the manifest action envelope:
+
+```text
+scene.go
+scene.push
+scene.back
+scene.jumpTo
+scene.dock
+text.toggleNext
+text.hide
+panel.open
+panel.close
+```
+
+Hotspots never call controller internals directly. They dispatch an action envelope; the action dispatcher routes it to the one owning controller.
+
+## Atomic scene transition
+
+SceneRuntime performs one transaction:
+
+```text
+lock input
+-> close current panel and suspend effects
+-> Asset loads and decodes next scene image
+-> commit scene id and stack
+-> reconcile scene-owned objects
+-> Layout projects all registered coordinates
+-> unlock input
+```
+
+`lapClose` owns only its two registered objects plus global controls. It does not inherit `coffeeCorner` hotspots, panels, effects, or text ports.
+
+## State and MCP boundary
+
+v2 is read-only:
+
+```text
+GPT / ChatGPT App
+-> existing /api/mcp update_text_target(targetId, text, mode)
+-> registered text target fields
+-> /api/state
+-> StateController
+-> TextPort or Panel
+```
+
+v2 contains no call to `/api/set-state` and no write credential handling. If `/api/state` fails, the isolated preview may use `preview-state.v2.json` only for surfaces that explicitly set `allowDegradedFallback:true`. The UI labels this source `preview copy`.
+
+## Source-of-truth gate
+
+Any object with base-image coordinates starts hidden. It becomes visible only after:
+
+```text
+asset loaded / decoded
+-> scene ownership resolved
+-> object DOM mounted
+-> coverBox available
+-> Layout applies registered coordinate
+-> data-layout-ready=1
+```
+
+There are no per-object delays or private coordinate patches.
+
+## Promotion boundary
+
+This architecture is not promoted merely because automated checks pass. The independent preview must be deployed and visibly accepted first. Promotion into `/cloud` requires a separate exact diff and rollback plan; it must retire replaced v1 owners rather than load v1 and v2 together.

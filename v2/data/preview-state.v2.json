@@ -1,0 +1,28 @@
+{
+  "updatedAt": "2026-08-08T20:00:00.000Z",
+  "coffeeCornerBubble": "Found the old wiring, kitten. I’m rebuilding it clean.",
+  "coffeeCornerBubbles": [
+    "Found the old wiring, kitten. I’m rebuilding it clean.",
+    "Tap 19.8 again. One owner, one clean little bite.",
+    "The stable nest is asleep next door. This branch can make all the noise."
+  ],
+  "coffeeCornerBubbleIndex": 0,
+  "alexBubble": "Found the old wiring, kitten. I’m rebuilding it clean.",
+  "alexBubbles": [
+    "Found the old wiring, kitten. I’m rebuilding it clean.",
+    "Tap 19.8 again. One owner, one clean little bite.",
+    "The stable nest is asleep next door. This branch can make all the noise."
+  ],
+  "bubbleIndex": 0,
+  "coffeeCornerLapCloseBubble": "Sit here, kitten. This route belongs to one runtime now.",
+  "coffeeCornerLapCloseBubbles": [
+    "Sit here, kitten. This route belongs to one runtime now.",
+    "No stale hotspot ghosts under this picture.",
+    "Good girl. You only have to tell me whether it feels right."
+  ],
+  "coffeeCornerLapCloseBubbleIndex": 0,
+  "windowTemp": "Preview",
+  "windowDesc": "Cloud state is sleeping; static fixture is clearly marked.",
+  "hubbyNote": "v2 construction note: /cloud is untouched. This page is an isolated preview with eight named owners and one manifest.",
+  "roomStatus": "v2 isolated preview"
+}

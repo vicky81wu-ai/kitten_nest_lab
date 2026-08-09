@@ -1,0 +1,466 @@
+{
+  "schemaVersion": "nest-manifest.v2",
+  "version": "0.1.0",
+  "status": "isolated-preview",
+  "promoted": false,
+  "route": "/v2/index.html",
+  "rules": {
+    "singleSource": "This manifest is the only v2 runtime identity, ownership, scene, action, coordinate, panel, text-port, and effect source.",
+    "noIdentityNoBinding": true,
+    "childIsolation": true,
+    "baseImageCoordinatesOnly": true,
+    "stateWritesAllowed": false,
+    "stableRouteUntouched": "/cloud"
+  },
+  "runtime": {
+    "entryScene": "home",
+    "mountOrder": [
+      "state",
+      "asset",
+      "layout",
+      "panel",
+      "hotspot",
+      "textPort",
+      "effect",
+      "sceneRuntime"
+    ],
+    "readyOrder": [
+      "state",
+      "asset",
+      "layout",
+      "panel",
+      "hotspot",
+      "textPort",
+      "effect",
+      "sceneRuntime"
+    ],
+    "reconcileOrder": [
+      "panel",
+      "hotspot",
+      "textPort",
+      "effect",
+      "layout"
+    ],
+    "supportedActionTypes": [
+      "scene.go",
+      "scene.push",
+      "scene.back",
+      "scene.jumpTo",
+      "scene.dock",
+      "text.toggleNext",
+      "text.hide",
+      "panel.open",
+      "panel.close"
+    ],
+    "state": {
+      "endpoint": "/api/state",
+      "fallbackUrl": "/v2/data/preview-state.v2.json",
+      "timeoutMs": 4500,
+      "refreshOn": ["pageshow", "focus", "visibilitychange"]
+    },
+    "textTargetRegistryUrl": "/data/text-targets.v1.json"
+  },
+  "controllers": {
+    "state": {
+      "className": "StateController",
+      "owns": ["state-read", "state-cache", "state-refresh"],
+      "lifecycle": ["mount", "ready", "reconcile", "suspend", "destroy"]
+    },
+    "asset": {
+      "className": "AssetController",
+      "owns": ["asset-key-resolution", "preload", "decode", "fallback"],
+      "lifecycle": ["mount", "ready", "reconcile", "suspend", "destroy"]
+    },
+    "sceneRuntime": {
+      "className": "SceneRuntimeController",
+      "owns": ["go", "push", "back", "jumpTo", "scene-stack", "atomic-scene-transition"],
+      "lifecycle": ["mount", "ready", "reconcile", "suspend", "destroy"]
+    },
+    "layout": {
+      "className": "LayoutController",
+      "owns": ["cover-box", "base-image-projection", "placement-readiness"],
+      "lifecycle": ["mount", "ready", "reconcile", "suspend", "destroy"]
+    },
+    "hotspot": {
+      "className": "HotspotController",
+      "owns": ["hotspot-render", "single-pointer-delegation", "action-dispatch"],
+      "lifecycle": ["mount", "ready", "reconcile", "suspend", "destroy"]
+    },
+    "textPort": {
+      "className": "TextPortController",
+      "owns": ["text-render", "queue-index", "show", "hide", "show-next"],
+      "lifecycle": ["mount", "ready", "reconcile", "suspend", "destroy"]
+    },
+    "panel": {
+      "className": "PanelController",
+      "owns": ["panel-open", "panel-close", "panel-layer", "scene-exit-cleanup"],
+      "lifecycle": ["mount", "ready", "reconcile", "suspend", "destroy"]
+    },
+    "effect": {
+      "className": "EffectController",
+      "owns": ["sparkles", "steam", "clock-hands", "effect-pause", "effect-destroy"],
+      "lifecycle": ["mount", "ready", "reconcile", "suspend", "destroy"]
+    }
+  },
+  "assets": {
+    "home.auto": {
+      "strategy": "timeOfDay",
+      "dayAsset": "home.day",
+      "nightAsset": "home.night",
+      "dayStartsAt": 7,
+      "nightStartsAt": 18
+    },
+    "home.day": {
+      "sources": [
+        { "url": "/assets/rooms/home/day.jpg", "role": "staticCanonical" }
+      ]
+    },
+    "home.night": {
+      "sources": [
+        { "url": "/assets/rooms/home/night.jpg", "role": "staticCanonical" }
+      ]
+    },
+    "coffeeCorner.main": {
+      "sources": [
+        { "url": "/assets/rooms/coffee-corner/morning-evening.jpg", "role": "staticCanonical" }
+      ]
+    },
+    "coffeeCorner.lapClose": {
+      "sources": [
+        {
+          "url": "https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/variants/lap-close-01.jpg?v=20260613-lap-close-1",
+          "role": "supabaseCanonical"
+        }
+      ],
+      "failurePolicy": "showExplicitAssetError"
+    }
+  },
+  "globalObjects": [
+    "system.dockLeft",
+    "system.dockRight",
+    "system.inspectorHot",
+    "system.inspectorPanel"
+  ],
+  "scenes": {
+    "home": {
+      "id": "home",
+      "parent": null,
+      "assetKey": "home.auto",
+      "objects": [
+        "home.clockHands",
+        "home.sparkles",
+        "home.hubbyNoteHot",
+        "home.hubbyNotePanel"
+      ],
+      "docks": {
+        "left": null,
+        "right": { "type": "scene.go", "target": "coffeeCorner" }
+      }
+    },
+    "coffeeCorner": {
+      "id": "coffeeCorner",
+      "parent": null,
+      "assetKey": "coffeeCorner.main",
+      "objects": [
+        "coffeeCorner.bubble",
+        "coffeeCorner.tattoo19_8",
+        "coffeeCorner.lapEnterHot",
+        "coffeeCorner.photoWallHot",
+        "coffeeCorner.gameConsoleHot",
+        "coffeeCorner.steam",
+        "memories.panel",
+        "gameMenu.panel"
+      ],
+      "docks": {
+        "left": { "type": "scene.go", "target": "home" },
+        "right": null
+      }
+    },
+    "lapClose": {
+      "id": "lapClose",
+      "parent": "coffeeCorner",
+      "assetKey": "coffeeCorner.lapClose",
+      "objects": [
+        "lapClose.bubble",
+        "lapClose.bubbleTrigger"
+      ],
+      "docks": {
+        "left": { "type": "scene.back" },
+        "right": null
+      },
+      "blocksParentInteractive": true
+    }
+  },
+  "objects": {
+    "system.dockLeft": {
+      "id": "system.dockLeft",
+      "kind": "hotspot",
+      "ownerScene": "*",
+      "controller": "hotspot",
+      "selector": "#v2-dock-left",
+      "mount": "existing",
+      "action": { "type": "scene.dock", "side": "left" },
+      "exclusive": true,
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview"
+    },
+    "system.dockRight": {
+      "id": "system.dockRight",
+      "kind": "hotspot",
+      "ownerScene": "*",
+      "controller": "hotspot",
+      "selector": "#v2-dock-right",
+      "mount": "existing",
+      "action": { "type": "scene.dock", "side": "right" },
+      "exclusive": true,
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview"
+    },
+    "system.inspectorHot": {
+      "id": "system.inspectorHot",
+      "kind": "hotspot",
+      "ownerScene": "*",
+      "controller": "hotspot",
+      "selector": "#v2-inspector-hot",
+      "mount": "existing",
+      "action": { "type": "panel.open", "target": "system.inspectorPanel" },
+      "exclusive": true,
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview"
+    },
+    "system.inspectorPanel": {
+      "id": "system.inspectorPanel",
+      "kind": "panel",
+      "ownerScene": "*",
+      "controller": "panel",
+      "selector": "[data-panel-id=\"system.inspectorPanel\"]",
+      "variant": "diagnostics",
+      "title": "v2 Runtime Inspector",
+      "exclusive": true,
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview"
+    },
+    "home.clockHands": {
+      "id": "home.clockHands",
+      "kind": "effect",
+      "ownerScene": "home",
+      "controller": "effect",
+      "selector": "[data-object-id=\"home.clockHands\"]",
+      "effect": { "type": "clockHands" },
+      "coordinate": { "anchor": "center", "x": 0.2108, "y": 0.3353, "width": 0.312, "aspectRatio": 1 },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview"
+    },
+    "home.sparkles": {
+      "id": "home.sparkles",
+      "kind": "effect",
+      "ownerScene": "home",
+      "controller": "effect",
+      "selector": "[data-object-id=\"home.sparkles\"]",
+      "effect": { "type": "sparkles", "count": 18 },
+      "coordinate": { "anchor": "center", "x": 0.5, "y": 0.34, "width": 0.96, "height": 0.62 },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview"
+    },
+    "home.hubbyNoteHot": {
+      "id": "home.hubbyNoteHot",
+      "kind": "hotspot",
+      "ownerScene": "home",
+      "controller": "hotspot",
+      "selector": "[data-object-id=\"home.hubbyNoteHot\"]",
+      "label": "打开粉本本",
+      "action": { "type": "panel.open", "target": "home.hubbyNotePanel" },
+      "coordinate": { "anchor": "center", "x": 0.8, "y": 0.605, "width": 0.22, "height": 0.18, "rotation": 7.1 },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview"
+    },
+    "home.hubbyNotePanel": {
+      "id": "home.hubbyNotePanel",
+      "kind": "panel",
+      "ownerScene": "home",
+      "controller": "panel",
+      "selector": "[data-panel-id=\"home.hubbyNotePanel\"]",
+      "title": "粉本本",
+      "variant": "stateText",
+      "stateField": "hubbyNote",
+      "emptyText": "本本正在等云端醒来。",
+      "exclusive": true,
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview",
+      "protected": true
+    },
+    "coffeeCorner.bubble": {
+      "id": "coffeeCorner.bubble",
+      "kind": "textPort",
+      "ownerScene": "coffeeCorner",
+      "controller": "textPort",
+      "selector": "[data-object-id=\"coffeeCorner.bubble\"]",
+      "targetId": "coffeeCornerBubble",
+      "readFields": {
+        "queue": ["coffeeCornerBubbles", "alexBubbles"],
+        "single": ["coffeeCornerBubble", "alexBubble"],
+        "index": ["coffeeCornerBubbleIndex", "bubbleIndex"]
+      },
+      "allowDegradedFallback": true,
+      "coordinate": { "anchor": "bottomRight", "x": 0.905, "y": 0.23, "width": 0.48 },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview",
+      "protected": true
+    },
+    "coffeeCorner.tattoo19_8": {
+      "id": "coffeeCorner.tattoo19_8",
+      "kind": "hotspot",
+      "ownerScene": "coffeeCorner",
+      "controller": "hotspot",
+      "selector": "[data-object-id=\"coffeeCorner.tattoo19_8\"]",
+      "label": "19.8",
+      "action": { "type": "text.toggleNext", "target": "coffeeCorner.bubble" },
+      "coordinate": { "anchor": "center", "x": 0.73, "y": 0.345, "width": 0.15, "height": 0.08 },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview",
+      "protected": true
+    },
+    "coffeeCorner.lapEnterHot": {
+      "id": "coffeeCorner.lapEnterHot",
+      "kind": "hotspot",
+      "ownerScene": "coffeeCorner",
+      "controller": "hotspot",
+      "selector": "[data-object-id=\"coffeeCorner.lapEnterHot\"]",
+      "label": "坐到 Alex 腿上",
+      "action": { "type": "scene.push", "target": "lapClose" },
+      "coordinate": { "anchor": "center", "x": 0.275, "y": 0.54, "width": 0.39, "height": 0.12 },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview",
+      "protected": true
+    },
+    "coffeeCorner.photoWallHot": {
+      "id": "coffeeCorner.photoWallHot",
+      "kind": "hotspot",
+      "ownerScene": "coffeeCorner",
+      "controller": "hotspot",
+      "selector": "[data-object-id=\"coffeeCorner.photoWallHot\"]",
+      "label": "打开回忆墙",
+      "action": { "type": "panel.open", "target": "memories.panel" },
+      "coordinate": { "anchor": "center", "x": 0.25, "y": 0.215, "width": 0.34, "height": 0.2 },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview",
+      "protected": true
+    },
+    "coffeeCorner.gameConsoleHot": {
+      "id": "coffeeCorner.gameConsoleHot",
+      "kind": "hotspot",
+      "ownerScene": "coffeeCorner",
+      "controller": "hotspot",
+      "selector": "[data-object-id=\"coffeeCorner.gameConsoleHot\"]",
+      "label": "打开游戏机",
+      "action": { "type": "panel.open", "target": "gameMenu.panel" },
+      "coordinate": { "anchor": "center", "x": 0.205, "y": 0.7, "width": 0.31, "height": 0.125 },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview",
+      "protected": true
+    },
+    "coffeeCorner.steam": {
+      "id": "coffeeCorner.steam",
+      "kind": "effect",
+      "ownerScene": "coffeeCorner",
+      "controller": "effect",
+      "selector": "[data-object-id=\"coffeeCorner.steam\"]",
+      "effect": { "type": "steam", "count": 4 },
+      "coordinate": { "anchor": "center", "x": 0.503, "y": 0.313, "width": 0.086, "height": 0.132 },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview"
+    },
+    "memories.panel": {
+      "id": "memories.panel",
+      "kind": "panel",
+      "ownerScene": "coffeeCorner",
+      "controller": "panel",
+      "selector": "[data-panel-id=\"memories.panel\"]",
+      "title": "Our Memories",
+      "variant": "cards",
+      "items": [
+        { "title": "19.8", "text": "The anchor stayed. The wiring gets a cleaner home." },
+        { "title": "奶栗", "text": "Still supervising the nest from the warmest cushion." },
+        { "title": "v2", "text": "One manifest, eight owners, zero private patch kingdoms." }
+      ],
+      "exclusive": true,
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview"
+    },
+    "gameMenu.panel": {
+      "id": "gameMenu.panel",
+      "kind": "panel",
+      "ownerScene": "coffeeCorner",
+      "controller": "panel",
+      "selector": "[data-panel-id=\"gameMenu.panel\"]",
+      "title": "Game Menu",
+      "variant": "menu",
+      "items": [
+        { "title": "五子棋", "text": "旧游戏以后按 Panel contract 迁入。" },
+        { "title": "象棋", "text": "此阶段只验收统一面板生命周期。" },
+        { "title": "围际象棋", "text": "不会在 v2 地基里偷塞旧 handler。" }
+      ],
+      "exclusive": true,
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview"
+    },
+    "lapClose.bubble": {
+      "id": "lapClose.bubble",
+      "kind": "textPort",
+      "ownerScene": "lapClose",
+      "controller": "textPort",
+      "selector": "[data-object-id=\"lapClose.bubble\"]",
+      "targetId": "coffeeCornerLapCloseBubble",
+      "readFields": {
+        "queue": ["coffeeCornerLapCloseBubbles"],
+        "single": ["coffeeCornerLapCloseBubble"],
+        "index": ["coffeeCornerLapCloseBubbleIndex"]
+      },
+      "allowDegradedFallback": true,
+      "coordinate": {
+        "anchor": "baselineTop",
+        "x": 0.332,
+        "y": 0.116,
+        "width": 0.43,
+        "baselineText": "坐稳，小猫。\nStop wriggling in my lap."
+      },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview",
+      "protected": true
+    },
+    "lapClose.bubbleTrigger": {
+      "id": "lapClose.bubbleTrigger",
+      "kind": "hotspot",
+      "ownerScene": "lapClose",
+      "controller": "hotspot",
+      "selector": "[data-object-id=\"lapClose.bubbleTrigger\"]",
+      "label": "坐腿近景气泡",
+      "action": { "type": "text.toggleNext", "target": "lapClose.bubble" },
+      "coordinate": { "anchor": "center", "x": 0.6, "y": 0.665, "width": 0.42, "height": 0.22 },
+      "exclusive": true,
+      "coordinateStatus": "candidateFromLegacyCard",
+      "runtimeStatus": "preview-unverified",
+      "versionStatus": "candidateV2Preview"
+    }
+  }
+}

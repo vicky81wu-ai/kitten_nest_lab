@@ -4,7 +4,10 @@
   "private": true,
   "description": "Kitten Nest frontend plus tiny Vercel API/MCP backend.",
   "scripts": {
-    "dev": "vercel dev"
+    "dev": "vercel dev",
+    "validate:v2": "node scripts/validate-v2.mjs",
+    "test:v2": "node --test tests/v2/*.test.mjs",
+    "check:v2": "npm run validate:v2 && npm run test:v2"
   },
   "engines": {
     "node": ">=18"
