@@ -93,7 +93,8 @@ Vercel branch deployment: Ready
 protected preview login: completed on Vicky's iPhone
 framework browser acceptance: passed
 restoration batch 0.2.0: Vercel Ready
-cloud-browser self-check: separate Vercel Protection session requires sign-in
+cloud-browser self-check: Vercel Protection login wall; the active Work client exposed no user login surface
+local mobile-browser acceptance: passed with the exact public asset bytes cached read-only
 ```
 
 Deployment success is not visual acceptance. Each restoration batch still receives one consolidated device pass behind the existing preview login.
@@ -158,7 +159,9 @@ Run:
 npm run check:v2
 ```
 
-This currently runs 26 checks covering controller contracts, one-manifest ownership, registered or explicitly static text ports, selector exclusivity, child isolation, portrait and panorama navigation, approved beach order, failed-asset rollback, projection math, text mutation layout invalidation, fallback refresh serialization, weather state/advice, time-of-day and manual asset resolution, connected stage-image loading, loading-veil presence, and bounded best-effort image decode behavior.
+This currently runs 28 checks covering controller contracts, one-manifest ownership, registered or explicitly static text ports, selector exclusivity, child isolation, portrait and panorama navigation, approved beach order, failed-asset rollback, projection math, panorama bubble reveal, text mutation layout invalidation, fallback refresh serialization, weather state/advice, time-of-day and manual asset resolution, connected stage-image loading, loading-veil presence, and bounded best-effort image decode behavior.
+
+The local 393 × 852 mobile-browser pass additionally exercised the real UI route: moon round-trip, weather panel, coffeeCorner, beach entry, 885 px of horizontal pan range, both-character dialogue, all three beach scenes, the three-level back chain, lapClose hide/show-next, and the final return home. It found one panorama-only defect: a newly opened dialogue could be clipped after its character hotspot moved the viewport. TextPort now waits for Layout readiness and adjusts horizontal scroll before paint; the rerun measured every sampled beach bubble at `visibleRatio: 1` with zero console, page, or request errors.
 
 ## Promotion stop condition
 

@@ -1,20 +1,26 @@
 import { BaseController } from '../core/base-controller.mjs';
 import { resolveTextPortState } from '../core/text-state.mjs';
 import { resolveWeatherState } from '../core/weather-state.mjs';
+import { horizontalRevealTarget } from '../core/geometry.mjs';
 
 export class TextPortController extends BaseController {
   constructor(context) {
     super('textPort', context);
     this.ports = new Map();
+    this.pendingRevealIds = new Set();
     this.boundPointer = (event) => this.handlePointer(event);
   }
 
   async mount() {
     await super.mount();
     this.layer = this.context.elements.textLayer;
+    this.viewport = this.context.elements.sceneViewport;
     this.layer.addEventListener('pointerup', this.boundPointer);
     this.unsubscribeState = this.context.events.on('state:change', () => {
       if (this.context.currentSnapshot) this.reconcile(this.context.currentSnapshot);
+    });
+    this.unsubscribeLayout = this.context.events.on('layout:ready', () => {
+      this.flushPendingReveals();
     });
   }
 
@@ -99,6 +105,7 @@ export class TextPortController extends BaseController {
       if (!allowed.has(id)) {
         port.element.remove();
         this.ports.delete(id);
+        this.pendingRevealIds.delete(id);
       }
     }
 
@@ -115,8 +122,37 @@ export class TextPortController extends BaseController {
     const port = this.ports.get(id);
     if (!port) return false;
     port.visible = false;
+    this.pendingRevealIds.delete(id);
     this.render(port);
     return true;
+  }
+
+  flushPendingReveals() {
+    if (!this.pendingRevealIds.size || !this.viewport) return;
+    if (document.body.dataset.scenePresentation !== 'panorama') {
+      this.pendingRevealIds.clear();
+      return;
+    }
+
+    const viewportRect = this.viewport.getBoundingClientRect();
+    for (const id of [...this.pendingRevealIds]) {
+      const port = this.ports.get(id);
+      if (!port || port.element.hidden) {
+        this.pendingRevealIds.delete(id);
+        continue;
+      }
+      if (port.element.dataset.layoutReady !== '1') continue;
+      const target = horizontalRevealTarget({
+        viewportRect,
+        elementRect: port.element.getBoundingClientRect(),
+        scrollLeft: this.viewport.scrollLeft,
+        scrollWidth: this.viewport.scrollWidth,
+        clientWidth: this.viewport.clientWidth,
+        padding: 16
+      });
+      if (Math.abs(target - this.viewport.scrollLeft) >= 1) this.viewport.scrollLeft = target;
+      this.pendingRevealIds.delete(id);
+    }
   }
 
   toggleNext(id) {
@@ -124,12 +160,14 @@ export class TextPortController extends BaseController {
     if (!port || !port.queue.length) return false;
     if (port.visible) {
       port.visible = false;
+      this.pendingRevealIds.delete(id);
     } else {
       if (port.hasShown) {
         port.index = port.queue.length > 1 ? (port.index + 1) % port.queue.length : 0;
       }
       port.visible = true;
       port.hasShown = true;
+      this.pendingRevealIds.add(id);
     }
     this.render(port);
     return true;
@@ -155,6 +193,7 @@ export class TextPortController extends BaseController {
   async suspend(reason = 'suspend') {
     for (const port of this.ports.values()) port.element.remove();
     this.ports.clear();
+    this.pendingRevealIds.clear();
     this.mark('suspended', reason);
   }
 
@@ -162,6 +201,7 @@ export class TextPortController extends BaseController {
     await this.suspend('destroy');
     this.layer.removeEventListener('pointerup', this.boundPointer);
     this.unsubscribeState?.();
+    this.unsubscribeLayout?.();
     await super.destroy();
   }
 }

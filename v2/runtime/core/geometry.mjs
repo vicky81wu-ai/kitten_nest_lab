@@ -76,3 +76,27 @@ export function projectCoordinate({
     rotation: Number(coordinate.rotation || 0)
   };
 }
+
+export function horizontalRevealTarget({
+  viewportRect,
+  elementRect,
+  scrollLeft = 0,
+  scrollWidth = 0,
+  clientWidth = 0,
+  padding = 16
+}) {
+  const maxScroll = Math.max(0, Number(scrollWidth || 0) - Number(clientWidth || 0));
+  let target = Math.min(maxScroll, Math.max(0, Number(scrollLeft || 0)));
+  if (!viewportRect || !elementRect || !maxScroll) return target;
+
+  const safePadding = Math.max(0, Number(padding || 0));
+  const safeLeft = Number(viewportRect.left || 0) + safePadding;
+  const safeRight = Number(viewportRect.right || 0) - safePadding;
+  const elementLeft = Number(elementRect.left || 0);
+  const elementRight = Number(elementRect.right || 0);
+
+  if (elementLeft < safeLeft) target += elementLeft - safeLeft;
+  else if (elementRight > safeRight) target += elementRight - safeRight;
+
+  return Math.min(maxScroll, Math.max(0, target));
+}

@@ -1,6 +1,6 @@
 # Kitten Nest v2 Independent Preview Acceptance
 
-Status: framework regression passed; restoration batch pending one consolidated device pass
+Status: framework regression and automated mobile-browser route passed; one concise iPhone Safari pass remains before promotion planning
 
 ## Visual route
 
@@ -18,6 +18,24 @@ Status: framework regression passed; restoration batch pending one consolidated 
 6. In each beach scene, tap Alex and Vicky to show/hide/advance their separate dialogue.
 7. Advance handhold → bracelet → stall, then walk the left/back path to coffeeCorner.
 8. Confirm the previously accepted notebook, 19.8, panels, lapClose, and home back path still work.
+
+## Automated mobile-browser checkpoint
+
+Passed at a 393 × 852 touch viewport using the exact existing public image bytes in a read-only local cache:
+
+```text
+home night -> day -> night
+weather text -> shared advice panel -> close
+home -> coffeeCorner -> first beach panorama
+horizontal pan and fixed controls
+Alex/Vicky dialogue reveal with full viewport visibility
+handhold -> bracelet -> stall
+stall -> bracelet -> handhold -> coffeeCorner
+coffeeCorner -> lapClose hide/show-next -> coffeeCorner -> home
+zero page errors, console errors, or failed requests
+```
+
+This pass caught and fixed panorama dialogue clipping. Newly revealed bubbles now wait for their measured layout and adjust only the horizontal scene viewport before the browser paints them. Cover rooms and manifest coordinates are unchanged.
 
 ## iPhone checkpoint
 

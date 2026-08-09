@@ -1,6 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { coverBox, projectCoordinate } from '../../v2/runtime/core/geometry.mjs';
+import {
+  coverBox,
+  horizontalRevealTarget,
+  projectCoordinate
+} from '../../v2/runtime/core/geometry.mjs';
 
 test('coverBox projects a portrait image through object-fit cover', () => {
   const box = coverBox(
@@ -46,4 +50,24 @@ test('content-sized panorama bubbles center from their measured width', () => {
   assert.equal(placement.left, 570);
   assert.equal(placement.top, 200);
   assert.equal(placement.width, 0);
+});
+
+test('panorama reveal target keeps a newly opened bubble inside the viewport', () => {
+  assert.equal(horizontalRevealTarget({
+    viewportRect: { left: 0, right: 393 },
+    elementRect: { left: -66, right: 54 },
+    scrollLeft: 466,
+    scrollWidth: 1278,
+    clientWidth: 393,
+    padding: 16
+  }), 384);
+
+  assert.equal(horizontalRevealTarget({
+    viewportRect: { left: 0, right: 393 },
+    elementRect: { left: 337, right: 540 },
+    scrollLeft: 506,
+    scrollWidth: 1278,
+    clientWidth: 393,
+    padding: 16
+  }), 669);
 });

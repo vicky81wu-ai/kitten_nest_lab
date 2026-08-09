@@ -78,6 +78,8 @@ lock input
 
 The three beach scenes use the same transaction and stack. Their wide base images live in the same retained scene world as portrait rooms; only the manifest presentation changes from `cover` to `panorama`. The viewport may scroll horizontally, while controls and panels remain stage-level UI.
 
+An initially hidden panorama dialogue is measured by Layout before it becomes paint-ready. TextPort listens for that layout completion and, only for the newly revealed port, clamps the horizontal viewport so the complete bubble remains inside a 16 px safe edge. The adjustment occurs in the same task as layout readiness, preventing both clipped copy and a visible second-position jump.
+
 If the next scene asset fails, SceneRuntime does not commit the candidate navigation state. It reconciles the prior snapshot, restores Layout readiness for the prior owner set, emits `scene:didFail`, and leaves the scene stack unchanged.
 
 ## State and MCP boundary

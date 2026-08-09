@@ -76,3 +76,33 @@ test('an initially hidden beach bubble shows its first line before advancing', (
   assert.equal(port.visible, true);
   assert.equal(port.index, 1);
 });
+
+test('a measured panorama bubble is revealed inside the current viewport', () => {
+  const originalDocument = globalThis.document;
+  globalThis.document = { body: { dataset: { scenePresentation: 'panorama' } } };
+  try {
+    const controller = new TextPortController({});
+    controller.viewport = {
+      scrollLeft: 466,
+      scrollWidth: 1278,
+      clientWidth: 393,
+      getBoundingClientRect: () => ({ left: 0, right: 393 })
+    };
+    controller.ports.set('vicky', {
+      element: {
+        hidden: false,
+        dataset: { layoutReady: '1' },
+        getBoundingClientRect: () => ({ left: -66, right: 54 })
+      }
+    });
+    controller.pendingRevealIds.add('vicky');
+
+    controller.flushPendingReveals();
+
+    assert.equal(controller.viewport.scrollLeft, 384);
+    assert.equal(controller.pendingRevealIds.size, 0);
+  } finally {
+    if (originalDocument === undefined) delete globalThis.document;
+    else globalThis.document = originalDocument;
+  }
+});
