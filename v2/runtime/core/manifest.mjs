@@ -70,6 +70,15 @@ export function validateManifest(manifest, textTargetRegistry = null) {
         if (!manifest?.assets?.[key]) errors.push(`Object ${id} toggles unknown asset ${key}`);
       });
     }
+    if (object?.variant === 'memories') {
+      const source = object.memorySource;
+      if (source?.type !== 'legacyIndexedDbReadOnly') {
+        errors.push(`Memories panel ${id} requires a read-only legacy source`);
+      }
+      if (!Array.isArray(source?.keys) || source.keys.length !== 6) {
+        errors.push(`Memories panel ${id} requires six explicit photo keys`);
+      }
+    }
     if (object?.coordinate && object.coordinateStatus !== 'baseImageLocked' && !String(object.coordinateStatus || '').startsWith('candidate')) {
       warnings.push(`Object ${id} has coordinates without a recognized coordinateStatus`);
     }

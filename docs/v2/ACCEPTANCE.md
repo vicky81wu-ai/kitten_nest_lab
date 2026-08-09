@@ -13,12 +13,13 @@ Status: framework regression and automated mobile-browser route passed; no devic
 1. Home opens normally; tap the moon lamp twice and confirm day → night → day uses two real images.
 2. Confirm the window shows temperature/description; tap it and close the single shared “窗边叮嘱” panel.
 3. Enter coffeeCorner and confirm the main bubble has rounded corners with no triangle tail.
-4. Tap the game console, open Gomoku, make one move, undo the round, change difficulty, and return to the same game menu.
-5. Tap the top-row beach photo to enter the first seaside panorama.
-6. Drag the panorama horizontally; fixed v2 controls must stay put while the scene moves.
-7. In each beach scene, tap Alex and Vicky to show/hide/advance their separate dialogue.
-8. Advance handhold → bracelet → stall, then walk the left/back path to coffeeCorner.
-9. Confirm the previously accepted notebook, 19.8, panels, lapClose, and home back path still work.
+4. Tap the photo wall. If this origin already has old photo slots, move through filled and empty slots; otherwise confirm the memory-card fallback appears without a permission prompt.
+5. Tap the game console, open Gomoku, make one move, undo the round, change difficulty, and return to the same game menu.
+6. Tap the top-row beach photo to enter the first seaside panorama.
+7. Drag the panorama horizontally; fixed v2 controls must stay put while the scene moves.
+8. In each beach scene, tap Alex and Vicky to show/hide/advance their separate dialogue.
+9. Advance handhold → bracelet → stall, then walk the left/back path to coffeeCorner.
+10. Confirm the previously accepted notebook, 19.8, panels, lapClose, and home back path still work.
 
 ## Automated mobile-browser checkpoint
 
@@ -27,7 +28,8 @@ Passed at a 393 × 852 touch viewport using the exact existing public image byte
 ```text
 home night -> day -> night
 weather text -> shared advice panel -> close
-home -> coffeeCorner -> game menu -> Gomoku
+home -> coffeeCorner -> six-slot readonly memories carousel -> close
+game menu -> Gomoku
 225-cell board -> kitten move -> Alex reply -> whole-round undo
 Normal -> Soft reset -> same-panel back -> close
 coffeeCorner -> first beach panorama
@@ -40,6 +42,8 @@ zero page errors, console errors, or failed requests
 ```
 
 This pass caught and fixed panorama dialogue clipping. Newly revealed bubbles now wait for their measured layout and adjust only the horizontal scene viewport before the browser paints them. Cover rooms and manifest coordinates are unchanged.
+
+The memories checkpoint seeded two photos into a disposable browser profile, verified a filled slot → empty slot → filled slot sequence, then closed the panel and completed every later route. The application itself performed only IndexedDB enumeration and a `readonly` transaction.
 
 ## iPhone checkpoint
 

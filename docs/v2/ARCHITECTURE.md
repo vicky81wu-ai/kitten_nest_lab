@@ -66,6 +66,12 @@ Interactive content does not create another runtime owner. `gameMenu.panel` disp
 
 The board rules, win detection, undo operation, candidate generation, and AI choice are pure functions in `runtime/core/gomoku.mjs`. They know nothing about DOM, controllers, state endpoints, or navigation. The panel session owns only ephemeral in-memory play state and cancels its pending AI timer on teardown. No game move reaches `/api/state` or any write endpoint.
 
+## Device-local compatibility boundary
+
+The memories panel may read the six blobs created by the old stable page in `kittenNestLabDB/images`. It first requires `indexedDB.databases()` to prove that the named database already exists. If enumeration is unsupported or the database is absent, it does not call `indexedDB.open()` at all. If present, it opens the enumerated version and uses only `transaction(store, 'readonly')`; an unexpected upgrade event is aborted.
+
+This bridge is intentionally not a new asset pipeline. It has no picker, `put`, delete, upload, or cloud fallback. Blob object URLs belong to the scoped memories session and are revoked at teardown. Same-origin isolation remains authoritative, and the manifest-owned card content is the no-data fallback.
+
 ## Atomic scene transition
 
 SceneRuntime performs one transaction:

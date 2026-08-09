@@ -571,7 +571,14 @@
       "controller": "panel",
       "selector": "[data-panel-id=\"memories.panel\"]",
       "title": "Our Memories",
-      "variant": "cards",
+      "variant": "memories",
+      "intro": "Paw-picked little moments.",
+      "memorySource": {
+        "type": "legacyIndexedDbReadOnly",
+        "database": "kittenNestLabDB",
+        "store": "images",
+        "keys": ["photo0", "photo1", "photo2", "photo3", "photo4", "photo5"]
+      },
       "items": [
         { "title": "19.8", "text": "The anchor stayed. The wiring gets a cleaner home." },
         { "title": "奶栗", "text": "Still supervising the nest from the warmest cushion." },

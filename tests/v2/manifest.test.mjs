@@ -61,3 +61,15 @@ test('the game console opens a manifest-owned interactive gomoku panel', async (
   assert.equal(gomoku.game.size, 15);
   assert.deepEqual(gomoku.game.difficulties.map((item) => item.id), ['soft', 'normal', 'wolf']);
 });
+
+test('the memories panel can only read the six explicit legacy photo slots', async () => {
+  const manifest = await readJson('../../v2/data/nest-manifest.v2.json');
+  const memories = manifest.objects['memories.panel'];
+  assert.equal(memories.variant, 'memories');
+  assert.equal(memories.memorySource.type, 'legacyIndexedDbReadOnly');
+  assert.equal(memories.memorySource.database, 'kittenNestLabDB');
+  assert.equal(memories.memorySource.store, 'images');
+  assert.deepEqual(memories.memorySource.keys, [
+    'photo0', 'photo1', 'photo2', 'photo3', 'photo4', 'photo5'
+  ]);
+});
