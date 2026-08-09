@@ -10,6 +10,16 @@ https://kitten-nest-lab.vercel.app/cloud
 
 The direct `/v2/index.html` route remains available during the rollback window.
 
+## Post-promotion iPhone PWA gate
+
+For manifest `0.3.1`, close the installed app completely before the first check so browser cache cannot hide the cold path:
+
+1. Open the home-screen nest once. The small `猫窝醒来中…` status may appear briefly, but the room must replace it without a 20–30 second unexplained maroon screen.
+2. Confirm the room image reaches the physical bottom of the iPhone canvas. The white Home Indicator may remain system-owned, but there must be no black strip behind or above it.
+3. Enter coffeeCorner and tap the beach hotspot once. The first panorama must open on that first attempt without an asset-timeout card or an app restart.
+
+These three checks are the only outstanding production gate for the hardening patch. They do not require a state write, upload, notebook mutation, or Storage change.
+
 ## Restoration acceptance loop
 
 1. Home opens normally; open the powder notebook. On a live-state run, write and save one disposable page, read it back from the first archive tab, favorite/unfavorite it, then delete it and confirm the UI says it moved to the recycle bin. On a degraded preview-copy run, confirm the notebook is explicitly read-only.

@@ -91,7 +91,7 @@ uses a readonly transaction
 revokes temporary object URLs when the panel closes
 ```
 
-The original transparent upper-left long press opens a separate device-local setup session with three explicit tabs. `房间` owns only the historical `homeOn`, `homeOff`, and `gameRoom` keys; `照片墙` owns only `photo0` through `photo5`; `其他` explains the source boundary. A room image resolves in this order: device-local override, published Supabase default, then repository fallback. Clearing a room override restores that default chain. Photo-wall slots remain device-local because no six independent published defaults exist. The picker rejects non-images and images above 15 MB, and nothing is uploaded to cloud storage.
+The original transparent upper-left long press opens a separate device-local setup session with three explicit tabs. `房间` owns only the historical `homeOn`, `homeOff`, and `gameRoom` keys; `照片墙` owns only `photo0` through `photo5`; `其他` explains the source boundary. A room image resolves in this order: device-local override, optimized same-origin delivery, published Supabase original, then repository-original fallback. Clearing a room override restores that default chain. Photo-wall slots remain device-local because no six independent published defaults exist. The picker rejects non-images and images above 15 MB, and nothing is uploaded to cloud storage.
 
 The upper-left 1.8 second gesture suppresses selection/callout only while that zone is armed, so iOS does not expose blue text-selection handles and unrelated scene gestures remain untouched. Lower-corner navigation captures its pointer at press time and tolerates up to 28 px of finger drift; the larger invisible zones remain fixed to explicit grid columns and paint no icon. Explicit columns matter because an unavailable sibling uses `hidden` and must not cause the remaining dock to auto-flow into the wrong half of the screen.
 
@@ -120,6 +120,20 @@ degraded preview: read-only; mutation controls disabled
 ```
 
 The Supabase service credential remains server-side. The device Nest key is accepted only by the existing server endpoint and is remembered locally after a successful response; an unauthorized response forgets the local copy and asks for a replacement. The stable `/write`, `/cloud`, and `/api/set-state` implementations were not edited.
+
+## Production PWA hardening 0.3.1
+
+The promoted runtime retains its scene, action, coordinate, and state-write contracts while correcting three delivery defects found in the installed iPhone app:
+
+```text
+canvas: accepted fixed 100vh / 100dvh / 100lvh chain
+first paint: visual lifecycle runs beside initial state refresh
+top-level delivery: same-origin WebP -> public Storage original -> repository original
+scene warming: bounded fetch Blob -> retained stage image
+detached Image warmers: zero
+```
+
+Home day, home night, and coffeeCorner delivery variants are each below 300 KB. The public Storage objects remain canonical recovery sources and were not mutated. Until the first image is ready, the shell shows a small passive `猫窝醒来中…` status instead of an unexplained maroon wait.
 
 ## State of external dependencies
 
@@ -243,7 +257,7 @@ Run:
 npm run check:v2
 ```
 
-This currently runs 73 checks covering controller contracts, paired preview/production route metadata, one-manifest ownership, registered or explicitly static text ports, selector exclusivity, child isolation, portrait and panorama navigation, approved beach order, failed-asset rollback, full-size optimized static WebP delivery with canonical Storage fallback, sequential beach warming, projection math, panorama bubble reveal, text mutation layout invalidation, fallback refresh serialization, compact weather presentation, invisible drift-tolerant corner docks, scoped iOS-safe long-press dispatch, exact three-room/six-photo local write allowlisting, device-local room-source priority, weather state/advice, time-of-day and manual asset resolution, connected stage-image loading, loading-veil presence, bounded best-effort image decode behavior, Gomoku legality/wins/undo and all three AI difficulty paths, absent/unsupported/existing legacy-photo database behavior, notebook normalization, save/deduplication, favorite, soft delete, request allowlisting, Nest-key failure handling, iPhone home-screen metadata, dangling scene/text action targets, coordinate ownership, supported effect types, and the absence of product-facing inspector/debug controls.
+This currently runs 78 checks covering controller contracts, paired preview/production route metadata, one-manifest ownership, registered or explicitly static text ports, selector exclusivity, child isolation, portrait and panorama navigation, approved beach order, failed-asset rollback, full-size optimized static WebP delivery with canonical Storage fallback, fetch/Blob sequential warming without detached image elements, single-consumer warm requests, stalled-warm cancellation, the fixed full-screen `100lvh` PWA canvas, state readiness beside visual bootstrap, projection math, panorama bubble reveal, text mutation layout invalidation, fallback refresh serialization, compact weather presentation, invisible drift-tolerant corner docks, scoped iOS-safe long-press dispatch, exact three-room/six-photo local write allowlisting, device-local room-source priority, weather state/advice, time-of-day and manual asset resolution, connected stage-image loading, loading-veil presence, bounded best-effort image decode behavior, Gomoku legality/wins/undo and all three AI difficulty paths, absent/unsupported/existing legacy-photo database behavior, notebook normalization, save/deduplication, favorite, soft delete, request allowlisting, Nest-key failure handling, iPhone home-screen metadata, dangling scene/text action targets, coordinate ownership, supported effect types, and the absence of product-facing inspector/debug controls.
 
 The local 393 × 852 mobile-browser pass uses an in-memory fake `/api/set-state`; it never contacts the real state project. It exercised new page -> save -> current page -> archive readback -> favorite -> unfavorite -> delete -> trash, and inspected all four requests. Every request used the QA-only token and only the six registered notebook fields. The same run then completed moon/weather, coffeeCorner, a seeded six-slot read-only memories carousel, Gomoku, all three beach scenes and dialogue, lapClose, and the final home return with zero console, page, or request errors.
 

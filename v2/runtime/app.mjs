@@ -2,6 +2,7 @@ import { EventBus } from './core/events.mjs';
 import { assertControllerContract } from './core/contracts.mjs';
 import { assertManifest } from './core/manifest.mjs';
 import { dispatchAction } from './core/actions.mjs';
+import { runReadyLifecycle } from './core/readiness.mjs';
 import { createControllers } from './controllers/index.mjs';
 
 async function fetchJson(url) {
@@ -81,9 +82,11 @@ async function boot() {
   for (const id of manifest.runtime.mountOrder) {
     await context.controllers.get(id).mount();
   }
-  for (const id of manifest.runtime.readyOrder) {
-    await context.controllers.get(id).ready();
-  }
+  await runReadyLifecycle(
+    context.controllers,
+    manifest.runtime.readyOrder,
+    manifest.runtime.backgroundReadyControllers
+  );
 
   const bootReady = Boolean(context.currentSnapshot && context.currentAsset);
   document.body.dataset.v2Status = bootReady ? 'ready' : 'blocked';

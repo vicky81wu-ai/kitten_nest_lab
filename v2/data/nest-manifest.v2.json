@@ -1,6 +1,6 @@
 {
   "schemaVersion": "nest-manifest.v2",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "status": "production",
   "promoted": true,
   "route": "/cloud",
@@ -37,6 +37,7 @@
       "effect",
       "sceneRuntime"
     ],
+    "backgroundReadyControllers": ["state"],
     "reconcileOrder": [
       "panel",
       "hotspot",
@@ -123,31 +124,52 @@
       "localKey": "homeOn",
       "sources": [
         {
+          "url": "/assets/rooms/home/day.webp",
+          "role": "staticOptimized",
+          "networkTimeoutMs": 8000
+        },
+        {
           "url": "https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/home/day.jpg",
-          "role": "supabaseCanonical"
+          "role": "supabaseCanonical",
+          "networkTimeoutMs": 15000
         },
         { "url": "/assets/rooms/home/day.jpg", "role": "staticFallback" }
-      ]
+      ],
+      "networkTimeoutMs": 10000
     },
     "home.night": {
       "localKey": "homeOff",
       "sources": [
         {
+          "url": "/assets/rooms/home/night.webp",
+          "role": "staticOptimized",
+          "networkTimeoutMs": 8000
+        },
+        {
           "url": "https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/home/night.jpg",
-          "role": "supabaseCanonical"
+          "role": "supabaseCanonical",
+          "networkTimeoutMs": 15000
         },
         { "url": "/assets/rooms/home/night.jpg", "role": "staticFallback" }
-      ]
+      ],
+      "networkTimeoutMs": 10000
     },
     "coffeeCorner.main": {
       "localKey": "gameRoom",
       "sources": [
         {
+          "url": "/assets/rooms/coffee-corner/morning-evening.webp",
+          "role": "staticOptimized",
+          "networkTimeoutMs": 8000
+        },
+        {
           "url": "https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/morning-evening.jpg",
-          "role": "supabaseCanonical"
+          "role": "supabaseCanonical",
+          "networkTimeoutMs": 15000
         },
         { "url": "/assets/rooms/coffee-corner/morning-evening.jpg", "role": "staticFallback" }
-      ]
+      ],
+      "networkTimeoutMs": 10000
     },
     "coffeeCorner.lapClose": {
       "sources": [

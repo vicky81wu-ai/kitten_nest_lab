@@ -275,6 +275,13 @@ export function validateManifest(manifest, textTargetRegistry = null) {
     if (!controllers[id]) errors.push(`Unknown controller in reconcileOrder: ${id}`);
   });
 
+  const readyOrder = manifest?.runtime?.readyOrder || [];
+  const backgroundReadyControllers = manifest?.runtime?.backgroundReadyControllers || [];
+  backgroundReadyControllers.forEach((id) => {
+    if (!controllers[id]) errors.push(`Unknown background-ready controller: ${id}`);
+    if (!readyOrder.includes(id)) errors.push(`Background-ready controller ${id} is absent from readyOrder`);
+  });
+
   return { ok: errors.length === 0, errors, warnings };
 }
 
