@@ -120,6 +120,7 @@
       "nightStartsAt": 18
     },
     "home.day": {
+      "localKey": "homeOn",
       "sources": [
         {
           "url": "https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/home/day.jpg",
@@ -129,6 +130,7 @@
       ]
     },
     "home.night": {
+      "localKey": "homeOff",
       "sources": [
         {
           "url": "https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/home/night.jpg",
@@ -138,6 +140,7 @@
       ]
     },
     "coffeeCorner.main": {
+      "localKey": "gameRoom",
       "sources": [
         {
           "url": "https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/morning-evening.jpg",
@@ -149,57 +152,57 @@
     "coffeeCorner.lapClose": {
       "sources": [
         {
-          "url": "/api/app-assets?sceneAsset=lap-close",
-          "role": "sameOriginCache"
+          "url": "/assets/rooms/coffee-corner/variants/lap-close-01.jpg",
+          "role": "staticPrimary"
         },
         {
           "url": "https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/variants/lap-close-01.jpg?v=20260613-lap-close-1",
           "role": "supabaseCanonical"
         }
       ],
-      "networkTimeoutMs": 30000,
+      "networkTimeoutMs": 15000,
       "failurePolicy": "showExplicitAssetError"
     },
     "coffeeCorner.beachHandholdSunset": {
       "sources": [
         {
-          "url": "/api/app-assets?sceneAsset=beach-handhold-sunset",
-          "role": "sameOriginCache"
+          "url": "/assets/rooms/coffee-corner/beach/beach-handhold-sunset.webp",
+          "role": "staticOptimized"
         },
         {
           "url": "https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/beach/beach-handhold-sunset.jpg",
           "role": "supabaseCanonical"
         }
       ],
-      "networkTimeoutMs": 30000,
+      "networkTimeoutMs": 15000,
       "failurePolicy": "showExplicitAssetError"
     },
     "coffeeCorner.beachBraceletPromise": {
       "sources": [
         {
-          "url": "/api/app-assets?sceneAsset=beach-bracelet-promise",
-          "role": "sameOriginCache"
+          "url": "/assets/rooms/coffee-corner/beach/beach-bracelet-promise.webp",
+          "role": "staticOptimized"
         },
         {
           "url": "https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/beach/beach-bracelet-promise.jpg",
           "role": "supabaseCanonical"
         }
       ],
-      "networkTimeoutMs": 30000,
+      "networkTimeoutMs": 15000,
       "failurePolicy": "showExplicitAssetError"
     },
     "coffeeCorner.beachStallOrder": {
       "sources": [
         {
-          "url": "/api/app-assets?sceneAsset=beach-stall-order",
-          "role": "sameOriginCache"
+          "url": "/assets/rooms/coffee-corner/beach/beach-stall-order.webp",
+          "role": "staticOptimized"
         },
         {
           "url": "https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/beach/beach-stall-order.jpg",
           "role": "supabaseCanonical"
         }
       ],
-      "networkTimeoutMs": 30000,
+      "networkTimeoutMs": 15000,
       "failurePolicy": "showExplicitAssetError"
     }
   },
@@ -359,9 +362,9 @@
       "controller": "hotspot",
       "selector": "#v2-admin-hot",
       "mount": "existing",
-      "label": "长按打开本机图片槽",
+      "label": "长按打开猫窝素材面板",
       "gesture": "longPress",
-      "longPressMs": 850,
+      "longPressMs": 1800,
       "action": { "type": "panel.open", "target": "system.localMediaPanel" },
       "exclusive": true,
       "runtimeStatus": "active",
@@ -373,14 +376,42 @@
       "ownerScene": "*",
       "controller": "panel",
       "selector": "[data-panel-id=\"system.localMediaPanel\"]",
-      "title": "本机图片槽",
+      "title": "猫窝素材",
       "variant": "localMediaSetup",
-      "intro": "照片只保存在这台设备的猫窝里，不会上传到云端。",
+      "intro": "本机图片优先；清除本机覆盖后，房间会恢复 Supabase 默认图。",
       "memoryTarget": {
-        "type": "legacyIndexedDbPhotoSlots",
+        "type": "indexedDbLocalImageSlots",
         "database": "kittenNestLabDB",
         "store": "images",
-        "keys": ["photo0", "photo1", "photo2", "photo3", "photo4", "photo5"]
+        "keys": ["homeOn", "homeOff", "gameRoom", "photo0", "photo1", "photo2", "photo3", "photo4", "photo5"],
+        "tabs": [
+          {
+            "id": "rooms",
+            "label": "房间",
+            "slots": [
+              { "key": "homeOn", "kind": "room", "label": "主页亮图", "defaultState": "默认：Supabase", "clearLabel": "恢复默认" },
+              { "key": "homeOff", "kind": "room", "label": "主页暗图", "defaultState": "默认：Supabase", "clearLabel": "恢复默认" },
+              { "key": "gameRoom", "kind": "room", "label": "咖啡角底图", "defaultState": "默认：Supabase", "clearLabel": "恢复默认" }
+            ]
+          },
+          {
+            "id": "photoWall",
+            "label": "照片墙",
+            "slots": [
+              { "key": "photo0", "kind": "photo", "label": "照片墙 1", "defaultState": "空槽" },
+              { "key": "photo1", "kind": "photo", "label": "照片墙 2", "defaultState": "空槽" },
+              { "key": "photo2", "kind": "photo", "label": "照片墙 3", "defaultState": "空槽" },
+              { "key": "photo3", "kind": "photo", "label": "照片墙 4", "defaultState": "空槽" },
+              { "key": "photo4", "kind": "photo", "label": "照片墙 5", "defaultState": "空槽" },
+              { "key": "photo5", "kind": "photo", "label": "照片墙 6", "defaultState": "空槽" }
+            ]
+          },
+          {
+            "id": "other",
+            "label": "其他",
+            "text": "房间图：本机覆盖 → Supabase 默认 → 静态备用。照片墙六槽只保存在这台设备；Supabase 目前没有独立的默认照片墙对象。"
+          }
+        ]
       },
       "exclusive": true,
       "runtimeStatus": "active",

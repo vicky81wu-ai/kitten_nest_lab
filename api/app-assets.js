@@ -1,5 +1,4 @@
 const appQ = require('./app-q');
-const { sendSceneAsset } = require('../lib/scene-asset-proxy');
 
 const ASSET_VERSION = 'supa-assets-20260612-2';
 const SUPABASE_PUBLIC_BASE = 'https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets';
@@ -200,11 +199,6 @@ function injectDefaultAssets(html) {
 }
 
 module.exports = async function handler(req, res) {
-  const sceneAsset = Array.isArray(req.query?.sceneAsset)
-    ? req.query.sceneAsset[0]
-    : req.query?.sceneAsset;
-  if (sceneAsset) return sendSceneAsset(sceneAsset, req, res);
-
   const originalSend = res.send.bind(res);
   res.send = function sendWithDefaultAssets(body) {
     if (typeof body === 'string') return originalSend(injectDefaultAssets(body));

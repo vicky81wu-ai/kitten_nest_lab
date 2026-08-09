@@ -51,7 +51,16 @@ test('local photo setup writes and clears only an explicit image slot', async ()
   assert.equal(observations.closes, 2);
 });
 
-test('local photo setup rejects non-images and keys outside the six slots', async () => {
+test('local setup also accepts the three historical room-image override keys', async () => {
+  const { indexedDb, observations } = writableDatabase();
+  const image = { type: 'image/jpeg', size: 4096 };
+  await writeLegacyMemorySlot({ indexedDb, key: 'gameRoom', value: image });
+  await clearLegacyMemorySlot({ indexedDb, key: 'gameRoom' });
+  assert.deepEqual(observations.puts, [{ value: image, key: 'gameRoom' }]);
+  assert.deepEqual(observations.deletes, ['gameRoom']);
+});
+
+test('local image setup rejects non-images and keys outside the exact nine slots', async () => {
   const { indexedDb } = writableDatabase();
   await assert.rejects(
     writeLegacyMemorySlot({ indexedDb, key: 'photo9', value: { type: 'image/png', size: 12 } }),

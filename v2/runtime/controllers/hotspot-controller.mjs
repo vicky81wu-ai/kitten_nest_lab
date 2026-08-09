@@ -5,11 +5,17 @@ export class HotspotController extends BaseController {
     super('hotspot', context);
     this.dynamic = new Map();
     this.longPress = null;
+    this.tapPress = null;
+    this.touchPressId = null;
     this.boundPointerDown = (event) => this.handlePointerDown(event);
     this.boundPointerMove = (event) => this.handlePointerMove(event);
     this.boundPointerUp = (event) => this.handlePointerUp(event);
     this.boundPointerCancel = (event) => this.handlePointerCancel(event);
     this.boundContextMenu = (event) => this.handleContextMenu(event);
+    this.boundTouchStart = (event) => this.handleTouchStart(event);
+    this.boundTouchMove = (event) => this.handleTouchMove(event);
+    this.boundTouchEnd = (event) => this.handleTouchEnd(event);
+    this.boundSelectStart = (event) => this.handleSelectStart(event);
   }
 
   async mount() {
@@ -24,6 +30,11 @@ export class HotspotController extends BaseController {
       root.addEventListener('pointerup', this.boundPointerUp);
       root.addEventListener('pointercancel', this.boundPointerCancel);
       root.addEventListener('contextmenu', this.boundContextMenu);
+      root.addEventListener('touchstart', this.boundTouchStart, { passive: false });
+      root.addEventListener('touchmove', this.boundTouchMove, { passive: false });
+      root.addEventListener('touchend', this.boundTouchEnd, { passive: false });
+      root.addEventListener('touchcancel', this.boundTouchEnd, { passive: false });
+      root.addEventListener('selectstart', this.boundSelectStart);
     });
   }
 
@@ -104,20 +115,22 @@ export class HotspotController extends BaseController {
     this.longPress = null;
   }
 
-  handlePointerDown(event) {
-    const match = this.hotspotFromEvent(event);
-    if (!match || match.object.gesture !== 'longPress') return;
-    this.clearLongPress();
-    this.blockEvent(event);
+  clearTapPress() {
+    if (!this.tapPress) return;
+    try { this.tapPress.target.releasePointerCapture?.(this.tapPress.pointerId); } catch {}
+    this.tapPress = null;
+  }
+
+  armLongPress(match, pointerId, x, y) {
     const press = {
       ...match,
-      pointerId: event.pointerId,
-      x: event.clientX,
-      y: event.clientY,
+      pointerId,
+      x,
+      y,
       fired: false,
       timer: null
     };
-    const delay = Number(match.object.longPressMs || 850);
+    const delay = Number(match.object.longPressMs || 1800);
     press.timer = setTimeout(async () => {
       if (this.longPress !== press || press.target.disabled) return;
       press.fired = true;
@@ -129,14 +142,43 @@ export class HotspotController extends BaseController {
     }, delay);
     this.longPress = press;
     if (globalThis.document?.body) document.body.dataset.longPressArmed = match.object.id;
-    try { match.target.setPointerCapture?.(event.pointerId); } catch {}
+    return press;
+  }
+
+  handlePointerDown(event) {
+    const match = this.hotspotFromEvent(event);
+    if (!match) return;
+    if (match.object.gesture === 'longPress') {
+      if (this.touchPressId !== null) return;
+      this.clearLongPress();
+      this.blockEvent(event);
+      this.armLongPress(match, event.pointerId, event.clientX, event.clientY);
+      try { match.target.setPointerCapture?.(event.pointerId); } catch {}
+      return;
+    }
+    this.clearTapPress();
+    this.tapPress = {
+      ...match,
+      pointerId: event.pointerId,
+      x: event.clientX,
+      y: event.clientY
+    };
+    if (match.object.action?.type === 'scene.dock') {
+      this.blockEvent(event);
+      try { match.target.setPointerCapture?.(event.pointerId); } catch {}
+    }
   }
 
   handlePointerMove(event) {
     const press = this.longPress;
-    if (!press || press.pointerId !== event.pointerId) return;
-    if (Math.hypot(event.clientX - press.x, event.clientY - press.y) > 14) {
+    if (press && press.pointerId === event.pointerId
+      && Math.hypot(event.clientX - press.x, event.clientY - press.y) > 14) {
       this.clearLongPress();
+    }
+    const tap = this.tapPress;
+    if (tap && tap.pointerId === event.pointerId
+      && Math.hypot(event.clientX - tap.x, event.clientY - tap.y) > 28) {
+      this.clearTapPress();
     }
   }
 
@@ -146,6 +188,18 @@ export class HotspotController extends BaseController {
     if (press && press.pointerId === event.pointerId) {
       this.blockEvent(event);
       this.clearLongPress();
+      return;
+    }
+    const tap = this.tapPress;
+    if (tap && tap.pointerId === event.pointerId) {
+      this.blockEvent(event);
+      this.clearTapPress();
+      if (tap.target.disabled) return;
+      try {
+        await this.context.dispatch(tap.object.action);
+      } catch (error) {
+        this.context.reportError(`hotspot:${tap.object.id}`, error);
+      }
       return;
     }
     if (!match || match.object.gesture === 'longPress') return;
@@ -159,6 +213,41 @@ export class HotspotController extends BaseController {
 
   handlePointerCancel(event) {
     if (this.longPress?.pointerId === event.pointerId) this.clearLongPress();
+    if (this.tapPress?.pointerId === event.pointerId) this.clearTapPress();
+  }
+
+  handleTouchStart(event) {
+    const match = this.hotspotFromEvent(event);
+    if (!match || match.object.gesture !== 'longPress') return;
+    const touch = event.touches?.[0];
+    if (!touch) return;
+    this.blockEvent(event);
+    this.touchPressId = touch.identifier;
+    this.clearLongPress();
+    this.armLongPress(match, `touch:${touch.identifier}`, touch.clientX, touch.clientY);
+  }
+
+  handleTouchMove(event) {
+    if (this.touchPressId === null || !this.longPress) return;
+    const touch = [...(event.touches || [])].find((item) => item.identifier === this.touchPressId);
+    if (!touch) return;
+    this.blockEvent(event);
+    if (Math.hypot(touch.clientX - this.longPress.x, touch.clientY - this.longPress.y) > 14) {
+      this.touchPressId = null;
+      this.clearLongPress();
+    }
+  }
+
+  handleTouchEnd(event) {
+    if (this.touchPressId === null) return;
+    this.blockEvent(event);
+    this.touchPressId = null;
+    this.clearLongPress();
+  }
+
+  handleSelectStart(event) {
+    const match = this.hotspotFromEvent(event);
+    if (match?.object.gesture === 'longPress') this.blockEvent(event);
   }
 
   handleContextMenu(event) {
@@ -168,6 +257,8 @@ export class HotspotController extends BaseController {
 
   async suspend(reason = 'suspend') {
     this.clearLongPress();
+    this.clearTapPress();
+    this.touchPressId = null;
     for (const element of this.dynamic.values()) element.remove();
     this.dynamic.clear();
     this.mark('suspended', reason);
@@ -181,6 +272,11 @@ export class HotspotController extends BaseController {
       root.removeEventListener('pointerup', this.boundPointerUp);
       root.removeEventListener('pointercancel', this.boundPointerCancel);
       root.removeEventListener('contextmenu', this.boundContextMenu);
+      root.removeEventListener('touchstart', this.boundTouchStart);
+      root.removeEventListener('touchmove', this.boundTouchMove);
+      root.removeEventListener('touchend', this.boundTouchEnd);
+      root.removeEventListener('touchcancel', this.boundTouchEnd);
+      root.removeEventListener('selectstart', this.boundSelectStart);
     });
     this.eventRoots = [];
     await super.destroy();

@@ -70,7 +70,9 @@ The board rules, win detection, undo operation, candidate generation, and AI cho
 
 The memories panel reads the six blobs created by the old stable page in `kittenNestLabDB/images`. It first requires `indexedDB.databases()` to prove that the named database already exists. If enumeration is unsupported or the database is absent, the read path does not call `indexedDB.open()` as a side effect. If present, it opens the enumerated version and uses only `transaction(store, 'readonly')`; an unexpected upgrade event is aborted.
 
-The original upper-left long-press gesture is restored as one transparent global Hotspot object. Its standard `panel.open` action opens a scoped `localMediaSetup` session inside the existing PanelController. That session may create the known database/store and write or clear only `photo0` through `photo5`, using `readwrite` transactions; it rejects non-images, files above 15 MB, and every other key. It has no cloud upload, room-background override, Supabase credential, or general IndexedDB access.
+The original upper-left long-press gesture is restored as one transparent global Hotspot object. Its standard `panel.open` action opens a scoped `localMediaSetup` session inside the existing PanelController. That session may create the known database/store and write or clear exactly nine historical keys using `readwrite` transactions: room overrides `homeOn`, `homeOff`, and `gameRoom`, plus `photo0` through `photo5`. It rejects non-images, files above 15 MB, and every other key. The room tab identifies each override explicitly; clearing it restores the manifest chain of published Supabase default then repository fallback. The photo-wall tab remains device-local because no six independent published default objects exist. The session has no cloud upload, Supabase credential, or general IndexedDB access.
+
+The 1.8 second selection/callout guard is scoped to the upper-left zone and lasts only for the armed press. Lower-corner room navigation uses pointer capture and a bounded drift tolerance, so releasing a normal tap just outside an invisible zone still dispatches once without installing a second touch system.
 
 The read carousel and local setup writer remain separate sessions. Blob object URLs belong to the memories session and are revoked at teardown. Reopening the photo wall performs a fresh readonly load, so a saved slot appears without a second runtime owner.
 
@@ -114,7 +116,7 @@ If the next scene asset fails, SceneRuntime does not commit the candidate naviga
 
 ## State and MCP boundary
 
-Most v2 cloud surfaces remain read-only. The powder notebook has one registered cloud-state write exception; the six device-local photo slots are an isolated browser-storage boundary described above:
+Most v2 cloud surfaces remain read-only. The powder notebook has one registered cloud-state write exception; the nine device-local image keys are an isolated browser-storage boundary described above:
 
 ```text
 GPT / ChatGPT App

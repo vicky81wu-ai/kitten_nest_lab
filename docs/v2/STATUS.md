@@ -23,7 +23,7 @@ home -> coffeeCorner -> push(lapClose) -> back()
 home hubbyNote current page, permanent archive, editor, favorite, and soft-delete trash
 coffeeCorner 19.8 rotating bubble
 coffeeCorner lap entry
-coffeeCorner six-slot memories panel plus scoped device-local slot editor
+coffeeCorner six-slot memories panel plus scoped three-room/six-photo device-local editor
 coffeeCorner game menu and interactive Gomoku panel
 lapClose rotating bubble
 home clock hands and sparkles
@@ -59,7 +59,7 @@ approved beach talk/next/back coordinates and both dialogue queues restored
 one scene world now supports portrait cover and horizontal panorama presentation
 ```
 
-The beach assets were verified read-only in the existing public asset bucket. No bucket, policy, database row, or state value was changed. Each large nested scene now uses an allowlisted same-origin cache endpoint before its canonical public Storage URL. Coffee corner warms the first beach image; each panorama warms the next one. The endpoint corrects the three PNG payloads stored under `.jpg` object names and never accepts an arbitrary Storage path.
+The beach assets were verified read-only in the existing public asset bucket. No bucket, policy, database row, or state value was changed. The three original 3.4–3.75 MB payloads now have repository-owned 1536 × 1024 WebP delivery variants of about 0.21–0.26 MB. Each nested scene uses its same-origin static variant first and retains the canonical public Storage object as a fallback. Coffee corner warms the first beach image; each panorama warms the next one. This removes the timed-out Vercel proxy/function hop while preserving the source images and full panorama dimensions.
 
 ## Interactive panel batch
 
@@ -88,7 +88,9 @@ uses a readonly transaction
 revokes temporary object URLs when the panel closes
 ```
 
-The original transparent upper-left long press opens a separate device-local setup session. It can create the known `kittenNestLabDB/images` store and write, replace, or clear only those six photo keys. The picker rejects non-images and images above 15 MB. Nothing is uploaded to cloud storage, and v2 room assets remain manifest-owned.
+The original transparent upper-left long press opens a separate device-local setup session with three explicit tabs. `房间` owns only the historical `homeOn`, `homeOff`, and `gameRoom` keys; `照片墙` owns only `photo0` through `photo5`; `其他` explains the source boundary. A room image resolves in this order: device-local override, published Supabase default, then repository fallback. Clearing a room override restores that default chain. Photo-wall slots remain device-local because no six independent published defaults exist. The picker rejects non-images and images above 15 MB, and nothing is uploaded to cloud storage.
+
+The upper-left 1.8 second gesture suppresses selection/callout only while that zone is armed, so iOS does not expose blue text-selection handles and unrelated scene gestures remain untouched. Lower-corner navigation captures its pointer at press time and tolerates up to 28 px of finger drift; the larger invisible zones remain fixed to the lower corners and paint no icon.
 
 Browser same-origin rules still apply. If the old photos live under another origin, or the browser does not support safe enumeration, v2 leaves them untouched and shows the existing three memory cards instead.
 
@@ -149,7 +151,7 @@ protected preview login: completed on Vicky's iPhone
 framework browser acceptance: passed
 restoration batch 0.2.0: Vercel Ready
 cloud-browser self-check: Vercel Protection login wall; the active Work client exposed no user login surface
-local mobile-browser acceptance: passed with the exact public asset bytes cached read-only
+local mobile-browser acceptance: passed with the optimized static delivery assets and canonical read-only fallbacks
 ```
 
 Deployment success is not visual acceptance. Continued branch construction receives automated mobile-browser acceptance; one concise iPhone pass is reserved for the eventual promotion checkpoint.
@@ -214,7 +216,7 @@ Run:
 npm run check:v2
 ```
 
-This currently runs 67 checks covering controller contracts, one-manifest ownership, registered or explicitly static text ports, selector exclusivity, child isolation, portrait and panorama navigation, approved beach order, failed-asset rollback, same-origin scene-asset allowlisting and content sniffing, reuse of the existing Vercel function budget, sequential beach warming, projection math, panorama bubble reveal, text mutation layout invalidation, fallback refresh serialization, compact weather presentation, invisible corner docks, global long-press dispatch, device-local six-slot write allowlisting, weather state/advice, time-of-day and manual asset resolution, connected stage-image loading, loading-veil presence, bounded best-effort image decode behavior, Gomoku legality/wins/undo and all three AI difficulty paths, absent/unsupported/existing legacy-photo database behavior, notebook normalization, save/deduplication, favorite, soft delete, request allowlisting, Nest-key failure handling, iPhone home-screen metadata, dangling scene/text action targets, coordinate ownership, supported effect types, and the absence of product-facing inspector/debug controls.
+This currently runs 72 checks covering controller contracts, one-manifest ownership, registered or explicitly static text ports, selector exclusivity, child isolation, portrait and panorama navigation, approved beach order, failed-asset rollback, full-size optimized static WebP delivery with canonical Storage fallback, sequential beach warming, projection math, panorama bubble reveal, text mutation layout invalidation, fallback refresh serialization, compact weather presentation, invisible drift-tolerant corner docks, scoped iOS-safe long-press dispatch, exact three-room/six-photo local write allowlisting, device-local room-source priority, weather state/advice, time-of-day and manual asset resolution, connected stage-image loading, loading-veil presence, bounded best-effort image decode behavior, Gomoku legality/wins/undo and all three AI difficulty paths, absent/unsupported/existing legacy-photo database behavior, notebook normalization, save/deduplication, favorite, soft delete, request allowlisting, Nest-key failure handling, iPhone home-screen metadata, dangling scene/text action targets, coordinate ownership, supported effect types, and the absence of product-facing inspector/debug controls.
 
 The local 393 × 852 mobile-browser pass uses an in-memory fake `/api/set-state`; it never contacts the real state project. It exercised new page -> save -> current page -> archive readback -> favorite -> unfavorite -> delete -> trash, and inspected all four requests. Every request used the QA-only token and only the six registered notebook fields. The same run then completed moon/weather, coffeeCorner, a seeded six-slot read-only memories carousel, Gomoku, all three beach scenes and dialogue, lapClose, and the final home return with zero console, page, or request errors.
 

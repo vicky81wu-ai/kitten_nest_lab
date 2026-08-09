@@ -5,6 +5,11 @@ import {
 } from './legacy-memory-source.mjs';
 
 export const MAX_LOCAL_IMAGE_BYTES = 15 * 1024 * 1024;
+export const LOCAL_ROOM_IMAGE_KEYS = Object.freeze(['homeOn', 'homeOff', 'gameRoom']);
+export const LOCAL_IMAGE_KEYS = Object.freeze([
+  ...LOCAL_ROOM_IMAGE_KEYS,
+  ...LEGACY_MEMORY_KEYS
+]);
 
 function openAtVersion(indexedDb, databaseName, storeName, version) {
   return new Promise((resolve, reject) => {
@@ -71,7 +76,7 @@ export async function writeLegacyMemorySlot({
   indexedDb = globalThis.indexedDB,
   databaseName = LEGACY_MEMORY_DATABASE,
   storeName = LEGACY_MEMORY_STORE,
-  keys = LEGACY_MEMORY_KEYS,
+  keys = LOCAL_IMAGE_KEYS,
   key,
   value
 } = {}) {
@@ -89,7 +94,7 @@ export async function clearLegacyMemorySlot({
   indexedDb = globalThis.indexedDB,
   databaseName = LEGACY_MEMORY_DATABASE,
   storeName = LEGACY_MEMORY_STORE,
-  keys = LEGACY_MEMORY_KEYS,
+  keys = LOCAL_IMAGE_KEYS,
   key
 } = {}) {
   validateSlot(key, keys);

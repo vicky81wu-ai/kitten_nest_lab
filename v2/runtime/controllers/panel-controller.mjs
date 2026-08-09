@@ -131,7 +131,8 @@ export class PanelController extends BaseController {
     if (object.variant === 'localMediaSetup') {
       this.interactiveSession = new LocalMediaPanelSession({
         body: this.body,
-        object
+        object,
+        onLocalAssetChange: (key) => this.context.controllers.get('asset').refreshLocalKey(key)
       });
       this.interactiveSession.mount();
       return;

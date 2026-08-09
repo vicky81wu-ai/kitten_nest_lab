@@ -22,7 +22,7 @@ Status: framework regression and automated mobile-browser route passed; no devic
 10. Advance handhold → bracelet → stall, then walk the left/back path to coffeeCorner.
 11. Confirm the previously accepted 19.8, panels, lapClose, and home back path still work.
 12. Confirm there are no visible navigation arrows, center `V2` button, or engineering-source line; `PREVIEW COPY` appears only on a degraded-state run.
-13. Long-press the transparent upper-left zone, choose one photo slot, and confirm the panel marks it saved. Close it, reopen the photo wall, and confirm the new local photo appears; clear the disposable slot afterward.
+13. Long-press the transparent upper-left zone for 1.8 seconds and confirm iOS shows no blue selection overlay. Verify the `房间 / 照片墙 / 其他` tabs, the three named room slots, and the six named photo slots. Save one disposable photo, reopen the photo wall to confirm it appears, then clear it. If testing a room override, clear it afterward and confirm the published default returns.
 
 ## Automated mobile-browser checkpoint
 
@@ -50,7 +50,7 @@ iPhone home-screen capability, safe-area viewport, status-bar, and app-title met
 manifest rejection for missing hotspot coordinates, dangling scene targets, and unsupported effects
 ```
 
-The post-iPhone correction suite separately verifies the compact weather-card contract, invisible lower-corner navigation, transparent upper-left long-press dispatch, allowlisted six-slot device-local image writes/clears, and same-origin nested-scene cache with canonical public Storage fallback. These corrections still require the concise device recheck below before promotion.
+The post-iPhone correction suite separately verifies the compact weather-card contract, drift-tolerant invisible lower-corner navigation, iOS-selection-safe upper-left long-press dispatch, exact three-room/six-photo device-local image writes/clears, and full-size optimized static beach delivery with canonical public Storage fallback. These corrections still require the concise device recheck below before promotion.
 
 This pass caught and fixed panorama dialogue clipping. Newly revealed bubbles now wait for their measured layout and adjust only the horizontal scene viewport before the browser paints them. Cover rooms and manifest coordinates are unchanged.
 

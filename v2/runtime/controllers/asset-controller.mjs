@@ -1,4 +1,15 @@
 import { BaseController } from '../core/base-controller.mjs';
+import { readLegacyMemorySlots } from '../core/legacy-memory-source.mjs';
+
+export function localImageSource(value, urlApi = globalThis.URL) {
+  if (typeof Blob !== 'undefined' && value instanceof Blob && urlApi?.createObjectURL) {
+    return { url: urlApi.createObjectURL(value), role: 'indexeddbLocalOverride', ownedLocalUrl: true };
+  }
+  if (typeof value === 'string' && value.startsWith('data:image/')) {
+    return { url: value, role: 'indexeddbLocalOverride', ownedLocalUrl: false };
+  }
+  return null;
+}
 
 export function resolveAssetKey(assets, requestedKey, hour = new Date().getHours()) {
   const card = assets?.[requestedKey];
@@ -86,6 +97,7 @@ export class AssetController extends BaseController {
     this.hintWarmTimer = null;
     this.hintWarmImage = null;
     this.hintWarmKey = null;
+    this.localObjectUrl = null;
   }
 
   async mount() {
@@ -148,13 +160,28 @@ export class AssetController extends BaseController {
     }, 120);
   }
 
+  async resolveLocalSource(card) {
+    if (!card?.localKey) return null;
+    const result = await readLegacyMemorySlots({ keys: [card.localKey] });
+    return localImageSource(result.slots?.[0]);
+  }
+
+  revokeLocalUrl(url) {
+    if (!url || typeof globalThis.URL?.revokeObjectURL !== 'function') return;
+    try { globalThis.URL.revokeObjectURL(url); } catch {}
+  }
+
   async loadAssetKey(scene, requestedKey) {
     if (this.loading) return { ok: false, key: requestedKey, error: 'Asset controller is busy' };
     this.loading = true;
     const assets = this.context.manifest.assets;
     const resolvedKey = resolveAssetKey(assets, requestedKey);
     const card = assets[resolvedKey];
-    const sources = Array.isArray(card.sources) ? card.sources : [];
+    const localSource = await this.resolveLocalSource(card).catch(() => null);
+    const sources = [
+      ...(localSource ? [localSource] : []),
+      ...(Array.isArray(card.sources) ? card.sources : [])
+    ];
     const networkTimeoutMs = Number(card.networkTimeoutMs ?? 20000);
     const decodeTimeoutMs = Number(card.decodeTimeoutMs ?? 1200);
     this.mark('loading', resolvedKey);
@@ -182,6 +209,11 @@ export class AssetController extends BaseController {
             role: source.role || 'source',
             presentation: this.applyPresentation(scene)
           };
+          const previousLocalUrl = this.localObjectUrl;
+          this.localObjectUrl = source.ownedLocalUrl ? source.url : null;
+          if (previousLocalUrl && previousLocalUrl !== this.localObjectUrl) {
+            this.revokeLocalUrl(previousLocalUrl);
+          }
           document.body.dataset.assetStatus = 'ready';
           document.body.dataset.assetVariant = resolvedKey;
           this.stage.setAttribute('aria-busy', 'false');
@@ -196,6 +228,7 @@ export class AssetController extends BaseController {
           return { ok: true, ...this.current };
         } catch (error) {
           failures.push(error.message);
+          if (source.ownedLocalUrl) this.revokeLocalUrl(source.url);
         }
       }
 
@@ -248,6 +281,15 @@ export class AssetController extends BaseController {
     }
   }
 
+  async refreshLocalKey(key) {
+    const snapshot = this.context.currentSnapshot;
+    const currentCard = this.context.manifest.assets?.[this.current?.key];
+    if (!snapshot || currentCard?.localKey !== key || this.loading) return false;
+    const result = await this.loadAssetKey(snapshot.scene, this.current.key);
+    if (result.ok) await this.context.controllers.get('layout').reconcile(snapshot, 'local-asset-refresh');
+    return result.ok;
+  }
+
   async reconcile(snapshot) {
     this.lastSnapshot = snapshot;
   }
@@ -262,6 +304,8 @@ export class AssetController extends BaseController {
     this.warmImage = null;
     this.hintWarmImage = null;
     this.hintWarmKey = null;
+    this.revokeLocalUrl(this.localObjectUrl);
+    this.localObjectUrl = null;
     this.image?.removeAttribute('src');
     await super.destroy();
   }

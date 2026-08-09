@@ -42,9 +42,9 @@ After deployment, close the existing home-screen nest, reopen it once, and run t
 1. Home paints, moon toggles day/night, clock moves, and weather opens as the compact floating card.
 2. Lower-corner scene navigation remains transparent; coffee corner shows the MCP-published bubble without a tail or position jump.
 3. Photo wall and Gomoku open and return through the one panel stack.
-4. Beach handhold -> bracelet -> stall -> back to coffee corner loads through the warmed, cached asset chain.
+4. Beach handhold -> bracelet -> stall -> back to coffee corner loads through the warmed optimized static assets without an asset error.
 5. Lap close -> coffee corner -> home works without leaked hotspots or panels.
-6. The transparent upper-left long press opens the six device-local photo slots; a disposable upload appears in the photo wall and can be cleared.
+6. The transparent upper-left long press opens `房间 / 照片墙 / 其他` without an iOS selection overlay; the three room overrides and six device-local photo slots are labeled, and a disposable photo appears in the wall and can be cleared.
 
 ## Rollback
 

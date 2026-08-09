@@ -13,6 +13,17 @@ const REQUIRED_CONTROLLERS = [
 
 const SCENE_TARGET_ACTIONS = new Set(['scene.go', 'scene.push', 'scene.jumpTo']);
 const SUPPORTED_EFFECT_TYPES = new Set(['sparkles', 'steam', 'clockHands']);
+const LOCAL_MEDIA_KEYS = [
+  'homeOn',
+  'homeOff',
+  'gameRoom',
+  'photo0',
+  'photo1',
+  'photo2',
+  'photo3',
+  'photo4',
+  'photo5'
+];
 
 export function validateManifest(manifest, textTargetRegistry = null) {
   const errors = [];
@@ -146,11 +157,20 @@ export function validateManifest(manifest, textTargetRegistry = null) {
     }
     if (object?.variant === 'localMediaSetup') {
       const target = object.memoryTarget;
-      if (target?.type !== 'legacyIndexedDbPhotoSlots') {
-        errors.push(`Local media panel ${id} requires device photo slots`);
+      if (target?.type !== 'indexedDbLocalImageSlots') {
+        errors.push(`Local media panel ${id} requires device-local image slots`);
       }
-      if (!Array.isArray(target?.keys) || target.keys.length !== 6 || new Set(target.keys).size !== 6) {
-        errors.push(`Local media panel ${id} requires six unique photo keys`);
+      if (!Array.isArray(target?.keys)
+        || target.keys.length !== LOCAL_MEDIA_KEYS.length
+        || LOCAL_MEDIA_KEYS.some((key) => !target.keys.includes(key))
+        || new Set(target.keys).size !== LOCAL_MEDIA_KEYS.length) {
+        errors.push(`Local media panel ${id} requires the three room keys and six photo keys`);
+      }
+      const tabKeys = (target?.tabs || []).flatMap((tab) => (tab.slots || []).map((slot) => slot.key));
+      if (tabKeys.length !== LOCAL_MEDIA_KEYS.length
+        || LOCAL_MEDIA_KEYS.some((key) => !tabKeys.includes(key))
+        || new Set(tabKeys).size !== LOCAL_MEDIA_KEYS.length) {
+        errors.push(`Local media panel ${id} tabs must expose each allowed image key exactly once`);
       }
     }
     if (object?.variant === 'notebookArchive') {

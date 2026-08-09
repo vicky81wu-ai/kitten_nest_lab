@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import {
   loadStageImage,
+  localImageSource,
   nextToggleAssetKey,
   resolveAssetKey,
   resolveScenePresentation,
@@ -64,6 +65,20 @@ test('manual moon toggles and scene presentation remain pure manifest decisions'
   assert.equal(resolveScenePresentation({}), 'cover');
 });
 
+test('a device-local room image becomes the first asset source', () => {
+  const revoked = [];
+  const source = localImageSource(new Blob(['image'], { type: 'image/png' }), {
+    createObjectURL: () => 'blob:kitten-room',
+    revokeObjectURL: (url) => revoked.push(url)
+  });
+  assert.deepEqual(source, {
+    url: 'blob:kitten-room',
+    role: 'indexeddbLocalOverride',
+    ownedLocalUrl: true
+  });
+  assert.deepEqual(revoked, []);
+});
+
 test('image decode is a bounded best-effort readiness hint', async () => {
   assert.equal(await waitForBestEffortDecode({}, 5), 'unsupported');
   assert.equal(await waitForBestEffortDecode({ decode: async () => {} }, 5), 'decoded');
@@ -97,9 +112,12 @@ test('room images use the public asset library before the protected-preview fall
     assert.equal(fallback.role, 'staticFallback');
     assert.match(fallback.url, /^\/assets\/rooms\//);
   }
+  assert.equal(manifest.assets['home.day'].localKey, 'homeOn');
+  assert.equal(manifest.assets['home.night'].localKey, 'homeOff');
+  assert.equal(manifest.assets['coffeeCorner.main'].localKey, 'gameRoom');
 });
 
-test('large nested scenes warm a same-origin cache before their canonical Storage fallback', async () => {
+test('nested scenes warm a same-origin static delivery asset before their canonical Storage fallback', async () => {
   const manifest = await readJson('../../v2/data/nest-manifest.v2.json');
   const keys = [
     'coffeeCorner.lapClose',
@@ -109,11 +127,11 @@ test('large nested scenes warm a same-origin cache before their canonical Storag
   ];
   keys.forEach((key) => {
     const [sameOrigin, canonical] = manifest.assets[key].sources;
-    assert.equal(sameOrigin.role, 'sameOriginCache');
-    assert.match(sameOrigin.url, /^\/api\/app-assets\?sceneAsset=/);
+    assert.match(sameOrigin.role, /^static(?:Primary|Optimized)$/);
+    assert.match(sameOrigin.url, /^\/assets\/rooms\//);
     assert.equal(canonical.role, 'supabaseCanonical');
     assert.match(canonical.url, /^https:\/\/pmkxzmogolxllijzqnfr\.supabase\.co\/storage\/v1\/object\/public\//);
-    assert.equal(manifest.assets[key].networkTimeoutMs, 30000);
+    assert.equal(manifest.assets[key].networkTimeoutMs, 15000);
   });
   assert.deepEqual(manifest.scenes.coffeeCorner.warmAssetKeys, ['coffeeCorner.beachHandholdSunset']);
   assert.deepEqual(

@@ -434,14 +434,14 @@ body[data-asset-variant="home.night"] .v2-text-port--weather::before {
   display: grid;
   grid-template-columns: 1fr 1fr;
   align-items: stretch;
-  height: max(20%, 138px);
+  height: max(22%, 160px);
   padding: 0;
   pointer-events: none;
 }
 
 .v2-control {
   display: block;
-  width: min(28vw, 152px);
+  width: min(34vw, 180px);
   height: 100%;
   margin: 0;
   padding: 0;
@@ -453,6 +453,7 @@ body[data-asset-variant="home.night"] .v2-text-port--weather::before {
   font-size: 0;
   pointer-events: auto;
   touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
@@ -486,7 +487,15 @@ body[data-asset-variant="home.night"] .v2-text-port--weather::before {
   outline: 0;
   touch-action: none;
   -webkit-touch-callout: none;
+  -webkit-user-select: none;
   user-select: none;
+}
+
+body[data-long-press-armed] .v2-stage,
+body[data-long-press-armed] .v2-stage * {
+  -webkit-touch-callout: none !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
 }
 
 .v2-admin-hot:focus-visible {
@@ -906,11 +915,11 @@ body[data-asset-variant="home.night"] .v2-text-port--weather::before {
 }
 
 .v2-panel[data-panel-id="system.localMediaPanel"] {
-  max-height: min(66dvh, 620px);
+  max-height: min(70dvh, 640px);
 }
 
 .v2-panel[data-panel-id="system.localMediaPanel"] .v2-panel__body {
-  max-height: calc(min(66dvh, 620px) - 68px);
+  max-height: calc(min(70dvh, 640px) - 68px);
 }
 
 .v2-panel__body--local-media {
@@ -923,6 +932,43 @@ body[data-asset-variant="home.night"] .v2-text-port--weather::before {
   font-size: 12px;
   line-height: 1.5;
   text-align: center;
+}
+
+.v2-local-media__tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0 0 10px;
+}
+
+.v2-local-media__tab {
+  min-height: 36px;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.5);
+  color: var(--rose-deep);
+  font-size: 12px;
+  font-weight: 680;
+}
+
+.v2-local-media__tab[aria-selected="true"] {
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: inset 0 0 0 1px rgba(157, 83, 100, 0.12);
+  font-weight: 820;
+}
+
+.v2-local-media__page[hidden] {
+  display: none;
+}
+
+.v2-local-media__other {
+  margin: 8px 4px 4px;
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.5);
+  color: rgba(53, 28, 33, 0.68);
+  font-size: 12px;
+  line-height: 1.6;
 }
 
 .v2-local-media__grid {
@@ -942,6 +988,10 @@ body[data-asset-variant="home.night"] .v2-text-port--weather::before {
   background: rgba(255, 255, 255, 0.46);
 }
 
+.v2-local-media__slot[data-local-media-kind="room"] {
+  min-height: 104px;
+}
+
 .v2-local-media__slot-title {
   font-size: 13px;
 }
@@ -954,6 +1004,13 @@ body[data-asset-variant="home.night"] .v2-text-port--weather::before {
 .v2-local-media__slot[data-filled="1"] .v2-local-media__slot-state {
   color: var(--rose-deep);
   font-weight: 750;
+}
+
+.v2-local-media__slot-actions {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px;
 }
 
 .v2-local-media__picker,

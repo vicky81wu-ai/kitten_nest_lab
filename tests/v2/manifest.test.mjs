@@ -67,8 +67,8 @@ test('room navigation is invisible and stays in the lower corner hit zones', asy
   assert.match(html, /id="v2-dock-left"[^>]*><\/button>/);
   assert.match(html, /id="v2-dock-right"[^>]*><\/button>/);
   assert.doesNotMatch(html, />[‹›]<\/button>/);
-  assert.match(css, /\.v2-controls\s*\{[^}]*bottom:\s*0;[^}]*height:\s*max\(20%,\s*138px\)/s);
-  assert.match(css, /\.v2-control\s*\{[^}]*border:\s*0;[^}]*background:\s*transparent;[^}]*color:\s*transparent;/s);
+  assert.match(css, /\.v2-controls\s*\{[^}]*bottom:\s*0;[^}]*height:\s*max\(22%,\s*160px\)/s);
+  assert.match(css, /\.v2-control\s*\{[^}]*width:\s*min\(34vw,\s*180px\);[^}]*border:\s*0;[^}]*background:\s*transparent;[^}]*color:\s*transparent;/s);
 });
 
 test('weather advice is a compact floating card instead of the generic bottom sheet', async () => {
@@ -77,18 +77,32 @@ test('weather advice is a compact floating card instead of the generic bottom sh
   assert.match(css, /\.v2-panel-layer\[data-panel-id="home\.weatherAdvicePanel"\][^{]*\.v2-panel__backdrop\s*\{[^}]*backdrop-filter:\s*none/s);
 });
 
-test('a transparent global long press owns the six local photo slots', async () => {
+test('a scoped long press owns three room overrides and six local photo slots', async () => {
   const manifest = await readJson('../../v2/data/nest-manifest.v2.json');
   const html = await readFile(new URL('../../v2/index.html', import.meta.url), 'utf8');
+  const css = await readFile(new URL('../../v2/styles/nest-v2.css', import.meta.url), 'utf8');
   const hot = manifest.objects['system.localMediaLongPressHot'];
   const panel = manifest.objects['system.localMediaPanel'];
   assert.match(html, /id="v2-admin-hot"/);
   assert.equal(hot.ownerScene, '*');
   assert.equal(hot.gesture, 'longPress');
+  assert.equal(hot.longPressMs, 1800);
   assert.equal(hot.action.target, panel.id);
   assert.equal(panel.variant, 'localMediaSetup');
-  assert.equal(panel.memoryTarget.type, 'legacyIndexedDbPhotoSlots');
-  assert.deepEqual(panel.memoryTarget.keys, ['photo0', 'photo1', 'photo2', 'photo3', 'photo4', 'photo5']);
+  assert.equal(panel.memoryTarget.type, 'indexedDbLocalImageSlots');
+  assert.deepEqual(panel.memoryTarget.keys, [
+    'homeOn', 'homeOff', 'gameRoom',
+    'photo0', 'photo1', 'photo2', 'photo3', 'photo4', 'photo5'
+  ]);
+  assert.deepEqual(panel.memoryTarget.tabs.map((tab) => tab.label), ['房间', '照片墙', '其他']);
+  assert.deepEqual(panel.memoryTarget.tabs[0].slots.map((slot) => slot.label), [
+    '主页亮图', '主页暗图', '咖啡角底图'
+  ]);
+  assert.deepEqual(panel.memoryTarget.tabs[1].slots.map((slot) => slot.label), [
+    '照片墙 1', '照片墙 2', '照片墙 3', '照片墙 4', '照片墙 5', '照片墙 6'
+  ]);
+  assert.match(css, /\.v2-admin-hot\s*\{[^}]*-webkit-touch-callout:\s*none;[^}]*-webkit-user-select:\s*none;/s);
+  assert.match(css, /body\[data-long-press-armed\] \.v2-stage/);
 });
 
 test('manifest validation rejects dangling hotspots and unsupported effects', async () => {
