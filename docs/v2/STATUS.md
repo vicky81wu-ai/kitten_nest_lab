@@ -1,7 +1,7 @@
 # Kitten Nest v2 Status
 
 Updated: 2026-08-09
-Status: framework regression passed; home/weather, beach, Gomoku, memories, and scoped powder-notebook write closure implemented, not promoted
+Status: final iPhone acceptance and live MCP/state gate passed; promotion-ready, not promoted
 
 ## Isolation
 
@@ -127,20 +127,24 @@ kitten-nest-mcp
 kitten-nest-lab-assets
 ```
 
-The public asset project was restored separately after the foundation commit:
+Both projects are now healthy:
 
 ```text
 kitten-nest-lab-assets: ACTIVE_HEALTHY
+kitten-nest-mcp: ACTIVE_HEALTHY
 lap-close-01.jpg: verified public image, 853 x 1844
 ```
 
-The private text/state project remains intentionally inactive:
+The live-state promotion gate was checked read-only on 2026-08-09:
 
 ```text
-kitten-nest-mcp: INACTIVE
+installed 猫窝 MCP read_nest_state: passed
+installed 猫窝 MCP update_text_target(dryRun): passed, writesState=false
+Supabase nest_state/main: required v2 text fields present
+production /api/state: HTTP 200 with the live state
 ```
 
-The preview therefore uses its explicit read-only fixture path and labels it `preview copy`. This avoids re-exposing notebook/history state through the currently public `/api/state` read path before a separate privacy plan is approved.
+No state value, text target, archive entry, Storage object, policy, or database schema was changed by this gate. The explicit read-only fixture remains a failover only; `PREVIEW COPY` still appears whenever the live state request fails and notebook mutation remains disabled in that mode.
 
 ## Deployment checkpoint
 
@@ -152,9 +156,27 @@ framework browser acceptance: passed
 restoration batch 0.2.0: Vercel Ready
 cloud-browser self-check: Vercel Protection login wall; the active Work client exposed no user login surface
 local mobile-browser acceptance: passed with the optimized static delivery assets and canonical read-only fallbacks
+final Home-right first-tap correction: accepted on Vicky's iPhone
 ```
 
-Deployment success is not visual acceptance. Continued branch construction receives automated mobile-browser acceptance; one concise iPhone pass is reserved for the eventual promotion checkpoint.
+Deployment success is not visual acceptance. The concise iPhone promotion pass is recorded below and closes the remaining device gate.
+
+## Final iPhone promotion checkpoint
+
+Vicky completed the remaining device pass on 2026-08-09. Accepted on the same protected branch deployment:
+
+```text
+home day/night and compact weather card
+transparent upper-left long press without persistent iOS selection UI
+three named room overrides and six named device-local photo slots
+home -> coffeeCorner on the corrected lower-right first tap
+coffeeCorner -> lapClose -> coffeeCorner -> home
+coffeeCorner -> three beach scenes with optimized assets
+fixed invisible lower-corner docks and beach back/forward route
+no beach asset timeout after the static WebP delivery correction
+```
+
+The remaining sparkle/light-point comments are visual tuning, not a routing, ownership, asset, state, or write-path defect. They are deliberately deferred to a separate post-promotion polish batch so the accepted runtime checkpoint stays independently reversible.
 
 ## First iPhone checkpoint
 

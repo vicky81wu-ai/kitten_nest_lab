@@ -345,3 +345,40 @@ Before any future scene group / nested scene / roleplay scene is added:
 4. test with manifest isolation
 5. only then promote
 ```
+
+## 2026-08-09 v2 promotion-ready checkpoint
+
+The isolated v2 rebuild completed its device acceptance loop without touching the stable `/cloud` route:
+
+```text
+home day/night moon toggle and compact window weather
+home -> coffeeCorner -> lapClose -> coffeeCorner -> home
+coffeeCorner -> beach handhold -> bracelet -> stall and back
+transparent fixed lower-corner docks
+upper-left device-local room/photo setup
+photo wall, Gomoku, powder notebook, bubbles, clock, steam, and sparkles
+```
+
+The last repeated-tap defect was not a router failure. On Home, the unavailable left dock was hidden and CSS Grid auto-flow moved the live right dock into the first column. Both invisible docks now have explicit columns, so availability cannot move their physical hit zones.
+
+Beach delivery no longer depends on the Vercel scene proxy or the multi-megabyte Storage originals as the first source. Repository-owned 1536 x 1024 WebP variants load first, and the canonical public Storage objects remain read-only fallbacks.
+
+Live write-path readiness was checked without publishing test content:
+
+```text
+kitten-nest-mcp Supabase project: ACTIVE_HEALTHY
+kitten-nest-lab-assets Supabase project: ACTIVE_HEALTHY
+installed 猫窝 MCP read: passed
+registered text-target dryRun: passed, writesState=false
+nest_state/main required v2 fields: present
+production /api/state: HTTP 200
+```
+
+Promotion decision:
+
+```text
+Freeze this accepted runtime as the functional checkpoint.
+Promote through one isolated /cloud route-switch commit with the documented rollback.
+Tune sparkle/light-point timing afterward in a separate reversible polish batch.
+Do not hold the functional release open for subjective effect tuning.
+```

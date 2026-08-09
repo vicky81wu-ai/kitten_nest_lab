@@ -1,6 +1,6 @@
 # Kitten Nest v2 Independent Preview Acceptance
 
-Status: framework regression and automated mobile-browser route passed; no device action is required during continued branch construction
+Status: framework regression, automated mobile route, and final iPhone promotion checkpoint passed
 
 ## Visual route
 
@@ -50,7 +50,7 @@ iPhone home-screen capability, safe-area viewport, status-bar, and app-title met
 manifest rejection for missing hotspot coordinates, dangling scene targets, and unsupported effects
 ```
 
-The post-iPhone correction suite separately verifies the compact weather-card contract, drift-tolerant invisible lower-corner navigation, iOS-selection-safe upper-left long-press dispatch, exact three-room/six-photo device-local image writes/clears, and full-size optimized static beach delivery with canonical public Storage fallback. These corrections still require the concise device recheck below before promotion.
+The post-iPhone correction suite separately verifies the compact weather-card contract, drift-tolerant invisible lower-corner navigation, iOS-selection-safe upper-left long-press dispatch, exact three-room/six-photo device-local image writes/clears, and full-size optimized static beach delivery with canonical public Storage fallback. The concise device recheck passed on 2026-08-09.
 
 This pass caught and fixed panorama dialogue clipping. Newly revealed bubbles now wait for their measured layout and adjust only the horizontal scene viewport before the browser paints them. Cover rooms and manifest coordinates are unchanged.
 
@@ -81,7 +81,20 @@ coffeeCorner bubble briefly reused its prior layout position after a text-height
 preview fallback lifecycle refresh briefly surfaced a stale diagnostic status
 ```
 
-The framework fixes for these observations passed on iPhone. Continued restoration uses the automated mobile route; a concise real-device sweep can wait until the branch is otherwise ready for promotion planning.
+The framework fixes for these observations passed on iPhone. The final real-device sweep is recorded below.
+
+Final promotion sweep passed on 2026-08-09:
+
+```text
+compact home weather card
+upper-left device-local setup gesture and labeled room/photo slots
+transparent Home-right dock on the first intended tap
+coffeeCorner, lapClose, and complete return route
+all three beach panoramas and their transparent back/forward docks
+optimized beach delivery without an asset timeout
+```
+
+Remaining sparkle/light-point tuning is non-blocking visual polish and is not part of the production route-switch commit.
 
 ## Failure rule
 

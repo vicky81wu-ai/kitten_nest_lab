@@ -2,6 +2,23 @@
 
 Status: gated; no production route has changed
 
+## Readiness evidence · 2026-08-09
+
+The independent branch now satisfies the promotion gates without mutating live content:
+
+```text
+npm run check:v2: passed
+protected iPhone acceptance: passed, including the corrected Home-right first tap
+installed 猫窝 MCP read_nest_state: passed
+installed 猫窝 MCP update_text_target dryRun: passed with writesState=false
+Supabase kitten-nest-mcp: ACTIVE_HEALTHY
+Supabase kitten-nest-lab-assets: ACTIVE_HEALTHY
+production /api/state: HTTP 200
+Vercel branch status: success
+```
+
+The remaining sparkle/light-point adjustments are a separate visual-polish batch and do not block this promotion. They must not be mixed into the exact route-switch commit below.
+
 ## Preconditions
 
 - `npm run check:v2` passes with no skipped or failing checks.
