@@ -46,6 +46,23 @@ export function validateManifest(manifest, textTargetRegistry = null) {
     if (object?.action?.type && !supportedActions.has(object.action.type)) {
       errors.push(`Object ${id} uses unsupported action ${object.action.type}`);
     }
+    if (object?.action?.type === 'panel.open') {
+      const target = objects[object.action.target];
+      if (!target || target.kind !== 'panel') {
+        errors.push(`Object ${id} opens unknown panel ${object.action.target}`);
+      }
+    }
+    (object?.items || []).forEach((item, index) => {
+      if (item?.action?.type && !supportedActions.has(item.action.type)) {
+        errors.push(`Object ${id} item ${index} uses unsupported action ${item.action.type}`);
+      }
+      if (item?.action?.type === 'panel.open') {
+        const target = objects[item.action.target];
+        if (!target || target.kind !== 'panel') {
+          errors.push(`Object ${id} item ${index} opens unknown panel ${item.action.target}`);
+        }
+      }
+    });
     if (object?.action?.type === 'asset.toggle') {
       const keys = Array.isArray(object.action.keys) ? object.action.keys : [];
       if (!keys.length) errors.push(`Object ${id} asset.toggle requires keys`);

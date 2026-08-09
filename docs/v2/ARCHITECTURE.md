@@ -32,7 +32,7 @@ The v2 manifest may describe read compatibility fields, but it cannot create a w
 | Layout | One base-image calculation and all cover/panorama projection | Click results, scene stack |
 | Hotspot | One pointer delegation path and standard action dispatch | Private navigation or panel logic |
 | TextPort | Queue, index, show, hide, next, canonical/fallback reads | State fetching, coordinate math |
-| Panel | Open, close, layer, scene-exit cleanup | Hotspot placement, navigation |
+| Panel | Open, close, nested panel stack, scoped content session, scene-exit cleanup | Hotspot placement, scene navigation, game rules |
 | Effect | Sparkles, steam, clock hands, pause/destroy | Click binding, scene mutation |
 
 Every controller exposes the same lifecycle:
@@ -59,6 +59,12 @@ panel.close
 ```
 
 Hotspots never call controller internals directly. They dispatch an action envelope; the action dispatcher routes it to the one owning controller.
+
+## Interactive panel content
+
+Interactive content does not create another runtime owner. `gameMenu.panel` dispatches the same standard `panel.open` action to `gomoku.panel`; PanelController retains one layer and a small internal back stack. The Gomoku DOM session is created only while that panel is open and is destroyed on back, close, suspend, or scene exit.
+
+The board rules, win detection, undo operation, candidate generation, and AI choice are pure functions in `runtime/core/gomoku.mjs`. They know nothing about DOM, controllers, state endpoints, or navigation. The panel session owns only ephemeral in-memory play state and cancels its pending AI timer on teardown. No game move reaches `/api/state` or any write endpoint.
 
 ## Atomic scene transition
 

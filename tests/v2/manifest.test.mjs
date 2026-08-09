@@ -49,3 +49,15 @@ test('the generic v2 bubble no longer draws the legacy triangle tail', async () 
   assert.doesNotMatch(css, /\.v2-text-port::after/);
   assert.match(css, /\.v2-text-port\s*\{[^}]*border-radius:\s*22px;/s);
 });
+
+test('the game console opens a manifest-owned interactive gomoku panel', async () => {
+  const manifest = await readJson('../../v2/data/nest-manifest.v2.json');
+  const menu = manifest.objects['gameMenu.panel'];
+  const gomoku = manifest.objects['gomoku.panel'];
+  assert.equal(manifest.scenes.coffeeCorner.objects.includes('gomoku.panel'), true);
+  assert.equal(menu.items[0].action.type, 'panel.open');
+  assert.equal(menu.items[0].action.target, 'gomoku.panel');
+  assert.equal(gomoku.variant, 'gomoku');
+  assert.equal(gomoku.game.size, 15);
+  assert.deepEqual(gomoku.game.difficulties.map((item) => item.id), ['soft', 'normal', 'wolf']);
+});

@@ -213,7 +213,8 @@
         "coffeeCorner.gameConsoleHot",
         "coffeeCorner.steam",
         "memories.panel",
-        "gameMenu.panel"
+        "gameMenu.panel",
+        "gomoku.panel"
       ],
       "docks": {
         "left": { "type": "scene.go", "target": "home" },
@@ -589,10 +590,55 @@
       "title": "Game Menu",
       "variant": "menu",
       "items": [
-        { "title": "五子棋", "text": "旧游戏以后按 Panel contract 迁入。" },
-        { "title": "象棋", "text": "此阶段只验收统一面板生命周期。" },
-        { "title": "围际象棋", "text": "不会在 v2 地基里偷塞旧 handler。" }
+        {
+          "section": "Board Games",
+          "title": "五子棋 / Gomoku",
+          "text": "十五路棋盘，小猫执黑先行。",
+          "status": "play",
+          "action": { "type": "panel.open", "target": "gomoku.panel" }
+        },
+        { "section": "Board Games", "title": "象棋 / Chinese Chess", "text": "还没解锁。", "status": "soon" },
+        { "section": "Board Games", "title": "国际象棋 / Chess", "text": "还没解锁。", "status": "soon" },
+        { "section": "Board Games", "title": "围棋 / Go", "text": "还没解锁。", "status": "soon" },
+        { "section": "Cozy Games", "title": "Memory Cards", "text": "还没解锁。", "status": "soon" },
+        { "section": "Cozy Games", "title": "Puzzle", "text": "还没解锁。", "status": "soon" },
+        { "section": "Cozy Games", "title": "2048 Paw", "text": "还没解锁。", "status": "soon" },
+        { "section": "Cozy Games", "title": "Match Tiles", "text": "还没解锁。", "status": "soon" },
+        { "section": "Kitten Mischief", "title": "奶栗投喂", "text": "还没解锁。", "status": "soon" },
+        { "section": "Kitten Mischief", "title": "Moon Puzzle", "text": "还没解锁。", "status": "soon" },
+        { "section": "Kitten Mischief", "title": "Paw Whack", "text": "还没解锁。", "status": "soon" },
+        { "section": "Kitten Mischief", "title": "English Pebbles", "text": "还没解锁。", "status": "soon" }
       ],
+      "exclusive": true,
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview"
+    },
+    "gomoku.panel": {
+      "id": "gomoku.panel",
+      "kind": "panel",
+      "ownerScene": "coffeeCorner",
+      "controller": "panel",
+      "selector": "[data-panel-id=\"gomoku.panel\"]",
+      "title": "五子棋",
+      "variant": "gomoku",
+      "game": {
+        "size": 15,
+        "defaultDifficulty": "normal",
+        "aiDelayMs": 180,
+        "difficulties": [
+          { "id": "soft", "label": "Soft", "line": "Alex: soft mode. Cute." },
+          { "id": "normal", "label": "Normal", "line": "Alex: normal mode. Your move." },
+          { "id": "wolf", "label": "Wolf", "line": "Alex: wolf mode. Brave kitten." }
+        ],
+        "copy": {
+          "ready": "Alex: your move, kitten.",
+          "thinking": "Alex: thinking…",
+          "kittenWin": "Alex: smug little thing. Fine, you win.",
+          "alexWin": "Alex: that’s my kitten. Consolation cuddle?",
+          "draw": "Alex: a draw. Keep your seat; we go again.",
+          "undo": "Alex: cheating already? Cute."
+        }
+      },
       "exclusive": true,
       "runtimeStatus": "active",
       "versionStatus": "canonicalV2Preview"

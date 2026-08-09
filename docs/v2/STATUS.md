@@ -1,7 +1,7 @@
 # Kitten Nest v2 Status
 
 Updated: 2026-08-09
-Status: framework regression passed; home/weather and beach restoration implemented, not promoted
+Status: framework regression passed; home/weather, beach, and Gomoku restoration implemented, not promoted
 
 ## Isolation
 
@@ -24,7 +24,7 @@ home hubbyNote panel
 coffeeCorner 19.8 rotating bubble
 coffeeCorner lap entry
 coffeeCorner memories panel
-coffeeCorner game menu panel
+coffeeCorner game menu and interactive Gomoku panel
 lapClose rotating bubble
 home clock hands and sparkles
 coffeeCorner steam
@@ -60,6 +60,21 @@ one scene world now supports portrait cover and horizontal panorama presentation
 ```
 
 The beach assets were verified read-only in the existing public asset bucket. No bucket, policy, database row, or state value was changed.
+
+## Interactive panel batch
+
+The game-console hotspot no longer ends at a placeholder. Its manifest-owned menu now opens a complete 15 × 15 Gomoku session inside the same PanelController layer:
+
+```text
+kitten plays black and moves first
+Alex replies with white
+Soft / Normal / Wolf difficulty reset
+undo removes the latest complete round
+restart and back-to-menu controls
+all pending AI timers die when the panel closes or switches
+```
+
+Game rules and AI selection live in a pure core module. PanelController owns only the panel stack and the scoped DOM session, so this restoration adds neither a ninth lifecycle controller nor a second click-delegation system. It performs no network or state writes.
 
 ## State of external dependencies
 
@@ -159,9 +174,9 @@ Run:
 npm run check:v2
 ```
 
-This currently runs 28 checks covering controller contracts, one-manifest ownership, registered or explicitly static text ports, selector exclusivity, child isolation, portrait and panorama navigation, approved beach order, failed-asset rollback, projection math, panorama bubble reveal, text mutation layout invalidation, fallback refresh serialization, weather state/advice, time-of-day and manual asset resolution, connected stage-image loading, loading-veil presence, and bounded best-effort image decode behavior.
+This currently runs 36 checks covering controller contracts, one-manifest ownership, registered or explicitly static text ports, selector exclusivity, child isolation, portrait and panorama navigation, approved beach order, failed-asset rollback, projection math, panorama bubble reveal, text mutation layout invalidation, fallback refresh serialization, weather state/advice, time-of-day and manual asset resolution, connected stage-image loading, loading-veil presence, bounded best-effort image decode behavior, Gomoku legality/wins/undo, and all three AI difficulty paths.
 
-The local 393 × 852 mobile-browser pass additionally exercised the real UI route: moon round-trip, weather panel, coffeeCorner, beach entry, 885 px of horizontal pan range, both-character dialogue, all three beach scenes, the three-level back chain, lapClose hide/show-next, and the final return home. It found one panorama-only defect: a newly opened dialogue could be clipped after its character hotspot moved the viewport. TextPort now waits for Layout readiness and adjusts horizontal scroll before paint; the rerun measured every sampled beach bubble at `visibleRatio: 1` with zero console, page, or request errors.
+The local 393 × 852 mobile-browser pass additionally exercised the real UI route: moon round-trip, weather panel, coffeeCorner, game menu, a 225-cell Gomoku board, kitten/Alex turns, whole-round undo, difficulty reset, nested panel back, beach entry, 885 px of horizontal pan range, both-character dialogue, all three beach scenes, the three-level back chain, lapClose hide/show-next, and the final return home. It found one panorama-only defect: a newly opened dialogue could be clipped after its character hotspot moved the viewport. TextPort now waits for Layout readiness and adjusts horizontal scroll before paint; the rerun measured every sampled beach bubble at `visibleRatio: 1` with zero console, page, or request errors.
 
 ## Promotion stop condition
 
