@@ -1,7 +1,7 @@
 # Kitten Nest v2 Status
 
 Updated: 2026-08-09
-Status: framework regression passed; home/weather, beach, Gomoku, and read-only memories restoration implemented, not promoted
+Status: framework regression passed; home/weather, beach, Gomoku, memories, and read-only notebook restoration implemented, not promoted
 
 ## Isolation
 
@@ -20,7 +20,7 @@ Included:
 
 ```text
 home -> coffeeCorner -> push(lapClose) -> back()
-home hubbyNote panel
+home hubbyNote current page and read-only permanent archive
 coffeeCorner 19.8 rotating bubble
 coffeeCorner lap entry
 coffeeCorner read-only six-slot memories panel
@@ -96,6 +96,12 @@ Browser same-origin rules still apply. If the old photos live under another orig
 The temporary runtime inspector has been retired at code level. Its manifest objects, center `V2` control, controller-status pills, hotspot-outline switch, diagnostic panel branch, and diagnostic-only styles no longer ship in the preview. Weather and notebook panels also no longer expose internal `source:` metadata.
 
 Internal lifecycle status remains available to the runtime and automated tests. The only passive source disclosure is `PREVIEW COPY`, shown when and only when StateController is actually serving the explicit degraded fixture. Asset, runtime, and fatal cards remain because they fail closed instead of presenting the wrong room.
+
+## Read-only powder notebook batch
+
+The home notebook hotspot now opens the current `hubbyNote` page plus the registered permanent archive fields `hubbyNoteArchive` / `hubbyNoteHistory`. Current and archive items are normalized into one horizontal page strip, favorite flags remain visible, and later state refreshes update the open session without adding another panel owner.
+
+This is intentionally a reading restoration. The notebook session contains no input, textarea, local token storage, fetch call, or write action. Editing, favorite mutation, deletion, trash, and Nest-key authorization remain on the stable write-capable path until v2 receives a separate privacy and mutation plan.
 
 ## State of external dependencies
 
@@ -195,9 +201,9 @@ Run:
 npm run check:v2
 ```
 
-This currently runs 41 checks covering controller contracts, one-manifest ownership, registered or explicitly static text ports, selector exclusivity, child isolation, portrait and panorama navigation, approved beach order, failed-asset rollback, projection math, panorama bubble reveal, text mutation layout invalidation, fallback refresh serialization, weather state/advice, time-of-day and manual asset resolution, connected stage-image loading, loading-veil presence, bounded best-effort image decode behavior, Gomoku legality/wins/undo and all three AI difficulty paths, absent/unsupported/existing legacy-photo database behavior, and the absence of product-facing inspector/debug controls.
+This currently runs 45 checks covering controller contracts, one-manifest ownership, registered or explicitly static text ports, selector exclusivity, child isolation, portrait and panorama navigation, approved beach order, failed-asset rollback, projection math, panorama bubble reveal, text mutation layout invalidation, fallback refresh serialization, weather state/advice, time-of-day and manual asset resolution, connected stage-image loading, loading-veil presence, bounded best-effort image decode behavior, Gomoku legality/wins/undo and all three AI difficulty paths, absent/unsupported/existing legacy-photo database behavior, read-only notebook normalization and registry binding, and the absence of product-facing inspector/debug controls.
 
-The local 393 × 852 mobile-browser pass additionally exercised the real UI route: moon round-trip, weather panel, coffeeCorner, a seeded six-slot read-only memories carousel including an empty slot, game menu, a 225-cell Gomoku board, kitten/Alex turns, whole-round undo, difficulty reset, nested panel back, beach entry, 885 px of horizontal pan range, both-character dialogue, all three beach scenes, the three-level back chain, lapClose hide/show-next, and the final return home. It found one panorama-only defect: a newly opened dialogue could be clipped after its character hotspot moved the viewport. TextPort now waits for Layout readiness and adjusts horizontal scroll before paint; the rerun measured every sampled beach bubble at `visibleRatio: 1` with zero console, page, or request errors.
+The local 393 × 852 mobile-browser pass additionally exercised the real UI route: current notebook page, favorited archive page, moon round-trip, weather panel, coffeeCorner, a seeded six-slot read-only memories carousel including an empty slot, game menu, a 225-cell Gomoku board, kitten/Alex turns, whole-round undo, difficulty reset, nested panel back, beach entry, 885 px of horizontal pan range, both-character dialogue, all three beach scenes, the three-level back chain, lapClose hide/show-next, and the final return home. It found one panorama-only defect: a newly opened dialogue could be clipped after its character hotspot moved the viewport. TextPort now waits for Layout readiness and adjusts horizontal scroll before paint; the rerun measured every sampled beach bubble at `visibleRatio: 1` with zero console, page, or request errors.
 
 ## Promotion stop condition
 

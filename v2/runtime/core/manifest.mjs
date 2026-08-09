@@ -79,6 +79,23 @@ export function validateManifest(manifest, textTargetRegistry = null) {
         errors.push(`Memories panel ${id} requires six explicit photo keys`);
       }
     }
+    if (object?.variant === 'notebookArchive') {
+      const target = textTargetRegistry?.targets?.[object.targetId];
+      if (!target || target.type !== 'note') {
+        errors.push(`Notebook panel ${id} requires a registered note target`);
+      } else {
+        if (object.currentField !== target.field) {
+          errors.push(`Notebook panel ${id} current field does not match ${object.targetId}`);
+        }
+        const archiveFields = Array.isArray(object.archiveFields) ? object.archiveFields : [];
+        [target.archiveField, target.historyField].filter(Boolean).forEach((field) => {
+          if (!archiveFields.includes(field)) {
+            errors.push(`Notebook panel ${id} is missing registered archive field ${field}`);
+          }
+        });
+      }
+      if (object.action) errors.push(`Notebook panel ${id} must stay read-only`);
+    }
     if (object?.coordinate && object.coordinateStatus !== 'baseImageLocked' && !String(object.coordinateStatus || '').startsWith('candidate')) {
       warnings.push(`Object ${id} has coordinates without a recognized coordinateStatus`);
     }

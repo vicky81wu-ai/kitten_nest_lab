@@ -72,6 +72,12 @@ The memories panel may read the six blobs created by the old stable page in `kit
 
 This bridge is intentionally not a new asset pipeline. It has no picker, `put`, delete, upload, or cloud fallback. Blob object URLs belong to the scoped memories session and are revoked at teardown. Same-origin isolation remains authoritative, and the manifest-owned card content is the no-data fallback.
 
+## Read-only notebook compatibility
+
+`home.hubbyNotePanel` is bound back to the registered `hubbyNote` target card, including its current, updated-at, archive, and history field names. A pure resolver normalizes string or object archive entries, dates, and favorite flags; a scoped notebook session renders those pages under the existing PanelController and preserves the selected page across state refreshes.
+
+The session is intentionally incapable of mutation. It contains no editor, credential storage, endpoint call, or archive action. PanelController may pass it newly read state through `update()`, but the session cannot reach StateController or dispatch a write. The manifest validator rejects an unregistered note target, mismatched current field, missing registered archive fields, or a notebook action envelope.
+
 ## Atomic scene transition
 
 SceneRuntime performs one transaction:

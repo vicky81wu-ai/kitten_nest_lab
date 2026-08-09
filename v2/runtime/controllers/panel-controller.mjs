@@ -2,6 +2,7 @@ import { BaseController } from '../core/base-controller.mjs';
 import { resolveWeatherState, weatherAdvice } from '../core/weather-state.mjs';
 import { GomokuPanelSession } from '../panels/gomoku-panel.mjs';
 import { MemoriesPanelSession } from '../panels/memories-panel.mjs';
+import { NotebookPanelSession } from '../panels/notebook-panel.mjs';
 
 function appendText(parent, tag, className, text) {
   const element = document.createElement(tag);
@@ -31,7 +32,12 @@ export class PanelController extends BaseController {
     this.layer.addEventListener('click', this.boundClick);
     this.unsubscribeState = this.context.events.on('state:change', () => {
       const object = this.context.manifest.objects[this.openId];
-      if (object && !this.interactiveSession) this.render(object);
+      if (!object) return;
+      if (this.interactiveSession?.update) {
+        this.interactiveSession.update(this.context.controllers.get('state').get() || {});
+      } else if (!this.interactiveSession) {
+        this.render(object);
+      }
     });
   }
 
@@ -107,6 +113,16 @@ export class PanelController extends BaseController {
       this.interactiveSession = new MemoriesPanelSession({
         body: this.body,
         object
+      });
+      this.interactiveSession.mount();
+      return;
+    }
+
+    if (object.variant === 'notebookArchive') {
+      this.interactiveSession = new NotebookPanelSession({
+        body: this.body,
+        object,
+        state: this.context.controllers.get('state').get() || {}
       });
       this.interactiveSession.mount();
       return;

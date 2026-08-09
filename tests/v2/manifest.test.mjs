@@ -84,3 +84,17 @@ test('the memories panel can only read the six explicit legacy photo slots', asy
     'photo0', 'photo1', 'photo2', 'photo3', 'photo4', 'photo5'
   ]);
 });
+
+test('the powder notebook reads current and archive fields without a write action', async () => {
+  const manifest = await readJson('../../v2/data/nest-manifest.v2.json');
+  const notebook = manifest.objects['home.hubbyNotePanel'];
+  assert.equal(notebook.variant, 'notebookArchive');
+  assert.equal(notebook.targetId, 'hubbyNote');
+  assert.equal(notebook.currentField, 'hubbyNote');
+  assert.deepEqual(notebook.archiveFields, ['hubbyNoteArchive', 'hubbyNoteHistory']);
+  assert.equal(notebook.maxArchiveItems, 20);
+  assert.equal(notebook.action, undefined);
+  assert.equal(manifest.rules.stateWritesAllowed, false);
+  const session = await readFile(new URL('../../v2/runtime/panels/notebook-panel.mjs', import.meta.url), 'utf8');
+  assert.doesNotMatch(session, /fetch\s*\(|localStorage|\/api\/set-state|createElement\(['"](?:input|textarea)/);
+});

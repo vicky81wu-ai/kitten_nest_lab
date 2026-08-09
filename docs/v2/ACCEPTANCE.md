@@ -10,17 +10,18 @@ Status: framework regression and automated mobile-browser route passed; no devic
 
 ## Restoration acceptance loop
 
-1. Home opens normally; tap the moon lamp twice and confirm day → night → day uses two real images.
-2. Confirm the window shows temperature/description; tap it and close the single shared “窗边叮嘱” panel.
-3. Enter coffeeCorner and confirm the main bubble has rounded corners with no triangle tail.
-4. Tap the photo wall. If this origin already has old photo slots, move through filled and empty slots; otherwise confirm the memory-card fallback appears without a permission prompt.
-5. Tap the game console, open Gomoku, make one move, undo the round, change difficulty, and return to the same game menu.
-6. Tap the top-row beach photo to enter the first seaside panorama.
-7. Drag the panorama horizontally; fixed v2 controls must stay put while the scene moves.
-8. In each beach scene, tap Alex and Vicky to show/hide/advance their separate dialogue.
-9. Advance handhold → bracelet → stall, then walk the left/back path to coffeeCorner.
-10. Confirm the previously accepted notebook, 19.8, panels, lapClose, and home back path still work.
-11. Confirm there is no center `V2` button or engineering-source line; `PREVIEW COPY` appears only on a degraded-state run.
+1. Home opens normally; open the powder notebook and move from the current page to a permanent archive page when one exists. Confirm there is no editor, key field, or mutation button.
+2. Tap the moon lamp twice and confirm day → night → day uses two real images.
+3. Confirm the window shows temperature/description; tap it and close the single shared “窗边叮嘱” panel.
+4. Enter coffeeCorner and confirm the main bubble has rounded corners with no triangle tail.
+5. Tap the photo wall. If this origin already has old photo slots, move through filled and empty slots; otherwise confirm the memory-card fallback appears without a permission prompt.
+6. Tap the game console, open Gomoku, make one move, undo the round, change difficulty, and return to the same game menu.
+7. Tap the top-row beach photo to enter the first seaside panorama.
+8. Drag the panorama horizontally; fixed v2 controls must stay put while the scene moves.
+9. In each beach scene, tap Alex and Vicky to show/hide/advance their separate dialogue.
+10. Advance handhold → bracelet → stall, then walk the left/back path to coffeeCorner.
+11. Confirm the previously accepted 19.8, panels, lapClose, and home back path still work.
+12. Confirm there is no center `V2` button or engineering-source line; `PREVIEW COPY` appears only on a degraded-state run.
 
 ## Automated mobile-browser checkpoint
 
@@ -28,6 +29,7 @@ Passed at a 393 × 852 touch viewport using the exact existing public image byte
 
 ```text
 home night -> day -> night
+powder notebook current page -> favorited archive page -> close
 weather text -> shared advice panel -> close
 home -> coffeeCorner -> six-slot readonly memories carousel -> close
 game menu -> Gomoku

@@ -936,6 +936,113 @@ body[data-asset-variant="home.night"] .v2-text-port--weather::before {
   margin: 0;
 }
 
+.v2-panel[data-panel-id="home.hubbyNotePanel"] {
+  max-height: min(82dvh, 700px);
+}
+
+.v2-panel[data-panel-id="home.hubbyNotePanel"] .v2-panel__body {
+  max-height: calc(min(82dvh, 700px) - 68px);
+}
+
+.v2-panel__body--notebook {
+  padding: 14px;
+}
+
+.v2-notebook {
+  display: grid;
+  gap: 12px;
+}
+
+.v2-notebook__page {
+  min-height: 230px;
+  padding: 18px 17px 22px;
+  border: 1px solid rgba(157, 83, 100, 0.16);
+  border-radius: 22px;
+  background:
+    linear-gradient(rgba(157, 83, 100, 0.055) 1px, transparent 1px) 0 49px / 100% 27px,
+    linear-gradient(145deg, rgba(255, 255, 255, 0.78), rgba(255, 237, 241, 0.68));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.55), 0 12px 26px rgba(70, 30, 40, 0.13);
+}
+
+.v2-notebook__page[data-page-kind="archive"] {
+  background:
+    linear-gradient(rgba(157, 83, 100, 0.055) 1px, transparent 1px) 0 49px / 100% 27px,
+    linear-gradient(145deg, rgba(255, 253, 241, 0.82), rgba(255, 239, 232, 0.68));
+}
+
+.v2-notebook__page-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 24px;
+  margin-bottom: 13px;
+}
+
+.v2-notebook__page-label {
+  color: var(--rose-deep);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+}
+
+.v2-notebook__page-date {
+  color: rgba(53, 28, 33, 0.45);
+  font-size: 10px;
+}
+
+.v2-notebook__page-text {
+  margin: 0;
+  color: var(--ink);
+  font-family: ui-serif, Georgia, "Times New Roman", serif;
+  font-size: clamp(16px, 4.3vw, 21px);
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+.v2-notebook__tabs {
+  display: flex;
+  gap: 7px;
+  padding: 2px 1px 5px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.v2-notebook__tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.v2-notebook__tab {
+  flex: 0 0 auto;
+  min-height: 36px;
+  padding: 8px 11px;
+  border: 1px solid rgba(157, 83, 100, 0.15);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.54);
+  color: rgba(53, 28, 33, 0.62);
+  font-size: 11px;
+  font-weight: 760;
+  touch-action: manipulation;
+}
+
+.v2-notebook__tab[aria-pressed="true"] {
+  background: rgba(157, 83, 100, 0.9);
+  color: #fffaf7;
+  box-shadow: 0 7px 16px rgba(100, 45, 60, 0.2);
+}
+
+.v2-notebook__empty,
+.v2-notebook__meta {
+  margin: 0;
+  color: rgba(53, 28, 33, 0.5);
+  font-size: 11px;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.v2-notebook__meta {
+  font-size: 10px;
+}
+
 .v2-error-card,
 .v2-fatal {
   position: absolute;
