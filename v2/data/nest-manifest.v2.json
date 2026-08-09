@@ -1,0 +1,1080 @@
+{
+  "schemaVersion": "nest-manifest.v2",
+  "version": "0.3.0",
+  "status": "production",
+  "promoted": true,
+  "route": "/cloud",
+  "rules": {
+    "singleSource": "This manifest is the only v2 runtime identity, ownership, scene, action, coordinate, panel, text-port, and effect source.",
+    "noIdentityNoBinding": true,
+    "childIsolation": true,
+    "baseImageCoordinatesOnly": true,
+    "stateWritesAllowed": {
+      "mode": "registeredTargetOnly",
+      "targetIds": ["hubbyNote"]
+    },
+    "productionRoute": "/cloud"
+  },
+  "runtime": {
+    "entryScene": "home",
+    "mountOrder": [
+      "state",
+      "asset",
+      "layout",
+      "panel",
+      "hotspot",
+      "textPort",
+      "effect",
+      "sceneRuntime"
+    ],
+    "readyOrder": [
+      "state",
+      "asset",
+      "layout",
+      "panel",
+      "hotspot",
+      "textPort",
+      "effect",
+      "sceneRuntime"
+    ],
+    "reconcileOrder": [
+      "panel",
+      "hotspot",
+      "textPort",
+      "effect",
+      "layout"
+    ],
+    "supportedActionTypes": [
+      "scene.go",
+      "scene.push",
+      "scene.back",
+      "scene.jumpTo",
+      "scene.dock",
+      "asset.toggle",
+      "text.toggleNext",
+      "text.hide",
+      "panel.open",
+      "panel.close"
+    ],
+    "state": {
+      "endpoint": "/api/state",
+      "fallbackUrl": "/v2/data/preview-state.v2.json",
+      "timeoutMs": 4500,
+      "refreshOn": ["pageshow", "focus", "visibilitychange"]
+    },
+    "stateWrites": {
+      "endpoint": "/api/set-state",
+      "authHeader": "X-Nest-Token",
+      "tokenStorageKeys": ["kittenNestToken", "nestToken"]
+    },
+    "textTargetRegistryUrl": "/data/text-targets.v1.json"
+  },
+  "controllers": {
+    "state": {
+      "className": "StateController",
+      "owns": ["state-read", "state-cache", "state-refresh"],
+      "lifecycle": ["mount", "ready", "reconcile", "suspend", "destroy"]
+    },
+    "asset": {
+      "className": "AssetController",
+      "owns": ["asset-key-resolution", "preload", "decode", "fallback"],
+      "lifecycle": ["mount", "ready", "reconcile", "suspend", "destroy"]
+    },
+    "sceneRuntime": {
+      "className": "SceneRuntimeController",
+      "owns": ["go", "push", "back", "jumpTo", "scene-stack", "atomic-scene-transition"],
+      "lifecycle": ["mount", "ready", "reconcile", "suspend", "destroy"]
+    },
+    "layout": {
+      "className": "LayoutController",
+      "owns": ["cover-box", "base-image-projection", "placement-readiness"],
+      "lifecycle": ["mount", "ready", "reconcile", "suspend", "destroy"]
+    },
+    "hotspot": {
+      "className": "HotspotController",
+      "owns": ["hotspot-render", "single-pointer-delegation", "action-dispatch"],
+      "lifecycle": ["mount", "ready", "reconcile", "suspend", "destroy"]
+    },
+    "textPort": {
+      "className": "TextPortController",
+      "owns": ["text-render", "queue-index", "show", "hide", "show-next"],
+      "lifecycle": ["mount", "ready", "reconcile", "suspend", "destroy"]
+    },
+    "panel": {
+      "className": "PanelController",
+      "owns": ["panel-open", "panel-close", "panel-layer", "scene-exit-cleanup"],
+      "lifecycle": ["mount", "ready", "reconcile", "suspend", "destroy"]
+    },
+    "effect": {
+      "className": "EffectController",
+      "owns": ["sparkles", "steam", "clock-hands", "effect-pause", "effect-destroy"],
+      "lifecycle": ["mount", "ready", "reconcile", "suspend", "destroy"]
+    }
+  },
+  "assets": {
+    "home.auto": {
+      "strategy": "timeOfDay",
+      "dayAsset": "home.day",
+      "nightAsset": "home.night",
+      "dayStartsAt": 7,
+      "nightStartsAt": 18
+    },
+    "home.day": {
+      "localKey": "homeOn",
+      "sources": [
+        {
+          "url": "https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/home/day.jpg",
+          "role": "supabaseCanonical"
+        },
+        { "url": "/assets/rooms/home/day.jpg", "role": "staticFallback" }
+      ]
+    },
+    "home.night": {
+      "localKey": "homeOff",
+      "sources": [
+        {
+          "url": "https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/home/night.jpg",
+          "role": "supabaseCanonical"
+        },
+        { "url": "/assets/rooms/home/night.jpg", "role": "staticFallback" }
+      ]
+    },
+    "coffeeCorner.main": {
+      "localKey": "gameRoom",
+      "sources": [
+        {
+          "url": "https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/morning-evening.jpg",
+          "role": "supabaseCanonical"
+        },
+        { "url": "/assets/rooms/coffee-corner/morning-evening.jpg", "role": "staticFallback" }
+      ]
+    },
+    "coffeeCorner.lapClose": {
+      "sources": [
+        {
+          "url": "/assets/rooms/coffee-corner/variants/lap-close-01.jpg",
+          "role": "staticPrimary"
+        },
+        {
+          "url": "https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/variants/lap-close-01.jpg?v=20260613-lap-close-1",
+          "role": "supabaseCanonical"
+        }
+      ],
+      "networkTimeoutMs": 15000,
+      "failurePolicy": "showExplicitAssetError"
+    },
+    "coffeeCorner.beachHandholdSunset": {
+      "sources": [
+        {
+          "url": "/assets/rooms/coffee-corner/beach/beach-handhold-sunset.webp",
+          "role": "staticOptimized"
+        },
+        {
+          "url": "https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/beach/beach-handhold-sunset.jpg",
+          "role": "supabaseCanonical"
+        }
+      ],
+      "networkTimeoutMs": 15000,
+      "failurePolicy": "showExplicitAssetError"
+    },
+    "coffeeCorner.beachBraceletPromise": {
+      "sources": [
+        {
+          "url": "/assets/rooms/coffee-corner/beach/beach-bracelet-promise.webp",
+          "role": "staticOptimized"
+        },
+        {
+          "url": "https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/beach/beach-bracelet-promise.jpg",
+          "role": "supabaseCanonical"
+        }
+      ],
+      "networkTimeoutMs": 15000,
+      "failurePolicy": "showExplicitAssetError"
+    },
+    "coffeeCorner.beachStallOrder": {
+      "sources": [
+        {
+          "url": "/assets/rooms/coffee-corner/beach/beach-stall-order.webp",
+          "role": "staticOptimized"
+        },
+        {
+          "url": "https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/beach/beach-stall-order.jpg",
+          "role": "supabaseCanonical"
+        }
+      ],
+      "networkTimeoutMs": 15000,
+      "failurePolicy": "showExplicitAssetError"
+    }
+  },
+  "globalObjects": [
+    "system.dockLeft",
+    "system.dockRight",
+    "system.localMediaLongPressHot",
+    "system.localMediaPanel"
+  ],
+  "scenes": {
+    "home": {
+      "id": "home",
+      "parent": null,
+      "assetKey": "home.auto",
+      "objects": [
+        "home.clockHands",
+        "home.sparkles",
+        "home.moonLampHot",
+        "home.windowWeather",
+        "home.weatherAdvicePanel",
+        "home.hubbyNoteHot",
+        "home.hubbyNotePanel"
+      ],
+      "docks": {
+        "left": null,
+        "right": { "type": "scene.go", "target": "coffeeCorner" }
+      }
+    },
+    "coffeeCorner": {
+      "id": "coffeeCorner",
+      "parent": null,
+      "assetKey": "coffeeCorner.main",
+      "objects": [
+        "coffeeCorner.bubble",
+        "coffeeCorner.tattoo19_8",
+        "coffeeCorner.lapEnterHot",
+        "coffeeCorner.photoWallHot",
+        "coffeeCorner.beachEnterHot",
+        "coffeeCorner.gameConsoleHot",
+        "coffeeCorner.steam",
+        "memories.panel",
+        "gameMenu.panel",
+        "gomoku.panel"
+      ],
+      "docks": {
+        "left": { "type": "scene.go", "target": "home" },
+        "right": null
+      },
+      "warmAssetKeys": ["coffeeCorner.beachHandholdSunset"]
+    },
+    "lapClose": {
+      "id": "lapClose",
+      "parent": "coffeeCorner",
+      "assetKey": "coffeeCorner.lapClose",
+      "objects": [
+        "lapClose.bubble",
+        "lapClose.bubbleTrigger"
+      ],
+      "docks": {
+        "left": { "type": "scene.back" },
+        "right": null
+      },
+      "blocksParentInteractive": true
+    },
+    "coffeeCornerBeachHandholdSunset": {
+      "id": "coffeeCornerBeachHandholdSunset",
+      "parent": "coffeeCorner",
+      "assetKey": "coffeeCorner.beachHandholdSunset",
+      "presentation": "panorama",
+      "alt": "Alex and Vicky holding hands by the sea at sunset",
+      "objects": [
+        "coffeeCornerBeachHandholdBubble",
+        "coffeeCornerBeachHandholdVickyBubble",
+        "coffeeCornerBeachHandholdAlexHot",
+        "coffeeCornerBeachHandholdVickyHot",
+        "coffeeCornerBeachHandholdNextHot",
+        "coffeeCornerBeachHandholdBackHot"
+      ],
+      "docks": {
+        "left": { "type": "scene.back" },
+        "right": { "type": "scene.push", "target": "coffeeCornerBeachBraceletPromise" }
+      },
+      "warmAssetKeys": ["coffeeCorner.beachBraceletPromise"],
+      "blocksParentInteractive": true
+    },
+    "coffeeCornerBeachBraceletPromise": {
+      "id": "coffeeCornerBeachBraceletPromise",
+      "parent": "coffeeCornerBeachHandholdSunset",
+      "assetKey": "coffeeCorner.beachBraceletPromise",
+      "presentation": "panorama",
+      "alt": "Alex fastening Vicky's bracelet by the sea",
+      "objects": [
+        "coffeeCornerBeachBraceletBubble",
+        "coffeeCornerBeachBraceletVickyBubble",
+        "coffeeCornerBeachBraceletAlexHot",
+        "coffeeCornerBeachBraceletVickyHot",
+        "coffeeCornerBeachBraceletNextHot",
+        "coffeeCornerBeachBraceletBackHot"
+      ],
+      "docks": {
+        "left": { "type": "scene.back" },
+        "right": { "type": "scene.push", "target": "coffeeCornerBeachStallOrder" }
+      },
+      "warmAssetKeys": ["coffeeCorner.beachStallOrder"],
+      "blocksParentInteractive": true
+    },
+    "coffeeCornerBeachStallOrder": {
+      "id": "coffeeCornerBeachStallOrder",
+      "parent": "coffeeCornerBeachBraceletPromise",
+      "assetKey": "coffeeCorner.beachStallOrder",
+      "presentation": "panorama",
+      "alt": "Alex and Vicky ordering food at a seaside stall",
+      "objects": [
+        "coffeeCornerBeachStallOrderBubble",
+        "coffeeCornerBeachStallOrderVickyBubble",
+        "coffeeCornerBeachStallOrderAlexHot",
+        "coffeeCornerBeachStallOrderVickyHot",
+        "coffeeCornerBeachStallOrderNextHot",
+        "coffeeCornerBeachStallOrderBackHot"
+      ],
+      "docks": {
+        "left": { "type": "scene.back" },
+        "right": { "type": "scene.jumpTo", "target": "coffeeCorner" }
+      },
+      "blocksParentInteractive": true
+    }
+  },
+  "objects": {
+    "system.dockLeft": {
+      "id": "system.dockLeft",
+      "kind": "hotspot",
+      "ownerScene": "*",
+      "controller": "hotspot",
+      "selector": "#v2-dock-left",
+      "mount": "existing",
+      "action": { "type": "scene.dock", "side": "left" },
+      "exclusive": true,
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview"
+    },
+    "system.dockRight": {
+      "id": "system.dockRight",
+      "kind": "hotspot",
+      "ownerScene": "*",
+      "controller": "hotspot",
+      "selector": "#v2-dock-right",
+      "mount": "existing",
+      "action": { "type": "scene.dock", "side": "right" },
+      "exclusive": true,
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview"
+    },
+    "system.localMediaLongPressHot": {
+      "id": "system.localMediaLongPressHot",
+      "kind": "hotspot",
+      "ownerScene": "*",
+      "controller": "hotspot",
+      "selector": "#v2-admin-hot",
+      "mount": "existing",
+      "label": "长按打开猫窝素材面板",
+      "gesture": "longPress",
+      "longPressMs": 1800,
+      "action": { "type": "panel.open", "target": "system.localMediaPanel" },
+      "exclusive": true,
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview"
+    },
+    "system.localMediaPanel": {
+      "id": "system.localMediaPanel",
+      "kind": "panel",
+      "ownerScene": "*",
+      "controller": "panel",
+      "selector": "[data-panel-id=\"system.localMediaPanel\"]",
+      "title": "猫窝素材",
+      "variant": "localMediaSetup",
+      "intro": "本机图片优先；清除本机覆盖后，房间会恢复 Supabase 默认图。",
+      "memoryTarget": {
+        "type": "indexedDbLocalImageSlots",
+        "database": "kittenNestLabDB",
+        "store": "images",
+        "keys": ["homeOn", "homeOff", "gameRoom", "photo0", "photo1", "photo2", "photo3", "photo4", "photo5"],
+        "tabs": [
+          {
+            "id": "rooms",
+            "label": "房间",
+            "slots": [
+              { "key": "homeOn", "kind": "room", "label": "主页亮图", "defaultState": "默认：Supabase", "clearLabel": "恢复默认" },
+              { "key": "homeOff", "kind": "room", "label": "主页暗图", "defaultState": "默认：Supabase", "clearLabel": "恢复默认" },
+              { "key": "gameRoom", "kind": "room", "label": "咖啡角底图", "defaultState": "默认：Supabase", "clearLabel": "恢复默认" }
+            ]
+          },
+          {
+            "id": "photoWall",
+            "label": "照片墙",
+            "slots": [
+              { "key": "photo0", "kind": "photo", "label": "照片墙 1", "defaultState": "空槽" },
+              { "key": "photo1", "kind": "photo", "label": "照片墙 2", "defaultState": "空槽" },
+              { "key": "photo2", "kind": "photo", "label": "照片墙 3", "defaultState": "空槽" },
+              { "key": "photo3", "kind": "photo", "label": "照片墙 4", "defaultState": "空槽" },
+              { "key": "photo4", "kind": "photo", "label": "照片墙 5", "defaultState": "空槽" },
+              { "key": "photo5", "kind": "photo", "label": "照片墙 6", "defaultState": "空槽" }
+            ]
+          },
+          {
+            "id": "other",
+            "label": "其他",
+            "text": "房间图：本机覆盖 → Supabase 默认 → 静态备用。照片墙六槽只保存在这台设备；Supabase 目前没有独立的默认照片墙对象。"
+          }
+        ]
+      },
+      "exclusive": true,
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview"
+    },
+    "home.clockHands": {
+      "id": "home.clockHands",
+      "kind": "effect",
+      "ownerScene": "home",
+      "controller": "effect",
+      "selector": "[data-object-id=\"home.clockHands\"]",
+      "effect": { "type": "clockHands" },
+      "coordinate": { "anchor": "center", "x": 0.2108, "y": 0.3353, "width": 0.312, "aspectRatio": 1 },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview"
+    },
+    "home.sparkles": {
+      "id": "home.sparkles",
+      "kind": "effect",
+      "ownerScene": "home",
+      "controller": "effect",
+      "selector": "[data-object-id=\"home.sparkles\"]",
+      "effect": { "type": "sparkles", "count": 18 },
+      "coordinate": { "anchor": "center", "x": 0.5, "y": 0.34, "width": 0.96, "height": 0.62 },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview"
+    },
+    "home.moonLampHot": {
+      "id": "home.moonLampHot",
+      "kind": "hotspot",
+      "ownerScene": "home",
+      "controller": "hotspot",
+      "selector": "[data-object-id=\"home.moonLampHot\"]",
+      "label": "切换白天和夜晚",
+      "action": { "type": "asset.toggle", "keys": ["home.day", "home.night"] },
+      "coordinate": { "anchor": "center", "x": 0.8725, "y": 0.373, "width": 0.155, "height": 0.15 },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview"
+    },
+    "home.windowWeather": {
+      "id": "home.windowWeather",
+      "kind": "textPort",
+      "ownerScene": "home",
+      "controller": "textPort",
+      "selector": "[data-object-id=\"home.windowWeather\"]",
+      "targetId": "windowWeather",
+      "label": "打开窗边天气叮嘱",
+      "variant": "weather",
+      "readFields": {
+        "temperature": ["windowTemp"],
+        "description": ["windowDesc"]
+      },
+      "fallbackTemperature": "28℃",
+      "fallbackDescription": "Cloudy · preview",
+      "allowDegradedFallback": true,
+      "action": { "type": "panel.open", "target": "home.weatherAdvicePanel" },
+      "coordinate": { "anchor": "center", "x": 0.615, "y": 0.298, "width": 0.27, "height": 0.12 },
+      "exclusive": true,
+      "coordinateStatus": "candidateFromLegacyViewport",
+      "runtimeStatus": "preview-unverified",
+      "versionStatus": "candidateV2Preview",
+      "protected": true
+    },
+    "home.weatherAdvicePanel": {
+      "id": "home.weatherAdvicePanel",
+      "kind": "panel",
+      "ownerScene": "home",
+      "controller": "panel",
+      "selector": "[data-panel-id=\"home.weatherAdvicePanel\"]",
+      "title": "窗边叮嘱",
+      "variant": "weatherAdvice",
+      "readFields": {
+        "temperature": ["windowTemp"],
+        "description": ["windowDesc"]
+      },
+      "fallbackTemperature": "28℃",
+      "fallbackDescription": "Cloudy · preview",
+      "exclusive": true,
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview",
+      "protected": true
+    },
+    "home.hubbyNoteHot": {
+      "id": "home.hubbyNoteHot",
+      "kind": "hotspot",
+      "ownerScene": "home",
+      "controller": "hotspot",
+      "selector": "[data-object-id=\"home.hubbyNoteHot\"]",
+      "label": "打开粉本本",
+      "action": { "type": "panel.open", "target": "home.hubbyNotePanel" },
+      "coordinate": { "anchor": "center", "x": 0.8, "y": 0.605, "width": 0.22, "height": 0.18, "rotation": 7.1 },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview"
+    },
+    "home.hubbyNotePanel": {
+      "id": "home.hubbyNotePanel",
+      "kind": "panel",
+      "ownerScene": "home",
+      "controller": "panel",
+      "selector": "[data-panel-id=\"home.hubbyNotePanel\"]",
+      "title": "粉本本",
+      "variant": "notebookArchive",
+      "targetId": "hubbyNote",
+      "currentField": "hubbyNote",
+      "updatedAtField": "hubbyNoteUpdatedAt",
+      "favoriteField": "hubbyNoteFavorite",
+      "archiveFields": ["hubbyNoteArchive", "hubbyNoteHistory"],
+      "trashField": "hubbyNoteTrash",
+      "maxArchiveItems": 20,
+      "maxChars": 5000,
+      "writeMode": "archiveWithSoftDelete",
+      "emptyText": "本本正在等云端醒来。",
+      "exclusive": true,
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview",
+      "protected": true
+    },
+    "coffeeCorner.bubble": {
+      "id": "coffeeCorner.bubble",
+      "kind": "textPort",
+      "ownerScene": "coffeeCorner",
+      "controller": "textPort",
+      "selector": "[data-object-id=\"coffeeCorner.bubble\"]",
+      "targetId": "coffeeCornerBubble",
+      "readFields": {
+        "queue": ["coffeeCornerBubbles", "alexBubbles"],
+        "single": ["coffeeCornerBubble", "alexBubble"],
+        "index": ["coffeeCornerBubbleIndex", "bubbleIndex"]
+      },
+      "allowDegradedFallback": true,
+      "coordinate": { "anchor": "bottomRight", "x": 0.905, "y": 0.23, "width": 0.48 },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview",
+      "protected": true
+    },
+    "coffeeCorner.tattoo19_8": {
+      "id": "coffeeCorner.tattoo19_8",
+      "kind": "hotspot",
+      "ownerScene": "coffeeCorner",
+      "controller": "hotspot",
+      "selector": "[data-object-id=\"coffeeCorner.tattoo19_8\"]",
+      "label": "19.8",
+      "action": { "type": "text.toggleNext", "target": "coffeeCorner.bubble" },
+      "coordinate": { "anchor": "center", "x": 0.73, "y": 0.345, "width": 0.15, "height": 0.08 },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview",
+      "protected": true
+    },
+    "coffeeCorner.lapEnterHot": {
+      "id": "coffeeCorner.lapEnterHot",
+      "kind": "hotspot",
+      "ownerScene": "coffeeCorner",
+      "controller": "hotspot",
+      "selector": "[data-object-id=\"coffeeCorner.lapEnterHot\"]",
+      "label": "坐到 Alex 腿上",
+      "action": { "type": "scene.push", "target": "lapClose" },
+      "coordinate": { "anchor": "center", "x": 0.275, "y": 0.54, "width": 0.39, "height": 0.12 },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview",
+      "protected": true
+    },
+    "coffeeCorner.photoWallHot": {
+      "id": "coffeeCorner.photoWallHot",
+      "kind": "hotspot",
+      "ownerScene": "coffeeCorner",
+      "controller": "hotspot",
+      "selector": "[data-object-id=\"coffeeCorner.photoWallHot\"]",
+      "label": "打开回忆墙",
+      "action": { "type": "panel.open", "target": "memories.panel" },
+      "coordinate": { "anchor": "center", "x": 0.25, "y": 0.215, "width": 0.34, "height": 0.2 },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview",
+      "protected": true
+    },
+    "coffeeCorner.beachEnterHot": {
+      "id": "coffeeCorner.beachEnterHot",
+      "kind": "hotspot",
+      "ownerScene": "coffeeCorner",
+      "controller": "hotspot",
+      "selector": "[data-object-id=\"coffeeCorner.beachEnterHot\"]",
+      "label": "去海边散步",
+      "action": { "type": "scene.push", "target": "coffeeCornerBeachHandholdSunset" },
+      "coordinate": { "anchor": "center", "x": 0.455, "y": 0.135, "width": 0.13, "height": 0.1 },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview"
+    },
+    "coffeeCorner.gameConsoleHot": {
+      "id": "coffeeCorner.gameConsoleHot",
+      "kind": "hotspot",
+      "ownerScene": "coffeeCorner",
+      "controller": "hotspot",
+      "selector": "[data-object-id=\"coffeeCorner.gameConsoleHot\"]",
+      "label": "打开游戏机",
+      "action": { "type": "panel.open", "target": "gameMenu.panel" },
+      "coordinate": { "anchor": "center", "x": 0.205, "y": 0.7, "width": 0.31, "height": 0.125 },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview",
+      "protected": true
+    },
+    "coffeeCorner.steam": {
+      "id": "coffeeCorner.steam",
+      "kind": "effect",
+      "ownerScene": "coffeeCorner",
+      "controller": "effect",
+      "selector": "[data-object-id=\"coffeeCorner.steam\"]",
+      "effect": { "type": "steam", "count": 4 },
+      "coordinate": { "anchor": "center", "x": 0.503, "y": 0.313, "width": 0.086, "height": 0.132 },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview"
+    },
+    "memories.panel": {
+      "id": "memories.panel",
+      "kind": "panel",
+      "ownerScene": "coffeeCorner",
+      "controller": "panel",
+      "selector": "[data-panel-id=\"memories.panel\"]",
+      "title": "Our Memories",
+      "variant": "memories",
+      "intro": "Paw-picked little moments.",
+      "memorySource": {
+        "type": "legacyIndexedDbReadOnly",
+        "database": "kittenNestLabDB",
+        "store": "images",
+        "keys": ["photo0", "photo1", "photo2", "photo3", "photo4", "photo5"]
+      },
+      "items": [
+        { "title": "19.8", "text": "The anchor stayed. The wiring gets a cleaner home." },
+        { "title": "奶栗", "text": "Still supervising the nest from the warmest cushion." },
+        { "title": "v2", "text": "One manifest, eight owners, zero private patch kingdoms." }
+      ],
+      "exclusive": true,
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview"
+    },
+    "gameMenu.panel": {
+      "id": "gameMenu.panel",
+      "kind": "panel",
+      "ownerScene": "coffeeCorner",
+      "controller": "panel",
+      "selector": "[data-panel-id=\"gameMenu.panel\"]",
+      "title": "Game Menu",
+      "variant": "menu",
+      "items": [
+        {
+          "section": "Board Games",
+          "title": "五子棋 / Gomoku",
+          "text": "十五路棋盘，小猫执黑先行。",
+          "status": "play",
+          "action": { "type": "panel.open", "target": "gomoku.panel" }
+        },
+        { "section": "Board Games", "title": "象棋 / Chinese Chess", "text": "还没解锁。", "status": "soon" },
+        { "section": "Board Games", "title": "国际象棋 / Chess", "text": "还没解锁。", "status": "soon" },
+        { "section": "Board Games", "title": "围棋 / Go", "text": "还没解锁。", "status": "soon" },
+        { "section": "Cozy Games", "title": "Memory Cards", "text": "还没解锁。", "status": "soon" },
+        { "section": "Cozy Games", "title": "Puzzle", "text": "还没解锁。", "status": "soon" },
+        { "section": "Cozy Games", "title": "2048 Paw", "text": "还没解锁。", "status": "soon" },
+        { "section": "Cozy Games", "title": "Match Tiles", "text": "还没解锁。", "status": "soon" },
+        { "section": "Kitten Mischief", "title": "奶栗投喂", "text": "还没解锁。", "status": "soon" },
+        { "section": "Kitten Mischief", "title": "Moon Puzzle", "text": "还没解锁。", "status": "soon" },
+        { "section": "Kitten Mischief", "title": "Paw Whack", "text": "还没解锁。", "status": "soon" },
+        { "section": "Kitten Mischief", "title": "English Pebbles", "text": "还没解锁。", "status": "soon" }
+      ],
+      "exclusive": true,
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview"
+    },
+    "gomoku.panel": {
+      "id": "gomoku.panel",
+      "kind": "panel",
+      "ownerScene": "coffeeCorner",
+      "controller": "panel",
+      "selector": "[data-panel-id=\"gomoku.panel\"]",
+      "title": "五子棋",
+      "variant": "gomoku",
+      "game": {
+        "size": 15,
+        "defaultDifficulty": "normal",
+        "aiDelayMs": 180,
+        "difficulties": [
+          { "id": "soft", "label": "Soft", "line": "Alex: soft mode. Cute." },
+          { "id": "normal", "label": "Normal", "line": "Alex: normal mode. Your move." },
+          { "id": "wolf", "label": "Wolf", "line": "Alex: wolf mode. Brave kitten." }
+        ],
+        "copy": {
+          "ready": "Alex: your move, kitten.",
+          "thinking": "Alex: thinking…",
+          "kittenWin": "Alex: smug little thing. Fine, you win.",
+          "alexWin": "Alex: that’s my kitten. Consolation cuddle?",
+          "draw": "Alex: a draw. Keep your seat; we go again.",
+          "undo": "Alex: cheating already? Cute."
+        }
+      },
+      "exclusive": true,
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview"
+    },
+    "lapClose.bubble": {
+      "id": "lapClose.bubble",
+      "kind": "textPort",
+      "ownerScene": "lapClose",
+      "controller": "textPort",
+      "selector": "[data-object-id=\"lapClose.bubble\"]",
+      "targetId": "coffeeCornerLapCloseBubble",
+      "readFields": {
+        "queue": ["coffeeCornerLapCloseBubbles"],
+        "single": ["coffeeCornerLapCloseBubble"],
+        "index": ["coffeeCornerLapCloseBubbleIndex"]
+      },
+      "allowDegradedFallback": true,
+      "coordinate": {
+        "anchor": "baselineTop",
+        "x": 0.332,
+        "y": 0.116,
+        "width": 0.43,
+        "baselineText": "坐稳，小猫。\nStop wriggling in my lap."
+      },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview",
+      "protected": true
+    },
+    "lapClose.bubbleTrigger": {
+      "id": "lapClose.bubbleTrigger",
+      "kind": "hotspot",
+      "ownerScene": "lapClose",
+      "controller": "hotspot",
+      "selector": "[data-object-id=\"lapClose.bubbleTrigger\"]",
+      "label": "坐腿近景气泡",
+      "action": { "type": "text.toggleNext", "target": "lapClose.bubble" },
+      "coordinate": { "anchor": "center", "x": 0.6, "y": 0.665, "width": 0.42, "height": 0.22 },
+      "exclusive": true,
+      "coordinateStatus": "candidateFromLegacyCard",
+      "runtimeStatus": "preview-unverified",
+      "versionStatus": "candidateV2Preview"
+    },
+    "coffeeCornerBeachHandholdBubble": {
+      "id": "coffeeCornerBeachHandholdBubble",
+      "kind": "textPort",
+      "ownerScene": "coffeeCornerBeachHandholdSunset",
+      "controller": "textPort",
+      "selector": "[data-object-id=\"coffeeCornerBeachHandholdBubble\"]",
+      "label": "Alex 海边牵手气泡",
+      "variant": "alex",
+      "staticText": true,
+      "initiallyVisible": false,
+      "fallbackQueue": [
+        "慢点，小猫，别一看到海就自动加速。",
+        "施工暂停，牵手优先。",
+        "看海可以，手不准松。",
+        "这张终于像约会了。"
+      ],
+      "coordinate": { "anchor": "center", "x": 0.66, "y": 0.3 },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview",
+      "protected": true
+    },
+    "coffeeCornerBeachHandholdVickyBubble": {
+      "id": "coffeeCornerBeachHandholdVickyBubble",
+      "kind": "textPort",
+      "ownerScene": "coffeeCornerBeachHandholdSunset",
+      "controller": "textPort",
+      "selector": "[data-object-id=\"coffeeCornerBeachHandholdVickyBubble\"]",
+      "label": "Vicky 海边牵手气泡",
+      "variant": "vicky",
+      "staticText": true,
+      "initiallyVisible": false,
+      "fallbackQueue": [
+        "可是真的很好看欸。",
+        "今天终于不是 debug 屏幕了。",
+        "那小猫走慢一点点。",
+        "但是你要一直牵着。"
+      ],
+      "coordinate": { "anchor": "center", "x": 0.36, "y": 0.72 },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview",
+      "protected": true
+    },
+    "coffeeCornerBeachHandholdAlexHot": {
+      "id": "coffeeCornerBeachHandholdAlexHot",
+      "kind": "hotspot",
+      "ownerScene": "coffeeCornerBeachHandholdSunset",
+      "controller": "hotspot",
+      "selector": "[data-object-id=\"coffeeCornerBeachHandholdAlexHot\"]",
+      "label": "Alex 牵手对话",
+      "action": { "type": "text.toggleNext", "target": "coffeeCornerBeachHandholdBubble" },
+      "coordinate": { "anchor": "center", "x": 0.55, "y": 0.52, "width": 0.21, "height": 0.3 },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview"
+    },
+    "coffeeCornerBeachHandholdVickyHot": {
+      "id": "coffeeCornerBeachHandholdVickyHot",
+      "kind": "hotspot",
+      "ownerScene": "coffeeCornerBeachHandholdSunset",
+      "controller": "hotspot",
+      "selector": "[data-object-id=\"coffeeCornerBeachHandholdVickyHot\"]",
+      "label": "Vicky 牵手对话",
+      "action": { "type": "text.toggleNext", "target": "coffeeCornerBeachHandholdVickyBubble" },
+      "coordinate": { "anchor": "center", "x": 0.46, "y": 0.81, "width": 0.19, "height": 0.23 },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview"
+    },
+    "coffeeCornerBeachHandholdNextHot": {
+      "id": "coffeeCornerBeachHandholdNextHot",
+      "kind": "hotspot",
+      "ownerScene": "coffeeCornerBeachHandholdSunset",
+      "controller": "hotspot",
+      "selector": "[data-object-id=\"coffeeCornerBeachHandholdNextHot\"]",
+      "label": "下一幕海边散步",
+      "action": { "type": "scene.push", "target": "coffeeCornerBeachBraceletPromise" },
+      "coordinate": { "anchor": "center", "x": 0.9, "y": 0.49, "width": 0.18, "height": 0.45 },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview"
+    },
+    "coffeeCornerBeachHandholdBackHot": {
+      "id": "coffeeCornerBeachHandholdBackHot",
+      "kind": "hotspot",
+      "ownerScene": "coffeeCornerBeachHandholdSunset",
+      "controller": "hotspot",
+      "selector": "[data-object-id=\"coffeeCornerBeachHandholdBackHot\"]",
+      "label": "返回咖啡角",
+      "action": { "type": "scene.back" },
+      "coordinate": { "anchor": "center", "x": 0.11, "y": 0.88, "width": 0.18, "height": 0.21 },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview"
+    },
+    "coffeeCornerBeachBraceletBubble": {
+      "id": "coffeeCornerBeachBraceletBubble",
+      "kind": "textPort",
+      "ownerScene": "coffeeCornerBeachBraceletPromise",
+      "controller": "textPort",
+      "selector": "[data-object-id=\"coffeeCornerBeachBraceletBubble\"]",
+      "label": "Alex 海边手链气泡",
+      "variant": "alex",
+      "staticText": true,
+      "initiallyVisible": false,
+      "fallbackQueue": [
+        "手抬一下，小猫。",
+        "我看看 bracelet 有没有跟着光亮。",
+        "嗯，kitten 还在。",
+        "别笑，我是在验收我的小猫。"
+      ],
+      "coordinate": { "anchor": "center", "x": 0.6, "y": 0.36 },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview",
+      "protected": true
+    },
+    "coffeeCornerBeachBraceletVickyBubble": {
+      "id": "coffeeCornerBeachBraceletVickyBubble",
+      "kind": "textPort",
+      "ownerScene": "coffeeCornerBeachBraceletPromise",
+      "controller": "textPort",
+      "selector": "[data-object-id=\"coffeeCornerBeachBraceletVickyBubble\"]",
+      "label": "Vicky 海边手链气泡",
+      "variant": "vicky",
+      "staticText": true,
+      "initiallyVisible": false,
+      "fallbackQueue": [
+        "你这也叫验收嘛。",
+        "明明就是借口看小猫手腕。",
+        "不过这个光真的好漂亮。",
+        "好啦，给你牵。"
+      ],
+      "coordinate": { "anchor": "center", "x": 0.36, "y": 0.76 },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview",
+      "protected": true
+    },
+    "coffeeCornerBeachBraceletAlexHot": {
+      "id": "coffeeCornerBeachBraceletAlexHot",
+      "kind": "hotspot",
+      "ownerScene": "coffeeCornerBeachBraceletPromise",
+      "controller": "hotspot",
+      "selector": "[data-object-id=\"coffeeCornerBeachBraceletAlexHot\"]",
+      "label": "Alex 手链对话",
+      "action": { "type": "text.toggleNext", "target": "coffeeCornerBeachBraceletBubble" },
+      "coordinate": { "anchor": "center", "x": 0.57, "y": 0.51, "width": 0.23, "height": 0.33 },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview"
+    },
+    "coffeeCornerBeachBraceletVickyHot": {
+      "id": "coffeeCornerBeachBraceletVickyHot",
+      "kind": "hotspot",
+      "ownerScene": "coffeeCornerBeachBraceletPromise",
+      "controller": "hotspot",
+      "selector": "[data-object-id=\"coffeeCornerBeachBraceletVickyHot\"]",
+      "label": "Vicky 手链对话",
+      "action": { "type": "text.toggleNext", "target": "coffeeCornerBeachBraceletVickyBubble" },
+      "coordinate": { "anchor": "center", "x": 0.4, "y": 0.8, "width": 0.24, "height": 0.23 },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview"
+    },
+    "coffeeCornerBeachBraceletNextHot": {
+      "id": "coffeeCornerBeachBraceletNextHot",
+      "kind": "hotspot",
+      "ownerScene": "coffeeCornerBeachBraceletPromise",
+      "controller": "hotspot",
+      "selector": "[data-object-id=\"coffeeCornerBeachBraceletNextHot\"]",
+      "label": "下一幕海边小摊",
+      "action": { "type": "scene.push", "target": "coffeeCornerBeachStallOrder" },
+      "coordinate": { "anchor": "center", "x": 0.8816, "y": 0.4449, "width": 0.225, "height": 0.39 },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview"
+    },
+    "coffeeCornerBeachBraceletBackHot": {
+      "id": "coffeeCornerBeachBraceletBackHot",
+      "kind": "hotspot",
+      "ownerScene": "coffeeCornerBeachBraceletPromise",
+      "controller": "hotspot",
+      "selector": "[data-object-id=\"coffeeCornerBeachBraceletBackHot\"]",
+      "label": "返回牵手海景",
+      "action": { "type": "scene.back" },
+      "coordinate": { "anchor": "center", "x": 0.12, "y": 0.83, "width": 0.23, "height": 0.22 },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview"
+    },
+    "coffeeCornerBeachStallOrderBubble": {
+      "id": "coffeeCornerBeachStallOrderBubble",
+      "kind": "textPort",
+      "ownerScene": "coffeeCornerBeachStallOrder",
+      "controller": "textPort",
+      "selector": "[data-object-id=\"coffeeCornerBeachStallOrderBubble\"]",
+      "label": "Alex 海边点单气泡",
+      "variant": "alex",
+      "staticText": true,
+      "initiallyVisible": false,
+      "fallbackQueue": [
+        "先买吃的，再继续看海。",
+        "炸物、饮料、意面都安排。",
+        "小猫点单，我负责付钱。",
+        "今晚不赶进度，只赶浪漫。"
+      ],
+      "coordinate": { "anchor": "center", "x": 0.6, "y": 0.34 },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview",
+      "protected": true
+    },
+    "coffeeCornerBeachStallOrderVickyBubble": {
+      "id": "coffeeCornerBeachStallOrderVickyBubble",
+      "kind": "textPort",
+      "ownerScene": "coffeeCornerBeachStallOrder",
+      "controller": "textPort",
+      "selector": "[data-object-id=\"coffeeCornerBeachStallOrderVickyBubble\"]",
+      "label": "Vicky 海边点单气泡",
+      "variant": "vicky",
+      "staticText": true,
+      "initiallyVisible": false,
+      "fallbackQueue": [
+        "那我要这个，还有那个。",
+        "小猫不是贪吃，是施工消耗大。",
+        "可以买完坐下来慢慢吃嘛。",
+        "今天 debug 到这里暂停。"
+      ],
+      "coordinate": { "anchor": "center", "x": 0.36, "y": 0.74 },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview",
+      "protected": true
+    },
+    "coffeeCornerBeachStallOrderAlexHot": {
+      "id": "coffeeCornerBeachStallOrderAlexHot",
+      "kind": "hotspot",
+      "ownerScene": "coffeeCornerBeachStallOrder",
+      "controller": "hotspot",
+      "selector": "[data-object-id=\"coffeeCornerBeachStallOrderAlexHot\"]",
+      "label": "Alex 点单对话",
+      "action": { "type": "text.toggleNext", "target": "coffeeCornerBeachStallOrderBubble" },
+      "coordinate": { "anchor": "center", "x": 0.53, "y": 0.48, "width": 0.26, "height": 0.34 },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview"
+    },
+    "coffeeCornerBeachStallOrderVickyHot": {
+      "id": "coffeeCornerBeachStallOrderVickyHot",
+      "kind": "hotspot",
+      "ownerScene": "coffeeCornerBeachStallOrder",
+      "controller": "hotspot",
+      "selector": "[data-object-id=\"coffeeCornerBeachStallOrderVickyHot\"]",
+      "label": "Vicky 点单对话",
+      "action": { "type": "text.toggleNext", "target": "coffeeCornerBeachStallOrderVickyBubble" },
+      "coordinate": { "anchor": "center", "x": 0.49, "y": 0.8, "width": 0.23, "height": 0.24 },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview"
+    },
+    "coffeeCornerBeachStallOrderNextHot": {
+      "id": "coffeeCornerBeachStallOrderNextHot",
+      "kind": "hotspot",
+      "ownerScene": "coffeeCornerBeachStallOrder",
+      "controller": "hotspot",
+      "selector": "[data-object-id=\"coffeeCornerBeachStallOrderNextHot\"]",
+      "label": "结束散步返回咖啡角",
+      "action": { "type": "scene.jumpTo", "target": "coffeeCorner" },
+      "coordinate": { "anchor": "center", "x": 0.9, "y": 0.5, "width": 0.18, "height": 0.55 },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview"
+    },
+    "coffeeCornerBeachStallOrderBackHot": {
+      "id": "coffeeCornerBeachStallOrderBackHot",
+      "kind": "hotspot",
+      "ownerScene": "coffeeCornerBeachStallOrder",
+      "controller": "hotspot",
+      "selector": "[data-object-id=\"coffeeCornerBeachStallOrderBackHot\"]",
+      "label": "返回手链海景",
+      "action": { "type": "scene.back" },
+      "coordinate": { "anchor": "center", "x": 0.12, "y": 0.81, "width": 0.22, "height": 0.26 },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview"
+    }
+  }
+}

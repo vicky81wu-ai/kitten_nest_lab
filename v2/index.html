@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Kitten Nest">
+  <meta name="theme-color" content="#2b1718">
+  <title>Kitten Nest</title>
+  <link rel="stylesheet" href="/v2/styles/nest-v2.css">
+</head>
+<body data-v2-status="booting">
+  <main id="v2-shell" aria-label="Kitten Nest">
+    <section id="v2-stage" class="v2-stage" data-layout-status="waiting" data-transitioning="0">
+      <div id="v2-scene-viewport" class="v2-scene-viewport">
+        <div id="v2-scene-world" class="v2-scene-world">
+          <img id="v2-scene-image" class="v2-stage__image" alt="" decoding="async">
+
+          <div id="v2-effect-layer" class="v2-layer v2-layer--effects" aria-hidden="true"></div>
+          <div id="v2-text-layer" class="v2-layer v2-layer--text"></div>
+          <div id="v2-hotspot-layer" class="v2-layer v2-layer--hotspots"></div>
+        </div>
+      </div>
+
+      <div id="v2-source-notice" class="v2-source-notice" aria-live="polite" hidden>Preview copy</div>
+
+      <div id="v2-asset-error" class="v2-error-card" hidden>
+        <strong>Scene asset unavailable</strong>
+        <span data-asset-error-message></span>
+        <small>The controller stopped here instead of substituting the wrong room image.</small>
+      </div>
+
+      <div id="v2-runtime-error" class="v2-error-card" hidden>
+        <strong>Runtime stopped safely</strong>
+        <span data-runtime-error-message></span>
+      </div>
+
+      <button id="v2-admin-hot" class="v2-admin-hot" type="button" aria-label="长按打开猫窝素材面板"></button>
+
+      <nav id="v2-controls" class="v2-controls" aria-label="Scene controls">
+        <button id="v2-dock-left" class="v2-control v2-control--dock" type="button" aria-label="左下场景入口"></button>
+        <button id="v2-dock-right" class="v2-control v2-control--dock" type="button" aria-label="右下场景入口"></button>
+      </nav>
+
+      <div id="v2-panel-layer" class="v2-panel-layer" hidden data-open="0">
+        <button class="v2-panel__backdrop" type="button" data-panel-backdrop aria-label="关闭面板"></button>
+        <section class="v2-panel" data-panel-card role="dialog" aria-modal="true" aria-labelledby="v2-panel-title">
+          <header class="v2-panel__header">
+            <h2 id="v2-panel-title" data-panel-title>Panel</h2>
+            <button class="v2-panel__close" type="button" data-panel-close aria-label="关闭">×</button>
+          </header>
+          <div class="v2-panel__body" data-panel-body></div>
+        </section>
+      </div>
+
+      <div id="v2-fatal" class="v2-fatal" hidden>
+        <strong>v2 failed closed</strong>
+        <span data-fatal-message></span>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="/v2/runtime/app.mjs"></script>
+</body>
+</html>
