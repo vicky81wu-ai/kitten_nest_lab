@@ -12,16 +12,17 @@ Status: framework regression and automated mobile-browser route passed; no devic
 
 1. Home opens normally; open the powder notebook. On a live-state run, write and save one disposable page, read it back from the first archive tab, favorite/unfavorite it, then delete it and confirm the UI says it moved to the recycle bin. On a degraded preview-copy run, confirm the notebook is explicitly read-only.
 2. Tap the moon lamp twice and confirm day → night → day uses two real images.
-3. Confirm the window shows temperature/description; tap it and close the single shared “窗边叮嘱” panel.
+3. Confirm the window shows temperature/description; tap it and close the compact floating “窗边叮嘱” card. It must not expand into the generic full-width bottom sheet.
 4. Enter coffeeCorner and confirm the main bubble has rounded corners with no triangle tail.
 5. Tap the photo wall. If this origin already has old photo slots, move through filled and empty slots; otherwise confirm the memory-card fallback appears without a permission prompt.
 6. Tap the game console, open Gomoku, make one move, undo the round, change difficulty, and return to the same game menu.
 7. Tap the top-row beach photo to enter the first seaside panorama.
-8. Drag the panorama horizontally; fixed v2 controls must stay put while the scene moves.
+8. Drag the panorama horizontally; the invisible lower-corner navigation hit zones must stay put while the scene moves.
 9. In each beach scene, tap Alex and Vicky to show/hide/advance their separate dialogue.
 10. Advance handhold → bracelet → stall, then walk the left/back path to coffeeCorner.
 11. Confirm the previously accepted 19.8, panels, lapClose, and home back path still work.
-12. Confirm there is no center `V2` button or engineering-source line; `PREVIEW COPY` appears only on a degraded-state run.
+12. Confirm there are no visible navigation arrows, center `V2` button, or engineering-source line; `PREVIEW COPY` appears only on a degraded-state run.
+13. Long-press the transparent upper-left zone, choose one photo slot, and confirm the panel marks it saved. Close it, reopen the photo wall, and confirm the new local photo appears; clear the disposable slot afterward.
 
 ## Automated mobile-browser checkpoint
 
@@ -48,6 +49,8 @@ four notebook POSTs, each carrying only registered notebook fields and a QA-only
 iPhone home-screen capability, safe-area viewport, status-bar, and app-title metadata
 manifest rejection for missing hotspot coordinates, dangling scene targets, and unsupported effects
 ```
+
+The post-iPhone correction suite separately verifies the compact weather-card contract, invisible lower-corner navigation, transparent upper-left long-press dispatch, allowlisted six-slot device-local image writes/clears, and same-origin nested-scene cache with canonical public Storage fallback. These corrections still require the concise device recheck below before promotion.
 
 This pass caught and fixed panorama dialogue clipping. Newly revealed bubbles now wait for their measured layout and adjust only the horizontal scene viewport before the browser paints them. Cover rooms and manifest coordinates are unchanged.
 

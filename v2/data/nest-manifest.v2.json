@@ -149,43 +149,65 @@
     "coffeeCorner.lapClose": {
       "sources": [
         {
+          "url": "/api/scene-asset?id=lap-close",
+          "role": "sameOriginCache"
+        },
+        {
           "url": "https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/variants/lap-close-01.jpg?v=20260613-lap-close-1",
           "role": "supabaseCanonical"
         }
       ],
+      "networkTimeoutMs": 30000,
       "failurePolicy": "showExplicitAssetError"
     },
     "coffeeCorner.beachHandholdSunset": {
       "sources": [
         {
+          "url": "/api/scene-asset?id=beach-handhold-sunset",
+          "role": "sameOriginCache"
+        },
+        {
           "url": "https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/beach/beach-handhold-sunset.jpg",
           "role": "supabaseCanonical"
         }
       ],
+      "networkTimeoutMs": 30000,
       "failurePolicy": "showExplicitAssetError"
     },
     "coffeeCorner.beachBraceletPromise": {
       "sources": [
         {
+          "url": "/api/scene-asset?id=beach-bracelet-promise",
+          "role": "sameOriginCache"
+        },
+        {
           "url": "https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/beach/beach-bracelet-promise.jpg",
           "role": "supabaseCanonical"
         }
       ],
+      "networkTimeoutMs": 30000,
       "failurePolicy": "showExplicitAssetError"
     },
     "coffeeCorner.beachStallOrder": {
       "sources": [
         {
+          "url": "/api/scene-asset?id=beach-stall-order",
+          "role": "sameOriginCache"
+        },
+        {
           "url": "https://pmkxzmogolxllijzqnfr.supabase.co/storage/v1/object/public/nest-public-assets/assets/rooms/coffee-corner/beach/beach-stall-order.jpg",
           "role": "supabaseCanonical"
         }
       ],
+      "networkTimeoutMs": 30000,
       "failurePolicy": "showExplicitAssetError"
     }
   },
   "globalObjects": [
     "system.dockLeft",
-    "system.dockRight"
+    "system.dockRight",
+    "system.localMediaLongPressHot",
+    "system.localMediaPanel"
   ],
   "scenes": {
     "home": {
@@ -225,7 +247,8 @@
       "docks": {
         "left": { "type": "scene.go", "target": "home" },
         "right": null
-      }
+      },
+      "warmAssetKeys": ["coffeeCorner.beachHandholdSunset"]
     },
     "lapClose": {
       "id": "lapClose",
@@ -259,6 +282,7 @@
         "left": { "type": "scene.back" },
         "right": { "type": "scene.push", "target": "coffeeCornerBeachBraceletPromise" }
       },
+      "warmAssetKeys": ["coffeeCorner.beachBraceletPromise"],
       "blocksParentInteractive": true
     },
     "coffeeCornerBeachBraceletPromise": {
@@ -279,6 +303,7 @@
         "left": { "type": "scene.back" },
         "right": { "type": "scene.push", "target": "coffeeCornerBeachStallOrder" }
       },
+      "warmAssetKeys": ["coffeeCorner.beachStallOrder"],
       "blocksParentInteractive": true
     },
     "coffeeCornerBeachStallOrder": {
@@ -323,6 +348,40 @@
       "selector": "#v2-dock-right",
       "mount": "existing",
       "action": { "type": "scene.dock", "side": "right" },
+      "exclusive": true,
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview"
+    },
+    "system.localMediaLongPressHot": {
+      "id": "system.localMediaLongPressHot",
+      "kind": "hotspot",
+      "ownerScene": "*",
+      "controller": "hotspot",
+      "selector": "#v2-admin-hot",
+      "mount": "existing",
+      "label": "长按打开本机图片槽",
+      "gesture": "longPress",
+      "longPressMs": 850,
+      "action": { "type": "panel.open", "target": "system.localMediaPanel" },
+      "exclusive": true,
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview"
+    },
+    "system.localMediaPanel": {
+      "id": "system.localMediaPanel",
+      "kind": "panel",
+      "ownerScene": "*",
+      "controller": "panel",
+      "selector": "[data-panel-id=\"system.localMediaPanel\"]",
+      "title": "本机图片槽",
+      "variant": "localMediaSetup",
+      "intro": "照片只保存在这台设备的猫窝里，不会上传到云端。",
+      "memoryTarget": {
+        "type": "legacyIndexedDbPhotoSlots",
+        "database": "kittenNestLabDB",
+        "store": "images",
+        "keys": ["photo0", "photo1", "photo2", "photo3", "photo4", "photo5"]
+      },
       "exclusive": true,
       "runtimeStatus": "active",
       "versionStatus": "canonicalV2Preview"

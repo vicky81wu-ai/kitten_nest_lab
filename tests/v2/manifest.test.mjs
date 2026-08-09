@@ -61,6 +61,36 @@ test('the v2 entry is ready for iPhone home-screen mode', async () => {
   assert.match(html, /name="apple-mobile-web-app-title" content="Kitten Nest"/);
 });
 
+test('room navigation is invisible and stays in the lower corner hit zones', async () => {
+  const html = await readFile(new URL('../../v2/index.html', import.meta.url), 'utf8');
+  const css = await readFile(new URL('../../v2/styles/nest-v2.css', import.meta.url), 'utf8');
+  assert.match(html, /id="v2-dock-left"[^>]*><\/button>/);
+  assert.match(html, /id="v2-dock-right"[^>]*><\/button>/);
+  assert.doesNotMatch(html, />[‹›]<\/button>/);
+  assert.match(css, /\.v2-controls\s*\{[^}]*bottom:\s*0;[^}]*height:\s*max\(20%,\s*138px\)/s);
+  assert.match(css, /\.v2-control\s*\{[^}]*border:\s*0;[^}]*background:\s*transparent;[^}]*color:\s*transparent;/s);
+});
+
+test('weather advice is a compact floating card instead of the generic bottom sheet', async () => {
+  const css = await readFile(new URL('../../v2/styles/nest-v2.css', import.meta.url), 'utf8');
+  assert.match(css, /\.v2-panel\[data-panel-id="home\.weatherAdvicePanel"\]\s*\{[^}]*top:\s*36\.5%;[^}]*right:\s*3\.2%;[^}]*width:\s*min\(72%,\s*480px\)/s);
+  assert.match(css, /\.v2-panel-layer\[data-panel-id="home\.weatherAdvicePanel"\][^{]*\.v2-panel__backdrop\s*\{[^}]*backdrop-filter:\s*none/s);
+});
+
+test('a transparent global long press owns the six local photo slots', async () => {
+  const manifest = await readJson('../../v2/data/nest-manifest.v2.json');
+  const html = await readFile(new URL('../../v2/index.html', import.meta.url), 'utf8');
+  const hot = manifest.objects['system.localMediaLongPressHot'];
+  const panel = manifest.objects['system.localMediaPanel'];
+  assert.match(html, /id="v2-admin-hot"/);
+  assert.equal(hot.ownerScene, '*');
+  assert.equal(hot.gesture, 'longPress');
+  assert.equal(hot.action.target, panel.id);
+  assert.equal(panel.variant, 'localMediaSetup');
+  assert.equal(panel.memoryTarget.type, 'legacyIndexedDbPhotoSlots');
+  assert.deepEqual(panel.memoryTarget.keys, ['photo0', 'photo1', 'photo2', 'photo3', 'photo4', 'photo5']);
+});
+
 test('manifest validation rejects dangling hotspots and unsupported effects', async () => {
   const source = await readJson('../../v2/data/nest-manifest.v2.json');
   const textTargets = await readJson('../../data/text-targets.v1.json');
@@ -68,6 +98,7 @@ test('manifest validation rejects dangling hotspots and unsupported effects', as
   manifest.objects['coffeeCorner.beachEnterHot'].action.target = 'missingBeach';
   delete manifest.objects['home.moonLampHot'].coordinate;
   manifest.objects['home.sparkles'].effect.type = 'mysteryDust';
+  manifest.objects['system.localMediaLongPressHot'].longPressMs = 100;
   manifest.scenes.home.docks.right.target = 'missingRoom';
   const result = validateManifest(manifest, textTargets);
   assert.equal(result.ok, false);
@@ -75,6 +106,7 @@ test('manifest validation rejects dangling hotspots and unsupported effects', as
   assert.match(result.errors.join('\n'), /home\.moonLampHot requires a manifest coordinate/);
   assert.match(result.errors.join('\n'), /home\.sparkles uses unsupported type mysteryDust/);
   assert.match(result.errors.join('\n'), /Scene home dock navigates to unknown scene missingRoom/);
+  assert.match(result.errors.join('\n'), /requires a 500-3000ms delay/);
 });
 
 test('the product surface contains no runtime inspector or hotspot debug switch', async () => {

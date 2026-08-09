@@ -2,6 +2,7 @@ import { BaseController } from '../core/base-controller.mjs';
 import { resolveWeatherState, weatherAdvice } from '../core/weather-state.mjs';
 import { NotebookWriteClient } from '../core/notebook-write-client.mjs';
 import { GomokuPanelSession } from '../panels/gomoku-panel.mjs';
+import { LocalMediaPanelSession } from '../panels/local-media-panel.mjs';
 import { MemoriesPanelSession } from '../panels/memories-panel.mjs';
 import { NotebookPanelSession } from '../panels/notebook-panel.mjs';
 
@@ -73,6 +74,7 @@ export class PanelController extends BaseController {
     this.openId = object.id;
     this.layer.hidden = false;
     this.layer.dataset.open = '1';
+    this.layer.dataset.panelId = object.id;
     this.card.dataset.panelId = object.id;
     this.render(object);
     requestAnimationFrame(() => this.closeButton.focus());
@@ -94,6 +96,7 @@ export class PanelController extends BaseController {
     this.panelStack = [];
     this.layer.dataset.open = '0';
     this.layer.hidden = true;
+    delete this.layer.dataset.panelId;
     this.card.removeAttribute('data-panel-id');
     if (this.previousFocus?.focus) this.previousFocus.focus();
     this.previousFocus = null;
@@ -118,6 +121,15 @@ export class PanelController extends BaseController {
 
     if (object.variant === 'memories') {
       this.interactiveSession = new MemoriesPanelSession({
+        body: this.body,
+        object
+      });
+      this.interactiveSession.mount();
+      return;
+    }
+
+    if (object.variant === 'localMediaSetup') {
+      this.interactiveSession = new LocalMediaPanelSession({
         body: this.body,
         object
       });

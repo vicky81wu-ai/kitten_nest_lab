@@ -23,7 +23,7 @@ home -> coffeeCorner -> push(lapClose) -> back()
 home hubbyNote current page, permanent archive, editor, favorite, and soft-delete trash
 coffeeCorner 19.8 rotating bubble
 coffeeCorner lap entry
-coffeeCorner read-only six-slot memories panel
+coffeeCorner six-slot memories panel plus scoped device-local slot editor
 coffeeCorner game menu and interactive Gomoku panel
 lapClose rotating bubble
 home clock hands and sparkles
@@ -59,7 +59,7 @@ approved beach talk/next/back coordinates and both dialogue queues restored
 one scene world now supports portrait cover and horizontal panorama presentation
 ```
 
-The beach assets were verified read-only in the existing public asset bucket. No bucket, policy, database row, or state value was changed.
+The beach assets were verified read-only in the existing public asset bucket. No bucket, policy, database row, or state value was changed. Each large nested scene now uses an allowlisted same-origin cache endpoint before its canonical public Storage URL. Coffee corner warms the first beach image; each panorama warms the next one. The endpoint corrects the three PNG payloads stored under `.jpg` object names and never accepts an arbitrary Storage path.
 
 ## Interactive panel batch
 
@@ -78,16 +78,17 @@ Game rules and AI selection live in a pure core module. PanelController owns onl
 
 ## Device-local memories batch
 
-The photo-wall hotspot now checks for the six old device-local slots (`photo0` through `photo5`) and renders the original carousel behavior when they exist. The compatibility path is deliberately one-way:
+The photo-wall hotspot checks for the six old device-local slots (`photo0` through `photo5`) and renders the original carousel behavior when they exist. The normal carousel path remains deliberately read-only:
 
 ```text
 requires IndexedDB.databases() safe enumeration
 does not call open() when the old database is absent
 opens the exact existing database version only
 uses a readonly transaction
-never creates a store, uploads a file, or exposes a picker
 revokes temporary object URLs when the panel closes
 ```
+
+The original transparent upper-left long press opens a separate device-local setup session. It can create the known `kittenNestLabDB/images` store and write, replace, or clear only those six photo keys. The picker rejects non-images and images above 15 MB. Nothing is uploaded to cloud storage, and v2 room assets remain manifest-owned.
 
 Browser same-origin rules still apply. If the old photos live under another origin, or the browser does not support safe enumeration, v2 leaves them untouched and shows the existing three memory cards instead.
 
@@ -213,7 +214,7 @@ Run:
 npm run check:v2
 ```
 
-This currently runs 56 checks covering controller contracts, one-manifest ownership, registered or explicitly static text ports, selector exclusivity, child isolation, portrait and panorama navigation, approved beach order, failed-asset rollback, projection math, panorama bubble reveal, text mutation layout invalidation, fallback refresh serialization, weather state/advice, time-of-day and manual asset resolution, connected stage-image loading, loading-veil presence, bounded best-effort image decode behavior, Gomoku legality/wins/undo and all three AI difficulty paths, absent/unsupported/existing legacy-photo database behavior, notebook normalization, save/deduplication, favorite, soft delete, request allowlisting, Nest-key failure handling, iPhone home-screen metadata, dangling scene/text action targets, coordinate ownership, supported effect types, and the absence of product-facing inspector/debug controls.
+This currently runs 66 checks covering controller contracts, one-manifest ownership, registered or explicitly static text ports, selector exclusivity, child isolation, portrait and panorama navigation, approved beach order, failed-asset rollback, same-origin scene-asset allowlisting and content sniffing, sequential beach warming, projection math, panorama bubble reveal, text mutation layout invalidation, fallback refresh serialization, compact weather presentation, invisible corner docks, global long-press dispatch, device-local six-slot write allowlisting, weather state/advice, time-of-day and manual asset resolution, connected stage-image loading, loading-veil presence, bounded best-effort image decode behavior, Gomoku legality/wins/undo and all three AI difficulty paths, absent/unsupported/existing legacy-photo database behavior, notebook normalization, save/deduplication, favorite, soft delete, request allowlisting, Nest-key failure handling, iPhone home-screen metadata, dangling scene/text action targets, coordinate ownership, supported effect types, and the absence of product-facing inspector/debug controls.
 
 The local 393 × 852 mobile-browser pass uses an in-memory fake `/api/set-state`; it never contacts the real state project. It exercised new page -> save -> current page -> archive readback -> favorite -> unfavorite -> delete -> trash, and inspected all four requests. Every request used the QA-only token and only the six registered notebook fields. The same run then completed moon/weather, coffeeCorner, a seeded six-slot read-only memories carousel, Gomoku, all three beach scenes and dialogue, lapClose, and the final home return with zero console, page, or request errors.
 

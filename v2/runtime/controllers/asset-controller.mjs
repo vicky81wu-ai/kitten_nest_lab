@@ -83,6 +83,9 @@ export class AssetController extends BaseController {
     this.loading = false;
     this.warmTimer = null;
     this.warmImage = null;
+    this.hintWarmTimer = null;
+    this.hintWarmImage = null;
+    this.hintWarmKey = null;
   }
 
   async mount() {
@@ -118,6 +121,31 @@ export class AssetController extends BaseController {
       image.src = source.url;
       this.warmImage = image;
     }, 80);
+  }
+
+  warmSceneHint(scene) {
+    const key = Array.isArray(scene?.warmAssetKeys) ? scene.warmAssetKeys[0] : null;
+    const source = this.context.manifest.assets?.[key]?.sources?.[0];
+    if (!key || !source?.url || typeof Image === 'undefined' || key === this.current?.key) return;
+    clearTimeout(this.hintWarmTimer);
+    this.hintWarmImage = null;
+    this.hintWarmKey = key;
+    this.hintWarmTimer = setTimeout(() => {
+      const image = new Image();
+      image.decoding = 'async';
+      image.onload = () => {
+        if (this.hintWarmKey !== key) return;
+        this.mark('ready', `${this.current?.key || 'scene'}; warmed ${key}`);
+      };
+      image.onerror = () => {
+        if (this.hintWarmKey === key) {
+          this.hintWarmImage = null;
+          this.hintWarmKey = null;
+        }
+      };
+      image.src = source.url;
+      this.hintWarmImage = image;
+    }, 120);
   }
 
   async loadAssetKey(scene, requestedKey) {
@@ -159,7 +187,12 @@ export class AssetController extends BaseController {
           this.stage.setAttribute('aria-busy', 'false');
           this.context.currentAsset = this.current;
           this.mark('ready', resolvedKey);
+          if (this.hintWarmKey === resolvedKey) {
+            this.hintWarmImage = null;
+            this.hintWarmKey = null;
+          }
           this.warmTimeOfDayAlternate(requestedKey, resolvedKey);
+          this.warmSceneHint(scene);
           return { ok: true, ...this.current };
         } catch (error) {
           failures.push(error.message);
@@ -225,7 +258,10 @@ export class AssetController extends BaseController {
 
   async destroy() {
     clearTimeout(this.warmTimer);
+    clearTimeout(this.hintWarmTimer);
     this.warmImage = null;
+    this.hintWarmImage = null;
+    this.hintWarmKey = null;
     this.image?.removeAttribute('src');
     await super.destroy();
   }

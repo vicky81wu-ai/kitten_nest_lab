@@ -111,6 +111,15 @@ export function validateManifest(manifest, textTargetRegistry = null) {
     if (object?.kind === 'effect' && !SUPPORTED_EFFECT_TYPES.has(object?.effect?.type)) {
       errors.push(`Effect ${id} uses unsupported type ${object?.effect?.type}`);
     }
+    if (object?.gesture && object.gesture !== 'longPress') {
+      errors.push(`Object ${id} uses unsupported gesture ${object.gesture}`);
+    }
+    if (object?.gesture === 'longPress') {
+      if (object.kind !== 'hotspot') errors.push(`Long-press object ${id} must be a hotspot`);
+      if (!Number.isFinite(object.longPressMs) || object.longPressMs < 500 || object.longPressMs > 3000) {
+        errors.push(`Long-press object ${id} requires a 500-3000ms delay`);
+      }
+    }
     if (['hotspot', 'textPort', 'effect'].includes(object?.kind) && object?.mount !== 'existing' && !object?.coordinate) {
       errors.push(`Object ${id} requires a manifest coordinate`);
     }
@@ -133,6 +142,15 @@ export function validateManifest(manifest, textTargetRegistry = null) {
       }
       if (!Array.isArray(source?.keys) || source.keys.length !== 6) {
         errors.push(`Memories panel ${id} requires six explicit photo keys`);
+      }
+    }
+    if (object?.variant === 'localMediaSetup') {
+      const target = object.memoryTarget;
+      if (target?.type !== 'legacyIndexedDbPhotoSlots') {
+        errors.push(`Local media panel ${id} requires device photo slots`);
+      }
+      if (!Array.isArray(target?.keys) || target.keys.length !== 6 || new Set(target.keys).size !== 6) {
+        errors.push(`Local media panel ${id} requires six unique photo keys`);
       }
     }
     if (object?.variant === 'notebookArchive') {
@@ -199,6 +217,9 @@ export function validateManifest(manifest, textTargetRegistry = null) {
       else if (object.ownerScene !== sceneId) errors.push(`Scene ${sceneId} lists ${objectId}, owned by ${object.ownerScene}`);
     });
     if (scene?.parent && !scenes[scene.parent]) errors.push(`Scene ${sceneId} has unknown parent ${scene.parent}`);
+    (scene?.warmAssetKeys || []).forEach((key) => {
+      if (!manifest?.assets?.[key]) errors.push(`Scene ${sceneId} warms unknown asset ${key}`);
+    });
     if (scene?.blocksParentInteractive && scene?.parent) {
       const parentObjects = new Set(scenes[scene.parent]?.objects || []);
       const leaked = (scene.objects || []).filter((id) => parentObjects.has(id));

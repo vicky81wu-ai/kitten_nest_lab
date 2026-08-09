@@ -99,6 +99,33 @@ test('room images use the public asset library before the protected-preview fall
   }
 });
 
+test('large nested scenes warm a same-origin cache before their canonical Storage fallback', async () => {
+  const manifest = await readJson('../../v2/data/nest-manifest.v2.json');
+  const keys = [
+    'coffeeCorner.lapClose',
+    'coffeeCorner.beachHandholdSunset',
+    'coffeeCorner.beachBraceletPromise',
+    'coffeeCorner.beachStallOrder'
+  ];
+  keys.forEach((key) => {
+    const [sameOrigin, canonical] = manifest.assets[key].sources;
+    assert.equal(sameOrigin.role, 'sameOriginCache');
+    assert.match(sameOrigin.url, /^\/api\/scene-asset\?id=/);
+    assert.equal(canonical.role, 'supabaseCanonical');
+    assert.match(canonical.url, /^https:\/\/pmkxzmogolxllijzqnfr\.supabase\.co\/storage\/v1\/object\/public\//);
+    assert.equal(manifest.assets[key].networkTimeoutMs, 30000);
+  });
+  assert.deepEqual(manifest.scenes.coffeeCorner.warmAssetKeys, ['coffeeCorner.beachHandholdSunset']);
+  assert.deepEqual(
+    manifest.scenes.coffeeCornerBeachHandholdSunset.warmAssetKeys,
+    ['coffeeCorner.beachBraceletPromise']
+  );
+  assert.deepEqual(
+    manifest.scenes.coffeeCornerBeachBraceletPromise.warmAssetKeys,
+    ['coffeeCorner.beachStallOrder']
+  );
+});
+
 test('asset loading hides progressive image paint behind the loading veil', async () => {
   const css = await readFile(new URL('../../v2/styles/nest-v2.css', import.meta.url), 'utf8');
   assert.match(

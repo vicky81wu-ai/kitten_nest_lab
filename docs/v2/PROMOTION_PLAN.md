@@ -39,11 +39,12 @@ Full URL: `https://kitten-nest-lab.vercel.app/cloud`
 
 After deployment, close the existing home-screen nest, reopen it once, and run this short route:
 
-1. Home paints, moon toggles day/night, clock moves, and weather opens/closes.
-2. Coffee corner shows the MCP-published bubble without a tail or position jump.
+1. Home paints, moon toggles day/night, clock moves, and weather opens as the compact floating card.
+2. Lower-corner scene navigation remains transparent; coffee corner shows the MCP-published bubble without a tail or position jump.
 3. Photo wall and Gomoku open and return through the one panel stack.
-4. Beach handhold -> bracelet -> stall -> back to coffee corner works.
+4. Beach handhold -> bracelet -> stall -> back to coffee corner loads through the warmed, cached asset chain.
 5. Lap close -> coffee corner -> home works without leaked hotspots or panels.
+6. The transparent upper-left long press opens the six device-local photo slots; a disposable upload appears in the photo wall and can be cleared.
 
 ## Rollback
 
