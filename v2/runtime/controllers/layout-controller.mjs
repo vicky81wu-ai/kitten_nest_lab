@@ -8,7 +8,9 @@ function nextFrame() {
 export class LayoutController extends BaseController {
   constructor(context) {
     super('layout', context);
-    this.scheduled = false;
+    this.frameId = null;
+    this.epoch = 0;
+    this.passId = 0;
     this.boundSchedule = () => this.schedule('viewport');
   }
 
@@ -26,11 +28,16 @@ export class LayoutController extends BaseController {
   }
 
   schedule(reason = 'schedule') {
-    if (this.scheduled || !this.context.currentSnapshot) return;
-    this.scheduled = true;
-    requestAnimationFrame(async () => {
-      this.scheduled = false;
-      await this.reconcile(this.context.currentSnapshot, reason);
+    if (
+      this.frameId != null ||
+      !this.context.currentSnapshot ||
+      this.stage.dataset.transitioning === '1'
+    ) return;
+    const snapshot = this.context.currentSnapshot;
+    const epoch = this.epoch;
+    this.frameId = requestAnimationFrame(async () => {
+      this.frameId = null;
+      await this.reconcile(snapshot, reason, epoch);
     });
   }
 
@@ -53,11 +60,13 @@ export class LayoutController extends BaseController {
     return height;
   }
 
-  async reconcile(snapshot, reason = 'scene') {
+  async reconcile(snapshot, reason = 'scene', expectedEpoch = this.epoch) {
     this.lastSnapshot = snapshot;
     if (!snapshot) return;
+    const passId = ++this.passId;
     this.stage.dataset.layoutStatus = 'measuring';
     await nextFrame();
+    if (expectedEpoch !== this.epoch || passId !== this.passId) return;
 
     const imageRect = this.image.getBoundingClientRect();
     const imageBox = coverBox(imageRect, {
@@ -122,11 +131,20 @@ export class LayoutController extends BaseController {
   }
 
   async suspend(reason = 'suspend') {
+    this.epoch += 1;
+    this.passId += 1;
+    if (this.frameId != null) cancelAnimationFrame(this.frameId);
+    this.frameId = null;
+    this.stage.querySelectorAll('[data-requires-layout="1"]').forEach((element) => {
+      element.removeAttribute('data-layout-ready');
+    });
+    this.context.currentLayout = null;
     this.stage.dataset.layoutStatus = 'suspended';
     this.mark('suspended', reason);
   }
 
   async destroy() {
+    await this.suspend('destroy');
     window.removeEventListener('resize', this.boundSchedule);
     window.removeEventListener('orientationchange', this.boundSchedule);
     this.image.removeEventListener('load', this.boundSchedule);

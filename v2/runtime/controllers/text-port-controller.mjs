@@ -54,12 +54,15 @@ export class TextPortController extends BaseController {
 
   render(port) {
     const text = port.queue[port.index] || '';
+    port.element.removeAttribute('data-layout-ready');
     port.element.textContent = text;
     port.element.hidden = !port.visible || !text;
     port.element.dataset.stateField = port.sourceField || 'none';
     port.element.dataset.stateSource = this.context.controllers.get('state').source;
     port.element.dataset.visible = port.visible ? '1' : '0';
-    this.context.controllers.get('layout')?.schedule('text-render');
+    if (!port.element.hidden && !this.context.isReconcilingScene) {
+      this.context.controllers.get('layout')?.schedule('text-render');
+    }
   }
 
   async reconcile(snapshot) {

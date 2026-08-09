@@ -49,6 +49,7 @@ async function boot() {
     currentSnapshot: null,
     currentAsset: null,
     currentLayout: null,
+    isReconcilingScene: false,
     setControllerStatus(id, status, detail = '') {
       controllerStatuses.set(id, { status, detail, at: Date.now() });
       elements.runtimeBadge.textContent = `${id} · ${status}`;
@@ -64,8 +65,13 @@ async function boot() {
       return dispatchAction(context, action);
     },
     async reconcileScene(snapshot) {
-      for (const id of manifest.runtime.reconcileOrder) {
-        await context.controllers.get(id).reconcile(snapshot);
+      context.isReconcilingScene = true;
+      try {
+        for (const id of manifest.runtime.reconcileOrder) {
+          await context.controllers.get(id).reconcile(snapshot);
+        }
+      } finally {
+        context.isReconcilingScene = false;
       }
     }
   };
@@ -80,9 +86,10 @@ async function boot() {
     await context.controllers.get(id).ready();
   }
 
-  document.body.dataset.v2Status = 'ready';
-  elements.runtimeBadge.textContent = 'v2 ready';
-  elements.runtimeBadge.dataset.status = 'ready';
+  const bootReady = Boolean(context.currentSnapshot && context.currentAsset);
+  document.body.dataset.v2Status = bootReady ? 'ready' : 'blocked';
+  elements.runtimeBadge.textContent = bootReady ? 'v2 ready' : 'v2 blocked';
+  elements.runtimeBadge.dataset.status = bootReady ? 'ready' : 'blocked';
 
   window.KittenNestV2 = Object.freeze({
     version: manifest.version,

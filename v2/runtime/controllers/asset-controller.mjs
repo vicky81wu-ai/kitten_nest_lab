@@ -74,6 +74,7 @@ export class AssetController extends BaseController {
   async mount() {
     await super.mount();
     this.image = this.context.elements.sceneImage;
+    this.stage = this.context.elements.stage;
     this.errorBox = this.context.elements.assetError;
   }
 
@@ -90,6 +91,7 @@ export class AssetController extends BaseController {
     const decodeTimeoutMs = Number(card.decodeTimeoutMs ?? 1200);
     this.mark('loading', resolvedKey);
     this.errorBox.hidden = true;
+    this.stage.setAttribute('aria-busy', 'true');
     document.body.dataset.assetStatus = 'loading';
 
     const previous = {
@@ -111,6 +113,7 @@ export class AssetController extends BaseController {
         this.image.dataset.assetRole = source.role || 'source';
         this.current = { key: resolvedKey, url: source.url, role: source.role || 'source' };
         document.body.dataset.assetStatus = 'ready';
+        this.stage.setAttribute('aria-busy', 'false');
         this.context.currentAsset = this.current;
         this.mark('ready', resolvedKey);
         return { ok: true, ...this.current };
@@ -128,6 +131,7 @@ export class AssetController extends BaseController {
     if (previous.assetRole) this.image.dataset.assetRole = previous.assetRole;
     else delete this.image.dataset.assetRole;
     document.body.dataset.assetStatus = 'error';
+    this.stage.setAttribute('aria-busy', 'false');
     this.errorBox.hidden = false;
     this.errorBox.querySelector('[data-asset-error-message]').textContent = message;
     this.mark('error', message);

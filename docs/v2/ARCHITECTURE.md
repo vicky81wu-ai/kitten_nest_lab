@@ -75,6 +75,8 @@ lock input
 
 `lapClose` owns only its two registered objects plus global controls. It does not inherit `coffeeCorner` hotspots, panels, effects, or text ports.
 
+If the next scene asset fails, SceneRuntime does not commit the candidate navigation state. It reconciles the prior snapshot, restores Layout readiness for the prior owner set, emits `scene:didFail`, and leaves the scene stack unchanged.
+
 ## State and MCP boundary
 
 v2 is read-only:
@@ -104,6 +106,8 @@ asset loaded / decoded
 ```
 
 There are no per-object delays or private coordinate patches.
+
+Any text mutation invalidates the port's existing `data-layout-ready` marker before changing visibility. A taller or shorter line remains non-interactive and transparent until the shared LayoutController measures and places its new box.
 
 ## Promotion boundary
 

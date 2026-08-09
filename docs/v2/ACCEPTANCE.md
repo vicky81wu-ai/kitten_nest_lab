@@ -1,6 +1,6 @@
 # Kitten Nest v2 Independent Preview Acceptance
 
-Status: waiting for deployed preview
+Status: iPhone vertical slice passed; post-fix regression pass pending
 
 ## Visual route
 
@@ -19,6 +19,31 @@ Status: waiting for deployed preview
 7. Confirm no coffeeCorner photo wall, console, 19.8, or steam remains interactive in `lapClose`.
 8. Tap the lap bubble to hide it, then the registered lap trigger to show the next line.
 9. Tap the left dock; it returns to coffeeCorner, then left dock returns home.
+
+## iPhone checkpoint
+
+Passed on the protected branch preview:
+
+```text
+home day image and cover layout
+home clock hands and sparkles
+hubby-note hotspot and single panel lifecycle
+home -> coffeeCorner scene navigation
+coffeeCorner text bubble hide / next-line cycle
+memories and game panels using the shared PanelController
+coffeeCorner -> lapClose push
+lapClose image, bubble, and parent-object visual isolation
+```
+
+Observed for the post-fix regression pass:
+
+```text
+room images painted progressively before final load readiness
+coffeeCorner bubble briefly reused its prior layout position after a text-height change
+preview fallback lifecycle refresh briefly surfaced a stale diagnostic status
+```
+
+The framework fixes for these observations are implemented in the isolated branch. The lap bubble hide/next cycle and the full `lapClose -> coffeeCorner -> home` back chain remain in the final short device pass.
 
 ## Failure rule
 

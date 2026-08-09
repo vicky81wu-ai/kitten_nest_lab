@@ -32,9 +32,13 @@ export class StateController extends BaseController {
     this.value = null;
     this.source = 'pending';
     this.error = null;
-    this.boundRefresh = () => this.refresh('lifecycle');
+    this.lifecycleReady = false;
+    this.refreshPromise = null;
+    this.boundRefresh = () => {
+      if (this.lifecycleReady) this.refresh('lifecycle');
+    };
     this.boundVisibility = () => {
-      if (!document.hidden) this.refresh('visibilitychange');
+      if (this.lifecycleReady && !document.hidden) this.refresh('visibilitychange');
     };
   }
 
@@ -48,10 +52,22 @@ export class StateController extends BaseController {
 
   async ready() {
     await this.refresh('initial', { allowFallback: true });
+    this.lifecycleReady = true;
     this.mark('ready', this.source);
   }
 
   async refresh(reason = 'manual', options = {}) {
+    if (this.refreshPromise) return this.refreshPromise;
+    const refreshPromise = this.runRefresh(reason, options);
+    this.refreshPromise = refreshPromise;
+    try {
+      return await refreshPromise;
+    } finally {
+      if (this.refreshPromise === refreshPromise) this.refreshPromise = null;
+    }
+  }
+
+  async runRefresh(reason = 'manual', options = {}) {
     const config = this.context.manifest.runtime.state;
     this.mark('loading', reason);
     try {
@@ -69,7 +85,11 @@ export class StateController extends BaseController {
           this.error = fallbackError;
         }
       }
-      this.mark(this.value ? 'stale' : 'error', this.error?.message || 'state unavailable');
+      const hasPreviewFallback = this.value && this.source === 'degradedFallback';
+      this.mark(
+        hasPreviewFallback ? 'ready' : this.value ? 'stale' : 'error',
+        hasPreviewFallback ? this.source : this.error?.message || 'state unavailable'
+      );
       this.paintStatus();
       return this.value;
     }
@@ -116,6 +136,7 @@ export class StateController extends BaseController {
   }
 
   async destroy() {
+    this.lifecycleReady = false;
     window.removeEventListener('pageshow', this.boundRefresh);
     window.removeEventListener('focus', this.boundRefresh);
     document.removeEventListener('visibilitychange', this.boundVisibility);

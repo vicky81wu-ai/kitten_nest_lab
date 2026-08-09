@@ -89,3 +89,11 @@ test('room images use the public asset library before the protected-preview fall
     assert.match(fallback.url, /^\/assets\/rooms\//);
   }
 });
+
+test('asset loading hides progressive image paint behind the loading veil', async () => {
+  const css = await readFile(new URL('../../v2/styles/nest-v2.css', import.meta.url), 'utf8');
+  assert.match(
+    css,
+    /body\[data-asset-status="loading"\]\s+\.v2-stage\[data-transitioning="1"\]\s+\.v2-stage__image\s*\{[^}]*opacity:\s*0/s
+  );
+});

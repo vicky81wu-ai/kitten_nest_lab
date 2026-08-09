@@ -1,6 +1,6 @@
 {
   "schemaVersion": "nest-manifest.v2",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "status": "isolated-preview",
   "promoted": false,
   "route": "/v2/index.html",

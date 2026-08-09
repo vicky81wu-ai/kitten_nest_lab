@@ -9,6 +9,8 @@ export class SceneRuntimeController extends BaseController {
   constructor(context) {
     super('sceneRuntime', context);
     this.navigation = createNavigationState(context.manifest.runtime.entryScene);
+    this.transitionDelayMs = Number(context.manifest.runtime.transitionDelayMs ?? 100);
+    this.settleDelayMs = Number(context.manifest.runtime.settleDelayMs ?? 80);
     this.locked = false;
     this.initialized = false;
   }
@@ -20,8 +22,12 @@ export class SceneRuntimeController extends BaseController {
   }
 
   async ready() {
-    await this.enter(this.navigation, { type: 'scene.jumpTo', target: this.navigation.current }, true);
-    this.mark('ready', this.navigation.current);
+    const entered = await this.enter(
+      this.navigation,
+      { type: 'scene.jumpTo', target: this.navigation.current },
+      true
+    );
+    this.mark(entered ? 'ready' : 'error', this.navigation.current);
   }
 
   snapshot() {
@@ -55,7 +61,9 @@ export class SceneRuntimeController extends BaseController {
     if (this.locked) return false;
     this.locked = true;
     const previous = this.navigation.current;
+    const previousSnapshot = this.context.currentSnapshot;
     const nextScene = this.context.manifest.scenes[nextNavigation.current];
+    let restoreLayout = false;
     this.stage.dataset.transitioning = '1';
     document.body.dataset.sceneLocked = '1';
     this.context.events.emit('scene:willChange', {
@@ -68,18 +76,34 @@ export class SceneRuntimeController extends BaseController {
     try {
       await this.context.controllers.get('panel').suspend('scene-change');
       await this.context.controllers.get('effect').suspend('scene-change');
-      if (!initial) await wait(100);
+      await this.context.controllers.get('layout').suspend('scene-change');
+      if (!initial && this.transitionDelayMs) await wait(this.transitionDelayMs);
       const assetResult = await this.context.controllers.get('asset').loadForScene(nextScene);
+      this.stage.dataset.assetResult = assetResult.ok ? 'ready' : 'error';
+      if (!assetResult.ok) {
+        restoreLayout = Boolean(previousSnapshot);
+        if (previousSnapshot) {
+          this.context.currentSnapshot = previousSnapshot;
+          await this.context.reconcileScene(previousSnapshot);
+        }
+        this.context.events.emit('scene:didFail', {
+          previous,
+          next: nextScene.id,
+          action,
+          error: assetResult.error
+        });
+        this.mark('blocked', `${nextScene.id}: ${assetResult.error}`);
+        return false;
+      }
       this.navigation = nextNavigation;
       this.initialized = true;
       document.body.dataset.sceneId = nextScene.id;
       this.stage.dataset.sceneId = nextScene.id;
-      this.stage.dataset.assetResult = assetResult.ok ? 'ready' : 'error';
       const snapshot = this.snapshot();
       this.context.currentSnapshot = snapshot;
       await this.context.reconcileScene(snapshot);
       this.context.events.emit('scene:didChange', snapshot);
-      await wait(80);
+      if (this.settleDelayMs) await wait(this.settleDelayMs);
       this.mark('ready', nextScene.id);
       return true;
     } catch (error) {
@@ -90,6 +114,7 @@ export class SceneRuntimeController extends BaseController {
       this.locked = false;
       this.stage.dataset.transitioning = '0';
       document.body.dataset.sceneLocked = '0';
+      if (restoreLayout) this.context.controllers.get('layout').schedule('scene-restore');
     }
   }
 

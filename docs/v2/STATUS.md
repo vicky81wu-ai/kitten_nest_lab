@@ -1,7 +1,7 @@
 # Kitten Nest v2 Status
 
-Updated: 2026-08-08  
-Status: implementation in isolated branch, not visually accepted, not promoted
+Updated: 2026-08-09
+Status: first iPhone vertical slice passed; framework polish implemented, not promoted
 
 ## Isolation
 
@@ -95,7 +95,29 @@ The three top-level room images now use their verified public Supabase objects a
 
 A third iPhone pass then timed out on both the public Supabase URL and the repository fallback even though both objects were independently readable. The shared failure point was the detached `new Image()` preloader. AssetController now loads exactly once through the retained, connected stage `<img>`, validates its natural dimensions, and treats decode as a bounded optional hint. The detached preload plus second stage assignment has been removed.
 
-This loader simplification remains isolated and requires one fresh deployed iPhone pass before the home step is accepted.
+This loader simplification remained isolated and passed the next deployed iPhone home check.
+
+## First iPhone vertical slice result
+
+After the connected stage-image loader deployed, the following chain passed on iPhone Safari:
+
+```text
+home image -> hubby-note panel
+home -> coffeeCorner
+19.8 bubble hide -> next line
+memories panel -> close
+game panel -> close
+coffeeCorner -> lapClose
+lapClose image and child-scene visual isolation
+```
+
+Three framework polish defects were recorded without blocking the vertical slice:
+
+1. The connected image painted partial JPEG rows while the asset was still loading.
+2. A changed coffeeCorner line could appear for one frame at its previous text height before Layout moved it.
+3. A lifecycle refresh over the explicit preview fallback could briefly report `state · stale`.
+
+The isolated follow-up fixes add a loading veil, invalidate TextPort layout before every visible text mutation, serialize state refreshes, suspend Layout during transitions, and prevent failed assets from committing navigation or child ownership.
 
 ## Automated acceptance
 
@@ -105,7 +127,7 @@ Run:
 npm run check:v2
 ```
 
-This validates controller contracts, one-manifest ownership, registered text targets, selector exclusivity, child isolation, navigation stack behavior, cover math, text-field precedence, time-of-day asset resolution, and bounded best-effort image decode behavior.
+This validates controller contracts, one-manifest ownership, registered text targets, selector exclusivity, child isolation, navigation stack behavior, failed-asset rollback, cover math, text mutation layout invalidation, fallback refresh serialization, text-field precedence, time-of-day asset resolution, connected stage-image loading, loading-veil presence, and bounded best-effort image decode behavior.
 
 ## Promotion stop condition
 
