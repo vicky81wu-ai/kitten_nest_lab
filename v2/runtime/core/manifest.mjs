@@ -11,6 +11,9 @@ const REQUIRED_CONTROLLERS = [
   'effect'
 ];
 
+const SCENE_TARGET_ACTIONS = new Set(['scene.go', 'scene.push', 'scene.jumpTo']);
+const SUPPORTED_EFFECT_TYPES = new Set(['sparkles', 'steam', 'clockHands']);
+
 export function validateManifest(manifest, textTargetRegistry = null) {
   const errors = [];
   const warnings = [];
@@ -56,6 +59,36 @@ export function validateManifest(manifest, textTargetRegistry = null) {
   const supportedActions = new Set(manifest?.runtime?.supportedActionTypes || []);
   const activeSelectors = new Map();
 
+  const validateAction = (action, source) => {
+    if (!action?.type) return;
+    if (!supportedActions.has(action.type)) {
+      errors.push(`${source} uses unsupported action ${action.type}`);
+      return;
+    }
+    if (action.type === 'panel.open') {
+      const target = objects[action.target];
+      if (!target || target.kind !== 'panel') {
+        errors.push(`${source} opens unknown panel ${action.target}`);
+      }
+    }
+    if (SCENE_TARGET_ACTIONS.has(action.type) && !scenes[action.target]) {
+      errors.push(`${source} navigates to unknown scene ${action.target}`);
+    }
+    if (action.type === 'text.toggleNext') {
+      const target = objects[action.target];
+      if (!target || target.kind !== 'textPort') {
+        errors.push(`${source} advances unknown text port ${action.target}`);
+      }
+    }
+    if (action.type === 'asset.toggle') {
+      const keys = Array.isArray(action.keys) ? action.keys : [];
+      if (!keys.length) errors.push(`${source} asset.toggle requires keys`);
+      keys.forEach((key) => {
+        if (!manifest?.assets?.[key]) errors.push(`${source} toggles unknown asset ${key}`);
+      });
+    }
+  };
+
   writeTargetIds.forEach((targetId) => {
     if (!textTargetRegistry?.targets?.[targetId]) {
       errors.push(`State write allowlist references unregistered target ${targetId}`);
@@ -68,32 +101,30 @@ export function validateManifest(manifest, textTargetRegistry = null) {
     if (object?.id !== id) errors.push(`Object key/id mismatch: ${id}`);
     if (!controllers[object?.controller]) errors.push(`Object ${id} references unknown controller ${object?.controller}`);
     if (object?.ownerScene !== '*' && !scenes[object?.ownerScene]) errors.push(`Object ${id} has unknown ownerScene ${object?.ownerScene}`);
-    if (object?.action?.type && !supportedActions.has(object.action.type)) {
-      errors.push(`Object ${id} uses unsupported action ${object.action.type}`);
+    if (object?.ownerScene !== '*' && scenes[object?.ownerScene] && !scenes[object.ownerScene].objects?.includes(id)) {
+      errors.push(`Object ${id} is absent from owner scene ${object.ownerScene}`);
     }
-    if (object?.action?.type === 'panel.open') {
-      const target = objects[object.action.target];
-      if (!target || target.kind !== 'panel') {
-        errors.push(`Object ${id} opens unknown panel ${object.action.target}`);
-      }
-    }
+    validateAction(object?.action, `Object ${id}`);
     (object?.items || []).forEach((item, index) => {
-      if (item?.action?.type && !supportedActions.has(item.action.type)) {
-        errors.push(`Object ${id} item ${index} uses unsupported action ${item.action.type}`);
-      }
-      if (item?.action?.type === 'panel.open') {
-        const target = objects[item.action.target];
-        if (!target || target.kind !== 'panel') {
-          errors.push(`Object ${id} item ${index} opens unknown panel ${item.action.target}`);
-        }
-      }
+      validateAction(item?.action, `Object ${id} item ${index}`);
     });
-    if (object?.action?.type === 'asset.toggle') {
-      const keys = Array.isArray(object.action.keys) ? object.action.keys : [];
-      if (!keys.length) errors.push(`Object ${id} asset.toggle requires keys`);
-      keys.forEach((key) => {
-        if (!manifest?.assets?.[key]) errors.push(`Object ${id} toggles unknown asset ${key}`);
-      });
+    if (object?.kind === 'effect' && !SUPPORTED_EFFECT_TYPES.has(object?.effect?.type)) {
+      errors.push(`Effect ${id} uses unsupported type ${object?.effect?.type}`);
+    }
+    if (['hotspot', 'textPort', 'effect'].includes(object?.kind) && object?.mount !== 'existing' && !object?.coordinate) {
+      errors.push(`Object ${id} requires a manifest coordinate`);
+    }
+    if (object?.coordinate) {
+      const { x, y, width, height } = object.coordinate;
+      if (!Number.isFinite(x) || x < 0 || x > 1 || !Number.isFinite(y) || y < 0 || y > 1) {
+        errors.push(`Object ${id} coordinate x/y must stay within the base image`);
+      }
+      if (width !== undefined && (!Number.isFinite(width) || width <= 0 || width > 1)) {
+        errors.push(`Object ${id} coordinate width must be within (0, 1]`);
+      }
+      if (height !== undefined && (!Number.isFinite(height) || height <= 0 || height > 1)) {
+        errors.push(`Object ${id} coordinate height must be within (0, 1]`);
+      }
     }
     if (object?.variant === 'memories') {
       const source = object.memorySource;
@@ -174,7 +205,7 @@ export function validateManifest(manifest, textTargetRegistry = null) {
       if (leaked.length) errors.push(`Child scene ${sceneId} leaks parent objects: ${leaked.join(', ')}`);
     }
     Object.values(scene?.docks || {}).filter(Boolean).forEach((action) => {
-      if (!supportedActions.has(action.type)) errors.push(`Scene ${sceneId} dock uses unsupported action ${action.type}`);
+      validateAction(action, `Scene ${sceneId} dock`);
     });
   });
 

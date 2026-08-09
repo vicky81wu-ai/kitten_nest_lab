@@ -53,6 +53,30 @@ test('the generic v2 bubble no longer draws the legacy triangle tail', async () 
   assert.match(css, /\.v2-text-port\s*\{[^}]*border-radius:\s*22px;/s);
 });
 
+test('the v2 entry is ready for iPhone home-screen mode', async () => {
+  const html = await readFile(new URL('../../v2/index.html', import.meta.url), 'utf8');
+  assert.match(html, /name="viewport" content="[^"]*viewport-fit=cover[^"]*maximum-scale=1[^"]*user-scalable=no"/);
+  assert.match(html, /name="apple-mobile-web-app-capable" content="yes"/);
+  assert.match(html, /name="apple-mobile-web-app-status-bar-style" content="black-translucent"/);
+  assert.match(html, /name="apple-mobile-web-app-title" content="Kitten Nest"/);
+});
+
+test('manifest validation rejects dangling hotspots and unsupported effects', async () => {
+  const source = await readJson('../../v2/data/nest-manifest.v2.json');
+  const textTargets = await readJson('../../data/text-targets.v1.json');
+  const manifest = structuredClone(source);
+  manifest.objects['coffeeCorner.beachEnterHot'].action.target = 'missingBeach';
+  delete manifest.objects['home.moonLampHot'].coordinate;
+  manifest.objects['home.sparkles'].effect.type = 'mysteryDust';
+  manifest.scenes.home.docks.right.target = 'missingRoom';
+  const result = validateManifest(manifest, textTargets);
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join('\n'), /coffeeCorner\.beachEnterHot navigates to unknown scene missingBeach/);
+  assert.match(result.errors.join('\n'), /home\.moonLampHot requires a manifest coordinate/);
+  assert.match(result.errors.join('\n'), /home\.sparkles uses unsupported type mysteryDust/);
+  assert.match(result.errors.join('\n'), /Scene home dock navigates to unknown scene missingRoom/);
+});
+
 test('the product surface contains no runtime inspector or hotspot debug switch', async () => {
   const manifest = await readJson('../../v2/data/nest-manifest.v2.json');
   const html = await readFile(new URL('../../v2/index.html', import.meta.url), 'utf8');

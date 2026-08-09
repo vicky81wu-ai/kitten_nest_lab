@@ -45,6 +45,8 @@ coffeeCorner -> lapClose hide/show-next -> coffeeCorner -> home
 zero page errors, console errors, or failed requests
 no runtime inspector, status ticker, or hotspot debug switch in the product DOM
 four notebook POSTs, each carrying only registered notebook fields and a QA-only token
+iPhone home-screen capability, safe-area viewport, status-bar, and app-title metadata
+manifest rejection for missing hotspot coordinates, dangling scene targets, and unsupported effects
 ```
 
 This pass caught and fixed panorama dialogue clipping. Newly revealed bubbles now wait for their measured layout and adjust only the horizontal scene viewport before the browser paints them. Cover rooms and manifest coordinates are unchanged.
