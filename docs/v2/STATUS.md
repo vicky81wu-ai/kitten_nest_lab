@@ -1,14 +1,15 @@
 # Kitten Nest v2 Status
 
 Updated: 2026-08-09
-Status: final iPhone acceptance and live MCP/state gate passed; promotion-ready, not promoted
+Status: isolated `/cloud` route-switch commit prepared; production deployment smoke check pending
 
-## Isolation
+## Promotion package
 
 ```text
 branch: agent/v2-runtime-foundation
-route: /v2/index.html
-stable /cloud injection chain: unchanged
+production route in this source state: /cloud -> /v2/index.html
+direct compatibility route: /v2/index.html
+legacy rollback route: /cloud-coords -> /api/app-coords
 live nest_state: unchanged
 /api/state and /api/set-state implementations: unchanged
 /write: unchanged
@@ -238,20 +239,19 @@ Run:
 npm run check:v2
 ```
 
-This currently runs 72 checks covering controller contracts, one-manifest ownership, registered or explicitly static text ports, selector exclusivity, child isolation, portrait and panorama navigation, approved beach order, failed-asset rollback, full-size optimized static WebP delivery with canonical Storage fallback, sequential beach warming, projection math, panorama bubble reveal, text mutation layout invalidation, fallback refresh serialization, compact weather presentation, invisible drift-tolerant corner docks, scoped iOS-safe long-press dispatch, exact three-room/six-photo local write allowlisting, device-local room-source priority, weather state/advice, time-of-day and manual asset resolution, connected stage-image loading, loading-veil presence, bounded best-effort image decode behavior, Gomoku legality/wins/undo and all three AI difficulty paths, absent/unsupported/existing legacy-photo database behavior, notebook normalization, save/deduplication, favorite, soft delete, request allowlisting, Nest-key failure handling, iPhone home-screen metadata, dangling scene/text action targets, coordinate ownership, supported effect types, and the absence of product-facing inspector/debug controls.
+This currently runs 73 checks covering controller contracts, paired preview/production route metadata, one-manifest ownership, registered or explicitly static text ports, selector exclusivity, child isolation, portrait and panorama navigation, approved beach order, failed-asset rollback, full-size optimized static WebP delivery with canonical Storage fallback, sequential beach warming, projection math, panorama bubble reveal, text mutation layout invalidation, fallback refresh serialization, compact weather presentation, invisible drift-tolerant corner docks, scoped iOS-safe long-press dispatch, exact three-room/six-photo local write allowlisting, device-local room-source priority, weather state/advice, time-of-day and manual asset resolution, connected stage-image loading, loading-veil presence, bounded best-effort image decode behavior, Gomoku legality/wins/undo and all three AI difficulty paths, absent/unsupported/existing legacy-photo database behavior, notebook normalization, save/deduplication, favorite, soft delete, request allowlisting, Nest-key failure handling, iPhone home-screen metadata, dangling scene/text action targets, coordinate ownership, supported effect types, and the absence of product-facing inspector/debug controls.
 
 The local 393 × 852 mobile-browser pass uses an in-memory fake `/api/set-state`; it never contacts the real state project. It exercised new page -> save -> current page -> archive readback -> favorite -> unfavorite -> delete -> trash, and inspected all four requests. Every request used the QA-only token and only the six registered notebook fields. The same run then completed moon/weather, coffeeCorner, a seeded six-slot read-only memories carousel, Gomoku, all three beach scenes and dialogue, lapClose, and the final home return with zero console, page, or request errors.
 
-## Promotion stop condition
+## Production activation and rollback
 
-Do not merge v2 into `/cloud` until Vicky verifies the independent preview and a separate promotion plan names:
+This source state contains only the documented route-switch product diff. It becomes the live nest only after the branch is merged and Vercel reports success.
 
 ```text
-old owners retired
-exact runtime files replaced
-state fields preserved
-full /cloud acceptance URL
-rollback commit
+production acceptance URL: https://kitten-nest-lab.vercel.app/cloud
+promotion source: isolated commit named "Promote v2 runtime to cloud route"
+pre-promotion production baseline: 5723fd592188583e3d366cf3550882f8c04d3927
+rollback: revert the isolated promotion commit and redeploy main
 ```
 
-The exact route, ownership, state-preservation, production acceptance, and rollback procedure is recorded in `docs/v2/PROMOTION_PLAN.md`. It remains gated: the document does not change `/cloud` by itself.
+The exact state-preservation, owner retirement, production acceptance, and rollback procedure remains recorded in `docs/v2/PROMOTION_PLAN.md`.

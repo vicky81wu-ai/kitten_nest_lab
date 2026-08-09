@@ -1,6 +1,6 @@
 # Kitten Nest v2 `/cloud` promotion plan
 
-Status: gated; no production route has changed
+Status: exact route-switch diff staged on the isolated branch; production deployment pending
 
 ## Readiness evidence · 2026-08-09
 

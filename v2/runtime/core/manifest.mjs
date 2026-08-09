@@ -30,7 +30,11 @@ export function validateManifest(manifest, textTargetRegistry = null) {
   const warnings = [];
 
   if (manifest?.schemaVersion !== 'nest-manifest.v2') errors.push('schemaVersion must be nest-manifest.v2');
-  if (manifest?.promoted !== false) errors.push('v2 preview manifest must keep promoted:false');
+  const previewRoute = manifest?.promoted === false && manifest?.route === '/v2/index.html';
+  const productionRoute = manifest?.promoted === true && manifest?.route === '/cloud';
+  if (!previewRoute && !productionRoute) {
+    errors.push('v2 route metadata must pair promoted:false with /v2/index.html or promoted:true with /cloud');
+  }
 
   const writePolicy = manifest?.rules?.stateWritesAllowed;
   const writeTargetIds = Array.isArray(writePolicy?.targetIds) ? writePolicy.targetIds : [];

@@ -5,18 +5,37 @@ import { validateManifest } from '../../v2/runtime/core/manifest.mjs';
 
 const readJson = async (path) => JSON.parse(await readFile(new URL(path, import.meta.url), 'utf8'));
 
-test('v2 manifest is an isolated, registry-backed single source', async () => {
+test('v2 production manifest is a registry-backed single source', async () => {
   const manifest = await readJson('../../v2/data/nest-manifest.v2.json');
   const textTargets = await readJson('../../data/text-targets.v1.json');
   const result = validateManifest(manifest, textTargets);
   assert.deepEqual(result.errors, []);
   assert.equal(result.ok, true);
-  assert.equal(manifest.promoted, false);
+  assert.equal(manifest.promoted, true);
+  assert.equal(manifest.route, '/cloud');
   assert.deepEqual(manifest.rules.stateWritesAllowed, {
     mode: 'registeredTargetOnly',
     targetIds: ['hubbyNote']
   });
   assert.equal(Object.keys(manifest.controllers).length, 8);
+});
+
+test('preview and production metadata accept only their matching routes', async () => {
+  const source = await readJson('../../v2/data/nest-manifest.v2.json');
+  const textTargets = await readJson('../../data/text-targets.v1.json');
+
+  const preview = structuredClone(source);
+  preview.promoted = false;
+  preview.route = '/v2/index.html';
+  assert.equal(validateManifest(preview, textTargets).ok, true);
+
+  const mismatchedPreview = structuredClone(source);
+  mismatchedPreview.promoted = false;
+  assert.equal(validateManifest(mismatchedPreview, textTargets).ok, false);
+
+  const mismatchedProduction = structuredClone(source);
+  mismatchedProduction.route = '/v2/index.html';
+  assert.equal(validateManifest(mismatchedProduction, textTargets).ok, false);
 });
 
 test('lapClose scene does not inherit coffeeCorner interactive objects', async () => {

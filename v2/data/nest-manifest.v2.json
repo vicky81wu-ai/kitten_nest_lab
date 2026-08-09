@@ -1,9 +1,9 @@
 {
   "schemaVersion": "nest-manifest.v2",
   "version": "0.3.0",
-  "status": "isolated-preview",
-  "promoted": false,
-  "route": "/v2/index.html",
+  "status": "production",
+  "promoted": true,
+  "route": "/cloud",
   "rules": {
     "singleSource": "This manifest is the only v2 runtime identity, ownership, scene, action, coordinate, panel, text-port, and effect source.",
     "noIdentityNoBinding": true,
@@ -13,7 +13,7 @@
       "mode": "registeredTargetOnly",
       "targetIds": ["hubbyNote"]
     },
-    "stableRouteUntouched": "/cloud"
+    "productionRoute": "/cloud"
   },
   "runtime": {
     "entryScene": "home",

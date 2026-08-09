@@ -1,12 +1,14 @@
 # Kitten Nest v2 Independent Preview Acceptance
 
-Status: framework regression, automated mobile route, and final iPhone promotion checkpoint passed
+Status: pre-promotion device acceptance passed; production `/cloud` smoke check pending
 
-## Visual route
+## Production route
 
 ```text
-/v2/index.html
+https://kitten-nest-lab.vercel.app/cloud
 ```
+
+The direct `/v2/index.html` route remains available during the rollback window.
 
 ## Restoration acceptance loop
 
@@ -98,4 +100,4 @@ Remaining sparkle/light-point tuning is non-blocking visual polish and is not pa
 
 ## Failure rule
 
-If the preview fails, fix or roll back the isolated branch. Do not add guards to `/cloud`, write live state, or promote partial behavior.
+If the production smoke check fails, revert only the isolated promotion commit and redeploy the known-good `/cloud` owner. Do not write live state or add a second runtime as a patch.
