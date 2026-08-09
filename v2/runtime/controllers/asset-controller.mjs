@@ -9,55 +9,85 @@ export function resolveAssetKey(assets, requestedKey, hour = new Date().getHours
   return hour >= dayStart && hour < nightStart ? card.dayAsset : card.nightAsset;
 }
 
-function loadImage(url, timeoutMs = 8000) {
+export function waitForBestEffortDecode(image, timeoutMs = 1200) {
+  if (!image || typeof image.decode !== 'function') return Promise.resolve('unsupported');
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = (status) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      resolve(status);
+    };
+    const timer = setTimeout(() => finish('timeout'), timeoutMs);
+    Promise.resolve()
+      .then(() => image.decode())
+      .then(() => finish('decoded'))
+      .catch(() => finish('failed'));
+  });
+}
+
+function loadImage(url, timeoutMs = 20000, decodeTimeoutMs = 1200) {
   return new Promise((resolve, reject) => {
     const image = new Image();
     let done = false;
+    const cleanup = () => {
+      image.onload = null;
+      image.onerror = null;
+    };
     const finish = (callback, value) => {
       if (done) return;
       done = true;
       clearTimeout(timer);
+      cleanup();
       callback(value);
     };
-    const timer = setTimeout(() => finish(reject, new Error(`Asset timeout: ${url}`)), timeoutMs);
+    const timer = setTimeout(() => {
+      finish(reject, new Error(`Asset network timeout: ${url}`));
+      image.src = '';
+    }, timeoutMs);
     image.decoding = 'async';
-    image.onload = async () => {
-      try {
-        if (image.decode) await image.decode();
-      } catch {
-        // A decoded image is optional after a successful load event.
-      }
-      finish(resolve, image);
+    image.onload = () => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      cleanup();
+      waitForBestEffortDecode(image, decodeTimeoutMs).then(() => resolve(image));
     };
     image.onerror = () => finish(reject, new Error(`Asset failed: ${url}`));
     image.src = url;
   });
 }
 
-function waitForStageImage(image, timeoutMs = 4000) {
+function waitForStageImage(image, timeoutMs = 20000, decodeTimeoutMs = 1200) {
   if (image.complete && image.naturalWidth && image.naturalHeight) {
-    return image.decode ? image.decode().catch(() => {}) : Promise.resolve();
+    return waitForBestEffortDecode(image, decodeTimeoutMs).then(() => {});
+  }
+  if (image.complete && image.src) {
+    return Promise.reject(new Error(`Stage image failed: ${image.src}`));
   }
   return new Promise((resolve, reject) => {
     let done = false;
+    const cleanup = () => {
+      image.removeEventListener('load', onLoad);
+      image.removeEventListener('error', onError);
+    };
     const finish = (callback, value) => {
       if (done) return;
       done = true;
       clearTimeout(timer);
-      image.removeEventListener('load', onLoad);
-      image.removeEventListener('error', onError);
+      cleanup();
       callback(value);
     };
-    const onLoad = async () => {
-      try {
-        if (image.decode) await image.decode();
-      } catch {
-        // The load event already proves the image is usable.
-      }
-      finish(resolve);
+    const onLoad = () => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      cleanup();
+      waitForBestEffortDecode(image, decodeTimeoutMs).then(() => resolve());
     };
     const onError = () => finish(reject, new Error(`Stage image failed: ${image.src}`));
-    const timer = setTimeout(() => finish(reject, new Error(`Stage image timeout: ${image.src}`)), timeoutMs);
+    const timer = setTimeout(() => finish(reject, new Error(`Stage image network timeout: ${image.src}`)), timeoutMs);
     image.addEventListener('load', onLoad, { once: true });
     image.addEventListener('error', onError, { once: true });
   });
@@ -84,6 +114,8 @@ export class AssetController extends BaseController {
     const resolvedKey = resolveAssetKey(assets, scene.assetKey);
     const card = assets[resolvedKey];
     const sources = Array.isArray(card.sources) ? card.sources : [];
+    const networkTimeoutMs = Number(card.networkTimeoutMs ?? 20000);
+    const decodeTimeoutMs = Number(card.decodeTimeoutMs ?? 1200);
     this.mark('loading', resolvedKey);
     this.errorBox.hidden = true;
     document.body.dataset.assetStatus = 'loading';
@@ -91,9 +123,9 @@ export class AssetController extends BaseController {
     const failures = [];
     for (const source of sources) {
       try {
-        const loaded = await loadImage(source.url, 8000);
+        const loaded = await loadImage(source.url, networkTimeoutMs, decodeTimeoutMs);
         this.image.src = loaded.src;
-        await waitForStageImage(this.image);
+        await waitForStageImage(this.image, networkTimeoutMs, decodeTimeoutMs);
         this.image.alt = scene.id === 'home'
           ? 'Kitten Nest home'
           : scene.id === 'coffeeCorner'

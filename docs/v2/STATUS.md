@@ -67,6 +67,24 @@ browser acceptance: blocked by Vercel Deployment Protection login
 
 Deployment success is not visual acceptance. The branch must still be opened behind the preview login and walked through the acceptance loop.
 
+## First iPhone checkpoint
+
+The protected preview was opened on iPhone Safari. The runtime reached the home scene but reported:
+
+```text
+Asset timeout: /assets/rooms/home/day.jpg
+```
+
+The canonical image blob is present on the remote branch. The false failure came from treating `HTMLImageElement.decode()` as part of the same hard eight-second network deadline. Safari can leave that optional decode promise pending after the load event, so v2 now separates the two gates:
+
+```text
+network load: required, explicit 20 second deadline
+decode hint: best effort, bounded at 1.2 seconds
+natural image dimensions: required before Layout readiness
+```
+
+This fix remains isolated and requires a fresh deployed iPhone pass before the home step is accepted.
+
 ## Automated acceptance
 
 Run:
@@ -75,7 +93,7 @@ Run:
 npm run check:v2
 ```
 
-This validates controller contracts, one-manifest ownership, registered text targets, selector exclusivity, child isolation, navigation stack behavior, cover math, text-field precedence, and time-of-day asset resolution.
+This validates controller contracts, one-manifest ownership, registered text targets, selector exclusivity, child isolation, navigation stack behavior, cover math, text-field precedence, time-of-day asset resolution, and bounded best-effort image decode behavior.
 
 ## Promotion stop condition
 
