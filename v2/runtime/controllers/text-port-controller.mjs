@@ -58,7 +58,9 @@ export class TextPortController extends BaseController {
       ? resolveTextPortState(state, port.object)
       : { queue: [], index: 0, sourceField: '' };
     port.queue = resolved.queue;
-    port.index = port.queue.length ? resolved.index % port.queue.length : 0;
+    port.index = port.object.staticText && port.hasRenderedState && port.queue.length
+      ? port.index % port.queue.length
+      : port.queue.length ? resolved.index % port.queue.length : 0;
     port.sourceField = resolved.sourceField;
     if (!port.queue.length) port.visible = false;
     else if (!port.hasRenderedState) port.visible = port.object.initiallyVisible !== false;

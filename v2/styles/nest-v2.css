@@ -83,7 +83,7 @@ body::before {
 .v2-scene-viewport {
   position: absolute;
   inset: 0;
-  z-index: 0;
+  z-index: auto;
   overflow: hidden;
   overscroll-behavior: contain;
 }
@@ -172,6 +172,11 @@ body[data-asset-status="loading"] .v2-stage[data-transitioning="1"] .v2-stage__i
 }
 
 [data-requires-layout="1"]:not([data-layout-ready="1"]) {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.v2-stage[data-transitioning="1"] [data-requires-layout="1"] {
   opacity: 0 !important;
   pointer-events: none !important;
 }

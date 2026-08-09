@@ -92,7 +92,8 @@ draft PR: #4
 Vercel branch deployment: Ready
 protected preview login: completed on Vicky's iPhone
 framework browser acceptance: passed
-restoration batch 0.2.0: not yet deployed
+restoration batch 0.2.0: Vercel Ready
+cloud-browser self-check: separate Vercel Protection session requires sign-in
 ```
 
 Deployment success is not visual acceptance. Each restoration batch still receives one consolidated device pass behind the existing preview login.

@@ -106,4 +106,5 @@ test('asset loading hides progressive image paint behind the loading veil', asyn
     /body\[data-asset-status="loading"\]\s+\.v2-stage\[data-transitioning="1"\]\s+\.v2-stage__image\s*\{[^}]*opacity:\s*0/s
   );
   assert.match(css, /body\[data-scene-presentation="panorama"\]\s+\.v2-scene-viewport\s*\{[^}]*overflow-x:\s*auto/s);
+  assert.match(css, /\.v2-stage\[data-transitioning="1"\]\s+\[data-requires-layout="1"\]\s*\{[^}]*opacity:\s*0/s);
 });
