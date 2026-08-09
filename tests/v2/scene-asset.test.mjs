@@ -1,9 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
+import { readdir } from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const require = createRequire(import.meta.url);
-const { resolveSceneAsset, sniffImageType } = require('../../api/scene-asset.js');
+const { resolveSceneAsset, sniffImageType } = require('../../lib/scene-asset-proxy.js');
+const testDirectory = path.dirname(fileURLToPath(import.meta.url));
+const apiDirectory = path.resolve(testDirectory, '../../api');
 
 test('scene asset proxy only resolves its explicit public Storage allowlist', () => {
   assert.match(
@@ -19,4 +24,10 @@ test('scene asset proxy corrects PNG bytes stored under a jpg object name', () =
   const jpeg = Buffer.from([0xff, 0xd8, 0xff, 0xdb]);
   assert.equal(sniffImageType(png, 'image/jpeg'), 'image/png');
   assert.equal(sniffImageType(jpeg, 'application/octet-stream'), 'image/jpeg');
+});
+
+test('scene asset proxy shares the existing app-assets function slot', async () => {
+  const functions = (await readdir(apiDirectory)).filter((name) => name.endsWith('.js'));
+  assert.equal(functions.length, 12);
+  assert.equal(functions.includes('scene-asset.js'), false);
 });

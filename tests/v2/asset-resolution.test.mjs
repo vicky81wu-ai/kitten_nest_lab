@@ -110,7 +110,7 @@ test('large nested scenes warm a same-origin cache before their canonical Storag
   keys.forEach((key) => {
     const [sameOrigin, canonical] = manifest.assets[key].sources;
     assert.equal(sameOrigin.role, 'sameOriginCache');
-    assert.match(sameOrigin.url, /^\/api\/scene-asset\?id=/);
+    assert.match(sameOrigin.url, /^\/api\/app-assets\?sceneAsset=/);
     assert.equal(canonical.role, 'supabaseCanonical');
     assert.match(canonical.url, /^https:\/\/pmkxzmogolxllijzqnfr\.supabase\.co\/storage\/v1\/object\/public\//);
     assert.equal(manifest.assets[key].networkTimeoutMs, 30000);

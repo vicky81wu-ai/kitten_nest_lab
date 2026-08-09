@@ -149,7 +149,7 @@
     "coffeeCorner.lapClose": {
       "sources": [
         {
-          "url": "/api/scene-asset?id=lap-close",
+          "url": "/api/app-assets?sceneAsset=lap-close",
           "role": "sameOriginCache"
         },
         {
@@ -163,7 +163,7 @@
     "coffeeCorner.beachHandholdSunset": {
       "sources": [
         {
-          "url": "/api/scene-asset?id=beach-handhold-sunset",
+          "url": "/api/app-assets?sceneAsset=beach-handhold-sunset",
           "role": "sameOriginCache"
         },
         {
@@ -177,7 +177,7 @@
     "coffeeCorner.beachBraceletPromise": {
       "sources": [
         {
-          "url": "/api/scene-asset?id=beach-bracelet-promise",
+          "url": "/api/app-assets?sceneAsset=beach-bracelet-promise",
           "role": "sameOriginCache"
         },
         {
@@ -191,7 +191,7 @@
     "coffeeCorner.beachStallOrder": {
       "sources": [
         {
-          "url": "/api/scene-asset?id=beach-stall-order",
+          "url": "/api/app-assets?sceneAsset=beach-stall-order",
           "role": "sameOriginCache"
         },
         {
