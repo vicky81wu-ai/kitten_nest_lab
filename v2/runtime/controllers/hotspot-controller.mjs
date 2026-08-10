@@ -1,5 +1,11 @@
 import { BaseController } from '../core/base-controller.mjs';
 
+const NAVIGATION_ACTION_TYPES = new Set(['scene.go', 'scene.push', 'scene.back', 'scene.jumpTo']);
+
+function isNavigationAction(action) {
+  return NAVIGATION_ACTION_TYPES.has(action?.type);
+}
+
 export class HotspotController extends BaseController {
   constructor(context) {
     super('hotspot', context);
@@ -21,7 +27,6 @@ export class HotspotController extends BaseController {
   async mount() {
     await super.mount();
     this.layer = this.context.elements.hotspotLayer;
-    this.controls = this.context.elements.controls;
     this.stage = this.context.elements.stage;
     this.eventRoots = [this.stage];
     this.eventRoots.forEach((root) => {
@@ -63,11 +68,6 @@ export class HotspotController extends BaseController {
     return element;
   }
 
-  actionAvailable(object, snapshot) {
-    if (object.action?.type !== 'scene.dock') return true;
-    return Boolean(snapshot.scene?.docks?.[object.action.side]);
-  }
-
   async reconcile(snapshot) {
     this.lastSnapshot = snapshot;
     const allowed = new Set(snapshot.allowedObjectIds);
@@ -86,10 +86,9 @@ export class HotspotController extends BaseController {
         ? this.existingHotspot(object)
         : this.dynamic.get(id) || this.createHotspot(object);
       if (!element) continue;
-      const available = this.actionAvailable(object, snapshot);
-      element.hidden = !available;
-      element.disabled = !available;
-      element.setAttribute('aria-hidden', available ? 'false' : 'true');
+      element.hidden = false;
+      element.disabled = false;
+      element.setAttribute('aria-hidden', 'false');
     }
 
     this.mark('ready', snapshot.sceneId);
@@ -163,7 +162,7 @@ export class HotspotController extends BaseController {
       x: event.clientX,
       y: event.clientY
     };
-    if (match.object.action?.type === 'scene.dock') {
+    if (isNavigationAction(match.object.action)) {
       this.blockEvent(event);
       try { match.target.setPointerCapture?.(event.pointerId); } catch {}
     }

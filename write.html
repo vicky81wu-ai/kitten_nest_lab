@@ -37,7 +37,7 @@
     <section class="card primaryCard">
       <span class="useTag">日常用这个</span>
       <h2>Alex 更新包</h2>
-      <p class="small">当前支持：[coffeeCornerBubble] 普通咖啡角气泡、[coffeeCornerLapCloseBubble] 坐腿近景左上气泡队列、[windowWeather] 窗户天气、[hubbyNote] 粉本本永久档案。没有标签默认进 [coffeeCornerBubble]。所有文本入口都应使用“房间/场景 + 文本类型”的完整 tag；不支持 [coffeeCorner] / [lapClose] / [lapCloseBubble] 这类短名。</p>
+      <p class="small">当前支持咖啡角、坐腿近景、海滨三幕的 Alex/Vicky 六条独立气泡通道、窗户天气和粉本本。没有标签默认进 [coffeeCornerBubble]。海滨 tag 使用完整场景名；带 Vicky 的 tag 只写 Vicky，不带 Vicky 的只写 Alex，六条互不覆盖。</p>
       <label for="packageText">Package</label>
       <textarea id="packageText" class="packageBox">[coffeeCornerBubble]
 早上好，小猫。
@@ -46,6 +46,24 @@
 [coffeeCornerLapCloseBubble]
 坐稳，小猫。
 Stop wriggling in my lap.
+
+[coffeeCornerBeachHandholdSunsetBubble]
+慢一点，小猫。海不会跑，hubby 也不会。
+
+[coffeeCornerBeachHandholdSunsetVickyBubble]
+那小猫走慢一点，但是手不松。
+
+[coffeeCornerBeachBraceletPromiseBubble]
+手给我。这个约定要扣好，不能掉。
+
+[coffeeCornerBeachBraceletPromiseVickyBubble]
+扣紧一点。这个是我们说好的。
+
+[coffeeCornerBeachStallOrderBubble]
+小猫负责点，hubby 负责端回来。
+
+[coffeeCornerBeachStallOrderVickyBubble]
+那我要这个、这个，还有那个！
 
 [windowWeather]
 23°C
@@ -74,6 +92,12 @@ Soft breeze
       <select id="draftRoom">
         <option value="coffeeCornerBubble">coffeeCornerBubble</option>
         <option value="coffeeCornerLapCloseBubble">coffeeCornerLapCloseBubble</option>
+        <option value="coffeeCornerBeachHandholdSunsetBubble">coffeeCornerBeachHandholdSunsetBubble</option>
+        <option value="coffeeCornerBeachHandholdSunsetVickyBubble">coffeeCornerBeachHandholdSunsetVickyBubble</option>
+        <option value="coffeeCornerBeachBraceletPromiseBubble">coffeeCornerBeachBraceletPromiseBubble</option>
+        <option value="coffeeCornerBeachBraceletPromiseVickyBubble">coffeeCornerBeachBraceletPromiseVickyBubble</option>
+        <option value="coffeeCornerBeachStallOrderBubble">coffeeCornerBeachStallOrderBubble</option>
+        <option value="coffeeCornerBeachStallOrderVickyBubble">coffeeCornerBeachStallOrderVickyBubble</option>
         <option value="hubbyNote">hubbyNote</option>
         <option value="home">home</option>
         <option value="global">global</option>
@@ -96,6 +120,12 @@ Soft breeze
       <select id="field">
         <option value="alexBubble">coffeeCornerBubble</option>
         <option value="coffeeCornerLapCloseBubble">coffeeCornerLapCloseBubble</option>
+        <option value="coffeeCornerBeachHandholdSunsetBubble">coffeeCornerBeachHandholdSunsetBubble</option>
+        <option value="coffeeCornerBeachHandholdSunsetVickyBubble">coffeeCornerBeachHandholdSunsetVickyBubble</option>
+        <option value="coffeeCornerBeachBraceletPromiseBubble">coffeeCornerBeachBraceletPromiseBubble</option>
+        <option value="coffeeCornerBeachBraceletPromiseVickyBubble">coffeeCornerBeachBraceletPromiseVickyBubble</option>
+        <option value="coffeeCornerBeachStallOrderBubble">coffeeCornerBeachStallOrderBubble</option>
+        <option value="coffeeCornerBeachStallOrderVickyBubble">coffeeCornerBeachStallOrderVickyBubble</option>
         <option value="windowWeather">windowWeather</option>
         <option value="hubbyNote">hubbyNote</option>
       </select>
@@ -118,6 +148,83 @@ Soft breeze
   const draftRoom = document.getElementById('draftRoom');
   const draftText = document.getElementById('draftText');
   const packageText = document.getElementById('packageText');
+  const BUBBLE_TARGETS = {
+    coffeeCornerBubble: {
+      label:'咖啡角气泡',
+      room:'coffeeCorner',
+      single:'coffeeCornerBubble',
+      queue:'coffeeCornerBubbles',
+      index:'coffeeCornerBubbleIndex',
+      updatedAt:'coffeeCornerBubbleUpdatedAt',
+      draftType:'bubbleDraft',
+      legacyCoffee:true
+    },
+    coffeeCornerLapCloseBubble: {
+      label:'坐腿近景气泡',
+      room:'coffeeCornerLapClose',
+      single:'coffeeCornerLapCloseBubble',
+      queue:'coffeeCornerLapCloseBubbles',
+      index:'coffeeCornerLapCloseBubbleIndex',
+      updatedAt:'coffeeCornerLapCloseBubbleUpdatedAt',
+      draftType:'lapCloseBubbleDraft'
+    },
+    coffeeCornerBeachHandholdSunsetBubble: {
+      label:'海滨牵手暮色气泡',
+      room:'coffeeCornerBeachHandholdSunset',
+      single:'coffeeCornerBeachHandholdSunsetBubble',
+      queue:'coffeeCornerBeachHandholdSunsetBubbles',
+      index:'coffeeCornerBeachHandholdSunsetBubbleIndex',
+      updatedAt:'coffeeCornerBeachHandholdSunsetBubbleUpdatedAt',
+      draftType:'coffeeCornerBeachHandholdSunsetBubbleDraft'
+    },
+    coffeeCornerBeachHandholdSunsetVickyBubble: {
+      label:'海滨牵手暮色 Vicky 气泡',
+      room:'coffeeCornerBeachHandholdSunset',
+      single:'coffeeCornerBeachHandholdSunsetVickyBubble',
+      queue:'coffeeCornerBeachHandholdSunsetVickyBubbles',
+      index:'coffeeCornerBeachHandholdSunsetVickyBubbleIndex',
+      updatedAt:'coffeeCornerBeachHandholdSunsetVickyBubbleUpdatedAt',
+      draftType:'coffeeCornerBeachHandholdSunsetVickyBubbleDraft'
+    },
+    coffeeCornerBeachBraceletPromiseBubble: {
+      label:'海滨手链约定气泡',
+      room:'coffeeCornerBeachBraceletPromise',
+      single:'coffeeCornerBeachBraceletPromiseBubble',
+      queue:'coffeeCornerBeachBraceletPromiseBubbles',
+      index:'coffeeCornerBeachBraceletPromiseBubbleIndex',
+      updatedAt:'coffeeCornerBeachBraceletPromiseBubbleUpdatedAt',
+      draftType:'coffeeCornerBeachBraceletPromiseBubbleDraft'
+    },
+    coffeeCornerBeachBraceletPromiseVickyBubble: {
+      label:'海滨手链约定 Vicky 气泡',
+      room:'coffeeCornerBeachBraceletPromise',
+      single:'coffeeCornerBeachBraceletPromiseVickyBubble',
+      queue:'coffeeCornerBeachBraceletPromiseVickyBubbles',
+      index:'coffeeCornerBeachBraceletPromiseVickyBubbleIndex',
+      updatedAt:'coffeeCornerBeachBraceletPromiseVickyBubbleUpdatedAt',
+      draftType:'coffeeCornerBeachBraceletPromiseVickyBubbleDraft'
+    },
+    coffeeCornerBeachStallOrderBubble: {
+      label:'海滨小摊点单气泡',
+      room:'coffeeCornerBeachStallOrder',
+      single:'coffeeCornerBeachStallOrderBubble',
+      queue:'coffeeCornerBeachStallOrderBubbles',
+      index:'coffeeCornerBeachStallOrderBubbleIndex',
+      updatedAt:'coffeeCornerBeachStallOrderBubbleUpdatedAt',
+      draftType:'coffeeCornerBeachStallOrderBubbleDraft'
+    },
+    coffeeCornerBeachStallOrderVickyBubble: {
+      label:'海滨小摊点单 Vicky 气泡',
+      room:'coffeeCornerBeachStallOrder',
+      single:'coffeeCornerBeachStallOrderVickyBubble',
+      queue:'coffeeCornerBeachStallOrderVickyBubbles',
+      index:'coffeeCornerBeachStallOrderVickyBubbleIndex',
+      updatedAt:'coffeeCornerBeachStallOrderVickyBubbleUpdatedAt',
+      draftType:'coffeeCornerBeachStallOrderVickyBubbleDraft'
+    }
+  };
+  const BUBBLE_TARGET_IDS = Object.keys(BUBBLE_TARGETS);
+  const BUBBLE_TAG_LOOKUP = Object.fromEntries(BUBBLE_TARGET_IDS.map(id => [id.toLowerCase().replace(/[\s_-]/g,''), id]));
   let currentState = null;
   const saved = localStorage.getItem('kittenNestToken');
   if(saved) token.value = saved;
@@ -141,14 +248,54 @@ Soft breeze
     return one ? [one] : [];
   }
   function lapCloseTextOf(state){ return lapCloseListOf(state).join('\n'); }
+  function bubbleListOf(state, targetId){
+    const target = BUBBLE_TARGETS[targetId];
+    if(!target) return [];
+    const queue = state && state[target.queue];
+    if(Array.isArray(queue)) return queue.map(x => String(x || '').trim()).filter(Boolean);
+    const single = String(state && state[target.single] || '').trim();
+    if(single) return [single];
+    if(target.legacyCoffee){
+      if(Array.isArray(state && state.alexBubbles)) return state.alexBubbles.map(x => String(x || '').trim()).filter(Boolean);
+      const legacy = String(state && state.alexBubble || '').trim();
+      if(legacy) return [legacy];
+    }
+    return [];
+  }
+  function bubblePatch(targetId, raw, state){
+    const target = BUBBLE_TARGETS[targetId];
+    if(!target) return {};
+    const queue = lines(raw);
+    if(!queue.length) return {};
+    const patch = {
+      [target.single]: queue[0],
+      [target.queue]: queue,
+      [target.index]: 0,
+      [target.updatedAt]: now()
+    };
+    if(target.legacyCoffee){
+      patch.previousPublished = {
+        alexBubble: state && state.alexBubble || '',
+        alexBubbles: state && state.alexBubbles || (state && state.alexBubble ? [state.alexBubble] : []),
+        bubbleIndex: state && state.bubbleIndex || 0,
+        coffeeCornerBubble: state && state.coffeeCornerBubble || '',
+        coffeeCornerBubbles: state && state.coffeeCornerBubbles || (state && state.coffeeCornerBubble ? [state.coffeeCornerBubble] : []),
+        coffeeCornerBubbleIndex: state && state.coffeeCornerBubbleIndex || 0,
+        savedAt: now()
+      };
+      patch.alexBubble = queue[0];
+      patch.alexBubbles = queue;
+      patch.bubbleIndex = 0;
+    }
+    return patch;
+  }
 
   function normalizeTag(tag){
     const raw = String(tag || '').trim();
     const low = raw.toLowerCase().replace(/[\s_-]/g,'');
     if(low === 'windowweather') return { kind:'weather', field:'windowWeather', label:'windowWeather' };
     if(low === 'hubbynote') return { kind:'hubbyNote', field:'hubbyNote', label:'hubbyNote' };
-    if(low === 'coffeecornerbubble') return { kind:'bubble', room:'coffeeCornerBubble', label:'coffeeCornerBubble' };
-    if(low === 'coffeecornerlapclosebubble') return { kind:'lapCloseBubble', field:'coffeeCornerLapCloseBubble', label:'coffeeCornerLapCloseBubble' };
+    if(BUBBLE_TAG_LOOKUP[low]) return { kind:'bubbleTarget', targetId:BUBBLE_TAG_LOOKUP[low], label:BUBBLE_TAG_LOOKUP[low] };
     if(low === 'coffeecorner' || low === 'coffee' || low === 'cafe' || low === 'coffeecornerlapclose' || low === 'lapclosebubble' || low === 'lapclose') return { kind:'disabledTag', label:raw };
     return { kind:'disabledTag', label:raw };
   }
@@ -158,8 +305,11 @@ Soft breeze
     const base = { id: makeDraftId(), source:'package', text: raw.slice(0,5000), status:'pending', createdAt: now() };
     if(tagInfo.kind === 'weather') return { ...base, type:'weatherDraft', field:'windowWeather', targetRoom:'windowWeather' };
     if(tagInfo.kind === 'hubbyNote') return { ...base, type:'hubbyNoteDraft', field:'hubbyNote', targetRoom:'hubbyNote' };
-    if(tagInfo.kind === 'lapCloseBubble') return { ...base, type:'lapCloseBubbleDraft', field:'coffeeCornerLapCloseBubble', targetId:'coffeeCornerLapCloseBubble', targetRoom:'coffeeCornerLapClose' };
-    return { ...base, type:'bubbleDraft', targetId:'coffeeCornerBubble', targetRoom:'coffeeCornerBubble' };
+    if(tagInfo.kind === 'bubbleTarget'){
+      const target = BUBBLE_TARGETS[tagInfo.targetId];
+      return { ...base, type:target.draftType, field:target.single, targetId:tagInfo.targetId, targetRoom:target.room };
+    }
+    return null;
   }
   function parsePackage(raw){
     const src = String(raw || '').replace(/\r\n/g,'\n');
@@ -172,10 +322,7 @@ Soft breeze
     return parts.slice(0,50);
   }
   function weatherPatch(raw){ const l = lines(raw); return { windowTemp: l[0] || '', windowDesc: l[1] || '' }; }
-  function lapClosePatch(raw){
-    const q = lines(raw);
-    return { coffeeCornerLapCloseBubble: q[0] || '', coffeeCornerLapCloseBubbles: q, coffeeCornerLapCloseBubbleIndex: 0, coffeeCornerLapCloseBubbleUpdatedAt: now() };
-  }
+  function lapClosePatch(raw){ return bubblePatch('coffeeCornerLapCloseBubble', raw, currentState || {}); }
   function hubbyNotePatch(raw, state){
     const note = String(raw || '').trim().slice(0,5000);
     if(!note) return {};
@@ -204,9 +351,11 @@ Soft breeze
     setStatus('Reading...');
     try{
       const data = await readState();
-      const bubbles = data.alexBubbles || (data.alexBubble ? [data.alexBubble] : []);
-      const lapList = lapCloseListOf(data);
-      setStatus('coffeeCornerBubble: ' + bubbles.length + '\n' + bubbles.join('\n') + '\n\ncoffeeCornerLapCloseBubble: ' + lapList.length + '\n' + lapList.join('\n') + '\n\nwindowWeather:\n' + (data.windowTemp || '') + '\n' + (data.windowDesc || '') + '\n\nhubbyNote:\n' + preview(data.hubbyNote || '', 180) + '\n\nhubbyNoteArchive: ' + noteArchiveOf(data).length + ' saved page(s)\nPending drafts: ' + ((data.pendingDrafts || []).length));
+      const bubbleSummary = BUBBLE_TARGET_IDS.map(targetId => {
+        const queue = bubbleListOf(data, targetId);
+        return targetId + ': ' + queue.length + '\n' + queue.join('\n');
+      }).join('\n\n');
+      setStatus(bubbleSummary + '\n\nwindowWeather:\n' + (data.windowTemp || '') + '\n' + (data.windowDesc || '') + '\n\nhubbyNote:\n' + preview(data.hubbyNote || '', 180) + '\n\nhubbyNoteArchive: ' + noteArchiveOf(data).length + ' saved page(s)\nPending drafts: ' + ((data.pendingDrafts || []).length));
       renderDrafts(data.pendingDrafts || []);
     }catch(e){ setStatus('Failed: ' + e.message); }
   }
@@ -226,16 +375,17 @@ Soft breeze
     setResult(message + '\nAdded ' + newDrafts.length + ' draft(s).');
     setStatus('Pending drafts: ' + pendingDrafts.length);
   }
-  async function createPackageDrafts(){ setResult('Parsing package...'); try{ const drafts = parsePackage(packageText.value); if(!drafts.length){ setResult('No valid package blocks. Check tag names. Use [coffeeCornerBubble] / [coffeeCornerLapCloseBubble] / [windowWeather] / [hubbyNote].'); return; } await saveDrafts(drafts, 'Package parsed.'); } catch(e){ setResult('Failed: ' + e.message); } }
+  async function createPackageDrafts(){ setResult('Parsing package...'); try{ const drafts = parsePackage(packageText.value); if(!drafts.length){ setResult('No valid package blocks. Check the full target tag names shown above.'); return; } await saveDrafts(drafts, 'Package parsed.'); } catch(e){ setResult('Failed: ' + e.message); } }
   async function createDraft(customText){
     setResult('Creating draft...');
     try{
       const raw = String(customText || draftText.value || '').trim();
       if(!raw){ setResult('Need draft text.'); return; }
       const target = draftRoom.value || 'coffeeCornerBubble';
-      const draft = { id: makeDraftId(), source:'console', targetId: target, targetRoom: target, type: target === 'hubbyNote' ? 'hubbyNoteDraft' : target === 'coffeeCornerLapCloseBubble' ? 'lapCloseBubbleDraft' : 'bubbleDraft', text: raw.slice(0,5000), status:'pending', createdAt: now() };
+      const bubbleTarget = BUBBLE_TARGETS[target];
+      const draft = { id: makeDraftId(), source:'console', targetId: target, targetRoom: bubbleTarget ? bubbleTarget.room : target, type: target === 'hubbyNote' ? 'hubbyNoteDraft' : bubbleTarget ? bubbleTarget.draftType : 'bubbleDraft', text: raw.slice(0,5000), status:'pending', createdAt: now() };
       if(target === 'hubbyNote') draft.field = 'hubbyNote';
-      if(target === 'coffeeCornerLapCloseBubble'){ draft.field = 'coffeeCornerLapCloseBubble'; draft.targetRoom = 'coffeeCornerLapClose'; }
+      if(bubbleTarget) draft.field = bubbleTarget.single;
       await saveDrafts([draft], 'Draft created.\n' + draft.text);
     }catch(e){ setResult('Failed: ' + e.message); }
   }
@@ -246,17 +396,22 @@ Soft breeze
       const drafts = Array.isArray(state.pendingDrafts) ? state.pendingDrafts : [];
       if(!drafts.length){ setResult('No drafts to publish.'); return; }
       const ordered = drafts.slice().reverse();
-      const bubbleDrafts = ordered.filter(d => (!d.type || d.type === 'bubbleDraft') && (d.targetId === 'coffeeCornerBubble' || !d.targetId));
-      const lapCloseDrafts = ordered.filter(d => d.type === 'lapCloseBubbleDraft' || d.targetId === 'coffeeCornerLapCloseBubble');
       const weatherDrafts = ordered.filter(d => d.type === 'weatherDraft');
       const noteDrafts = ordered.filter(d => d.type === 'hubbyNoteDraft');
       const patch = { pendingDrafts: [], lastPublishedAt: now() };
       const resultLines = [];
-      if(bubbleDrafts.length){
-        const alexBubbles = lines(bubbleDrafts.map(d => d.text || '').join('\n'));
-        if(alexBubbles.length){ patch.previousPublished = { alexBubble: state.alexBubble || '', alexBubbles: state.alexBubbles || (state.alexBubble ? [state.alexBubble] : []), bubbleIndex: state.bubbleIndex || 0, savedAt: now() }; patch.alexBubble = alexBubbles[0]; patch.alexBubbles = alexBubbles; patch.bubbleIndex = 0; resultLines.push('coffeeCornerBubble: ' + alexBubbles.length); }
-      }
-      if(lapCloseDrafts.length){ const lapPatch = lapClosePatch(lapCloseDrafts[lapCloseDrafts.length - 1].text); Object.assign(patch, lapPatch); resultLines.push('coffeeCornerLapCloseBubble: ' + (lapPatch.coffeeCornerLapCloseBubbles || []).length + ' line(s)'); }
+      BUBBLE_TARGET_IDS.forEach(targetId => {
+        const targetDrafts = ordered.filter(d => d.targetId === targetId || (targetId === 'coffeeCornerBubble' && (!d.targetId && (!d.type || d.type === 'bubbleDraft'))) || (targetId === 'coffeeCornerLapCloseBubble' && d.type === 'lapCloseBubbleDraft'));
+        if(!targetDrafts.length) return;
+        const target = BUBBLE_TARGETS[targetId];
+        const raw = targetId === 'coffeeCornerBubble'
+          ? targetDrafts.map(d => d.text || '').join('\n')
+          : targetDrafts[targetDrafts.length - 1].text;
+        const targetPatch = bubblePatch(targetId, raw, state);
+        if(!Object.keys(targetPatch).length) return;
+        Object.assign(patch, targetPatch);
+        resultLines.push(targetId + ': ' + ((targetPatch[target.queue] || []).length) + ' line(s)');
+      });
       if(weatherDrafts.length){ Object.assign(patch, weatherPatch(weatherDrafts[weatherDrafts.length - 1].text)); resultLines.push('windowWeather: updated'); }
       if(noteDrafts.length){ Object.assign(patch, hubbyNotePatch(noteDrafts[noteDrafts.length - 1].text, state)); resultLines.push('hubbyNote: saved permanently'); }
       if(!resultLines.length){ setResult('Drafts are empty.'); return; }
@@ -276,10 +431,9 @@ Soft breeze
       if(!raw){ setResult('Need text.'); return; }
       let patch = {};
       if(f === 'alexBubble'){
-        const alexBubbles = lines(raw);
-        patch = { previousPublished: { alexBubble: state.alexBubble || '', alexBubbles: state.alexBubbles || (state.alexBubble ? [state.alexBubble] : []), bubbleIndex: state.bubbleIndex || 0, savedAt: now() }, alexBubble: alexBubbles[0], alexBubbles, bubbleIndex: 0 };
-      }else if(f === 'coffeeCornerLapCloseBubble'){
-        patch = lapClosePatch(raw);
+        patch = bubblePatch('coffeeCornerBubble', raw, state);
+      }else if(BUBBLE_TARGETS[f]){
+        patch = bubblePatch(f, raw, state);
       }else if(f === 'windowWeather'){
         patch = weatherPatch(raw);
       }else if(f === 'hubbyNote'){
@@ -291,7 +445,7 @@ Soft breeze
   }
   async function restoreLast(){ setResult('Restoring...'); try{ const state = currentState || await readState(); const prev = state.previousPublished; if(!prev || !(prev.alexBubbles || prev.alexBubble)){ setResult('No previous coffeeCornerBubble version.'); return; } const alexBubbles = prev.alexBubbles || (prev.alexBubble ? [prev.alexBubble] : []); await writePatch({ alexBubble: alexBubbles[0] || '', alexBubbles, bubbleIndex: prev.bubbleIndex || 0 }); setResult('Restored previous coffeeCornerBubble queue.\n' + alexBubbles.join('\n')); } catch(e){ setResult('Failed: ' + e.message); } }
   function fillExamplePackage(){
-    packageText.value = '[coffeeCornerBubble]\n早上好，小猫。\n咖啡已经热好，毯子也给你留着。\n\n[coffeeCornerLapCloseBubble]\n坐稳，小猫。\nStop wriggling in my lap.\n\n[windowWeather]\n23°C\nSoft breeze\n\n[hubbyNote]\n2026-06-16 云猫窝进展：/write 开始统一文本入口命名，咖啡角气泡使用 [coffeeCornerBubble]，坐腿气泡使用 [coffeeCornerLapCloseBubble]。';
+    packageText.value = '[coffeeCornerBubble]\n早上好，小猫。\n咖啡已经热好，毯子也给你留着。\n\n[coffeeCornerLapCloseBubble]\n坐稳，小猫。\nStop wriggling in my lap.\n\n[coffeeCornerBeachHandholdSunsetBubble]\n慢一点，小猫。海不会跑，hubby 也不会。\n\n[coffeeCornerBeachHandholdSunsetVickyBubble]\n那小猫走慢一点，但是手不松。\n\n[coffeeCornerBeachBraceletPromiseBubble]\n手给我。这个约定要扣好，不能掉。\n\n[coffeeCornerBeachBraceletPromiseVickyBubble]\n扣紧一点。这个是我们说好的。\n\n[coffeeCornerBeachStallOrderBubble]\n小猫负责点，hubby 负责端回来。\n\n[coffeeCornerBeachStallOrderVickyBubble]\n那我要这个、这个，还有那个！\n\n[windowWeather]\n23°C\nSoft breeze\n\n[hubbyNote]\n2026-08-10：海滨三幕 Alex/Vicky 六个气泡已经各自拥有独立的完整 target。';
     setResult('Example package inserted.');
   }
 

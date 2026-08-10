@@ -54,6 +54,12 @@ Verified direct publish targets include:
 
 - `coffeeCornerBubble`
 - `coffeeCornerLapCloseBubble`
+- `coffeeCornerBeachHandholdSunsetBubble`
+- `coffeeCornerBeachHandholdSunsetVickyBubble`
+- `coffeeCornerBeachBraceletPromiseBubble`
+- `coffeeCornerBeachBraceletPromiseVickyBubble`
+- `coffeeCornerBeachStallOrderBubble`
+- `coffeeCornerBeachStallOrderVickyBubble`
 
 MCP `update_text_target` reads the registry and supports all registered targetIds. Permanent archive-style targets, especially `hubbyNote`, must still be handled intentionally and should not be mixed into routine bubble test packages.
 
@@ -97,6 +103,8 @@ It should not return the full `nest_state.value` for text-target envelope publis
 
 - `coffeeCornerBubble` envelope publish writes canonical fields and legacy compatibility fields together.
 - `coffeeCornerLapCloseBubble` envelope publish writes only lap-close bubble fields.
+- Each `coffeeCornerBeach*Bubble` envelope publish writes only that scene and speaker's current, queue, index, and timestamp fields.
+- Alex and Vicky use distinct registered targets in every beach scene.
 - Full state is not returned for envelope publish responses.
 - `/api/mcp` exposes `update_text_target` for the all-window Kitten Nest App.
 - `/api/mcp` reads targetIds from `data/text-targets.v1.json`.

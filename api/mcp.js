@@ -15,7 +15,7 @@ const TOOL_NAMES = [
 const SESSION_ID = 'kitten-nest-session';
 const MCP_VERSION = '2025-06-18';
 const SERVER_NAME = 'kitten-nest-mcp';
-const SERVER_VERSION = '0.1.6-registry-targets';
+const SERVER_VERSION = '0.1.8-all-beach-speakers';
 
 function normalizeTarget(targetId, target = {}) {
   const id = String(target.targetId || targetId || '').trim();
@@ -544,4 +544,10 @@ module.exports = async function handler(req, res) {
   } catch (error) {
     return json(res, 200, rpcError(id, -32000, error.message));
   }
+};
+
+module.exports._test = {
+  buildTextTargetPatch,
+  loadTextTargets,
+  toolList
 };

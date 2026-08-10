@@ -27,7 +27,7 @@ test('migration fallback remains readable without becoming a second owner', () =
   assert.equal(resolved.sourceField, 'alexBubbles');
 });
 
-test('static beach dialogue uses its manifest fallback without inventing a registry target', () => {
+test('an intentionally static dialogue fixture can still use a manifest fallback', () => {
   const resolved = resolveTextPortState({}, {
     staticText: true,
     fallbackQueue: ['牵手优先。', '手不准松。']

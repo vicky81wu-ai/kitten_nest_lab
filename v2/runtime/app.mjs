@@ -23,7 +23,6 @@ function collectElements() {
     hotspotLayer: byId('v2-hotspot-layer'),
     textLayer: byId('v2-text-layer'),
     panelLayer: byId('v2-panel-layer'),
-    controls: byId('v2-controls'),
     sourceNotice: byId('v2-source-notice'),
     assetError: byId('v2-asset-error'),
     runtimeError: byId('v2-runtime-error')

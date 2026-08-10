@@ -66,18 +66,18 @@ test('long press dispatches once while a short release and moved finger stay sil
 
 test('ordinary hotspot pointerup still dispatches immediately', async () => {
   const actions = [];
-  const element = { dataset: { hotspotId: 'dock' }, disabled: false };
+  const element = { dataset: { hotspotId: 'panel' }, disabled: false };
   const context = {
-    manifest: { objects: { dock: { id: 'dock', action: { type: 'scene.dock', side: 'right' } } } },
+    manifest: { objects: { panel: { id: 'panel', action: { type: 'panel.open', target: 'weather' } } } },
     dispatch: async (action) => { actions.push(action); },
     reportError: assert.fail
   };
   const controller = new HotspotController(context);
   await controller.handlePointerUp(eventFor(element));
-  assert.deepEqual(actions, [{ type: 'scene.dock', side: 'right' }]);
+  assert.deepEqual(actions, [{ type: 'panel.open', target: 'weather' }]);
 });
 
-test('dock tap survives pointer release outside the invisible corner zone', async () => {
+test('image-locked navigation tap survives pointer release outside its invisible zone', async () => {
   const actions = [];
   const element = {
     dataset: { hotspotId: 'dock' },
@@ -88,7 +88,7 @@ test('dock tap survives pointer release outside the invisible corner zone', asyn
     releasePointerCapture(pointerId) { this.releases.push(pointerId); }
   };
   const context = {
-    manifest: { objects: { dock: { id: 'dock', action: { type: 'scene.dock', side: 'right' } } } },
+    manifest: { objects: { dock: { id: 'dock', action: { type: 'scene.go', target: 'coffeeCorner' } } } },
     dispatch: async (action) => { actions.push(action); },
     reportError: assert.fail
   };
@@ -101,14 +101,14 @@ test('dock tap survives pointer release outside the invisible corner zone', asyn
     clientY: 713
   });
   await controller.handlePointerUp(outside);
-  assert.deepEqual(actions, [{ type: 'scene.dock', side: 'right' }]);
+  assert.deepEqual(actions, [{ type: 'scene.go', target: 'coffeeCorner' }]);
   assert.deepEqual(element.captures, [7]);
   assert.deepEqual(element.releases, [7]);
   assert.equal(down.prevented, 1);
   assert.equal(outside.prevented, 1);
 });
 
-test('dock drag beyond the tap tolerance cancels navigation', async () => {
+test('image-locked navigation drag beyond the tap tolerance cancels navigation', async () => {
   const actions = [];
   const element = {
     dataset: { hotspotId: 'dock' },
@@ -117,7 +117,7 @@ test('dock drag beyond the tap tolerance cancels navigation', async () => {
     releasePointerCapture() {}
   };
   const context = {
-    manifest: { objects: { dock: { id: 'dock', action: { type: 'scene.dock', side: 'right' } } } },
+    manifest: { objects: { dock: { id: 'dock', action: { type: 'scene.back' } } } },
     dispatch: async (action) => { actions.push(action); },
     reportError: assert.fail
   };

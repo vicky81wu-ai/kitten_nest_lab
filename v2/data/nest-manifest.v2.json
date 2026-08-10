@@ -1,6 +1,6 @@
 {
   "schemaVersion": "nest-manifest.v2",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "status": "production",
   "promoted": true,
   "route": "/cloud",
@@ -50,7 +50,6 @@
       "scene.push",
       "scene.back",
       "scene.jumpTo",
-      "scene.dock",
       "asset.toggle",
       "text.toggleNext",
       "text.hide",
@@ -229,8 +228,6 @@
     }
   },
   "globalObjects": [
-    "system.dockLeft",
-    "system.dockRight",
     "system.localMediaLongPressHot",
     "system.localMediaPanel"
   ],
@@ -246,12 +243,9 @@
         "home.windowWeather",
         "home.weatherAdvicePanel",
         "home.hubbyNoteHot",
-        "home.hubbyNotePanel"
-      ],
-      "docks": {
-        "left": null,
-        "right": { "type": "scene.go", "target": "coffeeCorner" }
-      }
+        "home.hubbyNotePanel",
+        "home.goCoffeeCornerHot"
+      ]
     },
     "coffeeCorner": {
       "id": "coffeeCorner",
@@ -267,12 +261,9 @@
         "coffeeCorner.steam",
         "memories.panel",
         "gameMenu.panel",
-        "gomoku.panel"
+        "gomoku.panel",
+        "coffeeCorner.backHomeHot"
       ],
-      "docks": {
-        "left": { "type": "scene.go", "target": "home" },
-        "right": null
-      },
       "warmAssetKeys": ["coffeeCorner.beachHandholdSunset"]
     },
     "lapClose": {
@@ -281,12 +272,9 @@
       "assetKey": "coffeeCorner.lapClose",
       "objects": [
         "lapClose.bubble",
-        "lapClose.bubbleTrigger"
+        "lapClose.bubbleTrigger",
+        "lapClose.backCoffeeCornerHot"
       ],
-      "docks": {
-        "left": { "type": "scene.back" },
-        "right": null
-      },
       "blocksParentInteractive": true
     },
     "coffeeCornerBeachHandholdSunset": {
@@ -303,10 +291,6 @@
         "coffeeCornerBeachHandholdNextHot",
         "coffeeCornerBeachHandholdBackHot"
       ],
-      "docks": {
-        "left": { "type": "scene.back" },
-        "right": { "type": "scene.push", "target": "coffeeCornerBeachBraceletPromise" }
-      },
       "warmAssetKeys": ["coffeeCorner.beachBraceletPromise"],
       "blocksParentInteractive": true
     },
@@ -324,10 +308,6 @@
         "coffeeCornerBeachBraceletNextHot",
         "coffeeCornerBeachBraceletBackHot"
       ],
-      "docks": {
-        "left": { "type": "scene.back" },
-        "right": { "type": "scene.push", "target": "coffeeCornerBeachStallOrder" }
-      },
       "warmAssetKeys": ["coffeeCorner.beachStallOrder"],
       "blocksParentInteractive": true
     },
@@ -345,38 +325,10 @@
         "coffeeCornerBeachStallOrderNextHot",
         "coffeeCornerBeachStallOrderBackHot"
       ],
-      "docks": {
-        "left": { "type": "scene.back" },
-        "right": { "type": "scene.jumpTo", "target": "coffeeCorner" }
-      },
       "blocksParentInteractive": true
     }
   },
   "objects": {
-    "system.dockLeft": {
-      "id": "system.dockLeft",
-      "kind": "hotspot",
-      "ownerScene": "*",
-      "controller": "hotspot",
-      "selector": "#v2-dock-left",
-      "mount": "existing",
-      "action": { "type": "scene.dock", "side": "left" },
-      "exclusive": true,
-      "runtimeStatus": "active",
-      "versionStatus": "canonicalV2Preview"
-    },
-    "system.dockRight": {
-      "id": "system.dockRight",
-      "kind": "hotspot",
-      "ownerScene": "*",
-      "controller": "hotspot",
-      "selector": "#v2-dock-right",
-      "mount": "existing",
-      "action": { "type": "scene.dock", "side": "right" },
-      "exclusive": true,
-      "runtimeStatus": "active",
-      "versionStatus": "canonicalV2Preview"
-    },
     "system.localMediaLongPressHot": {
       "id": "system.localMediaLongPressHot",
       "kind": "hotspot",
@@ -559,6 +511,21 @@
       "versionStatus": "canonicalV2Preview",
       "protected": true
     },
+    "home.goCoffeeCornerHot": {
+      "id": "home.goCoffeeCornerHot",
+      "kind": "hotspot",
+      "ownerScene": "home",
+      "controller": "hotspot",
+      "selector": "[data-object-id=\"home.goCoffeeCornerHot\"]",
+      "label": "进入咖啡角",
+      "action": { "type": "scene.go", "target": "coffeeCorner" },
+      "coordinate": { "anchor": "center", "x": 0.86, "y": 0.9, "width": 0.28, "height": 0.2 },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview",
+      "protected": true
+    },
     "coffeeCorner.bubble": {
       "id": "coffeeCorner.bubble",
       "kind": "textPort",
@@ -665,6 +632,21 @@
       "coordinateStatus": "baseImageLocked",
       "runtimeStatus": "active",
       "versionStatus": "canonicalV2Preview"
+    },
+    "coffeeCorner.backHomeHot": {
+      "id": "coffeeCorner.backHomeHot",
+      "kind": "hotspot",
+      "ownerScene": "coffeeCorner",
+      "controller": "hotspot",
+      "selector": "[data-object-id=\"coffeeCorner.backHomeHot\"]",
+      "label": "返回主页",
+      "action": { "type": "scene.go", "target": "home" },
+      "coordinate": { "anchor": "center", "x": 0.14, "y": 0.9, "width": 0.28, "height": 0.2 },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview",
+      "protected": true
     },
     "memories.panel": {
       "id": "memories.panel",
@@ -792,6 +774,21 @@
       "runtimeStatus": "preview-unverified",
       "versionStatus": "candidateV2Preview"
     },
+    "lapClose.backCoffeeCornerHot": {
+      "id": "lapClose.backCoffeeCornerHot",
+      "kind": "hotspot",
+      "ownerScene": "lapClose",
+      "controller": "hotspot",
+      "selector": "[data-object-id=\"lapClose.backCoffeeCornerHot\"]",
+      "label": "返回咖啡角",
+      "action": { "type": "scene.back" },
+      "coordinate": { "anchor": "center", "x": 0.14, "y": 0.9, "width": 0.28, "height": 0.2 },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalV2Preview",
+      "protected": true
+    },
     "coffeeCornerBeachHandholdBubble": {
       "id": "coffeeCornerBeachHandholdBubble",
       "kind": "textPort",
@@ -800,7 +797,13 @@
       "selector": "[data-object-id=\"coffeeCornerBeachHandholdBubble\"]",
       "label": "Alex 海边牵手气泡",
       "variant": "alex",
-      "staticText": true,
+      "targetId": "coffeeCornerBeachHandholdSunsetBubble",
+      "readFields": {
+        "queue": ["coffeeCornerBeachHandholdSunsetBubbles"],
+        "single": ["coffeeCornerBeachHandholdSunsetBubble"],
+        "index": ["coffeeCornerBeachHandholdSunsetBubbleIndex"]
+      },
+      "allowDegradedFallback": true,
       "initiallyVisible": false,
       "fallbackQueue": [
         "慢点，小猫，别一看到海就自动加速。",
@@ -823,7 +826,13 @@
       "selector": "[data-object-id=\"coffeeCornerBeachHandholdVickyBubble\"]",
       "label": "Vicky 海边牵手气泡",
       "variant": "vicky",
-      "staticText": true,
+      "targetId": "coffeeCornerBeachHandholdSunsetVickyBubble",
+      "readFields": {
+        "queue": ["coffeeCornerBeachHandholdSunsetVickyBubbles"],
+        "single": ["coffeeCornerBeachHandholdSunsetVickyBubble"],
+        "index": ["coffeeCornerBeachHandholdSunsetVickyBubbleIndex"]
+      },
+      "allowDegradedFallback": true,
       "initiallyVisible": false,
       "fallbackQueue": [
         "可是真的很好看欸。",
@@ -902,7 +911,13 @@
       "selector": "[data-object-id=\"coffeeCornerBeachBraceletBubble\"]",
       "label": "Alex 海边手链气泡",
       "variant": "alex",
-      "staticText": true,
+      "targetId": "coffeeCornerBeachBraceletPromiseBubble",
+      "readFields": {
+        "queue": ["coffeeCornerBeachBraceletPromiseBubbles"],
+        "single": ["coffeeCornerBeachBraceletPromiseBubble"],
+        "index": ["coffeeCornerBeachBraceletPromiseBubbleIndex"]
+      },
+      "allowDegradedFallback": true,
       "initiallyVisible": false,
       "fallbackQueue": [
         "手抬一下，小猫。",
@@ -925,7 +940,13 @@
       "selector": "[data-object-id=\"coffeeCornerBeachBraceletVickyBubble\"]",
       "label": "Vicky 海边手链气泡",
       "variant": "vicky",
-      "staticText": true,
+      "targetId": "coffeeCornerBeachBraceletPromiseVickyBubble",
+      "readFields": {
+        "queue": ["coffeeCornerBeachBraceletPromiseVickyBubbles"],
+        "single": ["coffeeCornerBeachBraceletPromiseVickyBubble"],
+        "index": ["coffeeCornerBeachBraceletPromiseVickyBubbleIndex"]
+      },
+      "allowDegradedFallback": true,
       "initiallyVisible": false,
       "fallbackQueue": [
         "你这也叫验收嘛。",
@@ -1004,7 +1025,13 @@
       "selector": "[data-object-id=\"coffeeCornerBeachStallOrderBubble\"]",
       "label": "Alex 海边点单气泡",
       "variant": "alex",
-      "staticText": true,
+      "targetId": "coffeeCornerBeachStallOrderBubble",
+      "readFields": {
+        "queue": ["coffeeCornerBeachStallOrderBubbles"],
+        "single": ["coffeeCornerBeachStallOrderBubble"],
+        "index": ["coffeeCornerBeachStallOrderBubbleIndex"]
+      },
+      "allowDegradedFallback": true,
       "initiallyVisible": false,
       "fallbackQueue": [
         "先买吃的，再继续看海。",
@@ -1027,7 +1054,13 @@
       "selector": "[data-object-id=\"coffeeCornerBeachStallOrderVickyBubble\"]",
       "label": "Vicky 海边点单气泡",
       "variant": "vicky",
-      "staticText": true,
+      "targetId": "coffeeCornerBeachStallOrderVickyBubble",
+      "readFields": {
+        "queue": ["coffeeCornerBeachStallOrderVickyBubbles"],
+        "single": ["coffeeCornerBeachStallOrderVickyBubble"],
+        "index": ["coffeeCornerBeachStallOrderVickyBubbleIndex"]
+      },
+      "allowDegradedFallback": true,
       "initiallyVisible": false,
       "fallbackQueue": [
         "那我要这个，还有那个。",

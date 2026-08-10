@@ -1,7 +1,7 @@
 # Kitten Nest v2 Status
 
-Updated: 2026-08-09
-Status: promoted to production `/cloud`; deployment and read-only smoke check passed
+Updated: 2026-08-10
+Status: production `/cloud`; image-locked navigation and six beach speaker targets prepared on an isolated branch
 
 ## Production route
 
@@ -12,9 +12,10 @@ isolated promotion source: b1867dcce2ec31ce65c2d3f27dc894fbbf874fb0
 production route: /cloud -> /v2/index.html
 direct compatibility route: /v2/index.html
 legacy rollback route: /cloud-coords -> /api/app-coords
-live nest_state: unchanged
-/api/state and /api/set-state implementations: unchanged
-/write: unchanged
+live nest_state: unchanged until an explicit target publish
+/api/state: unchanged
+/api/set-state: registry-scoped beach bubble envelope support added
+/write: six beach speaker tags added to the existing package/draft workflow
 ```
 
 ## First vertical slice
@@ -134,6 +135,25 @@ detached Image warmers: zero
 ```
 
 Home day, home night, and coffeeCorner delivery variants are each below 300 KB. The public Storage objects remain canonical recovery sources and were not mutated. Until the first image is ready, the shell shows a small passive `猫窝醒来中…` status instead of an unexplained maroon wait.
+
+## Image-world navigation and beach text targets 0.3.2
+
+The former stage-level lower-corner docks have been retired. Home Go, coffeeCorner Back, lapClose Back, and all beach Back/Push routes are transparent scene-owned Hotspot objects projected through the same base-image coordinate system as every other authored interaction. On a panorama they move with the art instead of staying glued to the phone viewport. Pointer capture and the 28 px drift tolerance now apply to every `scene.go`, `scene.push`, `scene.back`, and `scene.jumpTo` hotspot.
+
+Viewport-fixed navigation is reserved for a future, separately named rescue layer. It is not an active second route owner.
+
+The three established beach scenes now each own two registered bubble targets, one for Alex and one for Vicky:
+
+```text
+coffeeCornerBeachHandholdSunsetBubble
+coffeeCornerBeachHandholdSunsetVickyBubble
+coffeeCornerBeachBraceletPromiseBubble
+coffeeCornerBeachBraceletPromiseVickyBubble
+coffeeCornerBeachStallOrderBubble
+coffeeCornerBeachStallOrderVickyBubble
+```
+
+Each target has its own current, queue, index, and timestamp fields. Every port uses its existing approved scene copy as a degraded/no-state fallback. `/api/mcp`, the `/api/set-state` envelope, `/write`, the tag registry, and the runtime manifest all read the same exact target ids. No Supabase table, policy, bucket, or Storage object is changed by registration.
 
 ## State of external dependencies
 
@@ -257,7 +277,7 @@ Run:
 npm run check:v2
 ```
 
-This currently runs 78 checks covering controller contracts, paired preview/production route metadata, one-manifest ownership, registered or explicitly static text ports, selector exclusivity, child isolation, portrait and panorama navigation, approved beach order, failed-asset rollback, full-size optimized static WebP delivery with canonical Storage fallback, fetch/Blob sequential warming without detached image elements, single-consumer warm requests, stalled-warm cancellation, the fixed full-screen `100lvh` PWA canvas, state readiness beside visual bootstrap, projection math, panorama bubble reveal, text mutation layout invalidation, fallback refresh serialization, compact weather presentation, invisible drift-tolerant corner docks, scoped iOS-safe long-press dispatch, exact three-room/six-photo local write allowlisting, device-local room-source priority, weather state/advice, time-of-day and manual asset resolution, connected stage-image loading, loading-veil presence, bounded best-effort image decode behavior, Gomoku legality/wins/undo and all three AI difficulty paths, absent/unsupported/existing legacy-photo database behavior, notebook normalization, save/deduplication, favorite, soft delete, request allowlisting, Nest-key failure handling, iPhone home-screen metadata, dangling scene/text action targets, coordinate ownership, supported effect types, and the absence of product-facing inspector/debug controls.
+This currently runs 81 checks covering controller contracts, paired preview/production route metadata, one-manifest ownership, registered text ports, selector exclusivity, child isolation, portrait and panorama navigation, image-locked transparent Go/Back/Push routes, approved beach order, six isolated beach speaker target envelopes, writer/MCP registry agreement, failed-asset rollback, full-size optimized static WebP delivery with canonical Storage fallback, fetch/Blob sequential warming without detached image elements, single-consumer warm requests, stalled-warm cancellation, the fixed full-screen `100lvh` PWA canvas, state readiness beside visual bootstrap, projection math, panorama bubble reveal, text mutation layout invalidation, fallback refresh serialization, compact weather presentation, drift-tolerant navigation, scoped iOS-safe long-press dispatch, exact three-room/six-photo local write allowlisting, device-local room-source priority, weather state/advice, time-of-day and manual asset resolution, connected stage-image loading, loading-veil presence, bounded best-effort image decode behavior, Gomoku legality/wins/undo and all three AI difficulty paths, absent/unsupported/existing legacy-photo database behavior, notebook normalization, save/deduplication, favorite, soft delete, request allowlisting, Nest-key failure handling, iPhone home-screen metadata, dangling scene/text action targets, coordinate ownership, supported effect types, and the absence of product-facing inspector/debug controls.
 
 The local 393 × 852 mobile-browser pass uses an in-memory fake `/api/set-state`; it never contacts the real state project. It exercised new page -> save -> current page -> archive readback -> favorite -> unfavorite -> delete -> trash, and inspected all four requests. Every request used the QA-only token and only the six registered notebook fields. The same run then completed moon/weather, coffeeCorner, a seeded six-slot read-only memories carousel, Gomoku, all three beach scenes and dialogue, lapClose, and the final home return with zero console, page, or request errors.
 
