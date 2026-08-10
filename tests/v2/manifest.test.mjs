@@ -63,6 +63,16 @@ test('home restorations and the approved beach chain stay explicit in one manife
     'coffeeCorner.beachBraceletPromise',
     'coffeeCorner.beachStallOrder'
   ]);
+  assert.deepEqual(beachIds.map((id) => manifest.objects[manifest.scenes[id].objects[0]].targetId), [
+    'coffeeCornerBeachHandholdSunsetBubble',
+    'coffeeCornerBeachBraceletPromiseBubble',
+    'coffeeCornerBeachStallOrderBubble'
+  ]);
+  assert.deepEqual(beachIds.map((id) => manifest.objects[manifest.scenes[id].objects[1]].targetId), [
+    'coffeeCornerBeachHandholdSunsetVickyBubble',
+    'coffeeCornerBeachBraceletPromiseVickyBubble',
+    'coffeeCornerBeachStallOrderVickyBubble'
+  ]);
   assert.equal(manifest.objects.coffeeCornerBeachBraceletNextHot.coordinate.x, 0.8816);
 });
 
@@ -80,16 +90,29 @@ test('the v2 entry is ready for iPhone home-screen mode', async () => {
   assert.match(html, /name="apple-mobile-web-app-title" content="Kitten Nest"/);
 });
 
-test('room navigation is invisible and stays in the lower corner hit zones', async () => {
+test('room navigation is invisible and locked to the base-image lower corners', async () => {
+  const manifest = await readJson('../../v2/data/nest-manifest.v2.json');
   const html = await readFile(new URL('../../v2/index.html', import.meta.url), 'utf8');
   const css = await readFile(new URL('../../v2/styles/nest-v2.css', import.meta.url), 'utf8');
-  assert.match(html, /id="v2-dock-left"[^>]*><\/button>/);
-  assert.match(html, /id="v2-dock-right"[^>]*><\/button>/);
+  assert.doesNotMatch(html, /id="v2-dock-(?:left|right)"/);
+  assert.doesNotMatch(css, /\.v2-controls\s*\{/);
+  assert.equal(manifest.globalObjects.some((id) => id.startsWith('system.dock')), false);
+  const routeIds = [
+    'home.goCoffeeCornerHot',
+    'coffeeCorner.backHomeHot',
+    'lapClose.backCoffeeCornerHot',
+    'coffeeCornerBeachHandholdBackHot',
+    'coffeeCornerBeachBraceletBackHot',
+    'coffeeCornerBeachStallOrderBackHot'
+  ];
+  routeIds.forEach((id) => {
+    const object = manifest.objects[id];
+    assert.equal(object.kind, 'hotspot');
+    assert.equal(object.coordinateStatus, 'baseImageLocked');
+    assert.equal(object.mount, undefined);
+    assert.match(object.selector, /^\[data-object-id=/);
+  });
   assert.doesNotMatch(html, />[‹›]<\/button>/);
-  assert.match(css, /\.v2-controls\s*\{[^}]*bottom:\s*0;[^}]*height:\s*max\(22%,\s*160px\)/s);
-  assert.match(css, /\.v2-control\s*\{[^}]*width:\s*min\(34vw,\s*180px\);[^}]*border:\s*0;[^}]*background:\s*transparent;[^}]*color:\s*transparent;/s);
-  assert.match(css, /#v2-dock-left\s*\{[^}]*grid-column:\s*1;[^}]*grid-row:\s*1;/s);
-  assert.match(css, /#v2-dock-right\s*\{[^}]*grid-column:\s*2;[^}]*grid-row:\s*1;/s);
 });
 
 test('weather advice is a compact floating card instead of the generic bottom sheet', async () => {
@@ -134,13 +157,13 @@ test('manifest validation rejects dangling hotspots and unsupported effects', as
   delete manifest.objects['home.moonLampHot'].coordinate;
   manifest.objects['home.sparkles'].effect.type = 'mysteryDust';
   manifest.objects['system.localMediaLongPressHot'].longPressMs = 100;
-  manifest.scenes.home.docks.right.target = 'missingRoom';
+  manifest.objects['home.goCoffeeCornerHot'].action.target = 'missingRoom';
   const result = validateManifest(manifest, textTargets);
   assert.equal(result.ok, false);
   assert.match(result.errors.join('\n'), /coffeeCorner\.beachEnterHot navigates to unknown scene missingBeach/);
   assert.match(result.errors.join('\n'), /home\.moonLampHot requires a manifest coordinate/);
   assert.match(result.errors.join('\n'), /home\.sparkles uses unsupported type mysteryDust/);
-  assert.match(result.errors.join('\n'), /Scene home dock navigates to unknown scene missingRoom/);
+  assert.match(result.errors.join('\n'), /home\.goCoffeeCornerHot navigates to unknown scene missingRoom/);
   assert.match(result.errors.join('\n'), /requires a 500-3000ms delay/);
 });
 

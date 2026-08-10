@@ -1,5 +1,5 @@
 {
-  "version": "1.0.2",
+  "version": "1.1.0",
   "status": "active-routing-registry",
   "purpose": "Machine-readable registry for nest console tag routing and future writable scene objects.",
   "coreRule": "No tag, no text route. One tag, one destination family. Every writable object must have a tag registry entry before it is connected to the nest console.",
@@ -93,6 +93,132 @@
       ],
       "notes": "Canonical tag includes parent scene, child scene, and surface type. Existing console tag [coffeeCornerLapClose] remains as backward-compatible alias. Generic [lapCloseBubble] is deprecated because other scenes may later have their own lapClose bubble."
     },
+    "coffeeCornerBeachHandholdSunsetBubble": {
+      "tag": "[coffeeCornerBeachHandholdSunsetBubble]",
+      "status": "active",
+      "destinationFamily": "coffeeCorner.beachHandholdSunset.alexBubble",
+      "ownerScene": "coffeeCornerBeachHandholdSunset",
+      "parentScene": "coffeeCorner",
+      "objectId": "coffeeCornerBeachHandholdBubble",
+      "writeSurface": "coffeeCorner beach handhold sunset Alex bubble / 海滨牵手暮色气泡",
+      "surfaceType": "Bubble",
+      "aliases": [],
+      "useFor": [
+        "Alex rotating speech in the first beach scene",
+        "海滨牵手暮色图的 Alex 气泡"
+      ],
+      "mustNotAffect": [
+        "coffeeCornerBeachHandholdVickyBubble",
+        "coffeeCornerBeachBraceletBubble",
+        "coffeeCornerBeachStallOrderBubble"
+      ],
+      "notes": "The canonical tag reuses the established scene id and appends the surface type. Alex and Vicky have separate writable targets."
+    },
+    "coffeeCornerBeachHandholdSunsetVickyBubble": {
+      "tag": "[coffeeCornerBeachHandholdSunsetVickyBubble]",
+      "status": "active",
+      "destinationFamily": "coffeeCorner.beachHandholdSunset.vickyBubble",
+      "ownerScene": "coffeeCornerBeachHandholdSunset",
+      "parentScene": "coffeeCorner",
+      "objectId": "coffeeCornerBeachHandholdVickyBubble",
+      "writeSurface": "coffeeCorner beach handhold sunset Vicky bubble / 海滨牵手暮色 Vicky 气泡",
+      "surfaceType": "Bubble",
+      "aliases": [],
+      "useFor": [
+        "Vicky rotating speech in the first beach scene",
+        "海滨牵手暮色图的 Vicky 气泡"
+      ],
+      "mustNotAffect": [
+        "coffeeCornerBeachHandholdBubble",
+        "coffeeCornerBeachBraceletVickyBubble",
+        "coffeeCornerBeachStallOrderVickyBubble"
+      ],
+      "notes": "Vicky owns a separate scene-scoped channel so publishing either speaker cannot overwrite the other."
+    },
+    "coffeeCornerBeachBraceletPromiseBubble": {
+      "tag": "[coffeeCornerBeachBraceletPromiseBubble]",
+      "status": "active",
+      "destinationFamily": "coffeeCorner.beachBraceletPromise.alexBubble",
+      "ownerScene": "coffeeCornerBeachBraceletPromise",
+      "parentScene": "coffeeCornerBeachHandholdSunset",
+      "objectId": "coffeeCornerBeachBraceletBubble",
+      "writeSurface": "coffeeCorner beach bracelet promise Alex bubble / 海滨手链约定气泡",
+      "surfaceType": "Bubble",
+      "aliases": [],
+      "useFor": [
+        "Alex rotating speech in the second beach scene",
+        "海滨手链约定图的 Alex 气泡"
+      ],
+      "mustNotAffect": [
+        "coffeeCornerBeachBraceletVickyBubble",
+        "coffeeCornerBeachHandholdBubble",
+        "coffeeCornerBeachStallOrderBubble"
+      ],
+      "notes": "The canonical tag reuses the established scene id and appends the surface type. Alex and Vicky have separate writable targets."
+    },
+    "coffeeCornerBeachBraceletPromiseVickyBubble": {
+      "tag": "[coffeeCornerBeachBraceletPromiseVickyBubble]",
+      "status": "active",
+      "destinationFamily": "coffeeCorner.beachBraceletPromise.vickyBubble",
+      "ownerScene": "coffeeCornerBeachBraceletPromise",
+      "parentScene": "coffeeCornerBeachHandholdSunset",
+      "objectId": "coffeeCornerBeachBraceletVickyBubble",
+      "writeSurface": "coffeeCorner beach bracelet promise Vicky bubble / 海滨手链约定 Vicky 气泡",
+      "surfaceType": "Bubble",
+      "aliases": [],
+      "useFor": [
+        "Vicky rotating speech in the second beach scene",
+        "海滨手链约定图的 Vicky 气泡"
+      ],
+      "mustNotAffect": [
+        "coffeeCornerBeachBraceletBubble",
+        "coffeeCornerBeachHandholdVickyBubble",
+        "coffeeCornerBeachStallOrderVickyBubble"
+      ],
+      "notes": "Vicky owns a separate scene-scoped channel so publishing either speaker cannot overwrite the other."
+    },
+    "coffeeCornerBeachStallOrderBubble": {
+      "tag": "[coffeeCornerBeachStallOrderBubble]",
+      "status": "active",
+      "destinationFamily": "coffeeCorner.beachStallOrder.alexBubble",
+      "ownerScene": "coffeeCornerBeachStallOrder",
+      "parentScene": "coffeeCornerBeachBraceletPromise",
+      "objectId": "coffeeCornerBeachStallOrderBubble",
+      "writeSurface": "coffeeCorner beach stall order Alex bubble / 海滨小摊点单气泡",
+      "surfaceType": "Bubble",
+      "aliases": [],
+      "useFor": [
+        "Alex rotating speech in the third beach scene",
+        "海滨小摊点单图的 Alex 气泡"
+      ],
+      "mustNotAffect": [
+        "coffeeCornerBeachStallOrderVickyBubble",
+        "coffeeCornerBeachHandholdBubble",
+        "coffeeCornerBeachBraceletBubble"
+      ],
+      "notes": "The canonical tag reuses the established scene id and appends the surface type. Alex and Vicky have separate writable targets."
+    },
+    "coffeeCornerBeachStallOrderVickyBubble": {
+      "tag": "[coffeeCornerBeachStallOrderVickyBubble]",
+      "status": "active",
+      "destinationFamily": "coffeeCorner.beachStallOrder.vickyBubble",
+      "ownerScene": "coffeeCornerBeachStallOrder",
+      "parentScene": "coffeeCornerBeachBraceletPromise",
+      "objectId": "coffeeCornerBeachStallOrderVickyBubble",
+      "writeSurface": "coffeeCorner beach stall order Vicky bubble / 海滨小摊点单 Vicky 气泡",
+      "surfaceType": "Bubble",
+      "aliases": [],
+      "useFor": [
+        "Vicky rotating speech in the third beach scene",
+        "海滨小摊点单图的 Vicky 气泡"
+      ],
+      "mustNotAffect": [
+        "coffeeCornerBeachStallOrderBubble",
+        "coffeeCornerBeachHandholdVickyBubble",
+        "coffeeCornerBeachBraceletVickyBubble"
+      ],
+      "notes": "Vicky owns a separate scene-scoped channel so publishing either speaker cannot overwrite the other."
+    },
     "moodNote": {
       "tag": "[moodNote]",
       "status": "reserved-inactive",
@@ -119,7 +245,13 @@
       "[hubbyNote]",
       "[coffeeCorner]",
       "[windowWeather]",
-      "[coffeeCornerLapCloseBubble]"
+      "[coffeeCornerLapCloseBubble]",
+      "[coffeeCornerBeachHandholdSunsetBubble]",
+      "[coffeeCornerBeachHandholdSunsetVickyBubble]",
+      "[coffeeCornerBeachBraceletPromiseBubble]",
+      "[coffeeCornerBeachBraceletPromiseVickyBubble]",
+      "[coffeeCornerBeachStallOrderBubble]",
+      "[coffeeCornerBeachStallOrderVickyBubble]"
     ],
     "aliasAcceptedForLapCloseBubble": "[coffeeCornerLapClose]",
     "deprecatedDoNotUse": [

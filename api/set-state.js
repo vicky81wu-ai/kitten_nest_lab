@@ -1,5 +1,16 @@
 const textTargetRegistry = require('../data/text-targets.v1.json');
 
+const PUBLISHABLE_TEXT_TARGET_IDS = new Set([
+  'coffeeCornerBubble',
+  'coffeeCornerLapCloseBubble',
+  'coffeeCornerBeachHandholdSunsetBubble',
+  'coffeeCornerBeachHandholdSunsetVickyBubble',
+  'coffeeCornerBeachBraceletPromiseBubble',
+  'coffeeCornerBeachBraceletPromiseVickyBubble',
+  'coffeeCornerBeachStallOrderBubble',
+  'coffeeCornerBeachStallOrderVickyBubble'
+]);
+
 function cleanLines(value) {
   return String(value || '').split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
 }
@@ -37,7 +48,7 @@ function getTextTarget(targetId) {
 }
 
 function canPublishTextTarget(targetId) {
-  return ['coffeeCornerBubble', 'coffeeCornerLapCloseBubble'].includes(String(targetId || '').trim());
+  return PUBLISHABLE_TEXT_TARGET_IDS.has(String(targetId || '').trim());
 }
 
 function parseTextTargetEnvelope(rawPatch) {
@@ -91,6 +102,18 @@ function buildLapCloseBubblePatch(text) {
     coffeeCornerLapCloseBubbles: list,
     coffeeCornerLapCloseBubbleIndex: 0,
     coffeeCornerLapCloseBubbleUpdatedAt: now()
+  };
+}
+
+function buildBubbleQueuePatch(target, text) {
+  const list = cleanTargetLines(text, target.maxLines || 30);
+  if (!list.length) throw new Error('Text is empty.');
+
+  return {
+    [target.currentField]: list[0] || '',
+    [target.field]: list,
+    [target.indexField]: 0,
+    [target.updatedAtField]: now()
   };
 }
 
@@ -153,6 +176,7 @@ function buildTextTargetPatch(target, text, state, mode) {
 
   if (target.targetId === 'coffeeCornerBubble') return buildCoffeeCornerBubblePatch(text, state || {});
   if (target.targetId === 'coffeeCornerLapCloseBubble') return buildLapCloseBubblePatch(text);
+  if (target.type === 'bubbleQueue') return buildBubbleQueuePatch(target, text);
   if (target.targetId === 'windowWeather') return buildWeatherTextPatch(text);
   if (target.targetId === 'hubbyNote') return buildHubbyNotePatch(text, state || {});
   if (target.type === 'single') return buildSingleTextPatch(target, text);
@@ -370,7 +394,7 @@ module.exports = async function handler(req, res) {
       if (!canPublishTextTarget(textTargetEnvelope.request.targetId)) {
         return res.status(400).json({
           ok: false,
-          error: 'Text target envelope publish is currently enabled only for coffeeCornerBubble and coffeeCornerLapCloseBubble. Use dryRun:true for other targets.'
+          error: `Text target envelope publish is not enabled for ${textTargetEnvelope.request.targetId}. Use dryRun:true for non-publishable targets.`
         });
       }
 
@@ -399,4 +423,10 @@ module.exports = async function handler(req, res) {
     if (error.result) return res.status(500).json(error.result);
     return res.status(400).json({ ok: false, error: error.message });
   }
+};
+
+module.exports._test = {
+  buildTextTargetEnvelope,
+  canPublishTextTarget,
+  getTextTarget
 };

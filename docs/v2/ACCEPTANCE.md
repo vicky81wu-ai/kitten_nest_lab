@@ -12,7 +12,7 @@ The direct `/v2/index.html` route remains available during the rollback window.
 
 ## Post-promotion iPhone PWA gate
 
-For manifest `0.3.1`, close the installed app completely before the first check so browser cache cannot hide the cold path:
+For manifest `0.3.2`, close the installed app completely before the first check so browser cache cannot hide the cold path:
 
 1. Open the home-screen nest once. The small `猫窝醒来中…` status may appear briefly, but the room must replace it without a 20–30 second unexplained maroon screen.
 2. Confirm the room image reaches the physical bottom of the iPhone canvas. The white Home Indicator may remain system-owned, but there must be no black strip behind or above it.
@@ -29,8 +29,8 @@ These three checks are the only outstanding production gate for the hardening pa
 5. Tap the photo wall. If this origin already has old photo slots, move through filled and empty slots; otherwise confirm the memory-card fallback appears without a permission prompt.
 6. Tap the game console, open Gomoku, make one move, undo the round, change difficulty, and return to the same game menu.
 7. Tap the top-row beach photo to enter the first seaside panorama.
-8. Drag the panorama horizontally; the invisible lower-corner navigation hit zones must stay put while the scene moves.
-9. In each beach scene, tap Alex and Vicky to show/hide/advance their separate dialogue.
+8. Drag the panorama horizontally; the invisible Back/Push zones must move with the base image and remain at their authored image coordinates.
+9. In each beach scene, tap Alex and Vicky to show/hide/advance their separate dialogue. Publishing any one of the six registered speaker targets must change only that speaker in that scene.
 10. Advance handhold → bracelet → stall, then walk the left/back path to coffeeCorner.
 11. Confirm the previously accepted 19.8, panels, lapClose, and home back path still work.
 12. Confirm there are no visible navigation arrows, center `V2` button, or engineering-source line; `PREVIEW COPY` appears only on a degraded-state run.
@@ -50,7 +50,7 @@ game menu -> Gomoku
 225-cell board -> kitten move -> Alex reply -> whole-round undo
 Normal -> Soft reset -> same-panel back -> close
 coffeeCorner -> first beach panorama
-horizontal pan and fixed controls
+horizontal pan and image-locked transparent navigation
 Alex/Vicky dialogue reveal with full viewport visibility
 handhold -> bracelet -> stall
 stall -> bracelet -> handhold -> coffeeCorner
@@ -102,7 +102,7 @@ compact home weather card
 upper-left device-local setup gesture and labeled room/photo slots
 transparent Home-right dock on the first intended tap
 coffeeCorner, lapClose, and complete return route
-all three beach panoramas and their transparent back/forward docks
+all three beach panoramas and their transparent image-locked back/forward hotspots
 optimized beach delivery without an asset timeout
 ```
 

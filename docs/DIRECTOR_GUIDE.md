@@ -1,6 +1,6 @@
 # Kitten Nest Director Guide
 
-Updated: 2026-06-13
+Updated: 2026-08-10
 
 This guide is for Alex-as-director. It explains what important scenes and objects mean and how nest text should be adapted from the current chat. It does not change runtime code.
 
@@ -35,16 +35,29 @@ Each bracketed block should publish to its own home. Do not rely on visual scene
 Current supported tags:
 
 ```text
-[coffeeCorner]
+[coffeeCornerBubble]
 ```
 
-Publishes normal coffeeCorner bubble lines to `coffeeCorner.bubbles` / `alexBubbles`.
+Publishes normal coffeeCorner bubble lines.
 
 ```text
-[coffeeCornerLapClose]
+[coffeeCornerLapCloseBubble]
 ```
 
-Publishes one sitting-on-lap close-up line to `coffeeCorner.lapCloseBubble` / `coffeeCornerLapCloseBubble`. This is the only supported tag for the lap-close upper-left bubble. Do not use `[lapClose]`, `[lapBubble]`, or other short aliases; they are ambiguous if another scene later has its own lap-close variant.
+Publishes the sitting-on-lap close-up bubble queue. This is the only supported tag for that bubble. Do not use `[lapClose]`, `[lapBubble]`, or other short aliases; they are ambiguous if another scene later has its own lap-close variant.
+
+The beach route has six exact scene-and-speaker tags:
+
+```text
+[coffeeCornerBeachHandholdSunsetBubble]
+[coffeeCornerBeachHandholdSunsetVickyBubble]
+[coffeeCornerBeachBraceletPromiseBubble]
+[coffeeCornerBeachBraceletPromiseVickyBubble]
+[coffeeCornerBeachStallOrderBubble]
+[coffeeCornerBeachStallOrderVickyBubble]
+```
+
+The tag without `Vicky` writes Alex; the paired `VickyBubble` tag writes Vicky. Each queue is isolated from the other five.
 
 ```text
 [windowWeather]
@@ -60,11 +73,11 @@ Publishes one permanent note to the home-scoped powder notebook panel.
 
 Default rule:
 
-If a package starts with text before any tag, `/write` treats it as `[coffeeCorner]`. Do not use an untagged block for lap-close text.
+If a package starts with text before any tag, `/write` treats it as `[coffeeCornerBubble]`. Do not use an untagged block for lap-close or beach text.
 
 Empty block rule:
 
-If `[coffeeCornerLapClose]` has no text under it, it creates no draft and no lap bubble will appear. This is intentional: lap-close should not have a default filler line.
+If `[coffeeCornerLapCloseBubble]` has no text under it, it creates no draft and no lap bubble will appear. This is intentional.
 
 ## Scenes
 
@@ -134,7 +147,7 @@ The main Alex bubble in the coffee corner. It is immediate presence, not a perma
 Package tag:
 
 ```text
-[coffeeCorner]
+[coffeeCornerBubble]
 ```
 
 Use for:
@@ -160,7 +173,7 @@ The small lap-close bubble shown in the upper-left of the lap-close scene varian
 Package tag:
 
 ```text
-[coffeeCornerLapClose]
+[coffeeCornerLapCloseBubble]
 ```
 
 No alias rule:

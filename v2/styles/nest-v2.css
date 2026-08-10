@@ -494,56 +494,6 @@ body[data-asset-variant="home.night"] .v2-text-port--weather::before {
   -webkit-backdrop-filter: blur(8px);
 }
 
-.v2-controls {
-  position: absolute;
-  z-index: 12;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  align-items: stretch;
-  height: max(22%, 160px);
-  padding: 0;
-  pointer-events: none;
-}
-
-.v2-control {
-  display: block;
-  width: min(34vw, 180px);
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  color: transparent;
-  box-shadow: none;
-  font-size: 0;
-  pointer-events: auto;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-}
-
-#v2-dock-left {
-  grid-column: 1;
-  grid-row: 1;
-  justify-self: start;
-}
-
-#v2-dock-right {
-  grid-column: 2;
-  grid-row: 1;
-  justify-self: end;
-}
-
-.v2-control:focus-visible {
-  outline: 3px solid rgba(255, 240, 190, 0.95);
-  outline-offset: -4px;
-}
-
 .v2-admin-hot {
   position: absolute;
   z-index: 13;

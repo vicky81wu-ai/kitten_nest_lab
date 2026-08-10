@@ -1,7 +1,7 @@
 # Current Construction Map · Kitten Nest Text Target System
 
 Status: current deployment map
-Last updated: 2026-06-16
+Last updated: 2026-08-10
 
 This file is only for the text writing system.
 
@@ -47,6 +47,12 @@ Current registered targetIds:
 ```text
 coffeeCornerBubble
 coffeeCornerLapCloseBubble
+coffeeCornerBeachHandholdSunsetBubble
+coffeeCornerBeachHandholdSunsetVickyBubble
+coffeeCornerBeachBraceletPromiseBubble
+coffeeCornerBeachBraceletPromiseVickyBubble
+coffeeCornerBeachStallOrderBubble
+coffeeCornerBeachStallOrderVickyBubble
 windowWeather
 hubbyNote
 moodNote
@@ -58,6 +64,12 @@ roomStatus
 ```text
 [coffeeCornerBubble]
 [coffeeCornerLapCloseBubble]
+[coffeeCornerBeachHandholdSunsetBubble]
+[coffeeCornerBeachHandholdSunsetVickyBubble]
+[coffeeCornerBeachBraceletPromiseBubble]
+[coffeeCornerBeachBraceletPromiseVickyBubble]
+[coffeeCornerBeachStallOrderBubble]
+[coffeeCornerBeachStallOrderVickyBubble]
 [windowWeather]
 [hubbyNote]
 [moodNote]

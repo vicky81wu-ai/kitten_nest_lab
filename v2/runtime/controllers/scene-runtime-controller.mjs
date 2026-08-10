@@ -45,12 +45,6 @@ export class SceneRuntimeController extends BaseController {
   }
 
   async navigate(action) {
-    if (action?.type === 'scene.dock') {
-      const scene = this.context.manifest.scenes[this.navigation.current];
-      const dockAction = scene?.docks?.[action.side] || null;
-      if (!dockAction) return false;
-      return this.navigate(dockAction);
-    }
     if (this.locked) return false;
     const next = reduceNavigation(this.navigation, action, this.context.manifest.scenes);
     if (next.current === this.navigation.current && this.initialized) return false;

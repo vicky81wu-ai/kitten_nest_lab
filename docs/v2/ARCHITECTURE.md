@@ -1,8 +1,8 @@
 # Kitten Nest v2 Architecture
 
-Status: isolated preview architecture  
-Route: `/v2/index.html`  
-Stable route: `/cloud` remains untouched
+Status: production architecture
+Route: `/cloud`
+Compatibility route: `/v2/index.html`
 
 ## Single machine truth
 
@@ -50,7 +50,6 @@ scene.go
 scene.push
 scene.back
 scene.jumpTo
-scene.dock
 asset.toggle
 text.toggleNext
 text.hide
@@ -72,7 +71,9 @@ The memories panel reads the six blobs created by the old stable page in `kitten
 
 The original upper-left long-press gesture is restored as one transparent global Hotspot object. Its standard `panel.open` action opens a scoped `localMediaSetup` session inside the existing PanelController. That session may create the known database/store and write or clear exactly nine historical keys using `readwrite` transactions: room overrides `homeOn`, `homeOff`, and `gameRoom`, plus `photo0` through `photo5`. It rejects non-images, files above 15 MB, and every other key. The room tab identifies each override explicitly; clearing it restores the manifest chain of optimized same-origin delivery, published Supabase original, then repository-original fallback. The photo-wall tab remains device-local because no six independent published default objects exist. The session has no cloud upload, Supabase credential, or general IndexedDB access.
 
-The 1.8 second selection/callout guard is scoped to the upper-left zone and lasts only for the armed press. Lower-corner room navigation uses pointer capture and a bounded drift tolerance, so releasing a normal tap just outside an invisible zone still dispatches once without installing a second touch system.
+The 1.8 second selection/callout guard is scoped to the upper-left zone and lasts only for the armed press. Ordinary navigation is represented by scene-owned transparent Hotspot objects with `baseImageLocked` coordinates. They use pointer capture and a bounded drift tolerance, so releasing a normal tap just outside the image-locked zone still dispatches once without installing a second touch system.
+
+There is intentionally no active stage-level navigation dock. A future rescue-navigation affordance may be viewport-fixed, but it must be a separately named emergency layer and must not replace or duplicate the scene-owned Go, Back, and Push hotspots.
 
 The read carousel and local setup writer remain separate sessions. Blob object URLs belong to the memories session and are revoked at teardown. Reopening the photo wall performs a fresh readonly load, so a saved slot appears without a second runtime owner.
 
@@ -106,9 +107,9 @@ lock input
 -> unlock input
 ```
 
-`lapClose` owns only its two registered objects plus global controls. It does not inherit `coffeeCorner` hotspots, panels, effects, or text ports.
+`lapClose` owns its bubble, bubble trigger, and image-locked Back hotspot. It does not inherit `coffeeCorner` hotspots, panels, effects, or text ports.
 
-The three beach scenes use the same transaction and stack. Their wide base images live in the same retained scene world as portrait rooms; only the manifest presentation changes from `cover` to `panorama`. The viewport may scroll horizontally, while controls and panels remain stage-level UI.
+The three beach scenes use the same transaction and stack. Their wide base images live in the same retained scene world as portrait rooms; only the manifest presentation changes from `cover` to `panorama`. The viewport may scroll horizontally, and the scene-owned Back/Push hotspots move with that image world. Panels remain stage-level UI.
 
 An initially hidden panorama dialogue is measured by Layout before it becomes paint-ready. TextPort listens for that layout completion and, only for the newly revealed port, clamps the horizontal viewport so the complete bubble remains inside a 16 px safe edge. The adjustment occurs in the same task as layout readiness, preventing both clipped copy and a visible second-position jump.
 
@@ -136,7 +137,7 @@ NotebookPanelSession
 -> StateController.commit()
 ```
 
-No Supabase service or secret key is present in browser code. `/api/set-state` retains its existing server-side Supabase credential and authorization behavior. If `/api/state` fails, the isolated preview may use `preview-state.v2.json` only for surfaces that explicitly set `allowDegradedFallback:true`; the UI labels this source `preview copy` and disables notebook mutation. Recovered beach dialogue remains `staticText` with a manifest-owned fallback queue and does not invent a writable registry target.
+No Supabase service or secret key is present in browser code. `/api/set-state` retains its existing server-side Supabase credential and authorization behavior. If `/api/state` fails, the runtime may use `preview-state.v2.json` only for surfaces that explicitly set `allowDegradedFallback:true`; the UI labels this source `preview copy` and disables notebook mutation. Each beach scene has separate registered `bubbleQueue` targets for Alex and Vicky. All six ports use their approved manifest queues only while their own target has no readable state; publishing one speaker cannot overwrite the other speaker or another scene.
 
 ## Product surface boundary
 
