@@ -1,6 +1,6 @@
 {
   "schemaVersion": "nest-manifest.v2",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "status": "production",
   "promoted": true,
   "route": "/cloud",
@@ -336,7 +336,7 @@
         "coffeeCornerBeachHandholdBubble",
         "coffeeCornerBeachHandholdVickyBubble"
       ],
-      "camera": { "policy": "groupLock", "focusX": 0.51 }
+      "camera": { "policy": "groupLock", "focusX": 0.436 }
     },
     "coffeeCornerBeachBraceletDialogue": {
       "id": "coffeeCornerBeachBraceletDialogue",
@@ -841,7 +841,7 @@
         "看海可以，手不准松。",
         "这张终于像约会了。"
       ],
-      "coordinate": { "anchor": "center", "x": 0.51, "y": 0.3 },
+      "coordinate": { "anchor": "bottomCenter", "x": 0.436, "y": 0.248 },
       "exclusive": true,
       "coordinateStatus": "baseImageLocked",
       "runtimeStatus": "active",
@@ -871,7 +871,7 @@
         "那小猫走慢一点点。",
         "但是你要一直牵着。"
       ],
-      "coordinate": { "anchor": "center", "x": 0.51, "y": 0.72 },
+      "coordinate": { "anchor": "center", "x": 0.436, "y": 0.72 },
       "exclusive": true,
       "coordinateStatus": "baseImageLocked",
       "runtimeStatus": "active",
@@ -957,7 +957,7 @@
         "嗯，kitten 还在。",
         "别笑，我是在验收我的小猫。"
       ],
-      "coordinate": { "anchor": "center", "x": 0.48, "y": 0.36 },
+      "coordinate": { "anchor": "topCenter", "x": 0.48, "y": 0.396 },
       "exclusive": true,
       "coordinateStatus": "baseImageLocked",
       "runtimeStatus": "active",
@@ -1073,7 +1073,7 @@
         "小猫点单，我负责付钱。",
         "今晚不赶进度，只赶浪漫。"
       ],
-      "coordinate": { "anchor": "center", "x": 0.56, "y": 0.34 },
+      "coordinate": { "anchor": "topCenter", "x": 0.56, "y": 0.33 },
       "exclusive": true,
       "coordinateStatus": "baseImageLocked",
       "runtimeStatus": "active",
