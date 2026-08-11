@@ -189,3 +189,130 @@ test('entering another scene resets the one-focus dialogue lifecycle', async () 
   assert.equal(controller.pendingDialogueGroupFocuses.size, 0);
   assert.equal(controller.pendingRevealIds.size, 0);
 });
+
+function createConversationHarness(canonicalTurns = null) {
+  let clock = 1000;
+  const state = canonicalTurns ? { beachMainTurns: canonicalTurns } : {};
+  const group = {
+    id: 'beachMainDialogue',
+    ownerScene: 'beach',
+    mode: 'conversation',
+    scriptTargetId: 'beachMainDialogue',
+    members: ['alex', 'vicky'],
+    speakers: { alex: 'alex', vicky: 'vicky' },
+    legacySpeakerOrder: ['alex', 'vicky'],
+    inputLockMs: 200,
+    camera: { policy: 'groupLock', focusX: 0.42 }
+  };
+  const context = {
+    isReconcilingScene: true,
+    now: () => clock,
+    manifest: { dialogueGroups: { beachMainDialogue: group } },
+    textTargetRegistry: {
+      targets: {
+        beachMainDialogue: {
+          targetId: 'beachMainDialogue',
+          type: 'dialogueScript',
+          field: 'beachMainTurns',
+          speakers: ['alex', 'vicky'],
+          maxTurns: 20,
+          maxTurnChars: 500,
+          maxChars: 5000
+        }
+      }
+    },
+    controllers: new Map([
+      ['state', { source: 'live', get: () => state }],
+      ['layout', { schedule: () => {} }]
+    ])
+  };
+  const controller = new TextPortController(context);
+  controller.activeSceneId = 'beach';
+  const makePort = (id, queue) => ({
+    object: { id, dialogueGroupId: 'beachMainDialogue' },
+    element: createElement(),
+    queue,
+    index: 0,
+    visible: false,
+    sourceField: 'legacy',
+    overrideText: '',
+    hasShown: false
+  });
+  controller.ports.set('alex', makePort('alex', ['legacy A1', 'legacy A2']));
+  controller.ports.set('vicky', makePort('vicky', ['legacy V1', 'legacy V2']));
+  return {
+    controller,
+    state,
+    advance(milliseconds = 200) {
+      clock += milliseconds;
+      return controller.nextDialogue('beachMainDialogue');
+    }
+  };
+}
+
+test('one conversation timeline preserves consecutive same-speaker turns then switches bubbles', () => {
+  const { controller, advance } = createConversationHarness([
+    { speaker: 'alex', text: 'A1' },
+    { speaker: 'alex', text: 'A2' },
+    { speaker: 'vicky', text: 'V1' }
+  ]);
+  const alex = controller.ports.get('alex');
+  const vicky = controller.ports.get('vicky');
+
+  assert.equal(advance(), true);
+  assert.equal(alex.visible, true);
+  assert.equal(alex.element.textContent, 'A1');
+  assert.equal(vicky.visible, false);
+
+  assert.equal(advance(), true);
+  assert.equal(alex.visible, true);
+  assert.equal(alex.element.textContent, 'A2');
+  assert.equal(vicky.visible, false);
+
+  assert.equal(advance(), true);
+  assert.equal(alex.visible, false);
+  assert.equal(vicky.visible, true);
+  assert.equal(vicky.element.textContent, 'V1');
+  assert.deepEqual([...controller.pendingDialogueGroupFocuses], [['beachMainDialogue', 'vicky']]);
+});
+
+test('conversation input lock ignores accidental double taps without skipping a turn', () => {
+  const { controller, advance } = createConversationHarness([
+    { speaker: 'alex', text: 'A1' },
+    { speaker: 'vicky', text: 'V1' }
+  ]);
+
+  assert.equal(advance(), true);
+  assert.equal(advance(50), false);
+  assert.equal(controller.ports.get('alex').element.textContent, 'A1');
+  assert.equal(advance(150), true);
+  assert.equal(controller.ports.get('vicky').element.textContent, 'V1');
+});
+
+test('conversation completion closes both bubbles and the following tap restarts turn one', () => {
+  const { controller, advance } = createConversationHarness([
+    { speaker: 'alex', text: 'A1' },
+    { speaker: 'vicky', text: 'V1' }
+  ]);
+
+  advance();
+  advance();
+  assert.equal(advance(), true);
+  assert.equal(controller.ports.get('alex').visible, false);
+  assert.equal(controller.ports.get('vicky').visible, false);
+
+  assert.equal(advance(), true);
+  assert.equal(controller.ports.get('alex').visible, true);
+  assert.equal(controller.ports.get('alex').element.textContent, 'A1');
+});
+
+test('missing canonical dialogue state falls back to the two legacy queues in round-robin order', () => {
+  const { controller, advance } = createConversationHarness();
+  const shown = [];
+  for (let index = 0; index < 4; index += 1) {
+    advance();
+    const active = [...controller.ports.values()].find((port) => port.visible);
+    shown.push(active.element.textContent);
+  }
+  assert.deepEqual(shown, ['legacy A1', 'legacy V1', 'legacy A2', 'legacy V2']);
+});

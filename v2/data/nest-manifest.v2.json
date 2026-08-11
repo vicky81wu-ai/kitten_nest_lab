@@ -1,6 +1,6 @@
 {
   "schemaVersion": "nest-manifest.v2",
-  "version": "0.3.4",
+  "version": "0.4.0",
   "status": "production",
   "promoted": true,
   "route": "/cloud",
@@ -53,6 +53,7 @@
       "asset.toggle",
       "text.toggleNext",
       "text.hide",
+      "dialogue.next",
       "panel.open",
       "panel.close"
     ],
@@ -97,7 +98,7 @@
     },
     "textPort": {
       "className": "TextPortController",
-      "owns": ["text-render", "queue-index", "show", "hide", "show-next"],
+      "owns": ["text-render", "queue-index", "show", "hide", "show-next", "dialogue-turn-index", "dialogue-speaker-switch"],
       "lifecycle": ["mount", "ready", "reconcile", "suspend", "destroy"]
     },
     "panel": {
@@ -328,32 +329,94 @@
       "blocksParentInteractive": true
     }
   },
+  "stories": {
+    "seasideWalk": {
+      "id": "seasideWalk",
+      "label": "海滨散步",
+      "kind": "linear",
+      "entrySceneId": "coffeeCornerBeachHandholdSunset",
+      "tags": ["beach", "sunset", "date"],
+      "beats": [
+        {
+          "id": "handholdSunset",
+          "label": "牵手暮色",
+          "sceneId": "coffeeCornerBeachHandholdSunset",
+          "dialogueGroupIds": ["seasideWalkHandholdSunsetMainDialogue"]
+        },
+        {
+          "id": "braceletPromise",
+          "label": "手链约定",
+          "sceneId": "coffeeCornerBeachBraceletPromise",
+          "dialogueGroupIds": ["seasideWalkBraceletPromiseMainDialogue"]
+        },
+        {
+          "id": "stallOrder",
+          "label": "小摊点单",
+          "sceneId": "coffeeCornerBeachStallOrder",
+          "dialogueGroupIds": ["seasideWalkStallOrderMainDialogue"]
+        }
+      ]
+    }
+  },
   "dialogueGroups": {
-    "coffeeCornerBeachHandholdDialogue": {
-      "id": "coffeeCornerBeachHandholdDialogue",
+    "seasideWalkHandholdSunsetMainDialogue": {
+      "id": "seasideWalkHandholdSunsetMainDialogue",
+      "label": "海滨散步 · 牵手暮色 · 主对话",
+      "storyId": "seasideWalk",
+      "beatId": "handholdSunset",
       "ownerScene": "coffeeCornerBeachHandholdSunset",
+      "mode": "conversation",
+      "scriptTargetId": "seasideWalkHandholdSunsetMainDialogue",
       "members": [
         "coffeeCornerBeachHandholdBubble",
         "coffeeCornerBeachHandholdVickyBubble"
       ],
+      "speakers": {
+        "alex": "coffeeCornerBeachHandholdBubble",
+        "vicky": "coffeeCornerBeachHandholdVickyBubble"
+      },
+      "legacySpeakerOrder": ["alex", "vicky"],
+      "inputLockMs": 200,
       "camera": { "policy": "groupLock", "focusX": 0.436 }
     },
-    "coffeeCornerBeachBraceletDialogue": {
-      "id": "coffeeCornerBeachBraceletDialogue",
+    "seasideWalkBraceletPromiseMainDialogue": {
+      "id": "seasideWalkBraceletPromiseMainDialogue",
+      "label": "海滨散步 · 手链约定 · 主对话",
+      "storyId": "seasideWalk",
+      "beatId": "braceletPromise",
       "ownerScene": "coffeeCornerBeachBraceletPromise",
+      "mode": "conversation",
+      "scriptTargetId": "seasideWalkBraceletPromiseMainDialogue",
       "members": [
         "coffeeCornerBeachBraceletBubble",
         "coffeeCornerBeachBraceletVickyBubble"
       ],
+      "speakers": {
+        "alex": "coffeeCornerBeachBraceletBubble",
+        "vicky": "coffeeCornerBeachBraceletVickyBubble"
+      },
+      "legacySpeakerOrder": ["alex", "vicky"],
+      "inputLockMs": 200,
       "camera": { "policy": "groupLock", "focusX": 0.48 }
     },
-    "coffeeCornerBeachStallOrderDialogue": {
-      "id": "coffeeCornerBeachStallOrderDialogue",
+    "seasideWalkStallOrderMainDialogue": {
+      "id": "seasideWalkStallOrderMainDialogue",
+      "label": "海滨散步 · 小摊点单 · 主对话",
+      "storyId": "seasideWalk",
+      "beatId": "stallOrder",
       "ownerScene": "coffeeCornerBeachStallOrder",
+      "mode": "conversation",
+      "scriptTargetId": "seasideWalkStallOrderMainDialogue",
       "members": [
         "coffeeCornerBeachStallOrderBubble",
         "coffeeCornerBeachStallOrderVickyBubble"
       ],
+      "speakers": {
+        "alex": "coffeeCornerBeachStallOrderBubble",
+        "vicky": "coffeeCornerBeachStallOrderVickyBubble"
+      },
+      "legacySpeakerOrder": ["alex", "vicky"],
+      "inputLockMs": 200,
       "camera": { "policy": "groupLock", "focusX": 0.56 }
     }
   },
@@ -826,7 +889,8 @@
       "selector": "[data-object-id=\"coffeeCornerBeachHandholdBubble\"]",
       "label": "Alex 海边牵手气泡",
       "variant": "alex",
-      "dialogueGroupId": "coffeeCornerBeachHandholdDialogue",
+      "action": { "type": "dialogue.next", "target": "seasideWalkHandholdSunsetMainDialogue" },
+      "dialogueGroupId": "seasideWalkHandholdSunsetMainDialogue",
       "targetId": "coffeeCornerBeachHandholdSunsetBubble",
       "readFields": {
         "queue": ["coffeeCornerBeachHandholdSunsetBubbles"],
@@ -856,7 +920,8 @@
       "selector": "[data-object-id=\"coffeeCornerBeachHandholdVickyBubble\"]",
       "label": "Vicky 海边牵手气泡",
       "variant": "vicky",
-      "dialogueGroupId": "coffeeCornerBeachHandholdDialogue",
+      "action": { "type": "dialogue.next", "target": "seasideWalkHandholdSunsetMainDialogue" },
+      "dialogueGroupId": "seasideWalkHandholdSunsetMainDialogue",
       "targetId": "coffeeCornerBeachHandholdSunsetVickyBubble",
       "readFields": {
         "queue": ["coffeeCornerBeachHandholdSunsetVickyBubbles"],
@@ -885,7 +950,7 @@
       "controller": "hotspot",
       "selector": "[data-object-id=\"coffeeCornerBeachHandholdAlexHot\"]",
       "label": "Alex 牵手对话",
-      "action": { "type": "text.toggleNext", "target": "coffeeCornerBeachHandholdBubble" },
+      "action": { "type": "dialogue.next", "target": "seasideWalkHandholdSunsetMainDialogue" },
       "coordinate": { "anchor": "center", "x": 0.55, "y": 0.52, "width": 0.21, "height": 0.3 },
       "exclusive": true,
       "coordinateStatus": "baseImageLocked",
@@ -899,7 +964,7 @@
       "controller": "hotspot",
       "selector": "[data-object-id=\"coffeeCornerBeachHandholdVickyHot\"]",
       "label": "Vicky 牵手对话",
-      "action": { "type": "text.toggleNext", "target": "coffeeCornerBeachHandholdVickyBubble" },
+      "action": { "type": "dialogue.next", "target": "seasideWalkHandholdSunsetMainDialogue" },
       "coordinate": { "anchor": "center", "x": 0.46, "y": 0.81, "width": 0.19, "height": 0.23 },
       "exclusive": true,
       "coordinateStatus": "baseImageLocked",
@@ -942,7 +1007,8 @@
       "selector": "[data-object-id=\"coffeeCornerBeachBraceletBubble\"]",
       "label": "Alex 海边手链气泡",
       "variant": "alex",
-      "dialogueGroupId": "coffeeCornerBeachBraceletDialogue",
+      "action": { "type": "dialogue.next", "target": "seasideWalkBraceletPromiseMainDialogue" },
+      "dialogueGroupId": "seasideWalkBraceletPromiseMainDialogue",
       "targetId": "coffeeCornerBeachBraceletPromiseBubble",
       "readFields": {
         "queue": ["coffeeCornerBeachBraceletPromiseBubbles"],
@@ -972,7 +1038,8 @@
       "selector": "[data-object-id=\"coffeeCornerBeachBraceletVickyBubble\"]",
       "label": "Vicky 海边手链气泡",
       "variant": "vicky",
-      "dialogueGroupId": "coffeeCornerBeachBraceletDialogue",
+      "action": { "type": "dialogue.next", "target": "seasideWalkBraceletPromiseMainDialogue" },
+      "dialogueGroupId": "seasideWalkBraceletPromiseMainDialogue",
       "targetId": "coffeeCornerBeachBraceletPromiseVickyBubble",
       "readFields": {
         "queue": ["coffeeCornerBeachBraceletPromiseVickyBubbles"],
@@ -1001,7 +1068,7 @@
       "controller": "hotspot",
       "selector": "[data-object-id=\"coffeeCornerBeachBraceletAlexHot\"]",
       "label": "Alex 手链对话",
-      "action": { "type": "text.toggleNext", "target": "coffeeCornerBeachBraceletBubble" },
+      "action": { "type": "dialogue.next", "target": "seasideWalkBraceletPromiseMainDialogue" },
       "coordinate": { "anchor": "center", "x": 0.57, "y": 0.51, "width": 0.23, "height": 0.33 },
       "exclusive": true,
       "coordinateStatus": "baseImageLocked",
@@ -1015,7 +1082,7 @@
       "controller": "hotspot",
       "selector": "[data-object-id=\"coffeeCornerBeachBraceletVickyHot\"]",
       "label": "Vicky 手链对话",
-      "action": { "type": "text.toggleNext", "target": "coffeeCornerBeachBraceletVickyBubble" },
+      "action": { "type": "dialogue.next", "target": "seasideWalkBraceletPromiseMainDialogue" },
       "coordinate": { "anchor": "center", "x": 0.4, "y": 0.8, "width": 0.24, "height": 0.23 },
       "exclusive": true,
       "coordinateStatus": "baseImageLocked",
@@ -1058,7 +1125,8 @@
       "selector": "[data-object-id=\"coffeeCornerBeachStallOrderBubble\"]",
       "label": "Alex 海边点单气泡",
       "variant": "alex",
-      "dialogueGroupId": "coffeeCornerBeachStallOrderDialogue",
+      "action": { "type": "dialogue.next", "target": "seasideWalkStallOrderMainDialogue" },
+      "dialogueGroupId": "seasideWalkStallOrderMainDialogue",
       "targetId": "coffeeCornerBeachStallOrderBubble",
       "readFields": {
         "queue": ["coffeeCornerBeachStallOrderBubbles"],
@@ -1088,7 +1156,8 @@
       "selector": "[data-object-id=\"coffeeCornerBeachStallOrderVickyBubble\"]",
       "label": "Vicky 海边点单气泡",
       "variant": "vicky",
-      "dialogueGroupId": "coffeeCornerBeachStallOrderDialogue",
+      "action": { "type": "dialogue.next", "target": "seasideWalkStallOrderMainDialogue" },
+      "dialogueGroupId": "seasideWalkStallOrderMainDialogue",
       "targetId": "coffeeCornerBeachStallOrderVickyBubble",
       "readFields": {
         "queue": ["coffeeCornerBeachStallOrderVickyBubbles"],
@@ -1117,7 +1186,7 @@
       "controller": "hotspot",
       "selector": "[data-object-id=\"coffeeCornerBeachStallOrderAlexHot\"]",
       "label": "Alex 点单对话",
-      "action": { "type": "text.toggleNext", "target": "coffeeCornerBeachStallOrderBubble" },
+      "action": { "type": "dialogue.next", "target": "seasideWalkStallOrderMainDialogue" },
       "coordinate": { "anchor": "center", "x": 0.53, "y": 0.48, "width": 0.26, "height": 0.34 },
       "exclusive": true,
       "coordinateStatus": "baseImageLocked",
@@ -1131,7 +1200,7 @@
       "controller": "hotspot",
       "selector": "[data-object-id=\"coffeeCornerBeachStallOrderVickyHot\"]",
       "label": "Vicky 点单对话",
-      "action": { "type": "text.toggleNext", "target": "coffeeCornerBeachStallOrderVickyBubble" },
+      "action": { "type": "dialogue.next", "target": "seasideWalkStallOrderMainDialogue" },
       "coordinate": { "anchor": "center", "x": 0.49, "y": 0.8, "width": 0.23, "height": 0.24 },
       "exclusive": true,
       "coordinateStatus": "baseImageLocked",

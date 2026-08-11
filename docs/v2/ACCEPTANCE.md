@@ -12,7 +12,7 @@ The direct `/v2/index.html` route remains available during the rollback window.
 
 ## Post-promotion iPhone PWA gate
 
-For manifest `0.3.4`, close the installed app completely before the first check so browser cache cannot hide the cold path:
+For manifest `0.4.0`, close the installed app completely before the first check so browser cache cannot hide the cold path:
 
 1. Open the home-screen nest once. The small `猫窝醒来中…` status may appear briefly, but the room must replace it without a 20–30 second unexplained maroon screen.
 2. Confirm the room image reaches the physical bottom of the iPhone canvas. The white Home Indicator may remain system-owned, but there must be no black strip behind or above it.
@@ -30,7 +30,7 @@ These three checks are the only outstanding production gate for the hardening pa
 6. Tap the game console, open Gomoku, make one move, undo the round, change difficulty, and return to the same game menu.
 7. Tap the top-row beach photo to enter the first seaside panorama.
 8. Drag the panorama horizontally; the invisible Back/Push zones must move with the base image and remain at their authored image coordinates.
-9. In each beach scene, tap one speaker and confirm the panorama centers that scene's conversation once. Close or switch to the other speaker and confirm the camera does not move. Drag horizontally by hand, switch speakers again, and confirm the manual position remains in control. Publishing any one of the six registered speaker targets must still change only that speaker in that scene.
+9. In each beach scene, tap either speaker or its talk hotspot and confirm the panorama centers that scene's conversation once. Continue tapping either member: the shared dialogue must follow its authored order rather than whichever portrait was tapped. Two consecutive turns from one speaker update the same bubble; a speaker change switches bubbles without moving the camera. An immediate accidental double tap must not skip a line. The action after the final line closes both bubbles, and the following action restarts turn one. Drag horizontally by hand after the first focus and confirm later turns leave that manual position in control.
    - Handhold must open on the accepted `.436` focus. Alex copy keeps its lower edge at image Y `.248` and grows upward without covering his face.
    - Bracelet Alex copy keeps its upper edge at image Y `.396`; stall Alex copy keeps its upper edge at image Y `.33`. Both grow downward.
    - Generic dialogue copy is `15px`, normal weight, matching the size (not the bold weight) of the compact “窗边叮嘱” title.
@@ -69,7 +69,7 @@ manifest rejection for missing hotspot coordinates, dangling scene targets, and 
 
 The post-iPhone correction suite separately verifies the compact weather-card contract, drift-tolerant invisible lower-corner navigation, iOS-selection-safe upper-left long-press dispatch, exact three-room/six-photo device-local image writes/clears, and full-size optimized static beach delivery with canonical public Storage fallback. The concise device recheck passed on 2026-08-09.
 
-The original pass caught panorama dialogue clipping. Manifest `0.3.4` keeps that measured-layout safeguard for ungrouped ports and adds a stronger conversation contract for the beach pairs: one authored focus per scene entry, no member-to-member camera yo-yo, no recenter after manual panning, and explicit top/bottom growth edges for copy near protected faces. Cover rooms, route hotspots, and writable target ids are unchanged.
+The original pass caught panorama dialogue clipping. Manifest `0.4.0` keeps that measured-layout safeguard for ungrouped ports and retains one authored focus per scene entry, no member-to-member camera yo-yo, no recenter after manual panning, and explicit top/bottom growth edges for copy near protected faces. It additionally gives each scene one shared ordered dialogue timeline. Cover rooms, route hotspots, existing six compatibility target ids, and coordinates are unchanged.
 
 The memories checkpoint seeded two photos into a disposable browser profile, verified a filled slot → empty slot → filled slot sequence, then closed the panel and completed every later route. The application itself performed only IndexedDB enumeration and a `readonly` transaction.
 

@@ -14,6 +14,8 @@ const REQUIRED_CONTROLLERS = [
 const SCENE_TARGET_ACTIONS = new Set(['scene.go', 'scene.push', 'scene.jumpTo']);
 const SUPPORTED_EFFECT_TYPES = new Set(['sparkles', 'steam', 'clockHands']);
 const SUPPORTED_DIALOGUE_CAMERA_POLICIES = new Set(['groupLock']);
+const SUPPORTED_DIALOGUE_MODES = new Set(['conversation', 'ambient']);
+const SUPPORTED_STORY_KINDS = new Set(['linear']);
 const SUPPORTED_COORDINATE_ANCHORS = new Set([
   'center',
   'topCenter',
@@ -80,6 +82,7 @@ export function validateManifest(manifest, textTargetRegistry = null) {
 
   const scenes = manifest?.scenes || {};
   const objects = manifest?.objects || {};
+  const stories = manifest?.stories || {};
   const dialogueGroups = manifest?.dialogueGroups || {};
   const supportedActions = new Set(manifest?.runtime?.supportedActionTypes || []);
   const activeSelectors = new Map();
@@ -105,6 +108,12 @@ export function validateManifest(manifest, textTargetRegistry = null) {
         errors.push(`${source} advances unknown text port ${action.target}`);
       }
     }
+    if (action.type === 'dialogue.next') {
+      const target = dialogueGroups[action.target];
+      if (!target || target.mode !== 'conversation') {
+        errors.push(`${source} advances unknown conversation ${action.target}`);
+      }
+    }
     if (action.type === 'asset.toggle') {
       const keys = Array.isArray(action.keys) ? action.keys : [];
       if (!keys.length) errors.push(`${source} asset.toggle requires keys`);
@@ -121,6 +130,42 @@ export function validateManifest(manifest, textTargetRegistry = null) {
   });
 
   if (!scenes[manifest?.runtime?.entryScene]) errors.push('runtime.entryScene must identify a scene');
+
+  Object.entries(stories).forEach(([storyId, story]) => {
+    if (story?.id !== storyId) errors.push(`Story key/id mismatch: ${storyId}`);
+    if (!SUPPORTED_STORY_KINDS.has(story?.kind)) {
+      errors.push(`Story ${storyId} uses unsupported kind ${story?.kind}`);
+    }
+    if (!scenes[story?.entrySceneId]) {
+      errors.push(`Story ${storyId} has unknown entrySceneId ${story?.entrySceneId}`);
+    }
+    const beats = Array.isArray(story?.beats) ? story.beats : [];
+    if (!beats.length) errors.push(`Story ${storyId} requires beats`);
+    const beatIds = beats.map((beat) => beat?.id).filter(Boolean);
+    if (beatIds.length !== beats.length || new Set(beatIds).size !== beatIds.length) {
+      errors.push(`Story ${storyId} beat ids must be present and unique`);
+    }
+    if (beats[0]?.sceneId && beats[0].sceneId !== story.entrySceneId) {
+      errors.push(`Story ${storyId} first beat must use entrySceneId ${story.entrySceneId}`);
+    }
+    beats.forEach((beat) => {
+      if (!scenes[beat?.sceneId]) errors.push(`Story ${storyId} beat ${beat?.id} has unknown scene ${beat?.sceneId}`);
+      const groupIds = Array.isArray(beat?.dialogueGroupIds) ? beat.dialogueGroupIds : [];
+      if (new Set(groupIds).size !== groupIds.length) {
+        errors.push(`Story ${storyId} beat ${beat?.id} dialogueGroupIds must be unique`);
+      }
+      groupIds.forEach((groupId) => {
+        const group = dialogueGroups[groupId];
+        if (!group) {
+          errors.push(`Story ${storyId} beat ${beat?.id} references unknown dialogue group ${groupId}`);
+          return;
+        }
+        if (group.storyId !== storyId || group.beatId !== beat.id) {
+          errors.push(`Story ${storyId} beat ${beat.id} does not own dialogue group ${groupId}`);
+        }
+      });
+    });
+  });
 
   Object.entries(objects).forEach(([id, object]) => {
     if (object?.id !== id) errors.push(`Object key/id mismatch: ${id}`);
@@ -265,6 +310,48 @@ export function validateManifest(manifest, textTargetRegistry = null) {
     if (!members.length) errors.push(`Dialogue group ${groupId} requires members`);
     if (new Set(members).size !== members.length) {
       errors.push(`Dialogue group ${groupId} members must be unique`);
+    }
+
+    if (!SUPPORTED_DIALOGUE_MODES.has(group?.mode)) {
+      errors.push(`Dialogue group ${groupId} uses unsupported mode ${group?.mode}`);
+    }
+
+    if (group?.mode === 'conversation') {
+      const story = stories[group.storyId];
+      const beat = story?.beats?.find((candidate) => candidate.id === group.beatId);
+      if (!story || !beat) {
+        errors.push(`Conversation ${groupId} requires a valid storyId and beatId`);
+      } else if (beat.sceneId !== group.ownerScene) {
+        errors.push(`Conversation ${groupId} ownerScene must match its story beat`);
+      }
+
+      const scriptTarget = textTargetRegistry?.targets?.[group.scriptTargetId];
+      if (!scriptTarget || scriptTarget.type !== 'dialogueScript') {
+        errors.push(`Conversation ${groupId} requires a registered dialogueScript target`);
+      } else if (scriptTarget.dialogueGroupId !== groupId) {
+        errors.push(`Conversation ${groupId} script target lacks its group back-reference`);
+      }
+
+      const speakers = group?.speakers && typeof group.speakers === 'object' && !Array.isArray(group.speakers)
+        ? group.speakers
+        : {};
+      const speakerIds = Object.keys(speakers);
+      const speakerMembers = Object.values(speakers);
+      if (!speakerIds.length
+        || new Set(speakerMembers).size !== speakerMembers.length
+        || speakerMembers.length !== members.length
+        || members.some((memberId) => !speakerMembers.includes(memberId))) {
+        errors.push(`Conversation ${groupId} speakers must map exactly once to every member`);
+      }
+      const legacyOrder = Array.isArray(group.legacySpeakerOrder) ? group.legacySpeakerOrder : [];
+      if (legacyOrder.length !== speakerIds.length
+        || new Set(legacyOrder).size !== legacyOrder.length
+        || speakerIds.some((speaker) => !legacyOrder.includes(speaker))) {
+        errors.push(`Conversation ${groupId} legacySpeakerOrder must list every speaker exactly once`);
+      }
+      if (!Number.isFinite(group.inputLockMs) || group.inputLockMs < 0 || group.inputLockMs > 1000) {
+        errors.push(`Conversation ${groupId} inputLockMs must stay within 0-1000`);
+      }
     }
 
     const camera = group?.camera || {};

@@ -1,5 +1,5 @@
 {
-  "version": "1.1.0",
+  "version": "1.2.0",
   "status": "active-routing-registry",
   "purpose": "Machine-readable registry for nest console tag routing and future writable scene objects.",
   "coreRule": "No tag, no text route. One tag, one destination family. Every writable object must have a tag registry entry before it is connected to the nest console.",
@@ -92,6 +92,75 @@
         "home.windowWeatherAdvicePanel"
       ],
       "notes": "Canonical tag includes parent scene, child scene, and surface type. Existing console tag [coffeeCornerLapClose] remains as backward-compatible alias. Generic [lapCloseBubble] is deprecated because other scenes may later have their own lapClose bubble."
+    },
+    "seasideWalkHandholdSunsetMainDialogue": {
+      "tag": "[seasideWalkHandholdSunsetMainDialogue]",
+      "status": "active",
+      "destinationFamily": "stories.seasideWalk.handholdSunset.mainDialogue",
+      "ownerScene": "coffeeCornerBeachHandholdSunset",
+      "parentScene": "coffeeCorner",
+      "storyId": "seasideWalk",
+      "beatId": "handholdSunset",
+      "dialogueGroupId": "seasideWalkHandholdSunsetMainDialogue",
+      "objectIds": ["coffeeCornerBeachHandholdBubble", "coffeeCornerBeachHandholdVickyBubble"],
+      "writeSurface": "seasideWalk handhold-sunset ordered conversation / 海滨散步牵手暮色主对话",
+      "surfaceType": "DialogueScript",
+      "aliases": [],
+      "useFor": [
+        "ordered Alex and Vicky conversation in the first seasideWalk beat",
+        "用 @alex / @vicky 编排牵手暮色整段剧情"
+      ],
+      "mustNotAffect": [
+        "seasideWalkBraceletPromiseMainDialogue",
+        "seasideWalkStallOrderMainDialogue"
+      ],
+      "notes": "Canonical conversation route. The two old per-speaker bubbleQueue targets remain writable compatibility channels and are interleaved only when this script is absent."
+    },
+    "seasideWalkBraceletPromiseMainDialogue": {
+      "tag": "[seasideWalkBraceletPromiseMainDialogue]",
+      "status": "active",
+      "destinationFamily": "stories.seasideWalk.braceletPromise.mainDialogue",
+      "ownerScene": "coffeeCornerBeachBraceletPromise",
+      "parentScene": "coffeeCornerBeachHandholdSunset",
+      "storyId": "seasideWalk",
+      "beatId": "braceletPromise",
+      "dialogueGroupId": "seasideWalkBraceletPromiseMainDialogue",
+      "objectIds": ["coffeeCornerBeachBraceletBubble", "coffeeCornerBeachBraceletVickyBubble"],
+      "writeSurface": "seasideWalk bracelet-promise ordered conversation / 海滨散步手链约定主对话",
+      "surfaceType": "DialogueScript",
+      "aliases": [],
+      "useFor": [
+        "ordered Alex and Vicky conversation in the second seasideWalk beat",
+        "用 @alex / @vicky 编排手链约定整段剧情"
+      ],
+      "mustNotAffect": [
+        "seasideWalkHandholdSunsetMainDialogue",
+        "seasideWalkStallOrderMainDialogue"
+      ],
+      "notes": "Canonical conversation route. Navigation parentage does not define dialogue order; the story beat and this group own that order."
+    },
+    "seasideWalkStallOrderMainDialogue": {
+      "tag": "[seasideWalkStallOrderMainDialogue]",
+      "status": "active",
+      "destinationFamily": "stories.seasideWalk.stallOrder.mainDialogue",
+      "ownerScene": "coffeeCornerBeachStallOrder",
+      "parentScene": "coffeeCornerBeachBraceletPromise",
+      "storyId": "seasideWalk",
+      "beatId": "stallOrder",
+      "dialogueGroupId": "seasideWalkStallOrderMainDialogue",
+      "objectIds": ["coffeeCornerBeachStallOrderBubble", "coffeeCornerBeachStallOrderVickyBubble"],
+      "writeSurface": "seasideWalk stall-order ordered conversation / 海滨散步小摊点单主对话",
+      "surfaceType": "DialogueScript",
+      "aliases": [],
+      "useFor": [
+        "ordered Alex and Vicky conversation in the third seasideWalk beat",
+        "用 @alex / @vicky 编排小摊点单整段剧情"
+      ],
+      "mustNotAffect": [
+        "seasideWalkHandholdSunsetMainDialogue",
+        "seasideWalkBraceletPromiseMainDialogue"
+      ],
+      "notes": "Canonical conversation route. Beat ordering is explicit in stories.seasideWalk rather than encoded as a number in this tag."
     },
     "coffeeCornerBeachHandholdSunsetBubble": {
       "tag": "[coffeeCornerBeachHandholdSunsetBubble]",
@@ -246,6 +315,9 @@
       "[coffeeCorner]",
       "[windowWeather]",
       "[coffeeCornerLapCloseBubble]",
+      "[seasideWalkHandholdSunsetMainDialogue]",
+      "[seasideWalkBraceletPromiseMainDialogue]",
+      "[seasideWalkStallOrderMainDialogue]",
       "[coffeeCornerBeachHandholdSunsetBubble]",
       "[coffeeCornerBeachHandholdSunsetVickyBubble]",
       "[coffeeCornerBeachBraceletPromiseBubble]",

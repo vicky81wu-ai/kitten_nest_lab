@@ -79,15 +79,24 @@ test('home restorations and the approved beach chain stay explicit in one manife
 test('each beach conversation owns one stable group camera focus', async () => {
   const manifest = await readJson('../../v2/data/nest-manifest.v2.json');
   const expected = [
-    ['coffeeCornerBeachHandholdDialogue', 'coffeeCornerBeachHandholdSunset', 0.436],
-    ['coffeeCornerBeachBraceletDialogue', 'coffeeCornerBeachBraceletPromise', 0.48],
-    ['coffeeCornerBeachStallOrderDialogue', 'coffeeCornerBeachStallOrder', 0.56]
+    ['seasideWalkHandholdSunsetMainDialogue', 'coffeeCornerBeachHandholdSunset', 'handholdSunset', 0.436],
+    ['seasideWalkBraceletPromiseMainDialogue', 'coffeeCornerBeachBraceletPromise', 'braceletPromise', 0.48],
+    ['seasideWalkStallOrderMainDialogue', 'coffeeCornerBeachStallOrder', 'stallOrder', 0.56]
   ];
 
-  assert.equal(manifest.version, '0.3.4');
-  expected.forEach(([groupId, sceneId, focusX]) => {
+  assert.equal(manifest.version, '0.4.0');
+  assert.deepEqual(manifest.stories.seasideWalk.beats.map((beat) => beat.id), [
+    'handholdSunset', 'braceletPromise', 'stallOrder'
+  ]);
+  expected.forEach(([groupId, sceneId, beatId, focusX]) => {
     const group = manifest.dialogueGroups[groupId];
     assert.equal(group.ownerScene, sceneId);
+    assert.equal(group.storyId, 'seasideWalk');
+    assert.equal(group.beatId, beatId);
+    assert.equal(group.mode, 'conversation');
+    assert.equal(group.scriptTargetId, groupId);
+    assert.deepEqual(group.legacySpeakerOrder, ['alex', 'vicky']);
+    assert.equal(group.inputLockMs, 200);
     assert.deepEqual(group.camera, { policy: 'groupLock', focusX });
     assert.equal(group.members.length, 2);
     group.members.forEach((memberId) => {
@@ -207,7 +216,7 @@ test('manifest validation rejects dangling hotspots and unsupported effects', as
 test('manifest validation rejects broken dialogue group camera contracts', async () => {
   const manifest = await readJson('../../v2/data/nest-manifest.v2.json');
   const textTargets = await readJson('../../data/text-targets.v1.json');
-  manifest.dialogueGroups.coffeeCornerBeachHandholdDialogue.camera.policy = 'speakerFollow';
+  manifest.dialogueGroups.seasideWalkHandholdSunsetMainDialogue.camera.policy = 'speakerFollow';
   manifest.objects.coffeeCornerBeachBraceletVickyBubble.coordinate.x = 0.35;
   manifest.objects.coffeeCornerBeachStallOrderBubble.dialogueGroupId = 'missingDialogue';
 

@@ -2,6 +2,7 @@ import { BaseController } from '../core/base-controller.mjs';
 import { resolveTextPortState } from '../core/text-state.mjs';
 import { resolveWeatherState } from '../core/weather-state.mjs';
 import { horizontalFocusTarget, horizontalRevealTarget } from '../core/geometry.mjs';
+import { interleaveSpeakerQueues, normalizeDialogueTurns } from '../core/dialogue-script.mjs';
 
 export class TextPortController extends BaseController {
   constructor(context) {
@@ -10,6 +11,7 @@ export class TextPortController extends BaseController {
     this.pendingRevealIds = new Set();
     this.pendingDialogueGroupFocuses = new Map();
     this.focusedDialogueGroupIds = new Set();
+    this.dialogueRuntimes = new Map();
     this.activeSceneId = null;
     this.boundPointer = (event) => this.handlePointer(event);
   }
@@ -42,7 +44,15 @@ export class TextPortController extends BaseController {
     element.setAttribute('aria-label', object.label || `${object.targetId || object.id} text`);
     element.setAttribute('aria-live', 'polite');
     this.layer.appendChild(element);
-    const port = { object, element, queue: [], index: 0, visible: false, sourceField: '' };
+    const port = {
+      object,
+      element,
+      queue: [],
+      index: 0,
+      visible: false,
+      sourceField: '',
+      overrideText: ''
+    };
     this.ports.set(object.id, port);
     return port;
   }
@@ -79,7 +89,7 @@ export class TextPortController extends BaseController {
   }
 
   render(port) {
-    const text = port.queue[port.index] || '';
+    const text = port.overrideText || port.queue[port.index] || '';
     port.element.removeAttribute('data-layout-ready');
     if (port.object?.variant === 'weather') {
       const temperature = document.createElement('span');
@@ -108,6 +118,7 @@ export class TextPortController extends BaseController {
       this.pendingRevealIds.clear();
       this.pendingDialogueGroupFocuses.clear();
       this.focusedDialogueGroupIds.clear();
+      this.dialogueRuntimes.clear();
     }
     const allowed = new Set(snapshot.allowedObjectIds);
     for (const [id, port] of this.ports) {
@@ -125,6 +136,7 @@ export class TextPortController extends BaseController {
       const port = this.ports.get(id) || this.createPort(object);
       this.sync(port);
     }
+    this.refreshActiveDialogues();
     this.mark('ready', snapshot.sceneId);
   }
 
@@ -142,6 +154,142 @@ export class TextPortController extends BaseController {
     const groupId = port?.object?.dialogueGroupId;
     if (!groupId) return null;
     return this.context.manifest?.dialogueGroups?.[groupId] || null;
+  }
+
+  dialogueTargetFor(group) {
+    const targetId = group?.scriptTargetId;
+    return targetId ? this.context.textTargetRegistry?.targets?.[targetId] || null : null;
+  }
+
+  dialogueRuntimeFor(groupId) {
+    if (!this.dialogueRuntimes.has(groupId)) {
+      this.dialogueRuntimes.set(groupId, {
+        index: -1,
+        activeMemberId: null,
+        ended: false,
+        lastAdvanceAt: Number.NEGATIVE_INFINITY
+      });
+    }
+    return this.dialogueRuntimes.get(groupId);
+  }
+
+  conversationTurns(group) {
+    const target = this.dialogueTargetFor(group);
+    const stateController = this.context.controllers.get('state');
+    const state = stateController?.get?.() || {};
+    if (target && Array.isArray(state[target.field]) && state[target.field].length) {
+      try {
+        const turns = normalizeDialogueTurns(state[target.field], {
+          speakers: target.speakers,
+          maxTurns: target.maxTurns,
+          maxTurnChars: target.maxTurnChars,
+          maxChars: target.maxChars
+        });
+        if (turns.length) return { turns, sourceField: target.field };
+      } catch (error) {
+        console.warn(`[v2:textPort] Ignoring invalid dialogue state for ${group.id}: ${error.message}`);
+      }
+    }
+
+    const speakers = group?.speakers || {};
+    const order = Array.isArray(group?.legacySpeakerOrder)
+      ? group.legacySpeakerOrder
+      : Object.keys(speakers);
+    const queues = Object.fromEntries(order.map((speaker) => [
+      speaker,
+      this.ports.get(speakers[speaker])?.queue || []
+    ]));
+    return {
+      turns: interleaveSpeakerQueues(queues, order, {
+        maxTurns: target?.maxTurns || 60,
+        maxTurnChars: target?.maxTurnChars || 1000,
+        maxChars: target?.maxChars || 12000
+      }),
+      sourceField: 'legacy:roundRobin'
+    };
+  }
+
+  hideDialogueMembers(group) {
+    (group?.members || []).forEach((memberId) => {
+      const port = this.ports.get(memberId);
+      if (!port) return;
+      port.visible = false;
+      port.overrideText = '';
+      this.pendingRevealIds.delete(memberId);
+      this.removePendingDialogueGroupFocus(memberId);
+      this.render(port);
+    });
+  }
+
+  applyDialogueTurn(group, turn, runtime, sourceField) {
+    const memberId = group?.speakers?.[turn.speaker];
+    const activePort = this.ports.get(memberId);
+    if (!activePort) return false;
+
+    (group.members || []).forEach((candidateId) => {
+      const port = this.ports.get(candidateId);
+      if (!port) return;
+      const active = candidateId === memberId;
+      port.visible = active;
+      port.overrideText = active ? turn.text : '';
+      if (active) {
+        port.hasShown = true;
+        port.sourceField = sourceField;
+        this.scheduleReveal(port);
+      } else {
+        this.pendingRevealIds.delete(candidateId);
+        this.removePendingDialogueGroupFocus(candidateId);
+      }
+      this.render(port);
+    });
+    runtime.activeMemberId = memberId;
+    return true;
+  }
+
+  nextDialogue(groupId) {
+    const group = this.context.manifest?.dialogueGroups?.[groupId];
+    if (!group || group.mode !== 'conversation' || group.ownerScene !== this.activeSceneId) return false;
+
+    const runtime = this.dialogueRuntimeFor(groupId);
+    const currentTime = this.context.now?.() ?? Date.now();
+    const inputLockMs = Number.isFinite(group.inputLockMs) ? group.inputLockMs : 200;
+    if (currentTime - runtime.lastAdvanceAt < inputLockMs) return false;
+    runtime.lastAdvanceAt = currentTime;
+
+    const { turns, sourceField } = this.conversationTurns(group);
+    if (!turns.length) return false;
+
+    if (runtime.ended) {
+      runtime.index = -1;
+      runtime.ended = false;
+    }
+    if (runtime.index >= turns.length - 1) {
+      this.hideDialogueMembers(group);
+      runtime.index = -1;
+      runtime.activeMemberId = null;
+      runtime.ended = true;
+      return true;
+    }
+
+    runtime.index += 1;
+    return this.applyDialogueTurn(group, turns[runtime.index], runtime, sourceField);
+  }
+
+  refreshActiveDialogues() {
+    for (const [groupId, runtime] of this.dialogueRuntimes) {
+      if (runtime.index < 0 || runtime.ended) continue;
+      const group = this.context.manifest?.dialogueGroups?.[groupId];
+      if (!group || group.ownerScene !== this.activeSceneId) continue;
+      const { turns, sourceField } = this.conversationTurns(group);
+      if (!turns.length || runtime.index >= turns.length) {
+        this.hideDialogueMembers(group);
+        runtime.index = -1;
+        runtime.activeMemberId = null;
+        runtime.ended = true;
+        continue;
+      }
+      this.applyDialogueTurn(group, turns[runtime.index], runtime, sourceField);
+    }
   }
 
   removePendingDialogueGroupFocus(portId) {
@@ -224,6 +372,8 @@ export class TextPortController extends BaseController {
 
   toggleNext(id) {
     const port = this.ports.get(id);
+    const group = this.dialogueGroupFor(port);
+    if (group?.mode === 'conversation') return this.nextDialogue(group.id);
     if (!port || !port.queue.length) return false;
     if (port.visible) {
       port.visible = false;
@@ -264,6 +414,7 @@ export class TextPortController extends BaseController {
     this.pendingRevealIds.clear();
     this.pendingDialogueGroupFocuses.clear();
     this.focusedDialogueGroupIds.clear();
+    this.dialogueRuntimes.clear();
     this.activeSceneId = null;
     this.mark('suspended', reason);
   }

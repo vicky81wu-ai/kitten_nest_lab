@@ -117,6 +117,18 @@ On the first member reveal after entering a scene, TextPort waits for Layout rea
 
 `groupLock` is deliberately the only active dialogue camera policy. A future scene that intentionally follows widely separated speakers must introduce a separately specified policy and tests rather than weakening the stable conversation rule.
 
+Story order, navigation ownership, and dialogue turns are three independent contracts:
+
+| Contract | Manifest owner | Meaning |
+| --- | --- | --- |
+| Scene hierarchy | `scenes.parent` plus `scene.push/back` | Where Back returns and which image world owns a hotspot |
+| Story sequence | `stories.<id>.beats[]` | The authored order of named narrative scenes |
+| Dialogue sequence | `dialogueGroups.<id>` plus its script target | The exact ordered speaker turns inside one scene |
+
+The `seasideWalk` story therefore names `handholdSunset`, `braceletPromise`, and `stallOrder` as beats without encoding order into numeric ids. Its three main dialogue groups use `mode: conversation`. A conversation owns one shared turn index: any member hotspot or visible member bubble dispatches `dialogue.next` to the same group. Consecutive turns from one speaker update that speaker's existing bubble in place; a speaker change hides the prior member and reveals the mapped counterpart. A 200 ms group input lock prevents a double tap from skipping a turn. After the final turn, the next action closes the group; the following action restarts turn one.
+
+`mode: ambient` remains the contract for independent per-target queues. Ambient copy does not share an index, does not acquire story order, and is appropriate for room remarks or genuinely unrelated hotspots. Navigation parentage alone never makes two bubbles a conversation.
+
 TextPorts may use edge-growth anchors when copy length must never cover a protected subject. `bottomCenter` pins the authored lower edge and lets added lines grow upward; `topCenter` pins the authored upper edge and lets added lines grow downward. These remain normalized base-image coordinates and therefore travel with a panorama instead of becoming viewport overlays.
 
 If the next scene asset fails, SceneRuntime does not commit the candidate navigation state. It reconciles the prior snapshot, restores Layout readiness for the prior owner set, emits `scene:didFail`, and leaves the scene stack unchanged.
@@ -143,7 +155,9 @@ NotebookPanelSession
 -> StateController.commit()
 ```
 
-No Supabase service or secret key is present in browser code. `/api/set-state` retains its existing server-side Supabase credential and authorization behavior. If `/api/state` fails, the runtime may use `preview-state.v2.json` only for surfaces that explicitly set `allowDegradedFallback:true`; the UI labels this source `preview copy` and disables notebook mutation. Each beach scene has separate registered `bubbleQueue` targets for Alex and Vicky. All six ports use their approved manifest queues only while their own target has no readable state; publishing one speaker cannot overwrite the other speaker or another scene.
+No Supabase service or secret key is present in browser code. `/api/set-state` retains its existing server-side Supabase credential and authorization behavior. If `/api/state` fails, the runtime may use `preview-state.v2.json` only for surfaces that explicitly set `allowDegradedFallback:true`; the UI labels this source `preview copy` and disables notebook mutation.
+
+Each seaside beat now has one canonical `dialogueScript` target whose value is an ordered array of `{ speaker, text }` turns. `/write` and MCP accept the human-editable `@alex` / `@vicky` form and parse it through the same shared module. The existing six per-speaker `bubbleQueue` targets remain independently writable compatibility/ambient channels. If a canonical script field is absent, TextPort deterministically interleaves those two established queues Alex-first, Vicky-second; publishing a canonical script then becomes authoritative for that group. This adds no table, column, policy, bucket, or Storage migration because all fields remain keys inside the existing `nest_state.value` JSON document.
 
 ## Product surface boundary
 
