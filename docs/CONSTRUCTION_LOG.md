@@ -409,3 +409,9 @@ No text target, `nest_state` value, archive item, local-media slot, Storage obje
 The three beach Alex/Vicky pairs now use manifest-owned `dialogueGroups` with one `groupLock` focus per scene. The first member reveal centers that authored image focus once; subsequent speaker changes, copy-width changes, and manual panning cannot trigger member-level recentering. Bubbles remain pinned to the base image, and ungrouped panorama ports retain the existing safe-edge reveal fallback.
 
 Manifest 0.3.3 validation and 86/86 automated checks passed. The change does not alter navigation, six writable beach target ids, live state, Supabase, Storage, or the production route owner. Full details are in `docs/construction-logs/2026-08-11.md`.
+
+## 2026-08-11 panorama dialogue anchor polish
+
+Manifest 0.3.4 calibrates the first beach conversation to the accepted crop (`focusX .436`) and introduces reusable `bottomCenter` / `topCenter` image anchors. The handhold Alex bubble pins its lower edge above the face; bracelet and stall Alex bubbles pin their upper edges below the face. Longer published copy can now grow only into the approved direction. Generic bubble copy is unified at the compact weather-title size (`15px`) with normal weight.
+
+The six writable speaker targets, navigation stack, hotspots, images, live state, Supabase, Storage, and MCP envelopes are unchanged. Manifest validation rejects unknown coordinate anchors, and 87/87 checks pass.

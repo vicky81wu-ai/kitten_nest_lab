@@ -79,12 +79,12 @@ test('home restorations and the approved beach chain stay explicit in one manife
 test('each beach conversation owns one stable group camera focus', async () => {
   const manifest = await readJson('../../v2/data/nest-manifest.v2.json');
   const expected = [
-    ['coffeeCornerBeachHandholdDialogue', 'coffeeCornerBeachHandholdSunset', 0.51],
+    ['coffeeCornerBeachHandholdDialogue', 'coffeeCornerBeachHandholdSunset', 0.436],
     ['coffeeCornerBeachBraceletDialogue', 'coffeeCornerBeachBraceletPromise', 0.48],
     ['coffeeCornerBeachStallOrderDialogue', 'coffeeCornerBeachStallOrder', 0.56]
   ];
 
-  assert.equal(manifest.version, '0.3.3');
+  assert.equal(manifest.version, '0.3.4');
   expected.forEach(([groupId, sceneId, focusX]) => {
     const group = manifest.dialogueGroups[groupId];
     assert.equal(group.ownerScene, sceneId);
@@ -97,12 +97,24 @@ test('each beach conversation owns one stable group camera focus', async () => {
       assert.equal(member.coordinate.x, focusX);
     });
   });
+
+  assert.deepEqual(manifest.objects.coffeeCornerBeachHandholdBubble.coordinate, {
+    anchor: 'bottomCenter', x: 0.436, y: 0.248
+  });
+  assert.deepEqual(manifest.objects.coffeeCornerBeachBraceletBubble.coordinate, {
+    anchor: 'topCenter', x: 0.48, y: 0.396
+  });
+  assert.deepEqual(manifest.objects.coffeeCornerBeachStallOrderBubble.coordinate, {
+    anchor: 'topCenter', x: 0.56, y: 0.33
+  });
 });
 
 test('the generic v2 bubble no longer draws the legacy triangle tail', async () => {
   const css = await readFile(new URL('../../v2/styles/nest-v2.css', import.meta.url), 'utf8');
   assert.doesNotMatch(css, /\.v2-text-port::after/);
   assert.match(css, /\.v2-text-port\s*\{[^}]*border-radius:\s*22px;/s);
+  assert.match(css, /\.v2-text-port\s*\{[^}]*font-size:\s*15px;[^}]*font-weight:\s*400;/s);
+  assert.doesNotMatch(css, /\.v2-text-port--alex,\s*\.v2-text-port--vicky\s*\{[^}]*font-size:/s);
 });
 
 test('the v2 entry is ready for iPhone home-screen mode', async () => {
@@ -181,6 +193,7 @@ test('manifest validation rejects dangling hotspots and unsupported effects', as
   manifest.objects['home.sparkles'].effect.type = 'mysteryDust';
   manifest.objects['system.localMediaLongPressHot'].longPressMs = 100;
   manifest.objects['home.goCoffeeCornerHot'].action.target = 'missingRoom';
+  manifest.objects.coffeeCornerBeachHandholdBubble.coordinate.anchor = 'floatingFace';
   const result = validateManifest(manifest, textTargets);
   assert.equal(result.ok, false);
   assert.match(result.errors.join('\n'), /coffeeCorner\.beachEnterHot navigates to unknown scene missingBeach/);
@@ -188,6 +201,7 @@ test('manifest validation rejects dangling hotspots and unsupported effects', as
   assert.match(result.errors.join('\n'), /home\.sparkles uses unsupported type mysteryDust/);
   assert.match(result.errors.join('\n'), /home\.goCoffeeCornerHot navigates to unknown scene missingRoom/);
   assert.match(result.errors.join('\n'), /requires a 500-3000ms delay/);
+  assert.match(result.errors.join('\n'), /uses unsupported coordinate anchor floatingFace/);
 });
 
 test('manifest validation rejects broken dialogue group camera contracts', async () => {

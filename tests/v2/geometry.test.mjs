@@ -53,6 +53,42 @@ test('content-sized panorama bubbles center from their measured width', () => {
   assert.equal(placement.width, 0);
 });
 
+test('content-sized dialogue anchors grow away from their authored edge', () => {
+  const imageBox = { left: 0, top: 0, width: 1200, height: 800 };
+  const stageRect = { left: 0, top: 0 };
+  const bottomShort = projectCoordinate({
+    imageBox,
+    stageRect,
+    coordinate: { anchor: 'bottomCenter', x: 0.6, y: 0.25 },
+    elementSize: { width: 300, height: 80 }
+  });
+  const bottomTall = projectCoordinate({
+    imageBox,
+    stageRect,
+    coordinate: { anchor: 'bottomCenter', x: 0.6, y: 0.25 },
+    elementSize: { width: 300, height: 120 }
+  });
+  const topShort = projectCoordinate({
+    imageBox,
+    stageRect,
+    coordinate: { anchor: 'topCenter', x: 0.48, y: 0.4 },
+    elementSize: { width: 300, height: 80 }
+  });
+  const topTall = projectCoordinate({
+    imageBox,
+    stageRect,
+    coordinate: { anchor: 'topCenter', x: 0.48, y: 0.4 },
+    elementSize: { width: 300, height: 120 }
+  });
+
+  assert.equal(bottomShort.left, 570);
+  assert.equal(bottomShort.top + 80, 200);
+  assert.equal(bottomTall.top + 120, 200);
+  assert.equal(topShort.left, 426);
+  assert.equal(topShort.top, 320);
+  assert.equal(topTall.top, 320);
+});
+
 test('panorama reveal target keeps a newly opened bubble inside the viewport', () => {
   assert.equal(horizontalRevealTarget({
     viewportRect: { left: 0, right: 393 },

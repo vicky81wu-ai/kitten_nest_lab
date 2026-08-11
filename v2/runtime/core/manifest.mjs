@@ -14,6 +14,14 @@ const REQUIRED_CONTROLLERS = [
 const SCENE_TARGET_ACTIONS = new Set(['scene.go', 'scene.push', 'scene.jumpTo']);
 const SUPPORTED_EFFECT_TYPES = new Set(['sparkles', 'steam', 'clockHands']);
 const SUPPORTED_DIALOGUE_CAMERA_POLICIES = new Set(['groupLock']);
+const SUPPORTED_COORDINATE_ANCHORS = new Set([
+  'center',
+  'topCenter',
+  'bottomCenter',
+  'bottomRight',
+  'bottomLeft',
+  'baselineTop'
+]);
 const LOCAL_MEDIA_KEYS = [
   'homeOn',
   'homeOff',
@@ -141,7 +149,10 @@ export function validateManifest(manifest, textTargetRegistry = null) {
       errors.push(`Object ${id} requires a manifest coordinate`);
     }
     if (object?.coordinate) {
-      const { x, y, width, height } = object.coordinate;
+      const { anchor = 'center', x, y, width, height } = object.coordinate;
+      if (!SUPPORTED_COORDINATE_ANCHORS.has(anchor)) {
+        errors.push(`Object ${id} uses unsupported coordinate anchor ${anchor}`);
+      }
       if (!Number.isFinite(x) || x < 0 || x > 1 || !Number.isFinite(y) || y < 0 || y > 1) {
         errors.push(`Object ${id} coordinate x/y must stay within the base image`);
       }

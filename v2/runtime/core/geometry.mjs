@@ -59,6 +59,11 @@ export function projectCoordinate({
   if (anchor === 'center') {
     left -= anchorWidth / 2;
     top -= height / 2;
+  } else if (anchor === 'topCenter') {
+    left -= anchorWidth / 2;
+  } else if (anchor === 'bottomCenter') {
+    left -= anchorWidth / 2;
+    top -= height;
   } else if (anchor === 'bottomRight') {
     left -= anchorWidth;
     top -= height;

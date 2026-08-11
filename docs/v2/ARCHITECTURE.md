@@ -117,6 +117,8 @@ On the first member reveal after entering a scene, TextPort waits for Layout rea
 
 `groupLock` is deliberately the only active dialogue camera policy. A future scene that intentionally follows widely separated speakers must introduce a separately specified policy and tests rather than weakening the stable conversation rule.
 
+TextPorts may use edge-growth anchors when copy length must never cover a protected subject. `bottomCenter` pins the authored lower edge and lets added lines grow upward; `topCenter` pins the authored upper edge and lets added lines grow downward. These remain normalized base-image coordinates and therefore travel with a panorama instead of becoming viewport overlays.
+
 If the next scene asset fails, SceneRuntime does not commit the candidate navigation state. It reconciles the prior snapshot, restores Layout readiness for the prior owner set, emits `scene:didFail`, and leaves the scene stack unchanged.
 
 ## State and MCP boundary
