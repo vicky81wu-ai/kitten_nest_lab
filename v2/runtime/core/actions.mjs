@@ -11,6 +11,9 @@ export async function dispatchAction(context, action) {
   if (type === 'text.toggleNext') {
     return context.controllers.get('textPort').toggleNext(action.target);
   }
+  if (type === 'dialogue.next') {
+    return context.controllers.get('textPort').nextDialogue(action.target);
+  }
   if (type === 'text.hide') {
     return context.controllers.get('textPort').hide(action.target);
   }

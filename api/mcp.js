@@ -1,4 +1,5 @@
 const textTargetRegistry = require('../data/text-targets.v1.json');
+const { parseDialogueScript } = require('../shared/dialogue-script.js');
 
 const TOOL_NAMES = [
   'read_nest_state',
@@ -15,7 +16,7 @@ const TOOL_NAMES = [
 const SESSION_ID = 'kitten-nest-session';
 const MCP_VERSION = '2025-06-18';
 const SERVER_NAME = 'kitten-nest-mcp';
-const SERVER_VERSION = '0.1.8-all-beach-speakers';
+const SERVER_VERSION = '0.2.0-dialogue-timeline';
 
 function normalizeTarget(targetId, target = {}) {
   const id = String(target.targetId || targetId || '').trim();
@@ -217,6 +218,19 @@ function buildBubbleQueuePatch(target, text) {
   };
 }
 
+function buildDialogueScriptPatch(target, text) {
+  const turns = parseDialogueScript(text, {
+    speakers: target.speakers,
+    maxTurns: target.maxTurns,
+    maxTurnChars: target.maxTurnChars,
+    maxChars: target.maxChars
+  });
+  return {
+    [target.field]: turns,
+    [target.updatedAtField]: now()
+  };
+}
+
 function buildTextTargetPatch(targetId, text, state) {
   const target = TEXT_TARGETS[targetId];
   if (!target) throw new Error(`Unknown text target: ${targetId}`);
@@ -234,6 +248,10 @@ function buildTextTargetPatch(targetId, text, state) {
       alexBubbles: list,
       bubbleIndex: 0
     };
+  }
+
+  if (target.type === 'dialogueScript') {
+    return buildDialogueScriptPatch(target, text);
   }
 
   if (target.type === 'bubbleQueue') {
@@ -324,7 +342,7 @@ function textTargetSchema() {
       },
       text: {
         type: 'string',
-        description: 'Text to write. Bubble queues use one non-empty line per rotating bubble. windowWeather uses line 1 as temperature and line 2 as weather description.'
+        description: 'Text to write. Dialogue scripts use ordered @alex and @vicky blocks. Bubble queues use one non-empty line per rotating bubble. windowWeather uses line 1 as temperature and line 2 as weather description.'
       },
       mode: {
         type: 'string',

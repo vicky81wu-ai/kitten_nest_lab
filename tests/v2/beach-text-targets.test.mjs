@@ -43,6 +43,27 @@ const beachTargets = [
   }
 ];
 
+const dialogueTargets = [
+  {
+    targetId: 'seasideWalkHandholdSunsetMainDialogue',
+    sceneId: 'coffeeCornerBeachHandholdSunset',
+    beatId: 'handholdSunset',
+    field: 'seasideWalkHandholdSunsetMainTurns'
+  },
+  {
+    targetId: 'seasideWalkBraceletPromiseMainDialogue',
+    sceneId: 'coffeeCornerBeachBraceletPromise',
+    beatId: 'braceletPromise',
+    field: 'seasideWalkBraceletPromiseMainTurns'
+  },
+  {
+    targetId: 'seasideWalkStallOrderMainDialogue',
+    sceneId: 'coffeeCornerBeachStallOrder',
+    beatId: 'stallOrder',
+    field: 'seasideWalkStallOrderMainTurns'
+  }
+];
+
 test('three established beach scenes own six isolated writable speaker bubble targets', () => {
   const writableFields = [];
   for (const card of beachTargets) {
@@ -105,6 +126,53 @@ test('set-state and MCP builders write only the selected beach queue fields', ()
   }
 });
 
+test('three semantic dialogue targets own ordered story scripts without replacing legacy speaker queues', () => {
+  for (const card of dialogueTargets) {
+    const target = textTargets.targets[card.targetId];
+    const tag = writeTags.tags[card.targetId];
+    const group = manifest.dialogueGroups[card.targetId];
+
+    assert.equal(target.type, 'dialogueScript');
+    assert.equal(target.field, card.field);
+    assert.equal(target.storyId, 'seasideWalk');
+    assert.equal(target.beatId, card.beatId);
+    assert.deepEqual(target.speakers, ['alex', 'vicky']);
+    assert.equal(tag.tag, `[${card.targetId}]`);
+    assert.equal(tag.storyId, 'seasideWalk');
+    assert.equal(tag.beatId, card.beatId);
+    assert.equal(group.ownerScene, card.sceneId);
+    assert.equal(group.mode, 'conversation');
+    assert.deepEqual(Object.keys(group.speakers), ['alex', 'vicky']);
+    assert.equal(group.scriptTargetId, card.targetId);
+  }
+
+  beachTargets.forEach(({ targetId }) => assert.equal(textTargets.targets[targetId].type, 'bubbleQueue'));
+});
+
+test('set-state and MCP parse the same tagged speaker script into ordered turns', () => {
+  const script = '@alex\nfirst\n\n@alex second\n\n@vicky\nreply';
+  const expectedTurns = [
+    { speaker: 'alex', text: 'first' },
+    { speaker: 'alex', text: 'second' },
+    { speaker: 'vicky', text: 'reply' }
+  ];
+
+  for (const card of dialogueTargets) {
+    const target = textTargets.targets[card.targetId];
+    const expectedFields = [target.field, target.updatedAtField];
+    const envelope = setState.buildTextTargetEnvelope({
+      textTarget: { targetId: card.targetId, text: script, mode: 'publish', dryRun: true }
+    }, {});
+    const mcpPatch = mcp.buildTextTargetPatch(card.targetId, script, {});
+
+    assert.equal(setState.canPublishTextTarget(card.targetId), true);
+    assert.deepEqual(Object.keys(envelope.patch), expectedFields);
+    assert.deepEqual(envelope.patch[target.field], expectedTurns);
+    assert.deepEqual(Object.keys(mcpPatch), expectedFields);
+    assert.deepEqual(mcpPatch[target.field], expectedTurns);
+  }
+});
+
 test('writer console advertises all six canonical beach tags and MCP exposes every target id', async () => {
   const html = await readFile(new URL('../../write.html', import.meta.url), 'utf8');
   const mcpTargetEnum = mcp.toolList()
@@ -112,6 +180,25 @@ test('writer console advertises all six canonical beach tags and MCP exposes eve
     .inputSchema.properties.targetId.enum;
 
   for (const { targetId } of beachTargets) {
+    assert.match(html, new RegExp(`\\[${targetId}\\]`));
+    assert.match(html, new RegExp(`<option value="${targetId}">${targetId}</option>`));
+    assert.equal(mcpTargetEnum.includes(targetId), true);
+    assert.equal(writeTags.writeAllPlacesPreset.includeTags.includes(`[${targetId}]`), true);
+  }
+});
+
+test('writer console exposes explicit conversation and ambient modes for every seaside target', async () => {
+  const html = await readFile(new URL('../../write.html', import.meta.url), 'utf8');
+  const mcpTargetEnum = mcp.toolList()
+    .find((tool) => tool.name === 'update_text_target')
+    .inputSchema.properties.targetId.enum;
+
+  assert.match(html, />剧情对话</);
+  assert.match(html, />环境碎语</);
+  assert.match(html, /@alex/);
+  assert.match(html, /@vicky/);
+  assert.match(html, /shared\/dialogue-script\.js/);
+  for (const { targetId } of dialogueTargets) {
     assert.match(html, new RegExp(`\\[${targetId}\\]`));
     assert.match(html, new RegExp(`<option value="${targetId}">${targetId}</option>`));
     assert.equal(mcpTargetEnum.includes(targetId), true);

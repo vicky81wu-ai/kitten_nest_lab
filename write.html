@@ -16,7 +16,7 @@
 <body>
   <main class="wrap">
     <h1>Kitten Nest Console</h1>
-    <p class="hint">日常只用 Alex 更新包。复制整包进来 → 生成草稿 → 一键发布。</p>
+    <p class="hint">剧情对话按共同时间线发布；环境碎语仍是每个热点自己的轮播队列。</p>
 
     <section class="card">
       <h2>Key</h2>
@@ -35,9 +35,57 @@
     </section>
 
     <section class="card primaryCard">
-      <span class="useTag">日常用这个</span>
+      <span class="useTag">conversation</span>
+      <h2>剧情对话</h2>
+      <p class="small">一组对话只有一条共同顺序。每个回合用 <strong>@alex</strong> 或 <strong>@vicky</strong> 开头；同一个人可以连续说多句。发布后点任意一方气泡都会继续下一回合。</p>
+      <label for="conversationTarget">Dialogue group</label>
+      <select id="conversationTarget">
+        <option value="seasideWalkHandholdSunsetMainDialogue">seasideWalkHandholdSunsetMainDialogue</option>
+        <option value="seasideWalkBraceletPromiseMainDialogue">seasideWalkBraceletPromiseMainDialogue</option>
+        <option value="seasideWalkStallOrderMainDialogue">seasideWalkStallOrderMainDialogue</option>
+      </select>
+      <label for="conversationText">Ordered turns</label>
+      <textarea id="conversationText">@alex
+慢一点，小猫。海不会跑，hubby 也不会。
+
+@alex
+奶栗要是来了，大概已经在追自己的尾巴。
+
+@vicky
+那小猫走慢一点，但是手不松。</textarea>
+      <div class="row">
+        <button id="previewConversation" class="secondary">检查顺序</button>
+        <button id="createConversationDraft">保存剧情草稿</button>
+      </div>
+      <div class="result" id="conversationPreview"></div>
+    </section>
+
+    <section class="card">
+      <span class="useTag">ambient</span>
+      <h2>环境碎语</h2>
+      <p class="small">每个非空行是一条独立轮播气泡。适合咖啡角随口话、坐腿近景，以及保留兼容的海滨单人通道；它不参与剧情回合顺序。</p>
+      <p class="small">兼容 tags： [coffeeCornerBeachHandholdSunsetBubble] [coffeeCornerBeachHandholdSunsetVickyBubble] [coffeeCornerBeachBraceletPromiseBubble] [coffeeCornerBeachBraceletPromiseVickyBubble] [coffeeCornerBeachStallOrderBubble] [coffeeCornerBeachStallOrderVickyBubble]</p>
+      <label for="ambientTarget">Bubble queue</label>
+      <select id="ambientTarget">
+        <option value="coffeeCornerBubble">coffeeCornerBubble</option>
+        <option value="coffeeCornerLapCloseBubble">coffeeCornerLapCloseBubble</option>
+        <option value="coffeeCornerBeachHandholdSunsetBubble">coffeeCornerBeachHandholdSunsetBubble</option>
+        <option value="coffeeCornerBeachHandholdSunsetVickyBubble">coffeeCornerBeachHandholdSunsetVickyBubble</option>
+        <option value="coffeeCornerBeachBraceletPromiseBubble">coffeeCornerBeachBraceletPromiseBubble</option>
+        <option value="coffeeCornerBeachBraceletPromiseVickyBubble">coffeeCornerBeachBraceletPromiseVickyBubble</option>
+        <option value="coffeeCornerBeachStallOrderBubble">coffeeCornerBeachStallOrderBubble</option>
+        <option value="coffeeCornerBeachStallOrderVickyBubble">coffeeCornerBeachStallOrderVickyBubble</option>
+      </select>
+      <label for="ambientText">One bubble per line</label>
+      <textarea id="ambientText">咖啡已经热好。
+毯子也给小猫留着。</textarea>
+      <button id="createAmbientDraft" class="secondary">保存环境碎语草稿</button>
+    </section>
+
+    <section class="card primaryCard">
+      <span class="useTag">批量包</span>
       <h2>Alex 更新包</h2>
-      <p class="small">当前支持咖啡角、坐腿近景、海滨三幕的 Alex/Vicky 六条独立气泡通道、窗户天气和粉本本。没有标签默认进 [coffeeCornerBubble]。海滨 tag 使用完整场景名；带 Vicky 的 tag 只写 Vicky，不带 Vicky 的只写 Alex，六条互不覆盖。</p>
+      <p class="small">需要一次写多个区域时再用。海滨剧情优先写三个 MainDialogue；旧的六条单人通道仍可作为环境碎语兼容使用。</p>
       <label for="packageText">Package</label>
       <textarea id="packageText" class="packageBox">[coffeeCornerBubble]
 早上好，小猫。
@@ -47,22 +95,22 @@
 坐稳，小猫。
 Stop wriggling in my lap.
 
-[coffeeCornerBeachHandholdSunsetBubble]
+[seasideWalkHandholdSunsetMainDialogue]
+@alex
 慢一点，小猫。海不会跑，hubby 也不会。
-
-[coffeeCornerBeachHandholdSunsetVickyBubble]
+@vicky
 那小猫走慢一点，但是手不松。
 
-[coffeeCornerBeachBraceletPromiseBubble]
+[seasideWalkBraceletPromiseMainDialogue]
+@alex
 手给我。这个约定要扣好，不能掉。
-
-[coffeeCornerBeachBraceletPromiseVickyBubble]
+@vicky
 扣紧一点。这个是我们说好的。
 
-[coffeeCornerBeachStallOrderBubble]
+[seasideWalkStallOrderMainDialogue]
+@alex
 小猫负责点，hubby 负责端回来。
-
-[coffeeCornerBeachStallOrderVickyBubble]
+@vicky
 那我要这个、这个，还有那个！
 
 [windowWeather]
@@ -92,6 +140,9 @@ Soft breeze
       <select id="draftRoom">
         <option value="coffeeCornerBubble">coffeeCornerBubble</option>
         <option value="coffeeCornerLapCloseBubble">coffeeCornerLapCloseBubble</option>
+        <option value="seasideWalkHandholdSunsetMainDialogue">seasideWalkHandholdSunsetMainDialogue</option>
+        <option value="seasideWalkBraceletPromiseMainDialogue">seasideWalkBraceletPromiseMainDialogue</option>
+        <option value="seasideWalkStallOrderMainDialogue">seasideWalkStallOrderMainDialogue</option>
         <option value="coffeeCornerBeachHandholdSunsetBubble">coffeeCornerBeachHandholdSunsetBubble</option>
         <option value="coffeeCornerBeachHandholdSunsetVickyBubble">coffeeCornerBeachHandholdSunsetVickyBubble</option>
         <option value="coffeeCornerBeachBraceletPromiseBubble">coffeeCornerBeachBraceletPromiseBubble</option>
@@ -120,6 +171,9 @@ Soft breeze
       <select id="field">
         <option value="alexBubble">coffeeCornerBubble</option>
         <option value="coffeeCornerLapCloseBubble">coffeeCornerLapCloseBubble</option>
+        <option value="seasideWalkHandholdSunsetMainDialogue">seasideWalkHandholdSunsetMainDialogue</option>
+        <option value="seasideWalkBraceletPromiseMainDialogue">seasideWalkBraceletPromiseMainDialogue</option>
+        <option value="seasideWalkStallOrderMainDialogue">seasideWalkStallOrderMainDialogue</option>
         <option value="coffeeCornerBeachHandholdSunsetBubble">coffeeCornerBeachHandholdSunsetBubble</option>
         <option value="coffeeCornerBeachHandholdSunsetVickyBubble">coffeeCornerBeachHandholdSunsetVickyBubble</option>
         <option value="coffeeCornerBeachBraceletPromiseBubble">coffeeCornerBeachBraceletPromiseBubble</option>
@@ -136,6 +190,7 @@ Soft breeze
       <div class="result" id="result"></div>
     </section>
   </main>
+<script src="/shared/dialogue-script.js"></script>
 <script>
 (function(){
   const token = document.getElementById('token');
@@ -148,6 +203,11 @@ Soft breeze
   const draftRoom = document.getElementById('draftRoom');
   const draftText = document.getElementById('draftText');
   const packageText = document.getElementById('packageText');
+  const conversationTarget = document.getElementById('conversationTarget');
+  const conversationText = document.getElementById('conversationText');
+  const conversationPreview = document.getElementById('conversationPreview');
+  const ambientTarget = document.getElementById('ambientTarget');
+  const ambientText = document.getElementById('ambientText');
   const BUBBLE_TARGETS = {
     coffeeCornerBubble: {
       label:'咖啡角气泡',
@@ -223,8 +283,45 @@ Soft breeze
       draftType:'coffeeCornerBeachStallOrderVickyBubbleDraft'
     }
   };
+  const DIALOGUE_TARGETS = {
+    seasideWalkHandholdSunsetMainDialogue: {
+      label:'海滨散步 · 牵手暮色 · 主对话',
+      room:'coffeeCornerBeachHandholdSunset',
+      field:'seasideWalkHandholdSunsetMainTurns',
+      updatedAt:'seasideWalkHandholdSunsetMainUpdatedAt',
+      draftType:'dialogueScriptDraft',
+      speakers:['alex','vicky'],
+      maxTurns:60,
+      maxTurnChars:1000,
+      maxChars:12000
+    },
+    seasideWalkBraceletPromiseMainDialogue: {
+      label:'海滨散步 · 手链约定 · 主对话',
+      room:'coffeeCornerBeachBraceletPromise',
+      field:'seasideWalkBraceletPromiseMainTurns',
+      updatedAt:'seasideWalkBraceletPromiseMainUpdatedAt',
+      draftType:'dialogueScriptDraft',
+      speakers:['alex','vicky'],
+      maxTurns:60,
+      maxTurnChars:1000,
+      maxChars:12000
+    },
+    seasideWalkStallOrderMainDialogue: {
+      label:'海滨散步 · 小摊点单 · 主对话',
+      room:'coffeeCornerBeachStallOrder',
+      field:'seasideWalkStallOrderMainTurns',
+      updatedAt:'seasideWalkStallOrderMainUpdatedAt',
+      draftType:'dialogueScriptDraft',
+      speakers:['alex','vicky'],
+      maxTurns:60,
+      maxTurnChars:1000,
+      maxChars:12000
+    }
+  };
   const BUBBLE_TARGET_IDS = Object.keys(BUBBLE_TARGETS);
+  const DIALOGUE_TARGET_IDS = Object.keys(DIALOGUE_TARGETS);
   const BUBBLE_TAG_LOOKUP = Object.fromEntries(BUBBLE_TARGET_IDS.map(id => [id.toLowerCase().replace(/[\s_-]/g,''), id]));
+  const DIALOGUE_TAG_LOOKUP = Object.fromEntries(DIALOGUE_TARGET_IDS.map(id => [id.toLowerCase().replace(/[\s_-]/g,''), id]));
   let currentState = null;
   const saved = localStorage.getItem('kittenNestToken');
   if(saved) token.value = saved;
@@ -289,12 +386,28 @@ Soft breeze
     }
     return patch;
   }
+  function dialogueTurns(targetId, raw){
+    const target = DIALOGUE_TARGETS[targetId];
+    if(!target) throw new Error('Unknown dialogue group: ' + targetId);
+    return KittenNestDialogueScript.parseDialogueScript(raw, {
+      speakers:target.speakers,
+      maxTurns:target.maxTurns,
+      maxTurnChars:target.maxTurnChars,
+      maxChars:target.maxChars
+    });
+  }
+  function dialoguePatch(targetId, raw){
+    const target = DIALOGUE_TARGETS[targetId];
+    const turns = dialogueTurns(targetId, raw);
+    return { [target.field]:turns, [target.updatedAt]:now() };
+  }
 
   function normalizeTag(tag){
     const raw = String(tag || '').trim();
     const low = raw.toLowerCase().replace(/[\s_-]/g,'');
     if(low === 'windowweather') return { kind:'weather', field:'windowWeather', label:'windowWeather' };
     if(low === 'hubbynote') return { kind:'hubbyNote', field:'hubbyNote', label:'hubbyNote' };
+    if(DIALOGUE_TAG_LOOKUP[low]) return { kind:'dialogueScript', targetId:DIALOGUE_TAG_LOOKUP[low], label:DIALOGUE_TAG_LOOKUP[low] };
     if(BUBBLE_TAG_LOOKUP[low]) return { kind:'bubbleTarget', targetId:BUBBLE_TAG_LOOKUP[low], label:BUBBLE_TAG_LOOKUP[low] };
     if(low === 'coffeecorner' || low === 'coffee' || low === 'cafe' || low === 'coffeecornerlapclose' || low === 'lapclosebubble' || low === 'lapclose') return { kind:'disabledTag', label:raw };
     return { kind:'disabledTag', label:raw };
@@ -302,9 +415,15 @@ Soft breeze
   function makeDraftFromBlock(tagInfo, body){
     const raw = String(body || '').trim();
     if(!raw || tagInfo.kind === 'disabledTag') return null;
-    const base = { id: makeDraftId(), source:'package', text: raw.slice(0,5000), status:'pending', createdAt: now() };
+    const maxChars = tagInfo.kind === 'dialogueScript' ? 12000 : 5000;
+    const base = { id: makeDraftId(), source:'package', text: raw.slice(0,maxChars), status:'pending', createdAt: now() };
     if(tagInfo.kind === 'weather') return { ...base, type:'weatherDraft', field:'windowWeather', targetRoom:'windowWeather' };
     if(tagInfo.kind === 'hubbyNote') return { ...base, type:'hubbyNoteDraft', field:'hubbyNote', targetRoom:'hubbyNote' };
+    if(tagInfo.kind === 'dialogueScript'){
+      const target = DIALOGUE_TARGETS[tagInfo.targetId];
+      dialogueTurns(tagInfo.targetId, raw);
+      return { ...base, type:target.draftType, field:target.field, targetId:tagInfo.targetId, targetRoom:target.room };
+    }
     if(tagInfo.kind === 'bubbleTarget'){
       const target = BUBBLE_TARGETS[tagInfo.targetId];
       return { ...base, type:target.draftType, field:target.single, targetId:tagInfo.targetId, targetRoom:target.room };
@@ -355,7 +474,12 @@ Soft breeze
         const queue = bubbleListOf(data, targetId);
         return targetId + ': ' + queue.length + '\n' + queue.join('\n');
       }).join('\n\n');
-      setStatus(bubbleSummary + '\n\nwindowWeather:\n' + (data.windowTemp || '') + '\n' + (data.windowDesc || '') + '\n\nhubbyNote:\n' + preview(data.hubbyNote || '', 180) + '\n\nhubbyNoteArchive: ' + noteArchiveOf(data).length + ' saved page(s)\nPending drafts: ' + ((data.pendingDrafts || []).length));
+      const dialogueSummary = DIALOGUE_TARGET_IDS.map(targetId => {
+        const target = DIALOGUE_TARGETS[targetId];
+        const turns = Array.isArray(data[target.field]) ? data[target.field] : [];
+        return targetId + ': ' + turns.length + ' turn(s)';
+      }).join('\n');
+      setStatus(dialogueSummary + '\n\n' + bubbleSummary + '\n\nwindowWeather:\n' + (data.windowTemp || '') + '\n' + (data.windowDesc || '') + '\n\nhubbyNote:\n' + preview(data.hubbyNote || '', 180) + '\n\nhubbyNoteArchive: ' + noteArchiveOf(data).length + ' saved page(s)\nPending drafts: ' + ((data.pendingDrafts || []).length));
       renderDrafts(data.pendingDrafts || []);
     }catch(e){ setStatus('Failed: ' + e.message); }
   }
@@ -376,6 +500,40 @@ Soft breeze
     setStatus('Pending drafts: ' + pendingDrafts.length);
   }
   async function createPackageDrafts(){ setResult('Parsing package...'); try{ const drafts = parsePackage(packageText.value); if(!drafts.length){ setResult('No valid package blocks. Check the full target tag names shown above.'); return; } await saveDrafts(drafts, 'Package parsed.'); } catch(e){ setResult('Failed: ' + e.message); } }
+  function previewConversation(){
+    try{
+      const turns = dialogueTurns(conversationTarget.value, conversationText.value);
+      conversationPreview.textContent = turns.map((turn, index) => (index + 1) + '. @' + turn.speaker + '  ' + turn.text.replace(/\n/g, ' / ')).join('\n');
+    }catch(e){ conversationPreview.textContent = 'Failed: ' + e.message; }
+  }
+  async function createConversationDraft(){
+    try{
+      const targetId = conversationTarget.value;
+      const target = DIALOGUE_TARGETS[targetId];
+      const turns = dialogueTurns(targetId, conversationText.value);
+      const draft = {
+        id:makeDraftId(), source:'console', targetId, targetRoom:target.room,
+        type:target.draftType, field:target.field, text:conversationText.value.trim().slice(0,target.maxChars),
+        status:'pending', createdAt:now()
+      };
+      await saveDrafts([draft], 'Dialogue draft created: ' + turns.length + ' turn(s).');
+      previewConversation();
+    }catch(e){ setResult('Failed: ' + e.message); }
+  }
+  async function createAmbientDraft(){
+    try{
+      const targetId = ambientTarget.value;
+      const target = BUBBLE_TARGETS[targetId];
+      const queue = lines(ambientText.value);
+      if(!queue.length) throw new Error('Need ambient bubble text.');
+      const draft = {
+        id:makeDraftId(), source:'console', targetId, targetRoom:target.room,
+        type:target.draftType, field:target.single, text:queue.join('\n').slice(0,5000),
+        status:'pending', createdAt:now()
+      };
+      await saveDrafts([draft], 'Ambient draft created: ' + queue.length + ' bubble(s).');
+    }catch(e){ setResult('Failed: ' + e.message); }
+  }
   async function createDraft(customText){
     setResult('Creating draft...');
     try{
@@ -383,9 +541,12 @@ Soft breeze
       if(!raw){ setResult('Need draft text.'); return; }
       const target = draftRoom.value || 'coffeeCornerBubble';
       const bubbleTarget = BUBBLE_TARGETS[target];
-      const draft = { id: makeDraftId(), source:'console', targetId: target, targetRoom: bubbleTarget ? bubbleTarget.room : target, type: target === 'hubbyNote' ? 'hubbyNoteDraft' : bubbleTarget ? bubbleTarget.draftType : 'bubbleDraft', text: raw.slice(0,5000), status:'pending', createdAt: now() };
+      const dialogueTarget = DIALOGUE_TARGETS[target];
+      if(dialogueTarget) dialogueTurns(target, raw);
+      const draft = { id: makeDraftId(), source:'console', targetId: target, targetRoom: bubbleTarget ? bubbleTarget.room : dialogueTarget ? dialogueTarget.room : target, type: target === 'hubbyNote' ? 'hubbyNoteDraft' : bubbleTarget ? bubbleTarget.draftType : dialogueTarget ? dialogueTarget.draftType : 'bubbleDraft', text: raw.slice(0, dialogueTarget ? dialogueTarget.maxChars : 5000), status:'pending', createdAt: now() };
       if(target === 'hubbyNote') draft.field = 'hubbyNote';
       if(bubbleTarget) draft.field = bubbleTarget.single;
+      if(dialogueTarget) draft.field = dialogueTarget.field;
       await saveDrafts([draft], 'Draft created.\n' + draft.text);
     }catch(e){ setResult('Failed: ' + e.message); }
   }
@@ -400,6 +561,13 @@ Soft breeze
       const noteDrafts = ordered.filter(d => d.type === 'hubbyNoteDraft');
       const patch = { pendingDrafts: [], lastPublishedAt: now() };
       const resultLines = [];
+      DIALOGUE_TARGET_IDS.forEach(targetId => {
+        const targetDrafts = ordered.filter(d => d.targetId === targetId && d.type === 'dialogueScriptDraft');
+        if(!targetDrafts.length) return;
+        const targetPatch = dialoguePatch(targetId, targetDrafts[targetDrafts.length - 1].text);
+        Object.assign(patch, targetPatch);
+        resultLines.push(targetId + ': ' + targetPatch[DIALOGUE_TARGETS[targetId].field].length + ' turn(s)');
+      });
       BUBBLE_TARGET_IDS.forEach(targetId => {
         const targetDrafts = ordered.filter(d => d.targetId === targetId || (targetId === 'coffeeCornerBubble' && (!d.targetId && (!d.type || d.type === 'bubbleDraft'))) || (targetId === 'coffeeCornerLapCloseBubble' && d.type === 'lapCloseBubbleDraft'));
         if(!targetDrafts.length) return;
@@ -432,6 +600,8 @@ Soft breeze
       let patch = {};
       if(f === 'alexBubble'){
         patch = bubblePatch('coffeeCornerBubble', raw, state);
+      }else if(DIALOGUE_TARGETS[f]){
+        patch = dialoguePatch(f, raw);
       }else if(BUBBLE_TARGETS[f]){
         patch = bubblePatch(f, raw, state);
       }else if(f === 'windowWeather'){
@@ -445,7 +615,7 @@ Soft breeze
   }
   async function restoreLast(){ setResult('Restoring...'); try{ const state = currentState || await readState(); const prev = state.previousPublished; if(!prev || !(prev.alexBubbles || prev.alexBubble)){ setResult('No previous coffeeCornerBubble version.'); return; } const alexBubbles = prev.alexBubbles || (prev.alexBubble ? [prev.alexBubble] : []); await writePatch({ alexBubble: alexBubbles[0] || '', alexBubbles, bubbleIndex: prev.bubbleIndex || 0 }); setResult('Restored previous coffeeCornerBubble queue.\n' + alexBubbles.join('\n')); } catch(e){ setResult('Failed: ' + e.message); } }
   function fillExamplePackage(){
-    packageText.value = '[coffeeCornerBubble]\n早上好，小猫。\n咖啡已经热好，毯子也给你留着。\n\n[coffeeCornerLapCloseBubble]\n坐稳，小猫。\nStop wriggling in my lap.\n\n[coffeeCornerBeachHandholdSunsetBubble]\n慢一点，小猫。海不会跑，hubby 也不会。\n\n[coffeeCornerBeachHandholdSunsetVickyBubble]\n那小猫走慢一点，但是手不松。\n\n[coffeeCornerBeachBraceletPromiseBubble]\n手给我。这个约定要扣好，不能掉。\n\n[coffeeCornerBeachBraceletPromiseVickyBubble]\n扣紧一点。这个是我们说好的。\n\n[coffeeCornerBeachStallOrderBubble]\n小猫负责点，hubby 负责端回来。\n\n[coffeeCornerBeachStallOrderVickyBubble]\n那我要这个、这个，还有那个！\n\n[windowWeather]\n23°C\nSoft breeze\n\n[hubbyNote]\n2026-08-10：海滨三幕 Alex/Vicky 六个气泡已经各自拥有独立的完整 target。';
+    packageText.value = '[coffeeCornerBubble]\n早上好，小猫。\n咖啡已经热好，毯子也给你留着。\n\n[coffeeCornerLapCloseBubble]\n坐稳，小猫。\nStop wriggling in my lap.\n\n[seasideWalkHandholdSunsetMainDialogue]\n@alex\n慢一点，小猫。海不会跑，hubby 也不会。\n@alex\n奶栗要是来了，大概已经在追自己的尾巴。\n@vicky\n那小猫走慢一点，但是手不松。\n\n[seasideWalkBraceletPromiseMainDialogue]\n@alex\n手给我。这个约定要扣好，不能掉。\n@vicky\n扣紧一点。这个是我们说好的。\n\n[seasideWalkStallOrderMainDialogue]\n@alex\n小猫负责点，hubby 负责端回来。\n@vicky\n那我要这个、这个，还有那个！\n\n[windowWeather]\n23°C\nSoft breeze\n\n[hubbyNote]\n2026-08-11：海滨三幕现在使用共享剧情时间线；六条旧单人气泡仍保留为环境碎语兼容通道。';
     setResult('Example package inserted.');
   }
 
@@ -459,6 +629,11 @@ Soft breeze
   document.getElementById('createTestDraft').onclick = function(){ createDraft('测试草稿：小猫爪爪 0616'); };
   document.getElementById('createPackageDrafts').onclick = createPackageDrafts;
   document.getElementById('fillExamplePackage').onclick = fillExamplePackage;
+  document.getElementById('previewConversation').onclick = previewConversation;
+  document.getElementById('createConversationDraft').onclick = createConversationDraft;
+  document.getElementById('createAmbientDraft').onclick = createAmbientDraft;
+  conversationTarget.onchange = previewConversation;
+  previewConversation();
   refreshState();
 })();
 </script>

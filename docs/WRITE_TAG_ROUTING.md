@@ -160,6 +160,31 @@ Rules:
 Do not use unless the current UI has an active moodNote target.
 ```
 
+### Seaside story conversations
+
+Canonical ordered-dialogue tags:
+
+```text
+[seasideWalkHandholdSunsetMainDialogue]
+[seasideWalkBraceletPromiseMainDialogue]
+[seasideWalkStallOrderMainDialogue]
+```
+
+These three tags write one complete `conversation` script per named story beat. The body must use explicit speaker markers:
+
+```text
+@alex
+First authored turn.
+
+@alex
+Alex may speak again without forcing a Vicky turn.
+
+@vicky
+Then Vicky replies.
+```
+
+Do not infer dialogue order from the scene parent chain or from numbers in an id. `stories.seasideWalk.beats` owns scene order and the array produced by the script owns turn order. The six `coffeeCornerBeach...Bubble` tags remain valid `ambient`/compatibility queues; use them only when independent per-speaker rotation is intended. Publishing one canonical MainDialogue makes it authoritative for that group while leaving the legacy queues untouched.
+
 ## Automatic workflow rule
 
 Whenever a new writable object is created, do this in order:
@@ -185,6 +210,7 @@ Default routing:
 coffee-corner short bubble -> [coffeeCorner]
 home weather/window advice -> [windowWeather]
 coffee-corner lap-close bubble -> [coffeeCornerLapCloseBubble]
+seaside ordered conversation -> one exact [seasideWalk...MainDialogue] tag
 ```
 
 If live `/write` does not yet support the canonical long tag, use the registered alias `[coffeeCornerLapClose]` until the parser change is tested and promoted.

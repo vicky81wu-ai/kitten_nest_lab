@@ -1,8 +1,12 @@
 const textTargetRegistry = require('../data/text-targets.v1.json');
+const { parseDialogueScript } = require('../shared/dialogue-script.js');
 
 const PUBLISHABLE_TEXT_TARGET_IDS = new Set([
   'coffeeCornerBubble',
   'coffeeCornerLapCloseBubble',
+  'seasideWalkHandholdSunsetMainDialogue',
+  'seasideWalkBraceletPromiseMainDialogue',
+  'seasideWalkStallOrderMainDialogue',
   'coffeeCornerBeachHandholdSunsetBubble',
   'coffeeCornerBeachHandholdSunsetVickyBubble',
   'coffeeCornerBeachBraceletPromiseBubble',
@@ -117,6 +121,20 @@ function buildBubbleQueuePatch(target, text) {
   };
 }
 
+function buildDialogueScriptPatch(target, text) {
+  const turns = parseDialogueScript(text, {
+    speakers: target.speakers,
+    maxTurns: target.maxTurns,
+    maxTurnChars: target.maxTurnChars,
+    maxChars: target.maxChars
+  });
+
+  return {
+    [target.field]: turns,
+    [target.updatedAtField]: now()
+  };
+}
+
 function buildWeatherTextPatch(text) {
   const list = cleanTargetLines(text, 2);
   return {
@@ -176,6 +194,7 @@ function buildTextTargetPatch(target, text, state, mode) {
 
   if (target.targetId === 'coffeeCornerBubble') return buildCoffeeCornerBubblePatch(text, state || {});
   if (target.targetId === 'coffeeCornerLapCloseBubble') return buildLapCloseBubblePatch(text);
+  if (target.type === 'dialogueScript') return buildDialogueScriptPatch(target, text);
   if (target.type === 'bubbleQueue') return buildBubbleQueuePatch(target, text);
   if (target.targetId === 'windowWeather') return buildWeatherTextPatch(text);
   if (target.targetId === 'hubbyNote') return buildHubbyNotePatch(text, state || {});
