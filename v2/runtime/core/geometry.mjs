@@ -100,3 +100,19 @@ export function horizontalRevealTarget({
 
   return Math.min(maxScroll, Math.max(0, target));
 }
+
+export function horizontalFocusTarget({
+  focusX = 0.5,
+  scrollWidth = 0,
+  clientWidth = 0
+}) {
+  const worldWidth = Math.max(0, Number(scrollWidth || 0));
+  const viewportWidth = Math.max(0, Number(clientWidth || 0));
+  const maxScroll = Math.max(0, worldWidth - viewportWidth);
+  const numericFocus = Number(focusX);
+  const normalizedFocus = Number.isFinite(numericFocus)
+    ? Math.min(1, Math.max(0, numericFocus))
+    : 0.5;
+  const centeredTarget = worldWidth * normalizedFocus - viewportWidth / 2;
+  return Math.min(maxScroll, Math.max(0, centeredTarget));
+}

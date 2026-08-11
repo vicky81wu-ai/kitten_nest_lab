@@ -111,7 +111,11 @@ lock input
 
 The three beach scenes use the same transaction and stack. Their wide base images live in the same retained scene world as portrait rooms; only the manifest presentation changes from `cover` to `panorama`. The viewport may scroll horizontally, and the scene-owned Back/Push hotspots move with that image world. Panels remain stage-level UI.
 
-An initially hidden panorama dialogue is measured by Layout before it becomes paint-ready. TextPort listens for that layout completion and, only for the newly revealed port, clamps the horizontal viewport so the complete bubble remains inside a 16 px safe edge. The adjustment occurs in the same task as layout readiness, preventing both clipped copy and a visible second-position jump.
+Panorama conversations are manifest-owned camera units. A `dialogueGroups` entry declares one panorama owner, its TextPort members, and one normalized `groupLock` focus. Every member remains a `baseImageLocked` object and shares that authored image X coordinate; the group does not turn bubbles into viewport UI.
+
+On the first member reveal after entering a scene, TextPort waits for Layout readiness and centers the declared focus once. That group is then marked focused for the current scene entry. Switching Alex/Vicky, changing line length, hiding/reopening a member, or manually dragging the panorama cannot recenter it again. Leaving and later re-entering the scene starts one new focus lifecycle. Ungrouped panorama TextPorts retain the narrower compatibility behavior: only their newly revealed measured bubble is clamped inside a 16 px viewport edge.
+
+`groupLock` is deliberately the only active dialogue camera policy. A future scene that intentionally follows widely separated speakers must introduce a separately specified policy and tests rather than weakening the stable conversation rule.
 
 If the next scene asset fails, SceneRuntime does not commit the candidate navigation state. It reconciles the prior snapshot, restores Layout readiness for the prior owner set, emits `scene:didFail`, and leaves the scene stack unchanged.
 

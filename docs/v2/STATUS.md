@@ -1,7 +1,7 @@
 # Kitten Nest v2 Status
 
-Updated: 2026-08-10
-Status: production `/cloud`; image-locked navigation and six beach speaker targets prepared on an isolated branch
+Updated: 2026-08-11
+Status: production `/cloud`; stable beach dialogue-group camera prepared on an isolated branch
 
 ## Production route
 
@@ -155,6 +155,21 @@ coffeeCornerBeachStallOrderVickyBubble
 
 Each target has its own current, queue, index, and timestamp fields. Every port uses its existing approved scene copy as a degraded/no-state fallback. `/api/mcp`, the `/api/set-state` envelope, `/write`, the tag registry, and the runtime manifest all read the same exact target ids. No Supabase table, policy, bucket, or Storage object is changed by registration.
 
+## Panorama dialogue-group camera 0.3.3
+
+The three beach pairs are now explicit conversation groups rather than six unrelated reveal targets. Each group owns one base-image focus selected from the scene artwork:
+
+```text
+handhold:  focusX 0.51
+bracelet:  focusX 0.48
+stall:     focusX 0.56
+policy:    groupLock
+```
+
+Both Alex and Vicky bubbles remain image-locked at their group's X coordinate and keep their independent Y positions, queues, tags, and writable target ids. The first member opened after scene entry centers that focus only after Layout has measured the bubble. The controller then suppresses every later member-level reveal correction for that group, so different copy widths cannot cause horizontal oscillation. A user drag after the first focus remains authoritative. Re-entering the scene resets only the one-focus lifecycle, not dialogue content or state.
+
+The manifest validator rejects unknown policies, dangling groups, cross-scene members, missing back-references, duplicate members, and a `groupLock` member whose X differs from its group focus. A deliberately distant future speaker exchange must use a new explicit policy; `speakerFollow` is not silently accepted.
+
 ## State of external dependencies
 
 At implementation start, both Supabase projects were `INACTIVE`:
@@ -277,7 +292,7 @@ Run:
 npm run check:v2
 ```
 
-This currently runs 81 checks covering controller contracts, paired preview/production route metadata, one-manifest ownership, registered text ports, selector exclusivity, child isolation, portrait and panorama navigation, image-locked transparent Go/Back/Push routes, approved beach order, six isolated beach speaker target envelopes, writer/MCP registry agreement, failed-asset rollback, full-size optimized static WebP delivery with canonical Storage fallback, fetch/Blob sequential warming without detached image elements, single-consumer warm requests, stalled-warm cancellation, the fixed full-screen `100lvh` PWA canvas, state readiness beside visual bootstrap, projection math, panorama bubble reveal, text mutation layout invalidation, fallback refresh serialization, compact weather presentation, drift-tolerant navigation, scoped iOS-safe long-press dispatch, exact three-room/six-photo local write allowlisting, device-local room-source priority, weather state/advice, time-of-day and manual asset resolution, connected stage-image loading, loading-veil presence, bounded best-effort image decode behavior, Gomoku legality/wins/undo and all three AI difficulty paths, absent/unsupported/existing legacy-photo database behavior, notebook normalization, save/deduplication, favorite, soft delete, request allowlisting, Nest-key failure handling, iPhone home-screen metadata, dangling scene/text action targets, coordinate ownership, supported effect types, and the absence of product-facing inspector/debug controls.
+This currently runs 86 checks covering controller contracts, paired preview/production route metadata, one-manifest ownership, registered text ports, selector exclusivity, child isolation, portrait and panorama navigation, image-locked transparent Go/Back/Push routes, approved beach order, six isolated beach speaker target envelopes, three dialogue-group camera contracts, one-focus scene-entry lifecycle, manual-pan preservation, writer/MCP registry agreement, failed-asset rollback, full-size optimized static WebP delivery with canonical Storage fallback, fetch/Blob sequential warming without detached image elements, single-consumer warm requests, stalled-warm cancellation, the fixed full-screen `100lvh` PWA canvas, state readiness beside visual bootstrap, projection math, grouped and ungrouped panorama bubble reveal, text mutation layout invalidation, fallback refresh serialization, compact weather presentation, drift-tolerant navigation, scoped iOS-safe long-press dispatch, exact three-room/six-photo local write allowlisting, device-local room-source priority, weather state/advice, time-of-day and manual asset resolution, connected stage-image loading, loading-veil presence, bounded best-effort image decode behavior, Gomoku legality/wins/undo and all three AI difficulty paths, absent/unsupported/existing legacy-photo database behavior, notebook normalization, save/deduplication, favorite, soft delete, request allowlisting, Nest-key failure handling, iPhone home-screen metadata, dangling scene/text action targets, coordinate ownership, supported effect/dialogue camera types, and the absence of product-facing inspector/debug controls.
 
 The local 393 × 852 mobile-browser pass uses an in-memory fake `/api/set-state`; it never contacts the real state project. It exercised new page -> save -> current page -> archive readback -> favorite -> unfavorite -> delete -> trash, and inspected all four requests. Every request used the QA-only token and only the six registered notebook fields. The same run then completed moon/weather, coffeeCorner, a seeded six-slot read-only memories carousel, Gomoku, all three beach scenes and dialogue, lapClose, and the final home return with zero console, page, or request errors.
 

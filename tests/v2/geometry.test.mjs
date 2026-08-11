@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   coverBox,
+  horizontalFocusTarget,
   horizontalRevealTarget,
   projectCoordinate
 } from '../../v2/runtime/core/geometry.mjs';
@@ -70,4 +71,16 @@ test('panorama reveal target keeps a newly opened bubble inside the viewport', (
     clientWidth: 393,
     padding: 16
   }), 669);
+});
+
+test('panorama group focus centers one authored image coordinate and clamps its edges', () => {
+  const centered = horizontalFocusTarget({
+    focusX: 0.51,
+    scrollWidth: 1278,
+    clientWidth: 393
+  });
+  assert.ok(Math.abs(centered - 455.28) < 0.001);
+  assert.equal(horizontalFocusTarget({ focusX: 0, scrollWidth: 1278, clientWidth: 393 }), 0);
+  assert.equal(horizontalFocusTarget({ focusX: 1, scrollWidth: 1278, clientWidth: 393 }), 885);
+  assert.equal(horizontalFocusTarget({ focusX: 'invalid', scrollWidth: 1278, clientWidth: 393 }), 442.5);
 });

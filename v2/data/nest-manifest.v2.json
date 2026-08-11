@@ -1,6 +1,6 @@
 {
   "schemaVersion": "nest-manifest.v2",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "status": "production",
   "promoted": true,
   "route": "/cloud",
@@ -326,6 +326,35 @@
         "coffeeCornerBeachStallOrderBackHot"
       ],
       "blocksParentInteractive": true
+    }
+  },
+  "dialogueGroups": {
+    "coffeeCornerBeachHandholdDialogue": {
+      "id": "coffeeCornerBeachHandholdDialogue",
+      "ownerScene": "coffeeCornerBeachHandholdSunset",
+      "members": [
+        "coffeeCornerBeachHandholdBubble",
+        "coffeeCornerBeachHandholdVickyBubble"
+      ],
+      "camera": { "policy": "groupLock", "focusX": 0.51 }
+    },
+    "coffeeCornerBeachBraceletDialogue": {
+      "id": "coffeeCornerBeachBraceletDialogue",
+      "ownerScene": "coffeeCornerBeachBraceletPromise",
+      "members": [
+        "coffeeCornerBeachBraceletBubble",
+        "coffeeCornerBeachBraceletVickyBubble"
+      ],
+      "camera": { "policy": "groupLock", "focusX": 0.48 }
+    },
+    "coffeeCornerBeachStallOrderDialogue": {
+      "id": "coffeeCornerBeachStallOrderDialogue",
+      "ownerScene": "coffeeCornerBeachStallOrder",
+      "members": [
+        "coffeeCornerBeachStallOrderBubble",
+        "coffeeCornerBeachStallOrderVickyBubble"
+      ],
+      "camera": { "policy": "groupLock", "focusX": 0.56 }
     }
   },
   "objects": {
@@ -797,6 +826,7 @@
       "selector": "[data-object-id=\"coffeeCornerBeachHandholdBubble\"]",
       "label": "Alex 海边牵手气泡",
       "variant": "alex",
+      "dialogueGroupId": "coffeeCornerBeachHandholdDialogue",
       "targetId": "coffeeCornerBeachHandholdSunsetBubble",
       "readFields": {
         "queue": ["coffeeCornerBeachHandholdSunsetBubbles"],
@@ -811,7 +841,7 @@
         "看海可以，手不准松。",
         "这张终于像约会了。"
       ],
-      "coordinate": { "anchor": "center", "x": 0.66, "y": 0.3 },
+      "coordinate": { "anchor": "center", "x": 0.51, "y": 0.3 },
       "exclusive": true,
       "coordinateStatus": "baseImageLocked",
       "runtimeStatus": "active",
@@ -826,6 +856,7 @@
       "selector": "[data-object-id=\"coffeeCornerBeachHandholdVickyBubble\"]",
       "label": "Vicky 海边牵手气泡",
       "variant": "vicky",
+      "dialogueGroupId": "coffeeCornerBeachHandholdDialogue",
       "targetId": "coffeeCornerBeachHandholdSunsetVickyBubble",
       "readFields": {
         "queue": ["coffeeCornerBeachHandholdSunsetVickyBubbles"],
@@ -840,7 +871,7 @@
         "那小猫走慢一点点。",
         "但是你要一直牵着。"
       ],
-      "coordinate": { "anchor": "center", "x": 0.36, "y": 0.72 },
+      "coordinate": { "anchor": "center", "x": 0.51, "y": 0.72 },
       "exclusive": true,
       "coordinateStatus": "baseImageLocked",
       "runtimeStatus": "active",
@@ -911,6 +942,7 @@
       "selector": "[data-object-id=\"coffeeCornerBeachBraceletBubble\"]",
       "label": "Alex 海边手链气泡",
       "variant": "alex",
+      "dialogueGroupId": "coffeeCornerBeachBraceletDialogue",
       "targetId": "coffeeCornerBeachBraceletPromiseBubble",
       "readFields": {
         "queue": ["coffeeCornerBeachBraceletPromiseBubbles"],
@@ -925,7 +957,7 @@
         "嗯，kitten 还在。",
         "别笑，我是在验收我的小猫。"
       ],
-      "coordinate": { "anchor": "center", "x": 0.6, "y": 0.36 },
+      "coordinate": { "anchor": "center", "x": 0.48, "y": 0.36 },
       "exclusive": true,
       "coordinateStatus": "baseImageLocked",
       "runtimeStatus": "active",
@@ -940,6 +972,7 @@
       "selector": "[data-object-id=\"coffeeCornerBeachBraceletVickyBubble\"]",
       "label": "Vicky 海边手链气泡",
       "variant": "vicky",
+      "dialogueGroupId": "coffeeCornerBeachBraceletDialogue",
       "targetId": "coffeeCornerBeachBraceletPromiseVickyBubble",
       "readFields": {
         "queue": ["coffeeCornerBeachBraceletPromiseVickyBubbles"],
@@ -954,7 +987,7 @@
         "不过这个光真的好漂亮。",
         "好啦，给你牵。"
       ],
-      "coordinate": { "anchor": "center", "x": 0.36, "y": 0.76 },
+      "coordinate": { "anchor": "center", "x": 0.48, "y": 0.76 },
       "exclusive": true,
       "coordinateStatus": "baseImageLocked",
       "runtimeStatus": "active",
@@ -1025,6 +1058,7 @@
       "selector": "[data-object-id=\"coffeeCornerBeachStallOrderBubble\"]",
       "label": "Alex 海边点单气泡",
       "variant": "alex",
+      "dialogueGroupId": "coffeeCornerBeachStallOrderDialogue",
       "targetId": "coffeeCornerBeachStallOrderBubble",
       "readFields": {
         "queue": ["coffeeCornerBeachStallOrderBubbles"],
@@ -1039,7 +1073,7 @@
         "小猫点单，我负责付钱。",
         "今晚不赶进度，只赶浪漫。"
       ],
-      "coordinate": { "anchor": "center", "x": 0.6, "y": 0.34 },
+      "coordinate": { "anchor": "center", "x": 0.56, "y": 0.34 },
       "exclusive": true,
       "coordinateStatus": "baseImageLocked",
       "runtimeStatus": "active",
@@ -1054,6 +1088,7 @@
       "selector": "[data-object-id=\"coffeeCornerBeachStallOrderVickyBubble\"]",
       "label": "Vicky 海边点单气泡",
       "variant": "vicky",
+      "dialogueGroupId": "coffeeCornerBeachStallOrderDialogue",
       "targetId": "coffeeCornerBeachStallOrderVickyBubble",
       "readFields": {
         "queue": ["coffeeCornerBeachStallOrderVickyBubbles"],
@@ -1068,7 +1103,7 @@
         "可以买完坐下来慢慢吃嘛。",
         "今天 debug 到这里暂停。"
       ],
-      "coordinate": { "anchor": "center", "x": 0.36, "y": 0.74 },
+      "coordinate": { "anchor": "center", "x": 0.56, "y": 0.74 },
       "exclusive": true,
       "coordinateStatus": "baseImageLocked",
       "runtimeStatus": "active",

@@ -13,6 +13,7 @@ const REQUIRED_CONTROLLERS = [
 
 const SCENE_TARGET_ACTIONS = new Set(['scene.go', 'scene.push', 'scene.jumpTo']);
 const SUPPORTED_EFFECT_TYPES = new Set(['sparkles', 'steam', 'clockHands']);
+const SUPPORTED_DIALOGUE_CAMERA_POLICIES = new Set(['groupLock']);
 const LOCAL_MEDIA_KEYS = [
   'homeOn',
   'homeOff',
@@ -71,6 +72,7 @@ export function validateManifest(manifest, textTargetRegistry = null) {
 
   const scenes = manifest?.scenes || {};
   const objects = manifest?.objects || {};
+  const dialogueGroups = manifest?.dialogueGroups || {};
   const supportedActions = new Set(manifest?.runtime?.supportedActionTypes || []);
   const activeSelectors = new Map();
 
@@ -227,6 +229,64 @@ export function validateManifest(manifest, textTargetRegistry = null) {
         errors.push(`TextPort ${id} references unregistered targetId ${object.targetId}`);
       }
     }
+    if (object?.dialogueGroupId) {
+      const group = dialogueGroups[object.dialogueGroupId];
+      if (object.kind !== 'textPort') {
+        errors.push(`Object ${id} joins a dialogue group but is not a TextPort`);
+      }
+      if (!group) {
+        errors.push(`Object ${id} references unknown dialogue group ${object.dialogueGroupId}`);
+      } else if (!Array.isArray(group.members) || !group.members.includes(id)) {
+        errors.push(`Object ${id} is absent from dialogue group ${object.dialogueGroupId}`);
+      }
+    }
+  });
+
+  Object.entries(dialogueGroups).forEach(([groupId, group]) => {
+    if (group?.id !== groupId) errors.push(`Dialogue group key/id mismatch: ${groupId}`);
+    if (!scenes[group?.ownerScene]) {
+      errors.push(`Dialogue group ${groupId} has unknown ownerScene ${group?.ownerScene}`);
+    } else if (scenes[group.ownerScene].presentation !== 'panorama') {
+      errors.push(`Dialogue group ${groupId} requires a panorama owner scene`);
+    }
+
+    const members = Array.isArray(group?.members) ? group.members : [];
+    if (!members.length) errors.push(`Dialogue group ${groupId} requires members`);
+    if (new Set(members).size !== members.length) {
+      errors.push(`Dialogue group ${groupId} members must be unique`);
+    }
+
+    const camera = group?.camera || {};
+    if (!SUPPORTED_DIALOGUE_CAMERA_POLICIES.has(camera.policy)) {
+      errors.push(`Dialogue group ${groupId} uses unsupported camera policy ${camera.policy}`);
+    }
+    if (!Number.isFinite(camera.focusX) || camera.focusX < 0 || camera.focusX > 1) {
+      errors.push(`Dialogue group ${groupId} camera focusX must stay within the base image`);
+    }
+
+    members.forEach((memberId) => {
+      const member = objects[memberId];
+      if (!member || member.kind !== 'textPort') {
+        errors.push(`Dialogue group ${groupId} references unknown TextPort ${memberId}`);
+        return;
+      }
+      if (member.ownerScene !== group.ownerScene) {
+        errors.push(`Dialogue group ${groupId} member ${memberId} belongs to ${member.ownerScene}`);
+      }
+      if (member.dialogueGroupId !== groupId) {
+        errors.push(`Dialogue group ${groupId} member ${memberId} lacks its back-reference`);
+      }
+      if (
+        camera.policy === 'groupLock'
+        && Number.isFinite(camera.focusX)
+        && (
+          !Number.isFinite(member.coordinate?.x)
+          || Math.abs(member.coordinate.x - camera.focusX) > 0.000001
+        )
+      ) {
+        errors.push(`Dialogue group ${groupId} member ${memberId} must share camera focusX`);
+      }
+    });
   });
 
   Object.entries(scenes).forEach(([sceneId, scene]) => {
