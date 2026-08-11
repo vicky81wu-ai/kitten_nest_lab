@@ -403,3 +403,9 @@ three optimized beach WebP assets: HTTP 200 image/webp
 ```
 
 No text target, `nest_state` value, archive item, local-media slot, Storage object, policy, or schema was changed during promotion verification. Sparkle/light-point tuning begins only as a later independent visual-polish batch.
+
+## 2026-08-11 panorama dialogue camera
+
+The three beach Alex/Vicky pairs now use manifest-owned `dialogueGroups` with one `groupLock` focus per scene. The first member reveal centers that authored image focus once; subsequent speaker changes, copy-width changes, and manual panning cannot trigger member-level recentering. Bubbles remain pinned to the base image, and ungrouped panorama ports retain the existing safe-edge reveal fallback.
+
+Manifest 0.3.3 validation and 86/86 automated checks passed. The change does not alter navigation, six writable beach target ids, live state, Supabase, Storage, or the production route owner. Full details are in `docs/construction-logs/2026-08-11.md`.

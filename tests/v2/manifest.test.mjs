@@ -76,6 +76,29 @@ test('home restorations and the approved beach chain stay explicit in one manife
   assert.equal(manifest.objects.coffeeCornerBeachBraceletNextHot.coordinate.x, 0.8816);
 });
 
+test('each beach conversation owns one stable group camera focus', async () => {
+  const manifest = await readJson('../../v2/data/nest-manifest.v2.json');
+  const expected = [
+    ['coffeeCornerBeachHandholdDialogue', 'coffeeCornerBeachHandholdSunset', 0.51],
+    ['coffeeCornerBeachBraceletDialogue', 'coffeeCornerBeachBraceletPromise', 0.48],
+    ['coffeeCornerBeachStallOrderDialogue', 'coffeeCornerBeachStallOrder', 0.56]
+  ];
+
+  assert.equal(manifest.version, '0.3.3');
+  expected.forEach(([groupId, sceneId, focusX]) => {
+    const group = manifest.dialogueGroups[groupId];
+    assert.equal(group.ownerScene, sceneId);
+    assert.deepEqual(group.camera, { policy: 'groupLock', focusX });
+    assert.equal(group.members.length, 2);
+    group.members.forEach((memberId) => {
+      const member = manifest.objects[memberId];
+      assert.equal(member.ownerScene, sceneId);
+      assert.equal(member.dialogueGroupId, groupId);
+      assert.equal(member.coordinate.x, focusX);
+    });
+  });
+});
+
 test('the generic v2 bubble no longer draws the legacy triangle tail', async () => {
   const css = await readFile(new URL('../../v2/styles/nest-v2.css', import.meta.url), 'utf8');
   assert.doesNotMatch(css, /\.v2-text-port::after/);
@@ -165,6 +188,21 @@ test('manifest validation rejects dangling hotspots and unsupported effects', as
   assert.match(result.errors.join('\n'), /home\.sparkles uses unsupported type mysteryDust/);
   assert.match(result.errors.join('\n'), /home\.goCoffeeCornerHot navigates to unknown scene missingRoom/);
   assert.match(result.errors.join('\n'), /requires a 500-3000ms delay/);
+});
+
+test('manifest validation rejects broken dialogue group camera contracts', async () => {
+  const manifest = await readJson('../../v2/data/nest-manifest.v2.json');
+  const textTargets = await readJson('../../data/text-targets.v1.json');
+  manifest.dialogueGroups.coffeeCornerBeachHandholdDialogue.camera.policy = 'speakerFollow';
+  manifest.objects.coffeeCornerBeachBraceletVickyBubble.coordinate.x = 0.35;
+  manifest.objects.coffeeCornerBeachStallOrderBubble.dialogueGroupId = 'missingDialogue';
+
+  const result = validateManifest(manifest, textTargets);
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join('\n'), /uses unsupported camera policy speakerFollow/);
+  assert.match(result.errors.join('\n'), /member coffeeCornerBeachBraceletVickyBubble must share camera focusX/);
+  assert.match(result.errors.join('\n'), /references unknown dialogue group missingDialogue/);
+  assert.match(result.errors.join('\n'), /member coffeeCornerBeachStallOrderBubble lacks its back-reference/);
 });
 
 test('the product surface contains no runtime inspector or hotspot debug switch', async () => {
