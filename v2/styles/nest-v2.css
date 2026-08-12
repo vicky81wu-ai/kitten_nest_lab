@@ -182,7 +182,7 @@ body[data-v2-status="fatal"] .v2-boot-status {
 }
 
 .v2-stage__image--transition {
-  z-index: 1;
+  z-index: 0;
   opacity: 0;
   transform: none;
   pointer-events: none;
@@ -331,20 +331,6 @@ body[data-scene-locked="1"] .v2-control {
   animation: v2-weather-float 4.8s ease-in-out infinite;
 }
 
-.v2-text-port--weather::before {
-  content: "";
-  position: absolute;
-  top: -6%;
-  left: -12%;
-  width: 88%;
-  height: 68%;
-  background: linear-gradient(112deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.07) 42%, transparent 70%);
-  filter: blur(1px);
-  opacity: 0.38;
-  transform: skewX(-14deg);
-  pointer-events: none;
-}
-
 .v2-weather__temperature {
   font-size: clamp(18px, 5.45vw, 32px);
   font-weight: 300;
@@ -361,10 +347,6 @@ body[data-scene-locked="1"] .v2-control {
 body[data-asset-variant="home.night"] .v2-text-port--weather {
   color: rgba(232, 214, 255, 0.8);
   text-shadow: 0 0 5px rgba(230, 210, 255, 0.58), 0 0 12px rgba(165, 105, 255, 0.36);
-}
-
-body[data-asset-variant="home.night"] .v2-text-port--weather::before {
-  opacity: 0;
 }
 
 .v2-text-port--alex,
