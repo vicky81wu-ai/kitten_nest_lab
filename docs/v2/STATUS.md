@@ -204,6 +204,8 @@ Powder-notebook authorship is now an explicit seventh allowlisted field. `/write
 
 No Supabase schema, RLS, table, bucket, Storage object, text content, route owner, hotspot, base-image coordinate, or production state value changed in this branch.
 
+The branch itself still performs no migration. Separately, on 2026-08-12, Vicky explicitly identified the live legacy archive using page labels plus opening-text guards. One guarded data-only operation assigned `vicky` to pages `1, 4, 6, 7, 8, 9, 10, 12, 13, 14, 15, 17, 18` and the matching current page, and `alex` to pages `2, 3, 5, 11, 16, 19`. Independent read-back verified all 19 canonical/history pairs and confirmed that only author metadata changed.
+
 ## State of external dependencies
 
 At implementation start, both Supabase projects were `INACTIVE`:
