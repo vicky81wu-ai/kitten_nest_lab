@@ -1,14 +1,16 @@
 # Kitten Nest v2 Status
 
 Updated: 2026-08-12
-Status: production `/cloud`; manifest 0.5.0 immersive-runtime polish prepared on an isolated branch, not yet promoted
+Status: production `/cloud`; manifest 0.5.0 immersive runtime and home handoff accepted in the installed iPhone PWA
 
 ## Production route
 
 ```text
 production branch: main
-production merge: b6dbf054746e70e87551d39f51c31cf829c46771
-isolated promotion source: b1867dcce2ec31ce65c2d3f27dc894fbbf874fb0
+accepted runtime code head: e7cdaf80fc89810d06f7a920a5a6af8ba2175557
+immersive runtime merge: 953714c4251a6fe37592f227aface3bf3ddc94bd
+home handoff follow-up: e7cdaf80fc89810d06f7a920a5a6af8ba2175557
+original /cloud route promotion merge: b6dbf054746e70e87551d39f51c31cf829c46771
 production route: /cloud -> /v2/index.html
 direct compatibility route: /v2/index.html
 legacy rollback route: /cloud-coords -> /api/app-coords
@@ -186,7 +188,7 @@ No numeric suffix carries sequence. The story beat array carries story order; th
 
 The production writer exposes separate `conversation` and `ambient` modes. Conversation copy uses ordered `@alex` / `@vicky` blocks and publishes one script atomically. Ambient copy keeps the existing one-nonempty-line-per-bubble behavior. MCP and `/api/set-state` use the same parser and three registered target ids. The six earlier per-speaker targets are retained: in the absence of a new script field, runtime interleaves their current queues as a compatibility timeline. No live state migration, Supabase schema/RLS/Storage change, asset change, route change, coordinate change, or second controller was introduced.
 
-## Immersive runtime polish 0.5.0 · isolated branch
+## Immersive runtime polish 0.5.0 · production accepted
 
 The accepted dialogue-group focus experiment is superseded. All three production dialogue groups now declare `camera.policy: manual`; grouped dialogue never changes panorama `scrollLeft` on first reveal, same-speaker continuation, speaker switch, text-height change, Layout completion, or scene re-entry. Bubbles stay pinned to their authored image coordinates and the visitor owns the camera from scene entry onward. The old `groupLock` contract remains validator-compatible only for historical fixtures.
 
@@ -202,7 +204,7 @@ moon toggle: retained two-image 520 ms crossfade; overlays stay mounted
 
 Powder-notebook authorship is now an explicit seventh allowlisted field. `/write` and the panel editor own `vicky`; MCP owns `alex`; archived pages preserve known authors; unknown historical pages stay unclassified. Dialogue and notebook author colors share the same CSS tokens.
 
-No Supabase schema, RLS, table, bucket, Storage object, text content, route owner, hotspot, base-image coordinate, or production state value changed in this branch.
+No Supabase schema, RLS, table, bucket, Storage object, text content, route owner, hotspot, base-image coordinate, or production state value changed in this release.
 
 The branch itself still performs no migration. Separately, on 2026-08-12, Vicky explicitly identified the live legacy archive using page labels plus opening-text guards. One guarded data-only operation assigned `vicky` to pages `1, 4, 6, 7, 8, 9, 10, 12, 13, 14, 15, 17, 18` and the matching current page, and `alex` to pages `2, 3, 5, 11, 16, 19`. Independent read-back verified all 19 canonical/history pairs and confirmed that only author metadata changed.
 
@@ -328,9 +330,9 @@ Run:
 npm run check:v2
 ```
 
-This currently runs 107 checks. The 0.5.0 additions prove manual dialogue-camera immobility across every turn/layout path; session-only standalone-bubble resume, close, content-fingerprint reset, and runtime reset; `/write` versus MCP author stamping with legacy-author preservation; shared Alex/Vicky ink tokens; legacy weather opacity/float; independent jar particles; a retained two-image moon crossfade that commits only after both images are ready; and busy-lock release when asset-source preparation fails. The existing ownership, routing, asset fallback, PWA canvas, panel, local-media, Gomoku, writer, dialogue, notebook, and failure-rollback suites remain green.
+This currently runs 108 checks. The 0.5.0 additions prove manual dialogue-camera immobility across every turn/layout path; session-only standalone-bubble resume, close, content-fingerprint reset, and runtime reset; `/write` versus MCP author stamping with legacy-author preservation; shared Alex/Vicky ink tokens; legacy weather opacity/float without a background pseudo-element; independent jar particles; a retained two-image moon crossfade that commits only after both images are ready; a composited final handoff that cannot synchronously detach the outgoing layer; and busy-lock release when asset-source preparation fails. The existing ownership, routing, asset fallback, PWA canvas, panel, local-media, Gomoku, writer, dialogue, notebook, and failure-rollback suites remain green.
 
-The earlier local 393 × 852 mobile-browser pass used an in-memory fake `/api/set-state`; it never contacted the real state project. Manifest 0.5.0's code/contract suite is green, but its new crossfade and manual-camera behavior still requires the isolated public branch preview before promotion because the cloud browser cannot reach the workspace loopback server.
+The earlier local 393 × 852 mobile-browser pass used an in-memory fake `/api/set-state`; it never contacted the real state project. The new crossfade, manual camera, standalone continuity, author colors, weather, jar particles, final handoff, and glassless weather text have since passed in the installed iPhone PWA on production.
 
 ## Production activation and rollback
 
