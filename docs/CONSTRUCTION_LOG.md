@@ -427,3 +427,7 @@ Manifest 0.5.0 supersedes automatic panorama dialogue focus with `camera.policy:
 Home restores the legacy translucent floating weather copy and an independent 32-particle pebble-jar field. The moon toggle now uses two retained images so only the room art crossfades while hotspots/effects stay mounted. Powder-notebook entries gain the seventh registered field `hubbyNoteAuthor`: browser writes stamp Vicky, MCP stamps Alex, known archive authors persist, and legacy unknown pages are not guessed. The author colors share one CSS token pair with dialogue bubbles.
 
 No production route, text content, Supabase state, schema, RLS, bucket, Storage object, hotspot, or base-image coordinate changed. Manifest validation, 107/107 automated checks, and `git diff --check` pass. Public branch-preview interaction remains the release gate because the cloud browser cannot access the workspace loopback server.
+
+## 2026-08-12 explicit legacy notebook attribution
+
+Vicky identified the live powder-notebook archive by visible page number plus opening-text checks. A guarded one-time data operation classified Vicky pages `1, 4, 6, 7, 8, 9, 10, 12, 13, 14, 15, 17, 18`, Alex pages `2, 3, 5, 11, 16, 19`, and the current page as Vicky. Preflight and independent read-back both proved that all 19 canonical entries still matched all 19 history entries and that only author metadata changed. Text, timestamps, favorites, trash, other state, schema, policies, buckets, and Storage were untouched. The general code contract still refuses to guess an unknown historical author.
