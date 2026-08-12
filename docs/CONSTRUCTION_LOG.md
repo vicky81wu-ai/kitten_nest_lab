@@ -431,3 +431,9 @@ No production route, text content, Supabase state, schema, RLS, bucket, Storage 
 ## 2026-08-12 explicit legacy notebook attribution
 
 Vicky identified the live powder-notebook archive by visible page number plus opening-text checks. A guarded one-time data operation classified Vicky pages `1, 4, 6, 7, 8, 9, 10, 12, 13, 14, 15, 17, 18`, Alex pages `2, 3, 5, 11, 16, 19`, and the current page as Vicky. Preflight and independent read-back both proved that all 19 canonical entries still matched all 19 history entries and that only author metadata changed. Text, timestamps, favorites, trash, other state, schema, policies, buckets, and Storage were untouched. The general code contract still refuses to guess an unknown historical author.
+
+## 2026-08-12 immersive-runtime production acceptance
+
+PR #11 promoted manifest 0.5.0 at `953714c`: manual beach dialogue cameras; visit-scoped ambient-bubble continuity and default-closed ordinary bubbles; explicit Vicky/Alex notebook ownership and shared ink tokens; translucent floating weather; 32 independent pebble-jar particles; and a retained-image Day/Night crossfade. PR #12 closed the installed-PWA follow-up at `e7cdaf8`: the outgoing image now remains composited through final handoff, fixed stage shading remains above both image layers, and the daytime weather trapezoid is removed.
+
+Vicky accepted all six rule groups in the installed iPhone PWA. Manifest validation reports zero warnings and 108/108 checks pass. No hotspot, coordinate, scene hierarchy, live copy, MCP target, Supabase state, schema, policy, bucket, Storage object, or image asset changed during the handoff follow-up.
