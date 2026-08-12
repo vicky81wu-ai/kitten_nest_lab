@@ -11,6 +11,8 @@ import {
 const config = {
   currentField: 'hubbyNote',
   updatedAtField: 'hubbyNoteUpdatedAt',
+  authorField: 'hubbyNoteAuthor',
+  defaultAuthor: 'vicky',
   favoriteField: 'hubbyNoteFavorite',
   archiveFields: ['hubbyNoteArchive', 'hubbyNoteHistory'],
   trashField: 'hubbyNoteTrash',
@@ -28,6 +30,7 @@ test('saving writes the current page and archives the confirmed page immediately
   });
   assert.equal(patch.hubbyNote, 'new powder page');
   assert.equal(patch.hubbyNoteUpdatedAt, '2026-08-09T10:00:00Z');
+  assert.equal(patch.hubbyNoteAuthor, 'vicky');
   assert.equal(patch.hubbyNoteFavorite, false);
   assert.deepEqual(patch.hubbyNoteArchive.map((item) => item.id), ['new-id', 'old']);
   assert.deepEqual(patch.hubbyNoteHistory, patch.hubbyNoteArchive.slice(0, 2));
@@ -43,6 +46,7 @@ test('saving identical text does not duplicate the permanent archive', () => {
   assert.equal(patch.hubbyNoteArchive.length, 1);
   assert.equal(patch.hubbyNoteArchive[0].id, 'same-id');
   assert.equal(patch.hubbyNoteArchive[0].favorite, true);
+  assert.equal(Object.hasOwn(patch.hubbyNoteArchive[0], 'author'), false);
 });
 
 test('favorite toggles only the selected archive page', () => {
@@ -79,13 +83,36 @@ test('delete is a soft delete that moves one page into trash', () => {
   assert.equal(Object.hasOwn(result.patch, 'hubbyNote'), false);
 });
 
-test('the notebook allowlist contains only its six registered fields', () => {
+test('the notebook allowlist contains only its seven registered fields', () => {
   assert.deepEqual(notebookWriteFields(config), [
     'hubbyNote',
     'hubbyNoteUpdatedAt',
+    'hubbyNoteAuthor',
     'hubbyNoteFavorite',
     'hubbyNoteArchive',
     'hubbyNoteHistory',
     'hubbyNoteTrash'
   ]);
+});
+
+test('saving through an Alex-owned channel records Alex on current and archived pages', () => {
+  const patch = buildNotebookSavePatch('Alex page', {}, config, {
+    author: 'alex',
+    now: '2026-08-09T12:00:00Z',
+    createId: () => 'alex-page'
+  });
+  assert.equal(patch.hubbyNoteAuthor, 'alex');
+  assert.equal(patch.hubbyNoteArchive[0].author, 'alex');
+});
+
+test('soft delete preserves known authors and leaves legacy pages unclassified', () => {
+  const known = buildNotebookDeletePatch('id:known', {
+    hubbyNoteArchive: [{ id: 'known', text: 'known', author: 'vicky' }]
+  }, config, { createId: () => 'trash-known' });
+  assert.equal(known.patch.hubbyNoteTrash[0].author, 'vicky');
+
+  const legacy = buildNotebookDeletePatch('id:legacy', {
+    hubbyNoteArchive: [{ id: 'legacy', text: 'legacy' }]
+  }, config, { createId: () => 'trash-legacy' });
+  assert.equal(Object.hasOwn(legacy.patch.hubbyNoteTrash[0], 'author'), false);
 });

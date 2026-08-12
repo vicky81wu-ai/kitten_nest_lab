@@ -1,7 +1,7 @@
 # Kitten Nest v2 Status
 
-Updated: 2026-08-11
-Status: production `/cloud`; stable beach dialogue-group camera prepared on an isolated branch
+Updated: 2026-08-12
+Status: production `/cloud`; manifest 0.5.0 immersive-runtime polish prepared on an isolated branch, not yet promoted
 
 ## Production route
 
@@ -30,7 +30,7 @@ coffeeCorner lap entry
 coffeeCorner six-slot memories panel plus scoped three-room/six-photo device-local editor
 coffeeCorner game menu and interactive Gomoku panel
 lapClose rotating bubble
-home clock hands and sparkles
+home clock hands, room sparkles, and pebble-jar sparkles
 coffeeCorner steam
 degraded-preview disclosure and fail-closed asset handling
 ```
@@ -114,13 +114,13 @@ The write boundary is explicit rather than global:
 manifest policy: registeredTargetOnly -> hubbyNote
 endpoint: existing /api/set-state
 browser credential: X-Nest-Token only
-allowed fields: hubbyNote, hubbyNoteUpdatedAt, hubbyNoteFavorite,
-                hubbyNoteArchive, hubbyNoteHistory, hubbyNoteTrash
+allowed fields: hubbyNote, hubbyNoteUpdatedAt, hubbyNoteAuthor,
+                hubbyNoteFavorite, hubbyNoteArchive, hubbyNoteHistory, hubbyNoteTrash
 delete meaning: remove from archive and prepend to trash
 degraded preview: read-only; mutation controls disabled
 ```
 
-The Supabase service credential remains server-side. The device Nest key is accepted only by the existing server endpoint and is remembered locally after a successful response; an unauthorized response forgets the local copy and asks for a replacement. The stable `/write`, `/cloud`, and `/api/set-state` implementations were not edited.
+The Supabase service credential remains server-side. The device Nest key is accepted only by the existing server endpoint and is remembered locally after a successful response; an unauthorized response forgets the local copy and asks for a replacement. The write boundary remains the same registered `hubbyNote` target. Manifest 0.5.0 adds channel-owned author attribution: browser `/write` and the notebook editor stamp `vicky`, while MCP stamps `alex`.
 
 ## Production PWA hardening 0.3.1
 
@@ -155,7 +155,7 @@ coffeeCornerBeachStallOrderVickyBubble
 
 Each target has its own current, queue, index, and timestamp fields. Every port uses its existing approved scene copy as a degraded/no-state fallback. `/api/mcp`, the `/api/set-state` envelope, `/write`, the tag registry, and the runtime manifest all read the same exact target ids. No Supabase table, policy, bucket, or Storage object is changed by registration.
 
-## Panorama dialogue-group camera 0.3.4
+## Panorama dialogue-group camera 0.3.4 · historical, superseded by 0.5.0
 
 The three beach pairs are now explicit conversation groups rather than six unrelated reveal targets. Each group owns one base-image focus selected from the scene artwork:
 
@@ -185,6 +185,26 @@ seasideWalkStallOrderMainDialogue
 No numeric suffix carries sequence. The story beat array carries story order; the existing scene stack still carries Push/Back hierarchy; each `dialogueScript` array carries speaker order. Any member action advances its group's shared index. Same-speaker consecutive turns update one bubble in place, speaker changes switch members without changing the group focus, a 200 ms lock absorbs accidental double taps, and the group closes/restarts deterministically at its boundary.
 
 The production writer exposes separate `conversation` and `ambient` modes. Conversation copy uses ordered `@alex` / `@vicky` blocks and publishes one script atomically. Ambient copy keeps the existing one-nonempty-line-per-bubble behavior. MCP and `/api/set-state` use the same parser and three registered target ids. The six earlier per-speaker targets are retained: in the absence of a new script field, runtime interleaves their current queues as a compatibility timeline. No live state migration, Supabase schema/RLS/Storage change, asset change, route change, coordinate change, or second controller was introduced.
+
+## Immersive runtime polish 0.5.0 · isolated branch
+
+The accepted dialogue-group focus experiment is superseded. All three production dialogue groups now declare `camera.policy: manual`; grouped dialogue never changes panorama `scrollLeft` on first reveal, same-speaker continuation, speaker switch, text-height change, Layout completion, or scene re-entry. Bubbles stay pinned to their authored image coordinates and the visitor owns the camera from scene entry onward. The old `groupLock` contract remains validator-compatible only for historical fixtures.
+
+Standalone/ambient bubbles now keep an in-memory session record keyed by target and queue fingerprint. Scene navigation restores the exact line, open/closed state, and next-tap position. Changed published copy resets safely; runtime destruction or a full installed-app close clears the record. Ordinary standalone bubbles default closed, while the existing coffeeCorner and lapClose greeters opt in explicitly. No unread UI was added.
+
+Home visual behavior restores three legacy cues without changing scene ownership:
+
+```text
+weather: translucent day/night ink + 4.8 s / 3 px vertical float
+pebble jar: independent 32-particle upward magic field
+moon toggle: retained two-image 520 ms crossfade; overlays stay mounted
+```
+
+Powder-notebook authorship is now an explicit seventh allowlisted field. `/write` and the panel editor own `vicky`; MCP owns `alex`; archived pages preserve known authors; unknown historical pages stay unclassified. Dialogue and notebook author colors share the same CSS tokens.
+
+No Supabase schema, RLS, table, bucket, Storage object, text content, route owner, hotspot, base-image coordinate, or production state value changed in this branch.
+
+The branch itself still performs no migration. Separately, on 2026-08-12, Vicky explicitly identified the live legacy archive using page labels plus opening-text guards. One guarded data-only operation assigned `vicky` to pages `1, 4, 6, 7, 8, 9, 10, 12, 13, 14, 15, 17, 18` and the matching current page, and `alex` to pages `2, 3, 5, 11, 16, 19`. Independent read-back verified all 19 canonical/history pairs and confirmed that only author metadata changed.
 
 ## State of external dependencies
 
@@ -308,9 +328,9 @@ Run:
 npm run check:v2
 ```
 
-This currently runs 98 checks covering controller contracts, paired preview/production route metadata, one-manifest ownership, registered text ports, selector exclusivity, child isolation, portrait and panorama navigation, image-locked transparent Go/Back/Push routes, approved beach order, six isolated compatibility speaker targets, three canonical ordered dialogue-script targets, shared parser/API/MCP agreement, same-speaker continuation, speaker switching, double-tap protection, close/restart behavior, legacy round-robin fallback, three dialogue-group camera contracts, edge-growth dialogue anchors, one-focus scene-entry lifecycle, manual-pan preservation, writer conversation/ambient modes, failed-asset rollback, full-size optimized static WebP delivery with canonical Storage fallback, fetch/Blob sequential warming without detached image elements, single-consumer warm requests, stalled-warm cancellation, the fixed full-screen `100lvh` PWA canvas, state readiness beside visual bootstrap, projection math, grouped and ungrouped panorama bubble reveal, text mutation layout invalidation, fallback refresh serialization, compact weather presentation, drift-tolerant navigation, scoped iOS-safe long-press dispatch, exact three-room/six-photo local write allowlisting, device-local room-source priority, weather state/advice, time-of-day and manual asset resolution, connected stage-image loading, loading-veil presence, bounded best-effort image decode behavior, Gomoku legality/wins/undo and all three AI difficulty paths, absent/unsupported/existing legacy-photo database behavior, notebook normalization, save/deduplication, favorite, soft delete, request allowlisting, Nest-key failure handling, iPhone home-screen metadata, dangling scene/text/dialogue targets, coordinate ownership, supported effect/dialogue modes and camera types, and the absence of product-facing inspector/debug controls.
+This currently runs 107 checks. The 0.5.0 additions prove manual dialogue-camera immobility across every turn/layout path; session-only standalone-bubble resume, close, content-fingerprint reset, and runtime reset; `/write` versus MCP author stamping with legacy-author preservation; shared Alex/Vicky ink tokens; legacy weather opacity/float; independent jar particles; a retained two-image moon crossfade that commits only after both images are ready; and busy-lock release when asset-source preparation fails. The existing ownership, routing, asset fallback, PWA canvas, panel, local-media, Gomoku, writer, dialogue, notebook, and failure-rollback suites remain green.
 
-The local 393 × 852 mobile-browser pass uses an in-memory fake `/api/set-state`; it never contacts the real state project. It exercised new page -> save -> current page -> archive readback -> favorite -> unfavorite -> delete -> trash, and inspected all four requests. Every request used the QA-only token and only the six registered notebook fields. The same run then completed moon/weather, coffeeCorner, a seeded six-slot read-only memories carousel, Gomoku, all three beach scenes and dialogue, lapClose, and the final home return with zero console, page, or request errors.
+The earlier local 393 × 852 mobile-browser pass used an in-memory fake `/api/set-state`; it never contacted the real state project. Manifest 0.5.0's code/contract suite is green, but its new crossfade and manual-camera behavior still requires the isolated public branch preview before promotion because the cloud browser cannot reach the workspace loopback server.
 
 ## Production activation and rollback
 

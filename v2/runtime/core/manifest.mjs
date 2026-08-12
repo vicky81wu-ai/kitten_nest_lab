@@ -12,8 +12,8 @@ const REQUIRED_CONTROLLERS = [
 ];
 
 const SCENE_TARGET_ACTIONS = new Set(['scene.go', 'scene.push', 'scene.jumpTo']);
-const SUPPORTED_EFFECT_TYPES = new Set(['sparkles', 'steam', 'clockHands']);
-const SUPPORTED_DIALOGUE_CAMERA_POLICIES = new Set(['groupLock']);
+const SUPPORTED_EFFECT_TYPES = new Set(['sparkles', 'jarSparkles', 'steam', 'clockHands']);
+const SUPPORTED_DIALOGUE_CAMERA_POLICIES = new Set(['manual', 'groupLock']);
 const SUPPORTED_DIALOGUE_MODES = new Set(['conversation', 'ambient']);
 const SUPPORTED_STORY_KINDS = new Set(['linear']);
 const SUPPORTED_COORDINATE_ANCHORS = new Set([
@@ -354,11 +354,14 @@ export function validateManifest(manifest, textTargetRegistry = null) {
       }
     }
 
-    const camera = group?.camera || {};
+    const camera = group?.camera || { policy: 'manual' };
     if (!SUPPORTED_DIALOGUE_CAMERA_POLICIES.has(camera.policy)) {
       errors.push(`Dialogue group ${groupId} uses unsupported camera policy ${camera.policy}`);
     }
-    if (!Number.isFinite(camera.focusX) || camera.focusX < 0 || camera.focusX > 1) {
+    if (
+      camera.policy === 'groupLock'
+      && (!Number.isFinite(camera.focusX) || camera.focusX < 0 || camera.focusX > 1)
+    ) {
       errors.push(`Dialogue group ${groupId} camera focusX must stay within the base image`);
     }
 

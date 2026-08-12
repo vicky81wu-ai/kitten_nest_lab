@@ -136,6 +136,8 @@ export class NotebookPanelSession {
   renderPage() {
     const page = this.pages[this.index] || this.pages[0];
     this.page.dataset.pageKind = page.kind;
+    if (page.author) this.page.dataset.author = page.author;
+    else delete this.page.dataset.author;
     this.pageLabel.textContent = `${page.favorite ? '★ ' : ''}${page.label}`;
     this.pageDate.textContent = page.date;
     this.pageDate.hidden = !page.date;

@@ -12,7 +12,7 @@ The direct `/v2/index.html` route remains available during the rollback window.
 
 ## Post-promotion iPhone PWA gate
 
-For manifest `0.4.0`, close the installed app completely before the first check so browser cache cannot hide the cold path:
+For manifest `0.5.0`, close the installed app completely before the first check so browser cache cannot hide the cold path and so session-only bubble progress starts fresh:
 
 1. Open the home-screen nest once. The small `猫窝醒来中…` status may appear briefly, but the room must replace it without a 20–30 second unexplained maroon screen.
 2. Confirm the room image reaches the physical bottom of the iPhone canvas. The white Home Indicator may remain system-owned, but there must be no black strip behind or above it.
@@ -23,21 +23,22 @@ These three checks are the only outstanding production gate for the hardening pa
 ## Restoration acceptance loop
 
 1. Home opens normally; open the powder notebook. On a live-state run, write and save one disposable page, read it back from the first archive tab, favorite/unfavorite it, then delete it and confirm the UI says it moved to the recycle bin. On a degraded preview-copy run, confirm the notebook is explicitly read-only.
-2. Tap the moon lamp twice and confirm day → night → day uses two real images.
-3. Confirm the window shows temperature/description; tap it and close the compact floating “窗边叮嘱” card. It must not expand into the generic full-width bottom sheet.
-4. Enter coffeeCorner and confirm the main bubble has rounded corners with no triangle tail.
+2. Tap the moon lamp twice and confirm day → night → day uses two real images with a smooth crossfade. Only the images fade; weather, effects, hotspots, and panels neither disappear nor shift, and no blank/error frame appears.
+3. Confirm the window shows a subtly translucent temperature/description pair with a gentle vertical float. Confirm the pebble jar emits its own upward gold/pink/purple light points independently of the room-wide twinkles. Tap the weather and close the compact floating “窗边叮嘱” card; it must not expand into the generic full-width bottom sheet.
+4. Enter coffeeCorner and confirm the main bubble has rounded corners with no triangle tail. Close/advance it several lines, enter lapClose, return, and confirm it resumes the exact visible or closed state. Fully close and reopen the PWA and confirm that progress resets. CoffeeCorner and lapClose remain explicit greeters; ordinary non-dialogue bubbles start closed.
 5. Tap the photo wall. If this origin already has old photo slots, move through filled and empty slots; otherwise confirm the memory-card fallback appears without a permission prompt.
 6. Tap the game console, open Gomoku, make one move, undo the round, change difficulty, and return to the same game menu.
 7. Tap the top-row beach photo to enter the first seaside panorama.
 8. Drag the panorama horizontally; the invisible Back/Push zones must move with the base image and remain at their authored image coordinates.
-9. In each beach scene, tap either speaker or its talk hotspot and confirm the panorama centers that scene's conversation once. Continue tapping either member: the shared dialogue must follow its authored order rather than whichever portrait was tapped. Two consecutive turns from one speaker update the same bubble; a speaker change switches bubbles without moving the camera. An immediate accidental double tap must not skip a line. The action after the final line closes both bubbles, and the following action restarts turn one. Drag horizontally by hand after the first focus and confirm later turns leave that manual position in control.
-   - Handhold must open on the accepted `.436` focus. Alex copy keeps its lower edge at image Y `.248` and grows upward without covering his face.
+9. In each beach scene, manually place the panorama, record that horizontal position, then tap either speaker or its talk hotspot. The shared dialogue must follow its authored order rather than whichever portrait was tapped. First reveal, two consecutive turns from one speaker, a speaker switch, and a taller line must all leave the recorded horizontal position unchanged. An immediate accidental double tap must not skip a line. The action after the final line closes both bubbles, and the following action restarts turn one.
+   - Handhold Alex copy keeps its lower edge at image Y `.248` and grows upward without covering his face.
    - Bracelet Alex copy keeps its upper edge at image Y `.396`; stall Alex copy keeps its upper edge at image Y `.33`. Both grow downward.
    - Generic dialogue copy is `15px`, normal weight, matching the size (not the bold weight) of the compact “窗边叮嘱” title.
 10. Advance handhold → bracelet → stall, then walk the left/back path to coffeeCorner.
 11. Confirm the previously accepted 19.8, panels, lapClose, and home back path still work.
 12. Confirm there are no visible navigation arrows, center `V2` button, or engineering-source line; `PREVIEW COPY` appears only on a degraded-state run.
 13. Long-press the transparent upper-left zone for 1.8 seconds and confirm iOS shows no blue selection overlay. Verify the `房间 / 照片墙 / 其他` tabs, the three named room slots, and the six named photo slots. Save one disposable photo, reopen the photo wall to confirm it appears, then clear it. If testing a room override, clear it afterward and confirm the published default returns.
+14. Publish one disposable powder-notebook page through `/write` and one through MCP. Vicky's known pages must use the shared deep-pink ink; Alex's known pages must use near-black. Existing archive pages without author metadata must keep the legacy ink. Delete only the disposable pages afterward.
 
 ## Automated mobile-browser checkpoint
 
@@ -55,21 +56,20 @@ Normal -> Soft reset -> same-panel back -> close
 coffeeCorner -> first beach panorama
 horizontal pan and image-locked transparent navigation
 Alex/Vicky dialogue reveal with full viewport visibility
-first group reveal centers once; speaker switching and long copy do not recenter
-manual panorama drag remains authoritative after the first group focus
+first dialogue reveal, speaker switching, and long copy preserve the existing manual panorama position
 handhold -> bracelet -> stall
 stall -> bracelet -> handhold -> coffeeCorner
 coffeeCorner -> lapClose hide/show-next -> coffeeCorner -> home
 zero page errors, console errors, or failed requests
 no runtime inspector, status ticker, or hotspot debug switch in the product DOM
-four notebook POSTs, each carrying only registered notebook fields and a QA-only token
+four notebook POSTs, each carrying only seven registered notebook fields and a QA-only token
 iPhone home-screen capability, safe-area viewport, status-bar, and app-title metadata
 manifest rejection for missing hotspot coordinates, dangling scene targets, and unsupported effects
 ```
 
 The post-iPhone correction suite separately verifies the compact weather-card contract, drift-tolerant invisible lower-corner navigation, iOS-selection-safe upper-left long-press dispatch, exact three-room/six-photo device-local image writes/clears, and full-size optimized static beach delivery with canonical public Storage fallback. The concise device recheck passed on 2026-08-09.
 
-The original pass caught panorama dialogue clipping. Manifest `0.4.0` keeps that measured-layout safeguard for ungrouped ports and retains one authored focus per scene entry, no member-to-member camera yo-yo, no recenter after manual panning, and explicit top/bottom growth edges for copy near protected faces. It additionally gives each scene one shared ordered dialogue timeline. Cover rooms, route hotspots, existing six compatibility target ids, and coordinates are unchanged.
+The original pass caught panorama dialogue clipping. Manifest `0.5.0` keeps measured safe-edge reveal only for ungrouped ports; grouped dialogue never changes camera position at all. It retains explicit top/bottom growth edges for copy near protected faces and one shared ordered timeline per scene. Cover rooms, route hotspots, existing six compatibility target ids, and coordinates are unchanged.
 
 The memories checkpoint seeded two photos into a disposable browser profile, verified a filled slot → empty slot → filled slot sequence, then closed the panel and completed every later route. The application itself performed only IndexedDB enumeration and a `readonly` transaction.
 

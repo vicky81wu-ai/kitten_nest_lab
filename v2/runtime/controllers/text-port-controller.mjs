@@ -1,16 +1,19 @@
 import { BaseController } from '../core/base-controller.mjs';
 import { resolveTextPortState } from '../core/text-state.mjs';
 import { resolveWeatherState } from '../core/weather-state.mjs';
-import { horizontalFocusTarget, horizontalRevealTarget } from '../core/geometry.mjs';
+import { horizontalRevealTarget } from '../core/geometry.mjs';
 import { interleaveSpeakerQueues, normalizeDialogueTurns } from '../core/dialogue-script.mjs';
+
+export function textQueueFingerprint(queue = []) {
+  return JSON.stringify(queue.map((item) => String(item ?? '')));
+}
 
 export class TextPortController extends BaseController {
   constructor(context) {
     super('textPort', context);
     this.ports = new Map();
     this.pendingRevealIds = new Set();
-    this.pendingDialogueGroupFocuses = new Map();
-    this.focusedDialogueGroupIds = new Set();
+    this.ambientBubbleSessions = new Map();
     this.dialogueRuntimes = new Map();
     this.activeSceneId = null;
     this.boundPointer = (event) => this.handlePointer(event);
@@ -51,7 +54,8 @@ export class TextPortController extends BaseController {
       index: 0,
       visible: false,
       sourceField: '',
-      overrideText: ''
+      overrideText: '',
+      hasShown: false
     };
     this.ports.set(object.id, port);
     return port;
@@ -77,15 +81,45 @@ export class TextPortController extends BaseController {
       ? resolveTextPortState(state, port.object)
       : { queue: [], index: 0, sourceField: '' };
     port.queue = resolved.queue;
-    port.index = port.object.staticText && port.hasRenderedState && port.queue.length
-      ? port.index % port.queue.length
-      : port.queue.length ? resolved.index % port.queue.length : 0;
+    const resolvedIndex = port.queue.length ? resolved.index % port.queue.length : 0;
+    port.index = resolvedIndex;
     port.sourceField = resolved.sourceField;
     if (!port.queue.length) port.visible = false;
-    else if (!port.hasRenderedState) port.visible = port.object.initiallyVisible !== false;
-    if (port.visible) port.hasShown = true;
+    else if (this.isAmbientPort(port)) this.restoreAmbientSession(port, resolvedIndex);
+    else if (!port.hasRenderedState) port.visible = port.object.initiallyVisible === true;
+    if (port.visible && !this.isAmbientPort(port)) port.hasShown = true;
     port.hasRenderedState = true;
     this.render(port);
+  }
+
+  isAmbientPort(port) {
+    if (!port || port.object?.variant === 'weather') return false;
+    return this.dialogueGroupFor(port)?.mode !== 'conversation';
+  }
+
+  saveAmbientSession(port) {
+    if (!this.isAmbientPort(port) || !port.queue.length) return;
+    this.ambientBubbleSessions.set(port.object.id, {
+      fingerprint: textQueueFingerprint(port.queue),
+      index: port.index % port.queue.length,
+      visible: Boolean(port.visible),
+      hasShown: Boolean(port.hasShown)
+    });
+  }
+
+  restoreAmbientSession(port, resolvedIndex = 0) {
+    const fingerprint = textQueueFingerprint(port.queue);
+    const saved = this.ambientBubbleSessions.get(port.object.id);
+    if (saved?.fingerprint === fingerprint) {
+      port.index = Math.max(0, Number(saved.index) || 0) % port.queue.length;
+      port.visible = Boolean(saved.visible);
+      port.hasShown = Boolean(saved.hasShown);
+      return;
+    }
+    port.index = resolvedIndex;
+    port.visible = port.object.initiallyVisible === true;
+    port.hasShown = port.visible;
+    this.saveAmbientSession(port);
   }
 
   render(port) {
@@ -116,17 +150,15 @@ export class TextPortController extends BaseController {
     if (snapshot.sceneId !== this.activeSceneId) {
       this.activeSceneId = snapshot.sceneId;
       this.pendingRevealIds.clear();
-      this.pendingDialogueGroupFocuses.clear();
-      this.focusedDialogueGroupIds.clear();
       this.dialogueRuntimes.clear();
     }
     const allowed = new Set(snapshot.allowedObjectIds);
     for (const [id, port] of this.ports) {
       if (!allowed.has(id)) {
+        this.saveAmbientSession(port);
         port.element.remove();
         this.ports.delete(id);
         this.pendingRevealIds.delete(id);
-        this.removePendingDialogueGroupFocus(id);
       }
     }
 
@@ -145,8 +177,8 @@ export class TextPortController extends BaseController {
     if (!port) return false;
     port.visible = false;
     this.pendingRevealIds.delete(id);
-    this.removePendingDialogueGroupFocus(id);
     this.render(port);
+    this.saveAmbientSession(port);
     return true;
   }
 
@@ -216,7 +248,6 @@ export class TextPortController extends BaseController {
       port.visible = false;
       port.overrideText = '';
       this.pendingRevealIds.delete(memberId);
-      this.removePendingDialogueGroupFocus(memberId);
       this.render(port);
     });
   }
@@ -238,7 +269,6 @@ export class TextPortController extends BaseController {
         this.scheduleReveal(port);
       } else {
         this.pendingRevealIds.delete(candidateId);
-        this.removePendingDialogueGroupFocus(candidateId);
       }
       this.render(port);
     });
@@ -292,61 +322,17 @@ export class TextPortController extends BaseController {
     }
   }
 
-  removePendingDialogueGroupFocus(portId) {
-    for (const [groupId, triggerId] of [...this.pendingDialogueGroupFocuses]) {
-      if (triggerId !== portId) continue;
-      this.pendingDialogueGroupFocuses.delete(groupId);
-      const group = this.context.manifest?.dialogueGroups?.[groupId];
-      if (
-        !group
-        || group.ownerScene !== this.activeSceneId
-        || this.focusedDialogueGroupIds.has(groupId)
-      ) continue;
-      const replacement = group.members
-        .map((memberId) => this.ports.get(memberId))
-        .find((port) => port?.visible && !port.element.hidden);
-      if (replacement) this.pendingDialogueGroupFocuses.set(groupId, replacement.object.id);
-    }
-  }
-
   scheduleReveal(port) {
     const group = this.dialogueGroupFor(port);
-    if (group?.camera?.policy === 'groupLock') {
-      if (
-        !this.focusedDialogueGroupIds.has(group.id)
-        && !this.pendingDialogueGroupFocuses.has(group.id)
-      ) {
-        this.pendingDialogueGroupFocuses.set(group.id, port.object.id);
-      }
-      return;
-    }
+    if (group) return;
     this.pendingRevealIds.add(port.object.id);
   }
 
   flushPendingReveals() {
-    if ((!this.pendingRevealIds.size && !this.pendingDialogueGroupFocuses.size) || !this.viewport) return;
+    if (!this.pendingRevealIds.size || !this.viewport) return;
     if (document.body.dataset.scenePresentation !== 'panorama') {
       this.pendingRevealIds.clear();
-      this.pendingDialogueGroupFocuses.clear();
       return;
-    }
-
-    for (const [groupId, triggerId] of [...this.pendingDialogueGroupFocuses]) {
-      const port = this.ports.get(triggerId);
-      const group = this.context.manifest?.dialogueGroups?.[groupId];
-      if (!port || port.element.hidden || !group || group.ownerScene !== this.activeSceneId) {
-        this.pendingDialogueGroupFocuses.delete(groupId);
-        continue;
-      }
-      if (port.element.dataset.layoutReady !== '1') continue;
-      const target = horizontalFocusTarget({
-        focusX: group.camera.focusX,
-        scrollWidth: this.viewport.scrollWidth,
-        clientWidth: this.viewport.clientWidth
-      });
-      if (Math.abs(target - this.viewport.scrollLeft) >= 1) this.viewport.scrollLeft = target;
-      this.focusedDialogueGroupIds.add(groupId);
-      this.pendingDialogueGroupFocuses.delete(groupId);
     }
 
     const viewportRect = this.viewport.getBoundingClientRect();
@@ -378,7 +364,6 @@ export class TextPortController extends BaseController {
     if (port.visible) {
       port.visible = false;
       this.pendingRevealIds.delete(id);
-      this.removePendingDialogueGroupFocus(id);
     } else {
       if (port.hasShown) {
         port.index = port.queue.length > 1 ? (port.index + 1) % port.queue.length : 0;
@@ -388,6 +373,7 @@ export class TextPortController extends BaseController {
       this.scheduleReveal(port);
     }
     this.render(port);
+    this.saveAmbientSession(port);
     return true;
   }
 
@@ -409,11 +395,12 @@ export class TextPortController extends BaseController {
   }
 
   async suspend(reason = 'suspend') {
-    for (const port of this.ports.values()) port.element.remove();
+    for (const port of this.ports.values()) {
+      this.saveAmbientSession(port);
+      port.element.remove();
+    }
     this.ports.clear();
     this.pendingRevealIds.clear();
-    this.pendingDialogueGroupFocuses.clear();
-    this.focusedDialogueGroupIds.clear();
     this.dialogueRuntimes.clear();
     this.activeSceneId = null;
     this.mark('suspended', reason);
@@ -421,6 +408,7 @@ export class TextPortController extends BaseController {
 
   async destroy() {
     await this.suspend('destroy');
+    this.ambientBubbleSessions.clear();
     this.layer.removeEventListener('pointerup', this.boundPointer);
     this.unsubscribeState?.();
     this.unsubscribeLayout?.();

@@ -6,9 +6,10 @@ test('notebook state keeps the current page and normalizes the permanent archive
   const result = resolveNotebookState({
     hubbyNote: 'current page',
     hubbyNoteUpdatedAt: '2026-08-09T12:00:00Z',
+    hubbyNoteAuthor: 'vicky',
     hubbyNoteFavorite: true,
     hubbyNoteArchive: [
-      { id: 'a', text: 'first archive', savedAt: '2026-08-08T12:00:00Z', favorite: true },
+      { id: 'a', text: 'first archive', savedAt: '2026-08-08T12:00:00Z', author: 'alex', favorite: true },
       'second archive',
       { id: 'empty', text: '   ' }
     ]
@@ -16,9 +17,12 @@ test('notebook state keeps the current page and normalizes the permanent archive
   assert.equal(result.current.text, 'current page');
   assert.equal(result.current.date, '2026-08-09');
   assert.equal(result.current.favorite, true);
+  assert.equal(result.current.author, 'vicky');
   assert.equal(result.archive.length, 2);
   assert.deepEqual(result.archive.map((page) => page.text), ['first archive', 'second archive']);
   assert.equal(result.archive[0].favorite, true);
+  assert.equal(result.archive[0].author, 'alex');
+  assert.equal(result.archive[1].author, '');
   assert.equal(result.pages.length, 3);
 });
 

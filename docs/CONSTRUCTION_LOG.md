@@ -415,3 +415,19 @@ Manifest 0.3.3 validation and 86/86 automated checks passed. The change does not
 Manifest 0.3.4 calibrates the first beach conversation to the accepted crop (`focusX .436`) and introduces reusable `bottomCenter` / `topCenter` image anchors. The handhold Alex bubble pins its lower edge above the face; bracelet and stall Alex bubbles pin their upper edges below the face. Longer published copy can now grow only into the approved direction. Generic bubble copy is unified at the compact weather-title size (`15px`) with normal weight.
 
 The six writable speaker targets, navigation stack, hotspots, images, live state, Supabase, Storage, and MCP envelopes are unchanged. Manifest validation rejects unknown coordinate anchors, and 87/87 checks pass.
+
+## 2026-08-11 shared seaside dialogue timeline
+
+Manifest 0.4.0 separates exploration hierarchy, named story beats, and ordered dialogue turns. Each beach scene now owns one semantic `dialogueScript` target and one shared runtime turn index. Consecutive turns by the same speaker update one bubble; speaker changes switch members; a short input lock absorbs accidental double taps; completion closes the group and the next action restarts it. `/write`, `/api/set-state`, and MCP share the same `@alex` / `@vicky` parser. The six earlier per-speaker queues remain compatibility/ambient channels, so no state migration was required. Validation and 98/98 checks passed.
+
+## 2026-08-12 immersive runtime polish
+
+Manifest 0.5.0 supersedes automatic panorama dialogue focus with `camera.policy: manual`. Grouped dialogue never changes horizontal camera position; bubbles remain pinned to image coordinates and the visitor's pan is authoritative from scene entry. Standalone bubbles now remember line/open/closed state only inside the current runtime and reset on changed content or full app restart. Ordinary standalone bubbles default closed; coffeeCorner and lapClose remain explicit greeters.
+
+Home restores the legacy translucent floating weather copy and an independent 32-particle pebble-jar field. The moon toggle now uses two retained images so only the room art crossfades while hotspots/effects stay mounted. Powder-notebook entries gain the seventh registered field `hubbyNoteAuthor`: browser writes stamp Vicky, MCP stamps Alex, known archive authors persist, and legacy unknown pages are not guessed. The author colors share one CSS token pair with dialogue bubbles.
+
+No production route, text content, Supabase state, schema, RLS, bucket, Storage object, hotspot, or base-image coordinate changed. Manifest validation, 107/107 automated checks, and `git diff --check` pass. Public branch-preview interaction remains the release gate because the cloud browser cannot access the workspace loopback server.
+
+## 2026-08-12 explicit legacy notebook attribution
+
+Vicky identified the live powder-notebook archive by visible page number plus opening-text checks. A guarded one-time data operation classified Vicky pages `1, 4, 6, 7, 8, 9, 10, 12, 13, 14, 15, 17, 18`, Alex pages `2, 3, 5, 11, 16, 19`, and the current page as Vicky. Preflight and independent read-back both proved that all 19 canonical entries still matched all 19 history entries and that only author metadata changed. Text, timestamps, favorites, trash, other state, schema, policies, buckets, and Storage were untouched. The general code contract still refuses to guess an unknown historical author.

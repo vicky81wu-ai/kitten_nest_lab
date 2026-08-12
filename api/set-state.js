@@ -37,6 +37,19 @@ function clampText(value, maxChars) {
   return String(value || '').trim().slice(0, maxChars || 5000);
 }
 
+function knownAuthor(value) {
+  const author = String(value || '').trim().toLowerCase();
+  return author === 'alex' || author === 'vicky' ? author : '';
+}
+
+function archivedNote(text, savedAt, author) {
+  return {
+    text,
+    savedAt,
+    ...(knownAuthor(author) ? { author: knownAuthor(author) } : {})
+  };
+}
+
 function cleanTargetLines(value, maxLines) {
   return cleanLines(value).slice(0, maxLines || 30);
 }
@@ -150,11 +163,14 @@ function buildHubbyNotePatch(text, state) {
   const old = String(state && state.hubbyNote || '').trim();
   const archive = noteArchiveOf(state);
   const savedAt = now();
-  const nextArchive = old ? [{ text: old, savedAt: state.hubbyNoteUpdatedAt || state.updatedAt || savedAt }, ...archive] : archive;
+  const nextArchive = old
+    ? [archivedNote(old, state.hubbyNoteUpdatedAt || state.updatedAt || savedAt, state.hubbyNoteAuthor), ...archive]
+    : archive;
 
   return {
     hubbyNote: note,
     hubbyNoteUpdatedAt: savedAt,
+    hubbyNoteAuthor: 'vicky',
     hubbyNoteArchive: nextArchive,
     hubbyNoteHistory: nextArchive.slice(0, 20)
   };
@@ -269,7 +285,9 @@ function applyHubbyNotePackage(patch, state) {
   const old = String(state && state.hubbyNote || '').trim();
   const archive = noteArchiveOf(state);
   const savedAt = new Date().toISOString();
-  const nextArchive = old ? [{ text: old, savedAt: state.hubbyNoteUpdatedAt || state.updatedAt || savedAt }, ...archive] : archive;
+  const nextArchive = old
+    ? [archivedNote(old, state.hubbyNoteUpdatedAt || state.updatedAt || savedAt, state.hubbyNoteAuthor), ...archive]
+    : archive;
 
   delete patch.alexBubble;
   delete patch.alexBubbles;
@@ -278,6 +296,7 @@ function applyHubbyNotePackage(patch, state) {
 
   patch.hubbyNote = note;
   patch.hubbyNoteUpdatedAt = savedAt;
+  patch.hubbyNoteAuthor = 'vicky';
   patch.hubbyNoteArchive = nextArchive;
   patch.hubbyNoteHistory = nextArchive.slice(0, 20);
   return true;

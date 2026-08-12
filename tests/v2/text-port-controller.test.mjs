@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { TextPortController } from '../../v2/runtime/controllers/text-port-controller.mjs';
+import {
+  TextPortController,
+  textQueueFingerprint
+} from '../../v2/runtime/controllers/text-port-controller.mjs';
 
 function createElement() {
   return {
@@ -11,6 +14,9 @@ function createElement() {
     removeAttribute(name) {
       this.removed.push(name);
       if (name === 'data-layout-ready') delete this.dataset.layoutReady;
+    },
+    remove() {
+      this.didRemove = true;
     }
   };
 }
@@ -107,67 +113,28 @@ test('a measured panorama bubble is revealed inside the current viewport', () =>
   }
 });
 
-test('a panorama dialogue group focuses once and preserves later manual panning', () => {
+test('dialogue advance, speaker switches, and relayout never move a panorama camera', () => {
   const originalDocument = globalThis.document;
   globalThis.document = { body: { dataset: { scenePresentation: 'panorama' } } };
   try {
-    const context = {
-      isReconcilingScene: true,
-      manifest: {
-        dialogueGroups: {
-          beachTalk: {
-            id: 'beachTalk',
-            ownerScene: 'beach',
-            members: ['alex', 'vicky'],
-            camera: { policy: 'groupLock', focusX: 0.51 }
-          }
-        }
-      },
-      controllers: new Map([
-        ['state', { source: 'degradedFallback' }],
-        ['layout', { schedule: () => {} }]
-      ])
-    };
-    const controller = new TextPortController(context);
-    controller.activeSceneId = 'beach';
+    const { controller, advance } = createConversationHarness([
+      { speaker: 'alex', text: 'A1' },
+      { speaker: 'alex', text: 'A much taller replacement line' },
+      { speaker: 'vicky', text: 'V1' }
+    ]);
     controller.viewport = {
-      scrollLeft: 0,
+      scrollLeft: 137,
       scrollWidth: 1278,
       clientWidth: 393,
       getBoundingClientRect: () => ({ left: 0, right: 393 })
     };
-    const makePort = (id) => ({
-      object: { id, dialogueGroupId: 'beachTalk' },
-      element: createElement(),
-      queue: [`${id} line`],
-      index: 0,
-      visible: false,
-      sourceField: 'manifest:fallbackQueue',
-      hasShown: false
-    });
-    const alex = makePort('alex');
-    const vicky = makePort('vicky');
-    controller.ports.set('alex', alex);
-    controller.ports.set('vicky', vicky);
 
-    controller.toggleNext('alex');
-    controller.toggleNext('vicky');
-    controller.toggleNext('alex');
-    vicky.element.dataset.layoutReady = '1';
-    controller.flushPendingReveals();
-
-    assert.ok(Math.abs(controller.viewport.scrollLeft - 455.28) < 0.001);
-    assert.deepEqual([...controller.focusedDialogueGroupIds], ['beachTalk']);
-
-    controller.viewport.scrollLeft = 120;
-    controller.toggleNext('vicky');
-    controller.toggleNext('alex');
-    alex.element.getBoundingClientRect = () => ({ left: -240, right: 633 });
-    alex.element.dataset.layoutReady = '1';
-    controller.flushPendingReveals();
-
-    assert.equal(controller.viewport.scrollLeft, 120);
-    assert.equal(controller.pendingDialogueGroupFocuses.size, 0);
+    for (let turn = 0; turn < 3; turn += 1) {
+      assert.equal(advance(), true);
+      controller.ports.get(turn < 2 ? 'alex' : 'vicky').element.dataset.layoutReady = '1';
+      controller.flushPendingReveals();
+      assert.equal(controller.viewport.scrollLeft, 137);
+    }
     assert.equal(controller.pendingRevealIds.size, 0);
   } finally {
     if (originalDocument === undefined) delete globalThis.document;
@@ -175,19 +142,97 @@ test('a panorama dialogue group focuses once and preserves later manual panning'
   }
 });
 
-test('entering another scene resets the one-focus dialogue lifecycle', async () => {
+test('entering another scene clears dialogue runtime but preserves ambient session memory', async () => {
   const controller = new TextPortController({ manifest: { objects: {} } });
   controller.activeSceneId = 'beachA';
-  controller.focusedDialogueGroupIds.add('beachTalk');
-  controller.pendingDialogueGroupFocuses.set('beachTalk', 'alex');
+  controller.dialogueRuntimes.set('beachTalk', { index: 1 });
+  controller.ambientBubbleSessions.set('coffeeBubble', {
+    fingerprint: '["one"]', index: 0, visible: false, hasShown: true
+  });
   controller.pendingRevealIds.add('ungrouped');
 
   await controller.reconcile({ sceneId: 'beachB', allowedObjectIds: [] });
 
   assert.equal(controller.activeSceneId, 'beachB');
-  assert.equal(controller.focusedDialogueGroupIds.size, 0);
-  assert.equal(controller.pendingDialogueGroupFocuses.size, 0);
+  assert.equal(controller.dialogueRuntimes.size, 0);
+  assert.equal(controller.ambientBubbleSessions.size, 1);
   assert.equal(controller.pendingRevealIds.size, 0);
+});
+
+test('standalone bubbles resume the exact closed line and advance from it after scene return', () => {
+  const controller = new TextPortController({
+    manifest: { dialogueGroups: {} },
+    isReconcilingScene: true,
+    controllers: new Map([
+      ['state', { source: 'live' }],
+      ['layout', { schedule: () => {} }]
+    ])
+  });
+  const port = {
+    object: { id: 'coffeeBubble', initiallyVisible: true },
+    element: createElement(),
+    queue: ['one', 'two', 'three', 'four'],
+    index: 0,
+    visible: true,
+    hasShown: true
+  };
+  controller.ports.set('coffeeBubble', port);
+
+  controller.toggleNext('coffeeBubble');
+  controller.toggleNext('coffeeBubble');
+  controller.toggleNext('coffeeBubble');
+  controller.toggleNext('coffeeBubble');
+  controller.toggleNext('coffeeBubble');
+  assert.equal(port.index, 2);
+  assert.equal(port.visible, false);
+
+  const returned = {
+    object: port.object,
+    element: createElement(),
+    queue: [...port.queue],
+    index: 0,
+    visible: true,
+    hasShown: false
+  };
+  controller.restoreAmbientSession(returned, 0);
+  controller.ports.set('coffeeBubble', returned);
+  assert.equal(returned.index, 2);
+  assert.equal(returned.visible, false);
+  assert.equal(returned.hasShown, true);
+
+  controller.toggleNext('coffeeBubble');
+  assert.equal(returned.index, 3);
+  assert.equal(returned.visible, true);
+  assert.equal(returned.element.textContent, 'four');
+});
+
+test('changed standalone content resets safely and a fresh runtime forgets prior session state', () => {
+  const object = { id: 'ambient', initiallyVisible: false };
+  const controller = new TextPortController({ manifest: { dialogueGroups: {} } });
+  controller.ambientBubbleSessions.set('ambient', {
+    fingerprint: textQueueFingerprint(['old one', 'old two']),
+    index: 1,
+    visible: true,
+    hasShown: true
+  });
+  const changed = {
+    object,
+    element: createElement(),
+    queue: ['new one'],
+    index: 0,
+    visible: true,
+    hasShown: true
+  };
+  controller.restoreAmbientSession(changed, 0);
+  assert.equal(changed.index, 0);
+  assert.equal(changed.visible, false);
+  assert.equal(changed.hasShown, false);
+
+  const freshController = new TextPortController({ manifest: { dialogueGroups: {} } });
+  const fresh = { ...changed, element: createElement(), visible: true, hasShown: true };
+  freshController.restoreAmbientSession(fresh, 0);
+  assert.equal(fresh.visible, false);
+  assert.equal(fresh.hasShown, false);
 });
 
 function createConversationHarness(canonicalTurns = null) {
@@ -202,7 +247,7 @@ function createConversationHarness(canonicalTurns = null) {
     speakers: { alex: 'alex', vicky: 'vicky' },
     legacySpeakerOrder: ['alex', 'vicky'],
     inputLockMs: 200,
-    camera: { policy: 'groupLock', focusX: 0.42 }
+    camera: { policy: 'manual' }
   };
   const context = {
     isReconcilingScene: true,
@@ -273,7 +318,7 @@ test('one conversation timeline preserves consecutive same-speaker turns then sw
   assert.equal(alex.visible, false);
   assert.equal(vicky.visible, true);
   assert.equal(vicky.element.textContent, 'V1');
-  assert.deepEqual([...controller.pendingDialogueGroupFocuses], [['beachMainDialogue', 'vicky']]);
+  assert.equal(controller.pendingRevealIds.size, 0);
 });
 
 test('conversation input lock ignores accidental double taps without skipping a turn', () => {

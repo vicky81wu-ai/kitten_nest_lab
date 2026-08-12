@@ -11,6 +11,8 @@ function configOf(config = {}) {
   return {
     currentField: config.currentField || 'hubbyNote',
     updatedAtField: config.updatedAtField || 'hubbyNoteUpdatedAt',
+    authorField: config.authorField || 'hubbyNoteAuthor',
+    defaultAuthor: config.defaultAuthor === 'alex' ? 'alex' : 'vicky',
     favoriteField: config.favoriteField || 'hubbyNoteFavorite',
     archiveField: archiveFields[0],
     historyField: archiveFields[1] || archiveFields[0],
@@ -53,6 +55,7 @@ export function notebookWriteFields(config = {}) {
   return [
     value.currentField,
     value.updatedAtField,
+    value.authorField,
     value.favoriteField,
     value.archiveField,
     value.historyField,
@@ -66,13 +69,15 @@ export function buildNotebookSavePatch(raw, state = {}, rawConfig = {}, options 
   if (!note) throw new Error('先写一点点再保存，小猫。');
 
   const archive = archiveOf(state, config);
-  const duplicate = archive.some((item) => text(item.text || item.note) === note);
+  const duplicateIndex = archive.findIndex((item) => text(item.text || item.note) === note);
+  const author = options.author === 'alex' ? 'alex' : config.defaultAuthor;
   const savedAt = options.now || new Date().toISOString();
-  if (!duplicate) {
+  if (duplicateIndex < 0) {
     archive.unshift({
       id: (options.createId || defaultId)(),
       text: note,
       savedAt,
+      author,
       favorite: false
     });
   }
@@ -80,6 +85,7 @@ export function buildNotebookSavePatch(raw, state = {}, rawConfig = {}, options 
   return {
     [config.currentField]: note,
     [config.updatedAtField]: savedAt,
+    [config.authorField]: author,
     [config.favoriteField]: false,
     ...historyPatch(archive, config)
   };
@@ -111,6 +117,7 @@ export function buildNotebookDeletePatch(key, state = {}, rawConfig = {}, option
     deletedAt,
     originalSavedAt: removed.savedAt || removed.createdAt || removed.updatedAt || '',
     source: 'archive',
+    ...(removed.author ? { author: removed.author } : {}),
     favorite: Boolean(removed.favorite)
   });
   return {

@@ -38,6 +38,7 @@ export class EffectController extends BaseController {
     element.setAttribute('aria-hidden', 'true');
 
     if (type === 'sparkles') this.fillSparkles(element, object);
+    else if (type === 'jarSparkles') this.fillJarSparkles(element, object);
     else if (type === 'steam') this.fillSteam(element, object);
     else if (type === 'clockHands') this.fillClock(element, object);
 
@@ -56,6 +57,29 @@ export class EffectController extends BaseController {
       dot.style.setProperty('--delay', `${(-random() * 4).toFixed(2)}s`);
       dot.style.setProperty('--duration', `${(2.2 + random() * 3.8).toFixed(2)}s`);
       dot.style.setProperty('--size', `${(1.5 + random() * 3.2).toFixed(2)}px`);
+      element.appendChild(dot);
+    }
+  }
+
+  fillJarSparkles(element, object) {
+    const count = Number(object.effect?.count || 32);
+    const random = randomFactory(hashSeed(object.id));
+    const colors = [
+      'rgba(255,221,132,.9)',
+      'rgba(255,221,132,.88)',
+      'rgba(255,178,218,.72)',
+      'rgba(190,150,255,.68)',
+      'rgba(164,205,255,.68)',
+      'rgba(255,177,118,.72)'
+    ];
+    for (let index = 0; index < count; index += 1) {
+      const dot = document.createElement('i');
+      dot.style.setProperty('--x', `${(8 + random() * 84).toFixed(2)}%`);
+      dot.style.setProperty('--y', `${(16 + random() * 74).toFixed(2)}%`);
+      dot.style.setProperty('--size', `${(1.8 + random() * 1.4).toFixed(2)}px`);
+      dot.style.setProperty('--duration', `${(3.6 + random() * 2.2).toFixed(2)}s`);
+      dot.style.setProperty('--delay', `${(-random() * 4).toFixed(2)}s`);
+      dot.style.setProperty('--color', colors[index % colors.length]);
       element.appendChild(dot);
     }
   }

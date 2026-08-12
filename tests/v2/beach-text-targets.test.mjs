@@ -173,6 +173,28 @@ test('set-state and MCP parse the same tagged speaker script into ordered turns'
   }
 });
 
+test('writer and MCP note channels stamp their own author while preserving known history', () => {
+  const priorState = {
+    hubbyNote: 'prior page',
+    hubbyNoteUpdatedAt: '2026-08-10T10:00:00Z',
+    hubbyNoteAuthor: 'alex',
+    hubbyNoteArchive: [{ id: 'legacy', text: 'legacy page' }]
+  };
+  const writer = setState.buildTextTargetEnvelope({
+    textTarget: { targetId: 'hubbyNote', text: 'Vicky page', mode: 'publish', dryRun: true }
+  }, priorState).patch;
+  const alex = mcp.buildTextTargetPatch('hubbyNote', 'Alex page', {
+    ...priorState,
+    hubbyNoteAuthor: 'vicky'
+  });
+
+  assert.equal(writer.hubbyNoteAuthor, 'vicky');
+  assert.equal(writer.hubbyNoteArchive[0].author, 'alex');
+  assert.equal(Object.hasOwn(writer.hubbyNoteArchive[1], 'author'), false);
+  assert.equal(alex.hubbyNoteAuthor, 'alex');
+  assert.equal(alex.hubbyNoteArchive[0].author, 'vicky');
+});
+
 test('writer console advertises all six canonical beach tags and MCP exposes every target id', async () => {
   const html = await readFile(new URL('../../write.html', import.meta.url), 'utf8');
   const mcpTargetEnum = mcp.toolList()
