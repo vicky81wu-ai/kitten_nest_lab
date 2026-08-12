@@ -1,6 +1,6 @@
 {
   "schemaVersion": "nest-manifest.v2",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "status": "production",
   "promoted": true,
   "route": "/cloud",
@@ -108,7 +108,7 @@
     },
     "effect": {
       "className": "EffectController",
-      "owns": ["sparkles", "steam", "clock-hands", "effect-pause", "effect-destroy"],
+      "owns": ["sparkles", "jar-sparkles", "steam", "clock-hands", "effect-pause", "effect-destroy"],
       "lifecycle": ["mount", "ready", "reconcile", "suspend", "destroy"]
     }
   },
@@ -240,6 +240,7 @@
       "objects": [
         "home.clockHands",
         "home.sparkles",
+        "home.pebbleJarSparkles",
         "home.moonLampHot",
         "home.windowWeather",
         "home.weatherAdvicePanel",
@@ -377,7 +378,7 @@
       },
       "legacySpeakerOrder": ["alex", "vicky"],
       "inputLockMs": 200,
-      "camera": { "policy": "groupLock", "focusX": 0.436 }
+      "camera": { "policy": "manual" }
     },
     "seasideWalkBraceletPromiseMainDialogue": {
       "id": "seasideWalkBraceletPromiseMainDialogue",
@@ -397,7 +398,7 @@
       },
       "legacySpeakerOrder": ["alex", "vicky"],
       "inputLockMs": 200,
-      "camera": { "policy": "groupLock", "focusX": 0.48 }
+      "camera": { "policy": "manual" }
     },
     "seasideWalkStallOrderMainDialogue": {
       "id": "seasideWalkStallOrderMainDialogue",
@@ -417,7 +418,7 @@
       },
       "legacySpeakerOrder": ["alex", "vicky"],
       "inputLockMs": 200,
-      "camera": { "policy": "groupLock", "focusX": 0.56 }
+      "camera": { "policy": "manual" }
     }
   },
   "objects": {
@@ -509,6 +510,19 @@
       "runtimeStatus": "active",
       "versionStatus": "canonicalV2Preview"
     },
+    "home.pebbleJarSparkles": {
+      "id": "home.pebbleJarSparkles",
+      "kind": "effect",
+      "ownerScene": "home",
+      "controller": "effect",
+      "selector": "[data-object-id=\"home.pebbleJarSparkles\"]",
+      "effect": { "type": "jarSparkles", "count": 32 },
+      "coordinate": { "anchor": "center", "x": 0.495, "y": 0.581, "width": 0.32, "height": 0.21 },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "restoredLegacy"
+    },
     "home.moonLampHot": {
       "id": "home.moonLampHot",
       "kind": "hotspot",
@@ -591,6 +605,8 @@
       "targetId": "hubbyNote",
       "currentField": "hubbyNote",
       "updatedAtField": "hubbyNoteUpdatedAt",
+      "authorField": "hubbyNoteAuthor",
+      "defaultAuthor": "vicky",
       "favoriteField": "hubbyNoteFavorite",
       "archiveFields": ["hubbyNoteArchive", "hubbyNoteHistory"],
       "trashField": "hubbyNoteTrash",
@@ -631,6 +647,7 @@
         "index": ["coffeeCornerBubbleIndex", "bubbleIndex"]
       },
       "allowDegradedFallback": true,
+      "initiallyVisible": true,
       "coordinate": { "anchor": "bottomRight", "x": 0.905, "y": 0.23, "width": 0.48 },
       "exclusive": true,
       "coordinateStatus": "baseImageLocked",
@@ -839,6 +856,7 @@
         "index": ["coffeeCornerLapCloseBubbleIndex"]
       },
       "allowDegradedFallback": true,
+      "initiallyVisible": true,
       "coordinate": {
         "anchor": "baselineTop",
         "x": 0.332,

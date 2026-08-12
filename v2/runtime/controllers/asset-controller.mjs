@@ -87,6 +87,35 @@ export function loadStageImage(image, url, timeoutMs = 20000, decodeTimeoutMs = 
   });
 }
 
+function afterNextPaint() {
+  return new Promise((resolve) => {
+    const frame = globalThis.requestAnimationFrame;
+    if (typeof frame !== 'function') {
+      setTimeout(resolve, 0);
+      return;
+    }
+    frame(() => frame(resolve));
+  });
+}
+
+export function waitForCrossfade(image, timeoutMs = 560) {
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      image?.removeEventListener?.('transitionend', onTransitionEnd);
+      resolve();
+    };
+    const onTransitionEnd = (event) => {
+      if (!event || event.target === image) finish();
+    };
+    const timer = setTimeout(finish, Math.max(1, timeoutMs));
+    image?.addEventListener?.('transitionend', onTransitionEnd);
+  });
+}
+
 export async function fetchWarmImageBlob(url, options = {}) {
   const fetchImpl = options.fetchImpl || globalThis.fetch;
   if (typeof fetchImpl !== 'function') throw new Error('Asset warming requires fetch');
@@ -116,6 +145,7 @@ export class AssetController extends BaseController {
   async mount() {
     await super.mount();
     this.image = this.context.elements.sceneImage;
+    this.transitionImage = this.context.elements.sceneImageTransition;
     this.stage = this.context.elements.stage;
     this.viewport = this.context.elements.sceneViewport;
     this.errorBox = this.context.elements.assetError;
@@ -255,31 +285,31 @@ export class AssetController extends BaseController {
   async loadAssetKey(scene, requestedKey) {
     if (this.loading) return { ok: false, key: requestedKey, error: 'Asset controller is busy' };
     this.loading = true;
-    const assets = this.context.manifest.assets;
-    const resolvedKey = resolveAssetKey(assets, requestedKey);
-    const card = assets[resolvedKey];
-    const localSource = await this.resolveLocalSource(card).catch(() => null);
-    const warmSource = await this.consumeWarmSource(resolvedKey, localSource ? 0 : 900);
-    const sources = [
-      ...(localSource ? [localSource] : []),
-      ...(warmSource ? [warmSource] : []),
-      ...(Array.isArray(card.sources) ? card.sources : [])
-    ];
-    const networkTimeoutMs = Number(card.networkTimeoutMs ?? 20000);
-    const decodeTimeoutMs = Number(card.decodeTimeoutMs ?? 1200);
-    this.mark('loading', resolvedKey);
-    this.errorBox.hidden = true;
-    this.stage.setAttribute('aria-busy', 'true');
-    document.body.dataset.assetStatus = 'loading';
-
-    const previous = {
-      src: this.image.getAttribute('src'),
-      alt: this.image.alt,
-      assetKey: this.image.dataset.assetKey,
-      assetRole: this.image.dataset.assetRole
-    };
-    const failures = [];
     try {
+      const assets = this.context.manifest.assets;
+      const resolvedKey = resolveAssetKey(assets, requestedKey);
+      const card = assets[resolvedKey];
+      const localSource = await this.resolveLocalSource(card).catch(() => null);
+      const warmSource = await this.consumeWarmSource(resolvedKey, localSource ? 0 : 900);
+      const sources = [
+        ...(localSource ? [localSource] : []),
+        ...(warmSource ? [warmSource] : []),
+        ...(Array.isArray(card.sources) ? card.sources : [])
+      ];
+      const networkTimeoutMs = Number(card.networkTimeoutMs ?? 20000);
+      const decodeTimeoutMs = Number(card.decodeTimeoutMs ?? 1200);
+      this.mark('loading', resolvedKey);
+      this.errorBox.hidden = true;
+      this.stage.setAttribute('aria-busy', 'true');
+      document.body.dataset.assetStatus = 'loading';
+
+      const previous = {
+        src: this.image.getAttribute('src'),
+        alt: this.image.alt,
+        assetKey: this.image.dataset.assetKey,
+        assetRole: this.image.dataset.assetRole
+      };
+      const failures = [];
       for (const source of sources) {
         try {
           const sourceNetworkTimeoutMs = Number(source.networkTimeoutMs ?? networkTimeoutMs);
@@ -331,6 +361,116 @@ export class AssetController extends BaseController {
     }
   }
 
+  async crossfadeAssetKey(scene, requestedKey) {
+    if (!this.transitionImage) return this.loadAssetKey(scene, requestedKey);
+    if (this.loading) return { ok: false, key: requestedKey, error: 'Asset controller is busy' };
+    this.loading = true;
+    const image = this.transitionImage;
+    const previousPrimary = {
+      src: this.image.getAttribute('src') || '',
+      alt: this.image.alt,
+      assetKey: this.image.dataset.assetKey,
+      assetRole: this.image.dataset.assetRole
+    };
+    const restorePrimary = () => {
+      if (previousPrimary.src) this.image.src = previousPrimary.src;
+      else this.image.removeAttribute('src');
+      this.image.alt = previousPrimary.alt;
+      if (previousPrimary.assetKey) this.image.dataset.assetKey = previousPrimary.assetKey;
+      else delete this.image.dataset.assetKey;
+      if (previousPrimary.assetRole) this.image.dataset.assetRole = previousPrimary.assetRole;
+      else delete this.image.dataset.assetRole;
+    };
+
+    try {
+      const assets = this.context.manifest.assets;
+      const resolvedKey = resolveAssetKey(assets, requestedKey);
+      const card = assets[resolvedKey];
+      const localSource = await this.resolveLocalSource(card).catch(() => null);
+      const warmSource = await this.consumeWarmSource(resolvedKey, localSource ? 0 : 900);
+      const sources = [
+        ...(localSource ? [localSource] : []),
+        ...(warmSource ? [warmSource] : []),
+        ...(Array.isArray(card.sources) ? card.sources : [])
+      ];
+      const networkTimeoutMs = Number(card.networkTimeoutMs ?? 20000);
+      const decodeTimeoutMs = Number(card.decodeTimeoutMs ?? 1200);
+      const failures = [];
+      this.errorBox.hidden = true;
+      this.stage.setAttribute('aria-busy', 'true');
+      this.stage.dataset.assetToggle = 'loading';
+      this.mark('loading', `${resolvedKey}; crossfade`);
+
+      for (const source of sources) {
+        let primaryTouched = false;
+        try {
+          const sourceNetworkTimeoutMs = Number(source.networkTimeoutMs ?? networkTimeoutMs);
+          image.dataset.visible = '0';
+          image.hidden = false;
+          await loadStageImage(image, source.url, sourceNetworkTimeoutMs, decodeTimeoutMs);
+          image.alt = scene.alt || `Kitten Nest ${scene.id}`;
+          image.dataset.assetKey = resolvedKey;
+          image.dataset.assetRole = source.role || 'source';
+          await afterNextPaint();
+          image.dataset.visible = '1';
+          const reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+          await waitForCrossfade(image, reducedMotion ? 1 : 560);
+
+          primaryTouched = true;
+          await loadStageImage(
+            this.image,
+            source.url,
+            Math.min(sourceNetworkTimeoutMs, 4000),
+            decodeTimeoutMs
+          );
+          this.image.alt = image.alt;
+          this.image.dataset.assetKey = resolvedKey;
+          this.image.dataset.assetRole = source.role || 'source';
+          await afterNextPaint();
+          this.current = {
+            key: resolvedKey,
+            url: source.url,
+            role: source.role || 'source',
+            presentation: resolveScenePresentation(scene)
+          };
+          const previousLocalUrl = this.localObjectUrl;
+          this.localObjectUrl = source.ownedLocalUrl ? source.url : null;
+          if (previousLocalUrl && previousLocalUrl !== this.localObjectUrl) {
+            this.revokeLocalUrl(previousLocalUrl);
+          }
+          image.dataset.visible = '0';
+          image.hidden = true;
+          image.removeAttribute('src');
+          document.body.dataset.assetStatus = 'ready';
+          document.body.dataset.assetVariant = resolvedKey;
+          this.stage.dataset.assetToggle = 'ready';
+          this.stage.setAttribute('aria-busy', 'false');
+          this.context.currentAsset = this.current;
+          this.mark('ready', resolvedKey);
+          this.warmSceneHint(scene);
+          return { ok: true, ...this.current };
+        } catch (error) {
+          failures.push(error.message);
+          if (primaryTouched) restorePrimary();
+          image.dataset.visible = '0';
+          image.hidden = true;
+          image.removeAttribute('src');
+          if (source.ownedLocalUrl) this.revokeLocalUrl(source.url);
+        }
+      }
+
+      const message = failures.join(' · ') || `No sources for ${resolvedKey}`;
+      this.stage.dataset.assetToggle = 'error';
+      this.stage.setAttribute('aria-busy', 'false');
+      this.errorBox.hidden = false;
+      this.errorBox.querySelector('[data-asset-error-message]').textContent = message;
+      this.mark('error', message);
+      return { ok: false, key: resolvedKey, error: message };
+    } finally {
+      this.loading = false;
+    }
+  }
+
   async loadForScene(scene) {
     return this.loadAssetKey(scene, scene.assetKey);
   }
@@ -344,19 +484,14 @@ export class AssetController extends BaseController {
     });
     const nextKey = nextToggleAssetKey(this.current?.key, keys);
     const layout = this.context.controllers.get('layout');
-    await layout.suspend('asset-toggle');
-    this.stage.dataset.transitioning = '1';
     document.body.dataset.sceneLocked = '1';
     try {
-      const result = await this.loadAssetKey(snapshot.scene, nextKey);
-      if (!result.ok) {
-        await layout.reconcile(snapshot, 'asset-toggle-restore');
-        return false;
-      }
+      const result = await this.crossfadeAssetKey(snapshot.scene, nextKey);
+      if (!result.ok) return false;
       await layout.reconcile(snapshot, 'asset-toggle');
+      keys.filter((key) => key !== nextKey).forEach((key) => this.scheduleWarmAsset(key, 80));
       return true;
     } finally {
-      this.stage.dataset.transitioning = '0';
       document.body.dataset.sceneLocked = '0';
     }
   }
@@ -386,6 +521,7 @@ export class AssetController extends BaseController {
     this.revokeLocalUrl(this.localObjectUrl);
     this.localObjectUrl = null;
     this.image?.removeAttribute('src');
+    this.transitionImage?.removeAttribute('src');
     await super.destroy();
   }
 }

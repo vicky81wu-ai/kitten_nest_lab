@@ -50,6 +50,11 @@ test('home restorations and the approved beach chain stay explicit in one manife
   const manifest = await readJson('../../v2/data/nest-manifest.v2.json');
   assert.equal(manifest.objects['home.moonLampHot'].action.type, 'asset.toggle');
   assert.equal(manifest.objects['home.windowWeather'].targetId, 'windowWeather');
+  assert.equal(manifest.objects['home.pebbleJarSparkles'].effect.type, 'jarSparkles');
+  assert.equal(manifest.objects['home.pebbleJarSparkles'].effect.count, 32);
+  assert.deepEqual(manifest.objects['home.pebbleJarSparkles'].coordinate, {
+    anchor: 'center', x: 0.495, y: 0.581, width: 0.32, height: 0.21
+  });
   assert.equal(manifest.objects['coffeeCorner.beachEnterHot'].action.target, 'coffeeCornerBeachHandholdSunset');
 
   const beachIds = [
@@ -76,19 +81,19 @@ test('home restorations and the approved beach chain stay explicit in one manife
   assert.equal(manifest.objects.coffeeCornerBeachBraceletNextHot.coordinate.x, 0.8816);
 });
 
-test('each beach conversation owns one stable group camera focus', async () => {
+test('each beach conversation is ordered by story metadata without owning the camera', async () => {
   const manifest = await readJson('../../v2/data/nest-manifest.v2.json');
   const expected = [
-    ['seasideWalkHandholdSunsetMainDialogue', 'coffeeCornerBeachHandholdSunset', 'handholdSunset', 0.436],
-    ['seasideWalkBraceletPromiseMainDialogue', 'coffeeCornerBeachBraceletPromise', 'braceletPromise', 0.48],
-    ['seasideWalkStallOrderMainDialogue', 'coffeeCornerBeachStallOrder', 'stallOrder', 0.56]
+    ['seasideWalkHandholdSunsetMainDialogue', 'coffeeCornerBeachHandholdSunset', 'handholdSunset'],
+    ['seasideWalkBraceletPromiseMainDialogue', 'coffeeCornerBeachBraceletPromise', 'braceletPromise'],
+    ['seasideWalkStallOrderMainDialogue', 'coffeeCornerBeachStallOrder', 'stallOrder']
   ];
 
-  assert.equal(manifest.version, '0.4.0');
+  assert.equal(manifest.version, '0.5.0');
   assert.deepEqual(manifest.stories.seasideWalk.beats.map((beat) => beat.id), [
     'handholdSunset', 'braceletPromise', 'stallOrder'
   ]);
-  expected.forEach(([groupId, sceneId, beatId, focusX]) => {
+  expected.forEach(([groupId, sceneId, beatId]) => {
     const group = manifest.dialogueGroups[groupId];
     assert.equal(group.ownerScene, sceneId);
     assert.equal(group.storyId, 'seasideWalk');
@@ -97,13 +102,12 @@ test('each beach conversation owns one stable group camera focus', async () => {
     assert.equal(group.scriptTargetId, groupId);
     assert.deepEqual(group.legacySpeakerOrder, ['alex', 'vicky']);
     assert.equal(group.inputLockMs, 200);
-    assert.deepEqual(group.camera, { policy: 'groupLock', focusX });
+    assert.deepEqual(group.camera, { policy: 'manual' });
     assert.equal(group.members.length, 2);
     group.members.forEach((memberId) => {
       const member = manifest.objects[memberId];
       assert.equal(member.ownerScene, sceneId);
       assert.equal(member.dialogueGroupId, groupId);
-      assert.equal(member.coordinate.x, focusX);
     });
   });
 
@@ -124,6 +128,36 @@ test('the generic v2 bubble no longer draws the legacy triangle tail', async () 
   assert.match(css, /\.v2-text-port\s*\{[^}]*border-radius:\s*22px;/s);
   assert.match(css, /\.v2-text-port\s*\{[^}]*font-size:\s*15px;[^}]*font-weight:\s*400;/s);
   assert.doesNotMatch(css, /\.v2-text-port--alex,\s*\.v2-text-port--vicky\s*\{[^}]*font-size:/s);
+});
+
+test('weather, pebble jar, author colors, and moon crossfade keep their immersive contracts', async () => {
+  const html = await readFile(new URL('../../v2/index.html', import.meta.url), 'utf8');
+  const css = await readFile(new URL('../../v2/styles/nest-v2.css', import.meta.url), 'utf8');
+  const assetController = await readFile(new URL('../../v2/runtime/controllers/asset-controller.mjs', import.meta.url), 'utf8');
+
+  assert.match(html, /id="v2-scene-image-transition"/);
+  assert.match(css, /\.v2-stage__image--transition\s*\{[^}]*opacity:\s*0;[^}]*transition:\s*opacity 520ms ease;/s);
+  assert.match(assetController, /async crossfadeAssetKey\(/);
+  assert.match(assetController, /await waitForCrossfade\(image, reducedMotion \? 1 : 560\)/);
+  assert.doesNotMatch(assetController, /async toggle\([\s\S]*?dataset\.transitioning\s*=\s*'1'/);
+
+  assert.match(css, /\.v2-text-port--weather\s*\{[^}]*color:\s*rgba\(255, 255, 255, 0\.84\);[^}]*animation:\s*v2-weather-float 4\.8s ease-in-out infinite;/s);
+  assert.match(css, /\.v2-weather__description\s*\{[^}]*opacity:\s*0\.72;/s);
+  assert.match(css, /@keyframes v2-weather-float[\s\S]*50%\s*\{\s*transform:\s*translateY\(-3px\);/);
+  assert.match(css, /@keyframes v2-jar-float[\s\S]*45%\s*\{[^}]*translate\(2px, -10px\)[^}]*\}[\s\S]*70%\s*\{[^}]*translate\(-2px, -15px\)/);
+
+  assert.match(css, /--alex-ink:\s*#351c21;/);
+  assert.match(css, /--vicky-ink:\s*#8a3f65;/);
+  assert.match(css, /\.v2-text-port--vicky\s*\{[^}]*color:\s*var\(--vicky-ink\);/s);
+  assert.match(css, /\.v2-notebook__page\[data-author="vicky"\][^{]*\{\s*color:\s*var\(--vicky-ink\);/s);
+});
+
+test('ordinary bubbles default closed while the two established greeters remain explicit', async () => {
+  const manifest = await readJson('../../v2/data/nest-manifest.v2.json');
+  assert.equal(manifest.objects['coffeeCorner.bubble'].initiallyVisible, true);
+  assert.equal(manifest.objects['lapClose.bubble'].initiallyVisible, true);
+  const dialogueMemberIds = Object.values(manifest.dialogueGroups).flatMap((group) => group.members);
+  dialogueMemberIds.forEach((id) => assert.equal(manifest.objects[id].initiallyVisible, false));
 });
 
 test('the v2 entry is ready for iPhone home-screen mode', async () => {
@@ -213,10 +247,14 @@ test('manifest validation rejects dangling hotspots and unsupported effects', as
   assert.match(result.errors.join('\n'), /uses unsupported coordinate anchor floatingFace/);
 });
 
-test('manifest validation rejects broken dialogue group camera contracts', async () => {
+test('manifest validation accepts manual dialogue cameras and rejects broken legacy group locks', async () => {
   const manifest = await readJson('../../v2/data/nest-manifest.v2.json');
   const textTargets = await readJson('../../data/text-targets.v1.json');
   manifest.dialogueGroups.seasideWalkHandholdSunsetMainDialogue.camera.policy = 'speakerFollow';
+  manifest.dialogueGroups.seasideWalkBraceletPromiseMainDialogue.camera = {
+    policy: 'groupLock',
+    focusX: 0.48
+  };
   manifest.objects.coffeeCornerBeachBraceletVickyBubble.coordinate.x = 0.35;
   manifest.objects.coffeeCornerBeachStallOrderBubble.dialogueGroupId = 'missingDialogue';
 
@@ -271,6 +309,8 @@ test('the powder notebook owns one registry-scoped soft-delete write surface', a
   assert.equal(notebook.currentField, 'hubbyNote');
   assert.deepEqual(notebook.archiveFields, ['hubbyNoteArchive', 'hubbyNoteHistory']);
   assert.equal(notebook.favoriteField, 'hubbyNoteFavorite');
+  assert.equal(notebook.authorField, 'hubbyNoteAuthor');
+  assert.equal(notebook.defaultAuthor, 'vicky');
   assert.equal(notebook.trashField, 'hubbyNoteTrash');
   assert.equal(notebook.maxArchiveItems, 20);
   assert.equal(notebook.maxChars, 5000);

@@ -33,7 +33,7 @@ The v2 manifest may describe read compatibility fields, but it cannot create a w
 | Hotspot | One pointer delegation path and standard action dispatch | Private navigation or panel logic |
 | TextPort | Queue, index, show, hide, next, canonical/fallback reads | State fetching, coordinate math |
 | Panel | Open, close, nested panel stack, scoped content session, scene-exit cleanup | Hotspot placement, scene navigation, game rules |
-| Effect | Sparkles, steam, clock hands, pause/destroy | Click binding, scene mutation |
+| Effect | Global sparkles, jar sparkles, steam, clock hands, pause/destroy | Click binding, scene mutation |
 
 Every controller exposes the same lifecycle:
 
@@ -79,9 +79,11 @@ The read carousel and local setup writer remain separate sessions. Blob object U
 
 ## Scoped notebook mutation boundary
 
-`home.hubbyNotePanel` is bound to the registered `hubbyNote` target card, including its current, updated-at, favorite, archive, history, and trash fields. A pure resolver normalizes string or object archive entries, dates, and favorite flags; pure mutation builders produce save, favorite, and soft-delete patches. A scoped notebook session renders and edits those pages under the existing PanelController and preserves the selected page across state refreshes.
+`home.hubbyNotePanel` is bound to the registered `hubbyNote` target card, including its current, updated-at, author, favorite, archive, history, and trash fields. A pure resolver normalizes string or object archive entries, dates, known authors, and favorite flags; pure mutation builders produce save, favorite, and soft-delete patches. A scoped notebook session renders and edits those pages under the existing PanelController and preserves the selected page across state refreshes.
 
-The session does not own a general write client. PanelController injects one client configured by `runtime.stateWrites`; the client rejects every patch key outside the six fields derived from the notebook card. Successful responses are committed through StateController so the open panel and all other readers receive one `state:change` event. The notebook still has no generic action envelope or second controller.
+The session does not own a general write client. PanelController injects one client configured by `runtime.stateWrites`; the client rejects every patch key outside the seven fields derived from the notebook card. Successful responses are committed through StateController so the open panel and all other readers receive one `state:change` event. The notebook still has no generic action envelope or second controller.
+
+Author attribution is channel-owned, not inferred from prose. Browser `/write` and the in-panel editor stamp `vicky`; MCP stamps `alex`; an archived current page carries its known author forward. Historical entries without an author remain visually legacy-colored instead of being guessed. Both dialogue bubbles and notebook pages read the same `--vicky-ink` / `--alex-ink` tokens.
 
 The manifest write rule is an allowlist, not a boolean escape hatch:
 
@@ -111,11 +113,11 @@ lock input
 
 The three beach scenes use the same transaction and stack. Their wide base images live in the same retained scene world as portrait rooms; only the manifest presentation changes from `cover` to `panorama`. The viewport may scroll horizontally, and the scene-owned Back/Push hotspots move with that image world. Panels remain stage-level UI.
 
-Panorama conversations are manifest-owned camera units. A `dialogueGroups` entry declares one panorama owner, its TextPort members, and one normalized `groupLock` focus. Every member remains a `baseImageLocked` object and shares that authored image X coordinate; the group does not turn bubbles into viewport UI.
+Panorama conversations are manifest-owned dialogue units, not camera units. A `dialogueGroups` entry declares one panorama owner, its TextPort members, ordered script target, and `camera.policy: manual`. Every member remains a `baseImageLocked` object at its own authored image coordinate; the group does not turn bubbles into viewport UI.
 
-On the first member reveal after entering a scene, TextPort waits for Layout readiness and centers the declared focus once. That group is then marked focused for the current scene entry. Switching Alex/Vicky, changing line length, hiding/reopening a member, or manually dragging the panorama cannot recenter it again. Leaving and later re-entering the scene starts one new focus lifecycle. Ungrouped panorama TextPorts retain the narrower compatibility behavior: only their newly revealed measured bubble is clamped inside a 16 px viewport edge.
+TextPort never schedules horizontal reveal correction for a grouped conversation. First reveal, consecutive same-speaker turns, speaker switches, text-height changes, Layout passes, and scene re-entry all leave `scrollLeft` untouched. The visitor's manual panorama position is authoritative from the moment the scene opens. Ungrouped panorama TextPorts retain the narrower compatibility behavior: only a newly revealed standalone bubble may be clamped inside a 16 px viewport edge.
 
-`groupLock` is deliberately the only active dialogue camera policy. A future scene that intentionally follows widely separated speakers must introduce a separately specified policy and tests rather than weakening the stable conversation rule.
+`manual` is the active dialogue camera policy. The validator still understands legacy `groupLock` cards only so old fixtures fail predictably, but production groups do not use it. A future scene that intentionally follows widely separated speakers must introduce a separately specified policy and tests rather than weakening manual camera ownership.
 
 Story order, navigation ownership, and dialogue turns are three independent contracts:
 
@@ -129,9 +131,15 @@ The `seasideWalk` story therefore names `handholdSunset`, `braceletPromise`, and
 
 `mode: ambient` remains the contract for independent per-target queues. Ambient copy does not share an index, does not acquire story order, and is appropriate for room remarks or genuinely unrelated hotspots. Navigation parentage alone never makes two bubbles a conversation.
 
+Standalone/ambient bubble progress is session-only memory owned by TextPortController. It records content fingerprint, queue index, visible/closed state, and whether the current line has already been shown. Leaving and returning to a scene restores that exact state; a closed third line returns closed and the next tap opens line four. Changed published content resets safely to the manifest default. Destroying the runtime, including fully closing and reopening the installed PWA, clears the map. Ordinary standalone bubbles default closed; only an explicit `initiallyVisible:true` greeter opens on scene entry. There is no unread dot, badge, glow, or other fourth-wall hint.
+
 TextPorts may use edge-growth anchors when copy length must never cover a protected subject. `bottomCenter` pins the authored lower edge and lets added lines grow upward; `topCenter` pins the authored upper edge and lets added lines grow downward. These remain normalized base-image coordinates and therefore travel with a panorama instead of becoming viewport overlays.
 
 If the next scene asset fails, SceneRuntime does not commit the candidate navigation state. It reconciles the prior snapshot, restores Layout readiness for the prior owner set, emits `scene:didFail`, and leaves the scene stack unchanged.
+
+The home moon toggle is not a scene transition. AssetController retains a second stage image, loads and decodes the requested day/night source above the current image, crossfades only that image layer, confirms the primary image is ready underneath, then retires the transition image. Hotspots, TextPorts, effects, and Layout ownership remain mounted throughout. A failed alternate leaves the prior image and asset identity in place and shows the existing fail-closed card.
+
+Home ambient motion remains split by semantic owner. The weather TextPort owns its subtle 4.8 second vertical float and translucent day/night ink. `home.pebbleJarSparkles` owns a separate 32-particle upward jar field; it is not an alias for the room-wide twinkle layer.
 
 ## State and MCP boundary
 

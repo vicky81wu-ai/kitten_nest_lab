@@ -195,6 +195,19 @@ function noteArchiveOf(state) {
   return [];
 }
 
+function knownAuthor(value) {
+  const author = String(value || '').trim().toLowerCase();
+  return author === 'alex' || author === 'vicky' ? author : '';
+}
+
+function archivedNote(text, savedAt, author) {
+  return {
+    text,
+    savedAt,
+    ...(knownAuthor(author) ? { author: knownAuthor(author) } : {})
+  };
+}
+
 function previousCoffeeOf(state) {
   return {
     alexBubble: state.alexBubble || '',
@@ -273,10 +286,13 @@ function buildTextTargetPatch(targetId, text, state) {
     const old = String(state[target.field] || '').trim();
     const archive = noteArchiveOf(state);
     const savedAt = now();
-    const nextArchive = old ? [{ text: old, savedAt: state[target.updatedAtField] || state.updatedAt || savedAt }, ...archive] : archive;
+    const nextArchive = old
+      ? [archivedNote(old, state[target.updatedAtField] || state.updatedAt || savedAt, state[target.authorField]), ...archive]
+      : archive;
     return {
       [target.field]: note,
       [target.updatedAtField]: savedAt,
+      [target.authorField || 'hubbyNoteAuthor']: 'alex',
       [target.archiveField || 'hubbyNoteArchive']: nextArchive,
       [target.historyField || 'hubbyNoteHistory']: nextArchive.slice(0, target.maxArchiveItems || 20)
     };

@@ -286,6 +286,7 @@
       "targetRoom": "hubbyNote",
       "field": "hubbyNote",
       "updatedAtField": "hubbyNoteUpdatedAt",
+      "authorField": "hubbyNoteAuthor",
       "archiveField": "hubbyNoteArchive",
       "historyField": "hubbyNoteHistory",
       "favoriteField": "hubbyNoteFavorite",

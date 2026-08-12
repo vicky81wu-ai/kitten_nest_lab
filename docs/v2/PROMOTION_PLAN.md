@@ -61,7 +61,7 @@ Routing `/cloud` to the v2 document retires the v1 `api/app-coords.js` document 
 - `nest_state/main` is not migrated or rewritten.
 - The v2 runtime continues to read `/api/state`.
 - MCP writes continue through the registered targets in `data/text-targets.v1.json`.
-- Browser-originated writes remain limited to the six `hubbyNote` fields already enforced by the notebook client and `/api/set-state`.
+- Browser-originated writes remain limited to the seven `hubbyNote` fields, including `hubbyNoteAuthor`, already enforced by the notebook client and `/api/set-state`.
 - Supabase credentials remain server-side; no key enters the v2 document or manifest.
 
 ## Production acceptance

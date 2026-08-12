@@ -337,6 +337,8 @@ Soft breeze
     if(Array.isArray(state && state.hubbyNoteHistory)) return state.hubbyNoteHistory;
     return [];
   }
+  function knownAuthor(value){ const author=String(value||'').trim().toLowerCase(); return author==='alex'||author==='vicky'?author:''; }
+  function archivedNote(text,savedAt,author){ const item={text:text,savedAt:savedAt}; const value=knownAuthor(author); if(value)item.author=value; return item; }
   function now(){ return new Date().toISOString(); }
   function preview(value, n){ const s = String(value || '').replace(/\s+/g,' ').trim(); return s.length > n ? s.slice(0,n) + '…' : s; }
   function lapCloseListOf(state){
@@ -447,8 +449,9 @@ Soft breeze
     if(!note) return {};
     const old = String(state && state.hubbyNote || '').trim();
     const archive = noteArchiveOf(state);
-    const nextArchive = old ? [{ text: old, savedAt: state.hubbyNoteUpdatedAt || state.updatedAt || now() }, ...archive] : archive;
-    return { hubbyNote: note, hubbyNoteUpdatedAt: now(), hubbyNoteArchive: nextArchive, hubbyNoteHistory: nextArchive.slice(0,20) };
+    const savedAt=now();
+    const nextArchive = old ? [archivedNote(old, state.hubbyNoteUpdatedAt || state.updatedAt || savedAt, state.hubbyNoteAuthor), ...archive] : archive;
+    return { hubbyNote: note, hubbyNoteUpdatedAt: savedAt, hubbyNoteAuthor:'vicky', hubbyNoteArchive: nextArchive, hubbyNoteHistory: nextArchive.slice(0,20) };
   }
 
   async function readState(){

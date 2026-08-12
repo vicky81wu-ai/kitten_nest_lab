@@ -2,6 +2,11 @@ function text(value) {
   return typeof value === 'string' ? value.trim() : '';
 }
 
+function author(value) {
+  const normalized = text(value).toLowerCase();
+  return normalized === 'alex' || normalized === 'vicky' ? normalized : '';
+}
+
 export function notebookArchive(state, fields = ['hubbyNoteArchive', 'hubbyNoteHistory']) {
   for (const field of fields) {
     if (Array.isArray(state?.[field])) return state[field];
@@ -36,6 +41,7 @@ function archivePage(item, index) {
     label: `档案 ${index + 1}`,
     text: body,
     date: dateLabel(rawDate),
+    author: author(value.author),
     favorite: Boolean(value.favorite),
     archiveIndex: index
   };
@@ -45,6 +51,7 @@ export function resolveNotebookState(state = {}, config = {}) {
   const currentField = config.currentField || 'hubbyNote';
   const updatedAtField = config.updatedAtField || 'hubbyNoteUpdatedAt';
   const favoriteField = config.favoriteField || 'hubbyNoteFavorite';
+  const authorField = config.authorField || 'hubbyNoteAuthor';
   const archiveFields = config.archiveFields || ['hubbyNoteArchive', 'hubbyNoteHistory'];
   const maxArchiveItems = Number.isFinite(config.maxArchiveItems)
     ? Math.max(0, config.maxArchiveItems)
@@ -56,6 +63,7 @@ export function resolveNotebookState(state = {}, config = {}) {
     label: '当前页',
     text: currentText || config.emptyText || '本本正在等这一页醒来。',
     date: dateLabel(state?.[updatedAtField] || state?.updatedAt),
+    author: author(state?.[authorField]),
     favorite: Boolean(state?.[favoriteField]),
     empty: !currentText
   };

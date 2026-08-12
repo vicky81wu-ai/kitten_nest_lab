@@ -19,6 +19,7 @@ function collectElements() {
     sceneViewport: byId('v2-scene-viewport'),
     sceneWorld: byId('v2-scene-world'),
     sceneImage: byId('v2-scene-image'),
+    sceneImageTransition: byId('v2-scene-image-transition'),
     effectLayer: byId('v2-effect-layer'),
     hotspotLayer: byId('v2-hotspot-layer'),
     textLayer: byId('v2-text-layer'),

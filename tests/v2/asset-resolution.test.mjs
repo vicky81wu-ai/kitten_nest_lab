@@ -33,6 +33,9 @@ class FakeStageImage extends EventTarget {
     this.complete = false;
     this.naturalWidth = 0;
     this.naturalHeight = 0;
+    this.dataset = {};
+    this.hidden = false;
+    this.alt = '';
   }
 
   set src(value) {
@@ -50,6 +53,14 @@ class FakeStageImage extends EventTarget {
 
   get src() {
     return this.currentSrc || '';
+  }
+
+  getAttribute(name) {
+    return name === 'src' ? (this.currentSrc || null) : null;
+  }
+
+  removeAttribute(name) {
+    if (name === 'src') this.currentSrc = '';
   }
 
   async decode() {}
@@ -200,6 +211,26 @@ test('a stalled warm request is aborted before direct scene loading can continue
   }
 });
 
+test('asset loading releases its busy lock when source preparation throws', async () => {
+  const controller = new AssetController({
+    manifest: {
+      assets: {
+        home: { sources: [{ url: '/assets/home.webp', role: 'staticOptimized' }] }
+      }
+    },
+    setControllerStatus: () => {}
+  });
+  controller.consumeWarmSource = async () => {
+    throw new Error('warm source preparation failed');
+  };
+
+  await assert.rejects(
+    controller.loadAssetKey({ id: 'home' }, 'home'),
+    /warm source preparation failed/
+  );
+  assert.equal(controller.loading, false);
+});
+
 test('production room images use small same-origin WebP delivery before Storage originals', async () => {
   const manifest = await readJson('../../v2/data/nest-manifest.v2.json');
   for (const key of ['home.day', 'home.night', 'coffeeCorner.main']) {
@@ -255,4 +286,60 @@ test('asset loading hides progressive image paint behind the loading veil', asyn
   );
   assert.match(css, /body\[data-scene-presentation="panorama"\]\s+\.v2-scene-viewport\s*\{[^}]*overflow-x:\s*auto/s);
   assert.match(css, /\.v2-stage\[data-transitioning="1"\]\s+\[data-requires-layout="1"\]\s*\{[^}]*opacity:\s*0/s);
+});
+
+test('moon toggle crossfades two retained images and commits only after both are ready', async () => {
+  const originalDocument = globalThis.document;
+  const originalMatchMedia = globalThis.matchMedia;
+  globalThis.document = { body: { dataset: {} } };
+  globalThis.matchMedia = () => ({ matches: true });
+
+  const primary = new FakeStageImage('load');
+  primary.src = '/day.webp';
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  primary.dataset.assetKey = 'home.day';
+  primary.dataset.assetRole = 'staticOptimized';
+  const transition = new FakeStageImage('load');
+  const stage = {
+    dataset: {},
+    attributes: {},
+    setAttribute(name, value) { this.attributes[name] = value; }
+  };
+  const errorMessage = { textContent: '' };
+  const controller = new AssetController({
+    manifest: {
+      assets: {
+        'home.night': {
+          sources: [{ url: '/night.webp', role: 'staticOptimized' }]
+        }
+      }
+    },
+    currentAsset: null,
+    setControllerStatus: () => {}
+  });
+  controller.image = primary;
+  controller.transitionImage = transition;
+  controller.stage = stage;
+  controller.errorBox = {
+    hidden: true,
+    querySelector: () => errorMessage
+  };
+  controller.current = { key: 'home.day', url: '/day.webp', role: 'staticOptimized' };
+
+  try {
+    const result = await controller.crossfadeAssetKey({ id: 'home', presentation: 'cover' }, 'home.night');
+    assert.equal(result.ok, true);
+    assert.equal(primary.src, '/night.webp');
+    assert.equal(primary.dataset.assetKey, 'home.night');
+    assert.equal(transition.hidden, true);
+    assert.equal(transition.src, '');
+    assert.equal(globalThis.document.body.dataset.assetVariant, 'home.night');
+    assert.equal(stage.dataset.assetToggle, 'ready');
+    assert.equal(stage.attributes['aria-busy'], 'false');
+  } finally {
+    if (originalDocument === undefined) delete globalThis.document;
+    else globalThis.document = originalDocument;
+    if (originalMatchMedia === undefined) delete globalThis.matchMedia;
+    else globalThis.matchMedia = originalMatchMedia;
+  }
 });
