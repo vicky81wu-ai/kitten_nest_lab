@@ -7,6 +7,7 @@ import {
   loadStageImage,
   localImageSource,
   nextToggleAssetKey,
+  retireCrossfadeLayer,
   resolveAssetKey,
   resolveScenePresentation,
   waitForBestEffortDecode
@@ -97,6 +98,22 @@ test('image decode is a bounded best-effort readiness hint', async () => {
   assert.equal(await waitForBestEffortDecode({ decode: async () => {} }, 5), 'decoded');
   assert.equal(await waitForBestEffortDecode({ decode: async () => { throw new Error('decode failed'); } }, 5), 'failed');
   assert.equal(await waitForBestEffortDecode({ decode: () => new Promise(() => {}) }, 5), 'timeout');
+});
+
+test('crossfade overlay stays composited until its handoff fade has finished', async () => {
+  const transition = new FakeStageImage('pending');
+  transition.src = '/night.webp';
+  transition.dataset.visible = '1';
+
+  const retirement = retireCrossfadeLayer(transition, 100);
+  assert.equal(transition.dataset.visible, '0');
+  assert.equal(transition.hidden, false);
+  assert.equal(transition.src, '/night.webp');
+
+  transition.dispatchEvent(new Event('transitionend'));
+  await retirement;
+  assert.equal(transition.hidden, true);
+  assert.equal(transition.src, '');
 });
 
 test('asset loading uses the retained stage image instead of a detached preloader', async () => {

@@ -116,6 +116,14 @@ export function waitForCrossfade(image, timeoutMs = 560) {
   });
 }
 
+export async function retireCrossfadeLayer(image, timeoutMs = 560) {
+  const faded = waitForCrossfade(image, timeoutMs);
+  image.dataset.visible = '0';
+  await faded;
+  image.hidden = true;
+  image.removeAttribute('src');
+}
+
 export async function fetchWarmImageBlob(url, options = {}) {
   const fetchImpl = options.fetchImpl || globalThis.fetch;
   if (typeof fetchImpl !== 'function') throw new Error('Asset warming requires fetch');
@@ -438,9 +446,7 @@ export class AssetController extends BaseController {
           if (previousLocalUrl && previousLocalUrl !== this.localObjectUrl) {
             this.revokeLocalUrl(previousLocalUrl);
           }
-          image.dataset.visible = '0';
-          image.hidden = true;
-          image.removeAttribute('src');
+          await retireCrossfadeLayer(image, reducedMotion ? 1 : 560);
           document.body.dataset.assetStatus = 'ready';
           document.body.dataset.assetVariant = resolvedKey;
           this.stage.dataset.assetToggle = 'ready';

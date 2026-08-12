@@ -136,12 +136,14 @@ test('weather, pebble jar, author colors, and moon crossfade keep their immersiv
   const assetController = await readFile(new URL('../../v2/runtime/controllers/asset-controller.mjs', import.meta.url), 'utf8');
 
   assert.match(html, /id="v2-scene-image-transition"/);
-  assert.match(css, /\.v2-stage__image--transition\s*\{[^}]*opacity:\s*0;[^}]*transition:\s*opacity 520ms ease;/s);
+  assert.match(css, /\.v2-stage::before\s*\{[^}]*z-index:\s*1;/s);
+  assert.match(css, /\.v2-stage__image--transition\s*\{[^}]*z-index:\s*0;[^}]*opacity:\s*0;[^}]*transition:\s*opacity 520ms ease;/s);
   assert.match(assetController, /async crossfadeAssetKey\(/);
   assert.match(assetController, /await waitForCrossfade\(image, reducedMotion \? 1 : 560\)/);
   assert.doesNotMatch(assetController, /async toggle\([\s\S]*?dataset\.transitioning\s*=\s*'1'/);
 
   assert.match(css, /\.v2-text-port--weather\s*\{[^}]*color:\s*rgba\(255, 255, 255, 0\.84\);[^}]*animation:\s*v2-weather-float 4\.8s ease-in-out infinite;/s);
+  assert.doesNotMatch(css, /\.v2-text-port--weather::before\s*\{/);
   assert.match(css, /\.v2-weather__description\s*\{[^}]*opacity:\s*0\.72;/s);
   assert.match(css, /@keyframes v2-weather-float[\s\S]*50%\s*\{\s*transform:\s*translateY\(-3px\);/);
   assert.match(css, /@keyframes v2-jar-float[\s\S]*45%\s*\{[^}]*translate\(2px, -10px\)[^}]*\}[\s\S]*70%\s*\{[^}]*translate\(-2px, -15px\)/);
