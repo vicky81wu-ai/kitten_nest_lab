@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#efe0cf" />
+  <title>Nestward · 窝里窝外</title>
+  <link rel="stylesheet" href="./nestward.css" />
+</head>
+<body>
+  <main id="nestward" class="nestward-shell">
+    <canvas id="world" aria-label="Nestward playable world"></canvas>
+
+    <header class="nw-topbar">
+      <a class="nw-home" href="/cloud" aria-label="返回猫窝">← 猫窝</a>
+      <div class="nw-title-wrap">
+        <div class="nw-title">Nestward</div>
+        <div class="nw-subtitle">窝里窝外</div>
+      </div>
+      <div id="sceneBadge" class="nw-scene">室内</div>
+    </header>
+
+    <div id="hint" class="nw-hint">点地板，小猫就会走过去</div>
+    <div id="bubble" class="nw-bubble" hidden></div>
+
+    <section id="actionSheet" class="nw-sheet" hidden aria-live="polite">
+      <div class="nw-sheet-card">
+        <div class="nw-sheet-head">
+          <div>
+            <div id="sheetTitle" class="nw-sheet-title"></div>
+            <div id="sheetSub" class="nw-sheet-sub"></div>
+          </div>
+          <button id="closeSheet" class="nw-icon-btn" type="button" aria-label="关闭">×</button>
+        </div>
+        <div id="sheetActions" class="nw-actions"></div>
+      </div>
+    </section>
+
+    <section id="textPanel" class="nw-sheet" hidden>
+      <div class="nw-sheet-card nw-editor-card">
+        <div class="nw-sheet-head">
+          <div>
+            <div id="textPanelTitle" class="nw-sheet-title"></div>
+            <div id="textPanelSub" class="nw-sheet-sub"></div>
+          </div>
+          <button id="closeTextPanel" class="nw-icon-btn" type="button" aria-label="关闭">×</button>
+        </div>
+        <textarea id="textEditor" class="nw-textarea" rows="7"></textarea>
+        <div class="nw-editor-actions">
+          <button id="saveText" class="nw-primary" type="button">保存</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="wardrobePanel" class="nw-sheet" hidden>
+      <div class="nw-sheet-card">
+        <div class="nw-sheet-head">
+          <div>
+            <div class="nw-sheet-title">衣柜</div>
+            <div class="nw-sheet-sub">换一套，再出去晃</div>
+          </div>
+          <button id="closeWardrobe" class="nw-icon-btn" type="button" aria-label="关闭">×</button>
+        </div>
+        <div class="nw-wardrobe-grid">
+          <div>
+            <div class="nw-section-label">小猫</div>
+            <div id="kittenOutfits" class="nw-outfit-list"></div>
+          </div>
+          <div>
+            <div class="nw-section-label">Hubby</div>
+            <div id="hubbyOutfits" class="nw-outfit-list"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div id="fade" class="nw-fade"></div>
+  </main>
+
+  <script type="module" src="./nestward.js"></script>
+</body>
+</html>
