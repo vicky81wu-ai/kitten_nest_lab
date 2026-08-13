@@ -1,5 +1,6 @@
 const textTargetRegistry = require('../data/text-targets.v1.json');
 const { parseDialogueScript } = require('../shared/dialogue-script.js');
+const { buildNotebookPublishPatch } = require('../shared/notebook-publish.js');
 
 const TOOL_NAMES = [
   'read_nest_state',
@@ -189,25 +190,6 @@ function pendingDraftsOf(state) {
   return Array.isArray(state.pendingDrafts) ? state.pendingDrafts : [];
 }
 
-function noteArchiveOf(state) {
-  if (Array.isArray(state.hubbyNoteArchive)) return state.hubbyNoteArchive;
-  if (Array.isArray(state.hubbyNoteHistory)) return state.hubbyNoteHistory;
-  return [];
-}
-
-function knownAuthor(value) {
-  const author = String(value || '').trim().toLowerCase();
-  return author === 'alex' || author === 'vicky' ? author : '';
-}
-
-function archivedNote(text, savedAt, author) {
-  return {
-    text,
-    savedAt,
-    ...(knownAuthor(author) ? { author: knownAuthor(author) } : {})
-  };
-}
-
 function previousCoffeeOf(state) {
   return {
     alexBubble: state.alexBubble || '',
@@ -283,19 +265,18 @@ function buildTextTargetPatch(targetId, text, state) {
   if (target.type === 'note') {
     const note = clampText(text, target.maxChars);
     if (!note) throw new Error(`Missing ${targetId} text`);
-    const old = String(state[target.field] || '').trim();
-    const archive = noteArchiveOf(state);
-    const savedAt = now();
-    const nextArchive = old
-      ? [archivedNote(old, state[target.updatedAtField] || state.updatedAt || savedAt, state[target.authorField]), ...archive]
-      : archive;
-    return {
-      [target.field]: note,
-      [target.updatedAtField]: savedAt,
-      [target.authorField || 'hubbyNoteAuthor']: 'alex',
-      [target.archiveField || 'hubbyNoteArchive']: nextArchive,
-      [target.historyField || 'hubbyNoteHistory']: nextArchive.slice(0, target.maxArchiveItems || 20)
-    };
+    return buildNotebookPublishPatch(note, state, {
+      currentField: target.field,
+      updatedAtField: target.updatedAtField,
+      authorField: target.authorField,
+      favoriteField: target.favoriteField,
+      archiveField: target.archiveField,
+      historyField: target.historyField,
+      maxArchiveItems: target.maxArchiveItems,
+      maxChars: target.maxChars,
+      author: 'alex',
+      now: now()
+    });
   }
 
   if (target.type === 'single') {

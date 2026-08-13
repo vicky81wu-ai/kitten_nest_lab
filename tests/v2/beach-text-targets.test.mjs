@@ -178,7 +178,10 @@ test('writer and MCP note channels stamp their own author while preserving known
     hubbyNote: 'prior page',
     hubbyNoteUpdatedAt: '2026-08-10T10:00:00Z',
     hubbyNoteAuthor: 'alex',
-    hubbyNoteArchive: [{ id: 'legacy', text: 'legacy page' }]
+    hubbyNoteArchive: [
+      { id: 'prior', text: 'prior page', author: 'alex', favorite: true },
+      { id: 'legacy', text: 'legacy page' }
+    ]
   };
   const writer = setState.buildTextTargetEnvelope({
     textTarget: { targetId: 'hubbyNote', text: 'Vicky page', mode: 'publish', dryRun: true }
@@ -189,10 +192,24 @@ test('writer and MCP note channels stamp their own author while preserving known
   });
 
   assert.equal(writer.hubbyNoteAuthor, 'vicky');
-  assert.equal(writer.hubbyNoteArchive[0].author, 'alex');
-  assert.equal(Object.hasOwn(writer.hubbyNoteArchive[1], 'author'), false);
+  assert.equal(writer.hubbyNoteArchive[0].text, 'Vicky page');
+  assert.equal(writer.hubbyNoteArchive[0].author, 'vicky');
+  assert.equal(writer.hubbyNoteArchive[1].id, 'prior');
+  assert.equal(writer.hubbyNoteArchive[1].favorite, true);
+  assert.equal(writer.hubbyNoteArchive.filter((item) => item.text === 'prior page').length, 1);
+  assert.equal(Object.hasOwn(writer.hubbyNoteArchive[2], 'author'), false);
   assert.equal(alex.hubbyNoteAuthor, 'alex');
-  assert.equal(alex.hubbyNoteArchive[0].author, 'vicky');
+  assert.equal(alex.hubbyNoteArchive[0].text, 'Alex page');
+  assert.equal(alex.hubbyNoteArchive[0].author, 'alex');
+  assert.equal(alex.hubbyNoteArchive[1].id, 'prior');
+  assert.equal(alex.hubbyNoteArchive.filter((item) => item.text === 'prior page').length, 1);
+});
+
+test('writer loads the shared notebook publisher instead of carrying a second archive algorithm', async () => {
+  const html = await readFile(new URL('../../write.html', import.meta.url), 'utf8');
+  assert.match(html, /shared\/notebook-publish\.js/);
+  assert.match(html, /KittenNestNotebookPublish\.buildNotebookPublishPatch/);
+  assert.doesNotMatch(html, /nextArchive\s*=\s*old/);
 });
 
 test('writer console advertises all six canonical beach tags and MCP exposes every target id', async () => {

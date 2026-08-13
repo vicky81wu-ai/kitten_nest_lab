@@ -1,5 +1,6 @@
 const textTargetRegistry = require('../data/text-targets.v1.json');
 const { parseDialogueScript } = require('../shared/dialogue-script.js');
+const { buildNotebookPublishPatch } = require('../shared/notebook-publish.js');
 
 const PUBLISHABLE_TEXT_TARGET_IDS = new Set([
   'coffeeCornerBubble',
@@ -23,31 +24,12 @@ function now() {
   return new Date().toISOString();
 }
 
-function noteArchiveOf(state) {
-  if (Array.isArray(state && state.hubbyNoteArchive)) return state.hubbyNoteArchive;
-  if (Array.isArray(state && state.hubbyNoteHistory)) return state.hubbyNoteHistory;
-  return [];
-}
-
 function pendingDraftsOf(state) {
   return Array.isArray(state && state.pendingDrafts) ? state.pendingDrafts : [];
 }
 
 function clampText(value, maxChars) {
   return String(value || '').trim().slice(0, maxChars || 5000);
-}
-
-function knownAuthor(value) {
-  const author = String(value || '').trim().toLowerCase();
-  return author === 'alex' || author === 'vicky' ? author : '';
-}
-
-function archivedNote(text, savedAt, author) {
-  return {
-    text,
-    savedAt,
-    ...(knownAuthor(author) ? { author: knownAuthor(author) } : {})
-  };
 }
 
 function cleanTargetLines(value, maxLines) {
@@ -159,21 +141,7 @@ function buildWeatherTextPatch(text) {
 function buildHubbyNotePatch(text, state) {
   const note = clampText(text, 5000);
   if (!note) throw new Error('Text is empty.');
-
-  const old = String(state && state.hubbyNote || '').trim();
-  const archive = noteArchiveOf(state);
-  const savedAt = now();
-  const nextArchive = old
-    ? [archivedNote(old, state.hubbyNoteUpdatedAt || state.updatedAt || savedAt, state.hubbyNoteAuthor), ...archive]
-    : archive;
-
-  return {
-    hubbyNote: note,
-    hubbyNoteUpdatedAt: savedAt,
-    hubbyNoteAuthor: 'vicky',
-    hubbyNoteArchive: nextArchive,
-    hubbyNoteHistory: nextArchive.slice(0, 20)
-  };
+  return buildNotebookPublishPatch(note, state, { author: 'vicky', now: now() });
 }
 
 function buildSingleTextPatch(target, text) {
@@ -282,23 +250,15 @@ function applyHubbyNotePackage(patch, state) {
   const note = String(match[1] || '').trim().slice(0, 5000);
   if (!note) return false;
 
-  const old = String(state && state.hubbyNote || '').trim();
-  const archive = noteArchiveOf(state);
-  const savedAt = new Date().toISOString();
-  const nextArchive = old
-    ? [archivedNote(old, state.hubbyNoteUpdatedAt || state.updatedAt || savedAt, state.hubbyNoteAuthor), ...archive]
-    : archive;
-
   delete patch.alexBubble;
   delete patch.alexBubbles;
   delete patch.bubbleIndex;
   delete patch.previousPublished;
 
-  patch.hubbyNote = note;
-  patch.hubbyNoteUpdatedAt = savedAt;
-  patch.hubbyNoteAuthor = 'vicky';
-  patch.hubbyNoteArchive = nextArchive;
-  patch.hubbyNoteHistory = nextArchive.slice(0, 20);
+  Object.assign(patch, buildNotebookPublishPatch(note, state, {
+    author: 'vicky',
+    now: new Date().toISOString()
+  }));
   return true;
 }
 
