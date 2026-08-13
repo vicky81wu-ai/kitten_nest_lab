@@ -191,6 +191,7 @@ Soft breeze
     </section>
   </main>
 <script src="/shared/dialogue-script.js"></script>
+<script src="/shared/notebook-publish.js"></script>
 <script>
 (function(){
   const token = document.getElementById('token');
@@ -337,8 +338,6 @@ Soft breeze
     if(Array.isArray(state && state.hubbyNoteHistory)) return state.hubbyNoteHistory;
     return [];
   }
-  function knownAuthor(value){ const author=String(value||'').trim().toLowerCase(); return author==='alex'||author==='vicky'?author:''; }
-  function archivedNote(text,savedAt,author){ const item={text:text,savedAt:savedAt}; const value=knownAuthor(author); if(value)item.author=value; return item; }
   function now(){ return new Date().toISOString(); }
   function preview(value, n){ const s = String(value || '').replace(/\s+/g,' ').trim(); return s.length > n ? s.slice(0,n) + '…' : s; }
   function lapCloseListOf(state){
@@ -447,11 +446,7 @@ Soft breeze
   function hubbyNotePatch(raw, state){
     const note = String(raw || '').trim().slice(0,5000);
     if(!note) return {};
-    const old = String(state && state.hubbyNote || '').trim();
-    const archive = noteArchiveOf(state);
-    const savedAt=now();
-    const nextArchive = old ? [archivedNote(old, state.hubbyNoteUpdatedAt || state.updatedAt || savedAt, state.hubbyNoteAuthor), ...archive] : archive;
-    return { hubbyNote: note, hubbyNoteUpdatedAt: savedAt, hubbyNoteAuthor:'vicky', hubbyNoteArchive: nextArchive, hubbyNoteHistory: nextArchive.slice(0,20) };
+    return KittenNestNotebookPublish.buildNotebookPublishPatch(note, state, { author:'vicky', now:now() });
   }
 
   async function readState(){
