@@ -50,6 +50,7 @@
       "scene.push",
       "scene.back",
       "scene.jumpTo",
+      "route.open",
       "asset.toggle",
       "text.toggleNext",
       "text.hide",
@@ -241,6 +242,7 @@
         "home.clockHands",
         "home.sparkles",
         "home.pebbleJarSparkles",
+        "home.nestwardEnterHot",
         "home.moonLampHot",
         "home.windowWeather",
         "home.weatherAdvicePanel",
@@ -522,6 +524,20 @@
       "coordinateStatus": "baseImageLocked",
       "runtimeStatus": "active",
       "versionStatus": "restoredLegacy"
+    },
+    "home.nestwardEnterHot": {
+      "id": "home.nestwardEnterHot",
+      "kind": "hotspot",
+      "ownerScene": "home",
+      "controller": "hotspot",
+      "selector": "[data-object-id=\"home.nestwardEnterHot\"]",
+      "label": "走进回家的小世界",
+      "action": { "type": "route.open", "target": "/v2/nestward/" },
+      "coordinate": { "anchor": "center", "x": 0.495, "y": 0.581, "width": 0.28, "height": 0.19 },
+      "exclusive": true,
+      "coordinateStatus": "baseImageLocked",
+      "runtimeStatus": "active",
+      "versionStatus": "nestwardImmersiveEntry"
     },
     "home.moonLampHot": {
       "id": "home.moonLampHot",

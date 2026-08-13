@@ -1,6 +1,6 @@
 import { BaseController } from '../core/base-controller.mjs';
 
-const NAVIGATION_ACTION_TYPES = new Set(['scene.go', 'scene.push', 'scene.back', 'scene.jumpTo']);
+const NAVIGATION_ACTION_TYPES = new Set(['scene.go', 'scene.push', 'scene.back', 'scene.jumpTo', 'route.open']);
 
 function isNavigationAction(action) {
   return NAVIGATION_ACTION_TYPES.has(action?.type);

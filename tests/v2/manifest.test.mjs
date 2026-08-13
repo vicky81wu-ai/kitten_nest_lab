@@ -55,6 +55,12 @@ test('home restorations and the approved beach chain stay explicit in one manife
   assert.deepEqual(manifest.objects['home.pebbleJarSparkles'].coordinate, {
     anchor: 'center', x: 0.495, y: 0.581, width: 0.32, height: 0.21
   });
+  assert.deepEqual(manifest.objects['home.nestwardEnterHot'].action, {
+    type: 'route.open', target: '/v2/nestward/'
+  });
+  assert.deepEqual(manifest.objects['home.nestwardEnterHot'].coordinate, {
+    anchor: 'center', x: 0.495, y: 0.581, width: 0.28, height: 0.19
+  });
   assert.equal(manifest.objects['coffeeCorner.beachEnterHot'].action.target, 'coffeeCornerBeachHandholdSunset');
 
   const beachIds = [

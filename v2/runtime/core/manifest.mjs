@@ -121,6 +121,12 @@ export function validateManifest(manifest, textTargetRegistry = null) {
         if (!manifest?.assets?.[key]) errors.push(`${source} toggles unknown asset ${key}`);
       });
     }
+    if (action.type === 'route.open') {
+      const target = action.target;
+      if (typeof target !== 'string' || !target.startsWith('/') || target.startsWith('//') || target.includes('\\')) {
+        errors.push(`${source} route.open requires a same-origin absolute path`);
+      }
+    }
   };
 
   writeTargetIds.forEach((targetId) => {
