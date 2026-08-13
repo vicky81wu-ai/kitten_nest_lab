@@ -23,6 +23,22 @@ export async function dispatchAction(context, action) {
   if (type === 'panel.close') {
     return context.controllers.get('panel').close();
   }
+  if (type === 'route.open') {
+    const route = resolveSameOriginRoute(action.target);
+    globalThis.location.assign(route);
+    return route;
+  }
 
   throw new Error(`Unsupported action: ${type}`);
+}
+
+export function resolveSameOriginRoute(target, baseHref = globalThis.location?.href) {
+  if (typeof target !== 'string' || !target.startsWith('/') || target.startsWith('//') || target.includes('\\')) {
+    throw new Error('route.open requires a same-origin absolute path');
+  }
+  if (!baseHref) throw new Error('route.open requires a browser location');
+  const base = new URL(baseHref);
+  const url = new URL(target, base);
+  if (url.origin !== base.origin) throw new Error('route.open cannot leave the current origin');
+  return `${url.pathname}${url.search}${url.hash}`;
 }
