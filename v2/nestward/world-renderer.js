@@ -3,10 +3,30 @@ import { WORLD_HEIGHT, TAU, actorScale, groundY } from './world-model.js';
 const assetSources = {
   indoor: './assets/indoor-world.webp',
   outdoor: './assets/outdoor-world.webp',
-  kitten: './assets/kitten.png',
-  hubby: './assets/hubby.png',
-  naili: './assets/naili.png'
+  kittenIdle: './assets/characters/kitten-idle.png',
+  kittenWalk1: './assets/characters/kitten-walk-1.png',
+  kittenWalk2: './assets/characters/kitten-walk-2.png',
+  kittenWalk3: './assets/characters/kitten-walk-3.png',
+  kittenWalk4: './assets/characters/kitten-walk-4.png',
+  kittenBedSit: './assets/characters/kitten-bed-sit.png',
+  kittenBedLie: './assets/characters/kitten-bed-lie.png',
+  kittenBedLean: './assets/characters/kitten-bed-lean.png',
+  hubbyIdle: './assets/characters/hubby-idle.png',
+  hubbyWalk1: './assets/characters/hubby-walk-1.png',
+  hubbyWalk2: './assets/characters/hubby-walk-2.png',
+  hubbyWalk3: './assets/characters/hubby-walk-3.png',
+  hubbyWalk4: './assets/characters/hubby-walk-4.png',
+  hubbyBedSit: './assets/characters/hubby-bed-sit.png',
+  hubbyBedLie: './assets/characters/hubby-bed-lie.png',
+  hubbyBedLean: './assets/characters/hubby-bed-lean.png',
+  nailiIdle: './assets/characters/naili-idle.png'
 };
+
+// Source artwork is normalized at render time: Kitten/Naili face right,
+// while every Hubby idle/walk source faces left. Movement direction then
+// mirrors the complete figure, including his head, instead of leaving him
+// looking behind himself while walking right.
+const nativeFacingByRole = { player: 1, hubby: -1, naili: 1 };
 
 async function loadBitmap(relativeSource) {
   const response = await fetch(new URL(relativeSource, import.meta.url));
@@ -52,65 +72,135 @@ function clearGlow(ctx) {
   ctx.shadowOffsetY = 0;
 }
 
-function drawActorShadow(ctx, actor, alpha = .24) {
-  const scale = actorScale(actor.z);
-  const y = groundY(actor.scene, actor.z);
+function actorRole(actor) {
+  if (actor.id === 'player') return 'player';
+  if (actor.id === 'hubby') return 'hubby';
+  return 'naili';
+}
+
+function poseAssetKey(actor) {
+  const role = actorRole(actor);
+  if (role === 'naili') return 'nailiIdle';
+  const prefix = role === 'player' ? 'kitten' : 'hubby';
+  const pose = actor.mount?.pose;
+  if (pose === 'bed-sit') return `${prefix}BedSit`;
+  if (pose === 'bed-lie') return `${prefix}BedLie`;
+  if (pose === 'bed-lean') return `${prefix}BedLean`;
+  if (actor.walking) return `${prefix}Walk${Math.floor(actor.step * .72) % 4 + 1}`;
+  return `${prefix}Idle`;
+}
+
+function actorMetrics(assets, scene, actor) {
+  const role = actorRole(actor);
+  const sprite = assets.get(poseAssetKey(actor));
+  const perspective = actor.mount ? 1 : actorScale(actor.z) / actorScale(.62);
+  let height = actor.mount?.height || (scene.actorHeights?.[role] || (role === 'naili' ? 72 : 176)) * perspective;
+  let width = actor.mount?.width || height * (sprite.width / sprite.height);
+  if (actor.mount?.width && !actor.mount?.height) height = width * (sprite.height / sprite.width);
+  return {
+    sprite,
+    width,
+    height,
+    y: Number.isFinite(actor.mount?.renderY) ? actor.mount.renderY : groundY(scene, actor.z),
+    nativeFacing: nativeFacingByRole[role]
+  };
+}
+
+function drawActorShadow(ctx, actor, metrics, alpha = .24) {
+  if (actor.mount) return;
   const liftSpread = actor.flying ? 1.28 : 1;
-  ellipse(ctx, actor.x, y + 2, 32 * scale * liftSpread, 9 * scale, `rgba(40,23,20,${alpha})`);
+  ellipse(ctx, actor.x, metrics.y + 2, metrics.height * .16 * liftSpread, metrics.height * .043, `rgba(40,23,20,${alpha})`);
 }
 
-function drawWings(ctx, time, flying) {
-  const flutter = flying ? Math.sin(time * 8) * .16 : Math.sin(time * 1.2) * .035;
+function drawWings(ctx, time, flying, height) {
+  const flutter = flying ? Math.sin(time * 8) * .15 : Math.sin(time * 1.2) * .035;
+  const spread = height * .18;
+  const wingHeight = height * .22;
   ctx.save();
+  ctx.translate(0, -height * .6);
   ctx.globalCompositeOperation = 'screen';
-  ctx.globalAlpha = flying ? .78 : .56;
+  ctx.globalAlpha = flying ? .82 : .62;
+  glow(ctx, 'rgba(178,218,255,.7)', flying ? 18 : 10);
+  ctx.save();
   ctx.rotate(flutter);
-  glow(ctx, 'rgba(190,218,255,.5)', flying ? 14 : 7);
-  ellipse(ctx, -30, -62, 26, 42, '#88a9d0', -.58, '#d6e6f2', 2);
-  ellipse(ctx, -27, -29, 20, 31, '#c49ed0', -.28, '#ead9ef', 2);
-  ellipse(ctx, 30, -62, 26, 42, '#88a9d0', .58, '#d6e6f2', 2);
-  ellipse(ctx, 27, -29, 20, 31, '#c49ed0', .28, '#ead9ef', 2);
+  ellipse(ctx, -spread, -wingHeight * .28, spread * .78, wingHeight, '#87add5', -.58, '#e2f0fa', 2);
+  ellipse(ctx, -spread * .9, wingHeight * .62, spread * .55, wingHeight * .7, '#c39ed4', -.26, '#f1e0f4', 2);
+  ctx.restore();
+  ctx.save();
+  ctx.rotate(-flutter);
+  ellipse(ctx, spread, -wingHeight * .28, spread * .78, wingHeight, '#87add5', .58, '#e2f0fa', 2);
+  ellipse(ctx, spread * .9, wingHeight * .62, spread * .55, wingHeight * .7, '#c39ed4', .26, '#f1e0f4', 2);
+  ctx.restore();
   clearGlow(ctx);
+  for (let index = 0; index < 7; index += 1) {
+    const phase = (time * .22 + index * .137) % 1;
+    const side = index % 2 ? 1 : -1;
+    ellipse(ctx, side * (spread * .45 + phase * spread), wingHeight * (.3 + phase * 1.2), 1.4, 1.4, `rgba(255,233,169,${.65 - phase * .5})`);
+  }
   ctx.restore();
 }
 
-function drawSpriteActor(ctx, sprite, actor, time, options = {}) {
-  const y = Number.isFinite(actor.renderY) ? actor.renderY : groundY(actor.scene, actor.z);
-  const scale = actorScale(actor.z) * (options.scale || 1);
-  const bob = actor.walking ? Math.sin(actor.step) * 2.2 : Math.sin(time * 1.35 + (options.phase || 0)) * .55;
-  const lift = actor.flying ? 30 + Math.sin(time * 2.2) * 4 : 0;
-  const nativeFacing = options.nativeFacing || 1;
-  const direction = (actor.dir || 1) * nativeFacing;
+function drawSpriteActor(ctx, assets, actor, scene, time, options = {}) {
+  const metrics = actorMetrics(assets, scene, actor);
+  const bob = actor.mount ? 0 : actor.walking ? Math.sin(actor.step * 1.8) * 1.2 : Math.sin(time * 1.35 + (options.phase || 0)) * .42;
+  const lift = actor.flying ? 28 + Math.sin(time * 2.2) * 4 : 0;
+  const facing = actor.mount?.facing || actor.dir || 1;
+  const direction = facing * metrics.nativeFacing;
   ctx.save();
-  ctx.translate(actor.x, y + bob - lift);
-  if (actor.action === 'lie') {
-    ctx.rotate(-1.28 * (actor.dir || 1));
-    ctx.translate(-28, 15);
-  } else if (actor.action?.startsWith('sit') || actor.action === 'crouch') {
-    ctx.translate(0, 14);
-  }
-  ctx.scale(scale * direction, scale);
-  if (actor.wings) drawWings(ctx, time, actor.flying);
-  ctx.drawImage(sprite, -sprite.width * .5, -sprite.height);
+  ctx.translate(actor.x, metrics.y + bob - lift);
+  ctx.scale(direction, 1);
+  if (actor.wings) drawWings(ctx, time, actor.flying, metrics.height);
+  ctx.drawImage(metrics.sprite, -metrics.width * .5, -metrics.height, metrics.width, metrics.height);
   if (options.carriedSprite) {
-    const cat = options.carriedSprite;
-    ctx.save();
-    ctx.translate(23, -62);
-    ctx.scale(.55 * direction, .55);
-    ctx.drawImage(cat, -cat.width * .5, -cat.height * .72);
-    ctx.restore();
+    const catHeight = metrics.height * .31;
+    const catWidth = catHeight * (options.carriedSprite.width / options.carriedSprite.height);
+    ctx.drawImage(options.carriedSprite, metrics.width * .02, -metrics.height * .58, catWidth, catHeight);
   }
+  ctx.restore();
+  return metrics;
+}
+
+function drawSpriteNaili(ctx, assets, actor, scene, time) {
+  const metrics = actorMetrics(assets, scene, actor);
+  const bob = actor.walking ? Math.abs(Math.sin(actor.step * 1.7)) * 1.5 : Math.sin(time * 1.7 + 1.1) * .35;
+  ctx.save();
+  ctx.translate(actor.x, metrics.y - bob);
+  ctx.scale(actor.dir || 1, 1);
+  ctx.drawImage(metrics.sprite, -metrics.width * .5, -metrics.height, metrics.width, metrics.height);
   ctx.restore();
 }
 
-function drawSpriteNaili(ctx, sprite, actor, time) {
-  const y = groundY(actor.scene, actor.z);
-  const scale = actorScale(actor.z) * .62;
-  const bob = actor.walking ? Math.abs(Math.sin(actor.step)) * 2.4 : Math.sin(time * 1.7 + 1.1) * .45;
+function drawPlateLayer(ctx, plate, layer) {
   ctx.save();
-  ctx.translate(actor.x, y - bob);
-  ctx.scale(scale * (actor.dir || 1), scale);
-  ctx.drawImage(sprite, -sprite.width * .5, -sprite.height);
+  ctx.beginPath();
+  for (const polygon of layer.polygons || []) {
+    polygon.forEach(([x, y], index) => index ? ctx.lineTo(x, y) : ctx.moveTo(x, y));
+    ctx.closePath();
+  }
+  ctx.clip();
+  ctx.drawImage(plate, 0, 0);
+  ctx.restore();
+}
+
+function drawGardenGate(ctx, open) {
+  if (!open) return;
+  ctx.save();
+  ctx.fillStyle = 'rgba(35,39,26,.78)';
+  ctx.beginPath();
+  ctx.moveTo(750, 310);
+  ctx.lineTo(833, 305);
+  ctx.lineTo(846, 473);
+  ctx.lineTo(739, 474);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(89,64,42,.9)';
+  ctx.lineWidth = 7;
+  ctx.beginPath();
+  ctx.moveTo(741, 470);
+  ctx.lineTo(706, 335);
+  ctx.moveTo(841, 470);
+  ctx.lineTo(878, 336);
+  ctx.stroke();
   ctx.restore();
 }
 
@@ -120,21 +210,12 @@ function drawFountainEffects(ctx, time) {
   for (let index = 0; index < 7; index += 1) {
     const phase = (time * .24 + index * .19) % 1;
     const side = index % 2 ? 1 : -1;
-    const x = 1080 + side * (6 + phase * 13);
-    const y = 423 + phase * 43;
-    ellipse(ctx, x, y, 1.2 + phase * .55, 2.1 + phase, `rgba(219,247,246,${(.28 + pulse * .08) * (1 - phase * .7)})`);
+    ellipse(ctx, 1080 + side * (6 + phase * 13), 423 + phase * 43, 1.2 + phase * .55, 2.1 + phase, `rgba(219,247,246,${(.28 + pulse * .08) * (1 - phase * .7)})`);
   }
   clearGlow(ctx);
   for (let index = 0; index < 11; index += 1) {
     const orbit = time * .37 + index * .93;
-    ellipse(
-      ctx,
-      1080 + Math.cos(orbit) * (58 + index % 3 * 11),
-      500 + Math.sin(orbit * 1.6) * 60,
-      1.8,
-      1.8,
-      `rgba(255,225,139,${.2 + (index % 3) * .07})`
-    );
+    ellipse(ctx, 1080 + Math.cos(orbit) * (58 + index % 3 * 11), 500 + Math.sin(orbit * 1.6) * 60, 1.8, 1.8, `rgba(255,225,139,${.2 + (index % 3) * .07})`);
   }
 }
 
@@ -144,8 +225,7 @@ function drawAtmosphere(ctx, sceneId, cameraX, visibleWidth, time) {
       const x = (index * 241 + 113) % 1536;
       const y = 140 + (index * 97) % 480 + Math.sin(time * .45 + index) * 7;
       if (x < cameraX - 30 || x > cameraX + visibleWidth + 30) continue;
-      const alpha = .14 + (Math.sin(time * 1.2 + index) + 1) * .055;
-      ellipse(ctx, x, y, 2.2, 2.2, `rgba(255,215,143,${alpha})`);
+      ellipse(ctx, x, y, 2.2, 2.2, `rgba(255,215,143,${.14 + (Math.sin(time * 1.2 + index) + 1) * .055})`);
     }
     return;
   }
@@ -168,6 +248,8 @@ export class WorldRenderer {
     this.cssWidth = innerWidth;
     this.cssHeight = innerHeight;
     this.dpr = 1;
+    this.baseScale = 1;
+    this.zoom = 1;
     this.scale = 1;
   }
 
@@ -185,9 +267,15 @@ export class WorldRenderer {
     this.canvas.height = Math.round(this.cssHeight * this.dpr);
     this.canvas.style.width = `${this.cssWidth}px`;
     this.canvas.style.height = `${this.cssHeight}px`;
-    this.ctx.imageSmoothingEnabled = false;
-    this.scale = this.cssHeight / WORLD_HEIGHT;
+    this.ctx.imageSmoothingEnabled = true;
+    this.baseScale = this.cssHeight / WORLD_HEIGHT;
+    this.scale = this.baseScale * this.zoom;
     if (currentScene) this.ensureCache(currentScene);
+  }
+
+  setZoom(value) {
+    this.zoom = Math.max(1, Math.min(2.25, value));
+    this.scale = this.baseScale * this.zoom;
   }
 
   ensureCache(scene) {
@@ -198,57 +286,64 @@ export class WorldRenderer {
     surface.width = scene.width;
     surface.height = WORLD_HEIGHT;
     const context = surface.getContext('2d', { alpha: false });
-    context.imageSmoothingEnabled = false;
+    context.imageSmoothingEnabled = true;
     context.drawImage(artwork, 0, 0, scene.width, WORLD_HEIGHT);
     this.cache.set(scene.id, surface);
     return surface;
   }
 
-  screenToWorld(scene, cameraX, clientX, clientY) {
-    return {
-      x: cameraX + clientX / this.scale,
-      y: clientY / this.scale,
-      z: (clientY / this.scale - scene.wallBottom) / (scene.floorBottom - scene.wallBottom)
-    };
+  screenToWorld(scene, cameraX, clientX, clientY, cameraY = 0) {
+    const y = cameraY + clientY / this.scale;
+    return { x: cameraX + clientX / this.scale, y, z: (y - scene.wallBottom) / (scene.floorBottom - scene.wallBottom) };
   }
 
-  worldToScreen(cameraX, x, y) {
-    return { x: (x - cameraX) * this.scale, y: y * this.scale };
+  worldToScreen(cameraX, x, y, cameraY = 0) {
+    return { x: (x - cameraX) * this.scale, y: (y - cameraY) * this.scale };
+  }
+
+  actorScreenAnchor(state, actor) {
+    const metrics = actorMetrics(this.assets, state.scene, actor);
+    return this.worldToScreen(state.cameraX, actor.x, metrics.y - metrics.height - 12, state.cameraY || 0);
+  }
+
+  actorScreenBounds(state, actor) {
+    const metrics = actorMetrics(this.assets, state.scene, actor);
+    const topLeft = this.worldToScreen(state.cameraX, actor.x - metrics.width * .5, metrics.y - metrics.height, state.cameraY || 0);
+    return { x: topLeft.x, y: topLeft.y, width: metrics.width * this.scale, height: metrics.height * this.scale };
   }
 
   render(state, time) {
-    const { scene, cameraX, player, hubby, naili, tapPulse, swing, activeObjectId } = state;
+    const { scene, cameraX, cameraY = 0, player, hubby, naili, tapPulse, swing, activeObjectId } = state;
     const ctx = this.ctx;
+    const plate = this.ensureCache(scene);
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    ctx.imageSmoothingEnabled = true;
     ctx.clearRect(0, 0, this.cssWidth, this.cssHeight);
     ctx.save();
     ctx.scale(this.scale, this.scale);
-    ctx.translate(-cameraX, 0);
-    ctx.drawImage(this.ensureCache(scene), 0, 0);
+    ctx.translate(-cameraX, -cameraY);
+    ctx.drawImage(plate, 0, 0);
+    if (scene.id === 'outdoor') drawGardenGate(ctx, state.gardenGateOpen);
 
-    const renderables = [];
+    const renderables = (scene.foregroundLayers || []).map((layer) => ({ kind: 'plateLayer', z: layer.z, layer }));
     if (!naili.carried) renderables.push({ kind: 'naili', z: naili.z, actor: naili });
     if (!(scene.id === 'outdoor' && swing.active)) renderables.push({ kind: 'player', z: player.z, actor: player });
     renderables.push({ kind: 'hubby', z: hubby.z, actor: hubby });
     renderables.sort((a, b) => a.z - b.z);
-    renderables.forEach((item) => {
+    for (const item of renderables) {
+      if (item.kind === 'plateLayer') drawPlateLayer(ctx, plate, item.layer);
       if (item.kind === 'player') {
-        drawActorShadow(ctx, { ...player, scene }, player.flying ? .12 : .22);
-        drawSpriteActor(ctx, this.assets.get('kitten'), { ...player, scene }, time, {
-          scale: .96,
-          carriedSprite: naili.carried ? this.assets.get('naili') : null
-        });
+        const metrics = actorMetrics(this.assets, scene, player);
+        drawActorShadow(ctx, player, metrics, player.flying ? .12 : .22);
+        drawSpriteActor(ctx, this.assets, player, scene, time, { carriedSprite: naili.carried ? this.assets.get('nailiIdle') : null });
       }
       if (item.kind === 'hubby') {
-        drawActorShadow(ctx, { ...hubby, scene }, .23);
-        drawSpriteActor(ctx, this.assets.get('hubby'), { ...hubby, scene }, time, {
-          scale: 1.02,
-          nativeFacing: -1,
-          phase: 2
-        });
+        const metrics = actorMetrics(this.assets, scene, hubby);
+        drawActorShadow(ctx, hubby, metrics, .23);
+        drawSpriteActor(ctx, this.assets, hubby, scene, time, { phase: 2 });
       }
-      if (item.kind === 'naili') drawSpriteNaili(ctx, this.assets.get('naili'), { ...naili, scene }, time);
-    });
+      if (item.kind === 'naili') drawSpriteNaili(ctx, this.assets, naili, scene, time);
+    }
 
     if (scene.id === 'outdoor' && swing.active) {
       const angle = Math.sin(time * 2.25) * (swing.pushed ? .17 : .11);
@@ -257,9 +352,9 @@ export class WorldRenderer {
       ctx.save();
       ctx.translate(centerX, centerY);
       ctx.rotate(-angle * .35);
-      drawSpriteActor(ctx, this.assets.get('kitten'), {
-        ...player, x: 0, z: .3, renderY: 0, scene, flying: false, dir: 1, action: 'sit-swing'
-      }, time, { scale: .82 });
+      drawSpriteActor(ctx, this.assets, {
+        ...player, x: 0, z: .3, mount: { renderY: 0, pose: 'bed-sit', height: 135, facing: -1 }, flying: false, dir: 1
+      }, scene, time);
       ctx.restore();
     }
 

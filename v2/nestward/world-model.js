@@ -13,7 +13,18 @@ export function seededRandom(seed = 198) {
 }
 
 const indoorObjects = [
-  { id: 'bed', label: '床', x: 245, z: .31, w: 470, d: .21, hit: [0, 270, 470, 650], block: [0, 470, .04, .31], socket: { x: 430, z: .42 }, slots: { kitten: { x: 405, z: .44 }, hubby: { x: 470, z: .44 } } },
+  {
+    id: 'bed', label: '床', x: 245, z: .31, w: 470, d: .21,
+    hit: [0, 270, 470, 650], block: [0, 470, .04, .31], socket: { x: 430, z: .42 },
+    slots: { kitten: { x: 405, z: .44 }, hubby: { x: 470, z: .44 } },
+    mounts: {
+      kittenSit: { x: 348, z: .325, renderY: 570, pose: 'bed-sit', height: 188, facing: -1 },
+      kittenLie: { x: 248, z: .285, renderY: 474, pose: 'bed-lie', width: 338, facing: 1 },
+      kittenLean: { x: 352, z: .326, renderY: 568, pose: 'bed-lean', height: 184, facing: -1 },
+      hubbySit: { x: 236, z: .305, renderY: 566, pose: 'bed-sit', height: 218, facing: 1 },
+      hubbyLean: { x: 230, z: .304, renderY: 566, pose: 'bed-lean', height: 212, facing: 1 }
+    }
+  },
   { id: 'windowSeat', label: '窗边', x: 300, z: .2, w: 245, d: .12, hit: [185, 90, 410, 365], socket: { x: 470, z: .42 }, slots: { kitten: { x: 285, z: .42 }, hubby: { x: 350, z: .42 } } },
   { id: 'wardrobe', label: '衣柜', x: 535, z: .25, w: 235, d: .18, hit: [420, 105, 640, 560], block: [420, 640, .04, .3], socket: { x: 610, z: .43 } },
   { id: 'sofa', label: '沙发', x: 970, z: .3, w: 345, d: .2, hit: [790, 320, 1145, 590], block: [790, 1145, .04, .31], socket: { x: 810, z: .43 }, slots: { kitten: { x: 930, z: .47 }, hubby: { x: 1000, z: .47 } } },
@@ -31,6 +42,10 @@ const outdoorObjects = [
   { id: 'garden', label: '花圃', x: 720, z: .53, w: 325, d: .18, hit: [550, 500, 885, 760], block: [550, 885, .26, .58], socket: { x: 610, z: .69 }, slots: { naili: { x: 760, z: .69 } } },
   { id: 'teaTable', label: '院子小桌', x: 965, z: .57, w: 250, d: .16, hit: [840, 520, 1110, 735], block: [840, 1110, .28, .55], socket: { x: 940, z: .68 }, slots: { hubbyServe: { x: 895, z: .67 } } },
   { id: 'fountain', label: '许愿喷泉', x: 1080, z: .38, w: 285, d: .2, hit: [935, 285, 1230, 625], block: [935, 1230, .03, .38], socket: { x: 1145, z: .52 } },
+  {
+    id: 'gardenGate', label: '花园门', x: 786, z: .18, w: 150, d: .08,
+    hit: [710, 250, 870, 495], socket: { x: 790, z: .68 }, stateKey: 'gardenGateOpen', futureExit: 'orchardPath'
+  },
   { id: 'pond', label: '萤火池塘', x: 1360, z: .63, w: 350, d: .17, hit: [1180, 570, 1535, 875], block: [1180, 1536, .42, .79], socket: { x: 1135, z: .7 }, slots: { naili: { x: 1110, z: .74 } } },
   { id: 'bower', label: '藤架深处', x: 1370, z: .34, w: 300, d: .2, hit: [1220, 250, 1535, 570], block: [1220, 1536, .03, .24], socket: { x: 1290, z: .36 }, slots: { kitten: { x: 1325, z: .36 }, hubby: { x: 1390, z: .36 } } }
 ];
@@ -46,6 +61,11 @@ export const SCENES = {
       fromOutdoor: { player: { x: 1345, z: .47 }, hubby: { x: 1270, z: .52 }, naili: { x: 1220, z: .64 } }
     },
     objects: indoorObjects,
+    actorHeights: { player: 190, hubby: 218, naili: 76 },
+    foregroundLayers: [{
+      id: 'bed-front', z: .35,
+      polygons: [[[0, 482], [414, 452], [470, 650], [0, 650]]]
+    }],
     obstacles: [
       ...indoorObjects.flatMap((object) => object.block ? [{ x1: object.block[0], x2: object.block[1], z1: object.block[2], z2: object.block[3] }] : []),
       { x1: 640, x2: 805, z1: .04, z2: .31 },
@@ -63,6 +83,7 @@ export const SCENES = {
       fromIndoor: { player: { x: 350, z: .58 }, hubby: { x: 455, z: .62 }, naili: { x: 525, z: .73 } }
     },
     objects: outdoorObjects,
+    actorHeights: { player: 156, hubby: 184, naili: 70 },
     obstacles: [
       ...outdoorObjects.flatMap((object) => object.block ? [{ x1: object.block[0], x2: object.block[1], z1: object.block[2], z2: object.block[3] }] : []),
       { x1: 0, x2: 320, z1: .03, z2: .4 }
