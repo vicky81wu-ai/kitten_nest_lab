@@ -47,6 +47,14 @@ The renderer composes:
 5. deterministic ambient particles and small world-bound effects;
 6. transient tap feedback.
 
+An object may now own a `visual` prop with independent `backZ` and `frontZ`
+passes. `frontPolygons` clip only the portions that must cover a mounted actor.
+The green reading chair is the reference implementation: the chair back renders
+behind the sitter, the sitter renders at the authored mount, and the arms plus
+seat rail render in front. This is the accepted proof that future separable
+furniture can provide real occlusion without baking every character pose into a
+full-scene image.
+
 Static decoration is never regenerated per frame. Any procedural variation uses a fixed seed. Actors pass in front of or behind one another by walk depth. The Canvas fills the installed-PWA viewport and must not expose a demo title, scene badge, hotspot icon field, or permanent instruction HUD.
 
 An interactive object baked into a plate may still be used for navigation or inspection, but an object that seats, hides, carries, opens, swings, animates, or changes state must own one or more separate visual layers and authored mounts. A standing actor sprite must never be rotated on the floor to impersonate a lie or seat pose.
@@ -68,6 +76,27 @@ long-press CG object  -> open its same-origin CG route only when cgPortal is aut
 ```
 
 Hubby and Naili are actors, not static hotspots. Follow, carry, put-down, shared seating, swing pushing, and related actions use the same world model. Object interaction must never work only because a large invisible screen-fixed rescue target catches the tap. Local action menus must always offer an explicit close control.
+
+Character bodies use two semantic touch zones. The upper body owns speech; the
+lower body owns local actions and poses. Mounted characters stay mounted while
+their speech or action menu is inspected. A clear-floor tap is the ordinary way
+to leave a mount and resume walking. Kitten and Hubby may also sit, lie, stand,
+or lean on clear floor through the same authored pose assets.
+
+Speech is data-driven through `speech-runtime.js` rather than one-off timers.
+Scripts declare ordered turns, speaker, duration, playback (`manual`, `auto`, or
+`hybrid`), and loop policy. Tapping a character can advance or resume its script;
+tapping the bubble pauses and hides it without drawing a close icon. Automatic
+dialogue preserves consecutive turns by the same speaker and can finish by
+removing the bubble. Kitten-authored copy uses the shared vivid peach-pink voice
+token while Hubby copy remains dark ink.
+
+Princess carry is one combined two-frame actor state. Hubby owns movement and
+camera follow while Kitten stays synchronized to him; their complete combined
+sprite mirrors as one unit for travel direction. The carry script may alternate
+natural Hubby and Kitten lines while moving. A destination object can end the
+carry silently at its approach socket and continue into that object's normal
+interaction.
 
 ## Current worlds and durable state
 

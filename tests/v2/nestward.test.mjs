@@ -61,7 +61,7 @@ test('Nestward local route action cannot become an external redirect', () => {
 });
 
 test('Nestward browser modules parse as JavaScript', () => {
-  for (const file of ['v2/nestward/nestward.js', 'v2/nestward/world-model.js', 'v2/nestward/world-renderer.js']) {
+  for (const file of ['v2/nestward/nestward.js', 'v2/nestward/world-model.js', 'v2/nestward/world-renderer.js', 'v2/nestward/speech-runtime.js']) {
     const result = spawnSync(process.execPath, ['--check', file], {
       cwd: new URL('../..', import.meta.url),
       encoding: 'utf8'
@@ -119,4 +119,70 @@ test('future CG portals are opt-in long presses and the garden gate owns explici
   const gate = SCENES.outdoor.objects.find((object) => object.id === 'gardenGate');
   assert.equal(gate.futureExit, 'orchardPath');
   assert.equal(Object.values(SCENES).flatMap((scene) => scene.objects).some((object) => object.cgPortal), false);
+});
+
+test('indoor people scale by 35 percent while bed lying keeps an authored normalized width', async () => {
+  const { SCENES } = await import('../../v2/nestward/world-model.js');
+  assert.equal(SCENES.indoor.actorHeights.player, 257);
+  assert.equal(SCENES.indoor.actorHeights.hubby, 294);
+  const bed = SCENES.indoor.objects.find((object) => object.id === 'bed');
+  assert.equal(bed.mounts.kittenLie.width, 310);
+});
+
+test('the reading chair proves back actor and front occlusion layers from one object model', async () => {
+  const { SCENES } = await import('../../v2/nestward/world-model.js');
+  const chair = SCENES.indoor.objects.find((object) => object.id === 'readingChair');
+  assert.equal(chair.visual.asset, 'readingChair');
+  assert.ok(chair.visual.backZ < chair.mounts.kittenSit.z);
+  assert.ok(chair.visual.frontZ > chair.mounts.kittenSit.z);
+  assert.ok(chair.visual.frontPolygons.length >= 3);
+  assert.equal(chair.mounts.kittenSit.pose, 'bed-sit');
+  assert.equal(chair.mounts.kittenSit.height, 231);
+  assert.equal(chair.mounts.hubbySit.height, 265);
+  const renderer = await read('../../v2/nestward/world-renderer.js');
+  assert.match(renderer, /drawPropLayer/);
+  assert.match(renderer, /kind: 'propBack'/);
+  assert.match(renderer, /kind: 'propFront'/);
+});
+
+test('speech supports pause resume manual and automatic ordered turns', async () => {
+  const { SpeechRuntime } = await import('../../v2/nestward/speech-runtime.js');
+  const runtime = new SpeechRuntime({
+    chat: {
+      playback: 'auto', loop: false, participants: ['hubby', 'player'], duration: 100,
+      lines: [
+        { speaker: 'hubby', text: 'one' },
+        { speaker: 'hubby', text: 'two' },
+        { speaker: 'player', text: 'three' }
+      ]
+    },
+    note: { playback: 'manual', speaker: 'player', lines: ['a', 'b'] }
+  });
+  assert.equal(runtime.activate('chat', 0).state.text, 'one');
+  assert.equal(runtime.tick(99), null);
+  assert.equal(runtime.tick(100).state.text, 'two');
+  assert.equal(runtime.close().type, 'hide');
+  assert.equal(runtime.advance(200).state.text, 'three');
+  assert.equal(runtime.tick(300).complete, true);
+  assert.equal(runtime.activate('note', 0).state.speaker, 'player');
+  assert.equal(runtime.tick(9999), null);
+  assert.equal(runtime.advance(9999).state.text, 'b');
+});
+
+test('actor body zones, carry walking, and immersive viewport sizing remain explicit', async () => {
+  const runtime = await read('../../v2/nestward/nestward.js');
+  const renderer = await read('../../v2/nestward/world-renderer.js');
+  const css = await read('../../v2/nestward/nestward.css');
+  assert.match(runtime, /hitZoneForActor/);
+  assert.match(runtime, /startPrincessCarry/);
+  assert.match(runtime, /poseActorInPlace/);
+  assert.match(runtime, /脱下月光翅膀/);
+  assert.match(renderer, /hubby-carry-walk-1\.png/);
+  assert.match(renderer, /hubby-carry-walk-2\.png/);
+  assert.match(renderer, /state\.hubby\.dir \|\| 1\) \* nativeFacingByRole\.hubby/);
+  assert.doesNotMatch(renderer, /drawGardenGate/);
+  assert.match(renderer, /parentElement\?\.getBoundingClientRect/);
+  assert.doesNotMatch(css, /height:100dvh/);
+  assert.match(css, /--kitten-voice:#d85b86/);
+  assert.match(css, /pointer-events:auto/);
 });

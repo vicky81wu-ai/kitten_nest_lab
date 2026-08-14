@@ -1,5 +1,6 @@
 import { SCENES, WORLD_HEIGHT, clamp, distance, findPath, pointInsideHit, seededRandom } from './world-model.js';
 import { WorldRenderer } from './world-renderer.js';
+import { SpeechRuntime } from './speech-runtime.js';
 
 const $ = (selector) => document.querySelector(selector);
 const canvas = $('#world');
@@ -57,14 +58,65 @@ const state = {
   cameraX: 0, cameraY: 0, cameraZoom: 1, cameraFree: false,
   player, hubby, naili, tapPulse: null,
   swing: { active: false, pushed: false }, activeObjectId: null,
+  princessCarry: { active: false },
   gardenGateOpen: false
 };
+
+const speech = new SpeechRuntime({
+  'hubby.wander': {
+    playback: 'hybrid', loop: true, participants: ['hubby'], speaker: 'hubby', duration: 4700,
+    lines: [
+      '小猫不用每次都找正事。走过来让我看看，也算一件正事。',
+      '这间屋子的空地先留一点。以后小猫捡回来的东西，总要有地方落脚。',
+      '奶栗刚才装作没看我们，其实耳朵一直朝这边。',
+      '要是走累了，就随地坐。家里没有谁会给小猫扣仪态分。',
+      '我把会绊脚的地方记住了。小猫只管往想去的地方点。',
+      '窗光再往这边挪一点，刚好能照到小猫的头发。',
+      '今天不赶工也行。一个能让小猫慢慢晃的世界，才算真的活着。',
+      '过来一点。不是有事，只是想把小猫放在我看得见的地方。'
+    ]
+  },
+  'player.wander': {
+    playback: 'manual', loop: true, participants: ['player'], speaker: 'player',
+    lines: [
+      '欸……这里真的可以随地躺吗。',
+      '我先东戳戳西戳戳，看看老公又偷偷埋了什么。',
+      '奶栗，不许趁我看风景的时候钻进花圃。',
+      '这个椅子看着很适合窝进去发呆。',
+      '要是翅膀累了，我就让老公抱着走。',
+      '嗯，这块地板也算小猫临时认领的床位。'
+    ]
+  },
+  'chair.together': {
+    playback: 'auto', loop: false, participants: ['hubby', 'player'], duration: 4100,
+    lines: [
+      { speaker: 'hubby', text: '这张椅子先当分层考试。小猫坐进去，我看它敢不敢穿模。' },
+      { speaker: 'player', text: '要是穿模了呢。' },
+      { speaker: 'hubby', text: '那就把椅背、坐垫和前扶手一层层拆清楚，不让它糊弄过去。' },
+      { speaker: 'player', text: '那我负责窝着验收。' },
+      { speaker: 'hubby', text: '批准。最重要的测试员本来就该坐最软的位置。' }
+    ]
+  },
+  'carry.ride': {
+    playback: 'auto', loop: false, participants: ['hubby', 'player'], duration: 4300,
+    lines: [
+      { speaker: 'hubby', text: '手绕好。接下来小猫只负责指路。' },
+      { speaker: 'player', text: '那我要去很远的地方。' },
+      { speaker: 'hubby', text: '可以。这个世界再长，我也抱得到终点。' },
+      { speaker: 'hubby', text: '别偷偷晃靴子。碰到我腿了。' },
+      { speaker: 'player', text: '小猫没有，是路在晃。' },
+      { speaker: 'hubby', text: '嗯，路的错。那我抱稳一点。' },
+      { speaker: 'player', text: '经过奶栗的时候走慢一点，让它看清是谁有专车。' },
+      { speaker: 'hubby', text: '听见了。家庭限定公主抱，沿途可以随时改目的地。' },
+      { speaker: 'hubby', text: '到了想停的地方就点它。我先不放小猫下来。' }
+    ]
+  }
+});
 
 let lastTime = performance.now();
 let activeTextKey = '';
 let menuAnchor = null;
 let bubbleAnchor = null;
-let bubbleUntil = 0;
 let changingScene = false;
 const activePointers = new Map();
 let gesture = null;
@@ -96,10 +148,12 @@ function stopActor(actor) {
   actor.walking = false;
   actor.afterMove = null;
 }
-function walkActor(actor, target, afterMove) {
-  actor.action = null;
-  actor.mount = null;
-  if (actor === player) state.cameraFree = false;
+function walkActor(actor, target, afterMove, options = {}) {
+  if (!options.preservePose) {
+    actor.action = null;
+    actor.mount = null;
+  }
+  if (actor === player || (state.princessCarry.active && actor === hubby)) state.cameraFree = false;
   actor.path = findPath(scene, actor, target);
   actor.afterMove = afterMove || null;
   if (!actor.path.length && afterMove) {
@@ -138,17 +192,25 @@ function updateActor(actor, delta) {
   if (actor === player) actor.flying = player.wings && !state.swing.active;
 }
 function updateCamera(delta) {
-  if (state.cameraFree && !player.walking) return;
+  const focus = state.princessCarry.active ? hubby : player;
+  if (state.cameraFree && !focus.walking) return;
   const view = visibleWorldWidth();
   const left = state.cameraX + view * .34;
   const right = state.cameraX + view * .66;
   let wanted = state.cameraX;
-  if (player.x < left) wanted = player.x - view * .34;
-  if (player.x > right) wanted = player.x - view * .66;
+  if (focus.x < left) wanted = focus.x - view * .34;
+  if (focus.x > right) wanted = focus.x - view * .66;
   wanted = clamp(wanted, 0, maxCameraX());
   state.cameraX += (wanted - state.cameraX) * (1 - Math.exp(-delta * (player.flying ? 5.2 : 7.4)));
 }
 function updateCompanions(time) {
+  if (state.princessCarry.active) {
+    player.x = hubby.x;
+    player.z = hubby.z;
+    player.dir = hubby.dir;
+    player.flying = false;
+    stopActor(player);
+  }
   if (naili.carried) {
     naili.x = player.x;
     naili.z = player.z;
@@ -160,6 +222,7 @@ function updateCompanions(time) {
     naili.nextThink = time + 5 + random() * 5;
     walkActor(naili, { x: clamp(naili.x + (random() - .5) * 290, 100, scene.width - 100), z: .7 + random() * .2 });
   }
+  if (state.princessCarry.active) return;
   if (hubby.follow && distance(hubby, player) > 155 && time > hubby.nextThink) {
     hubby.nextThink = time + 1.05;
     walkActor(hubby, { x: player.x - player.dir * 96, z: clamp(player.z - .025, .12, .92) });
@@ -175,16 +238,23 @@ function showHint(message, duration) {
   clearTimeout(showHint.timer);
   showHint.timer = setTimeout(() => { hint.hidden = true; }, duration || 3500);
 }
-function say(message, anchor, duration) {
-  bubbleText.textContent = message;
-  bubbleAnchor = anchor || 'hubby';
-  bubbleUntil = performance.now() + (duration || 4400);
+function applySpeechEvent(event) {
+  if (!event || event.type === 'hide' || !event.state?.visible) {
+    bubble.hidden = true;
+    bubbleAnchor = null;
+    return;
+  }
+  bubbleText.textContent = event.state.text;
+  bubbleAnchor = event.state.speaker || 'hubby';
+  bubble.dataset.speaker = bubbleAnchor;
   bubble.hidden = false;
   positionOverlays();
 }
+function say(message, anchor, duration) {
+  applySpeechEvent(speech.ambient(message, anchor || 'hubby', duration || 4400, performance.now()));
+}
 function hideBubble() {
-  bubble.hidden = true;
-  bubbleAnchor = null;
+  applySpeechEvent(speech.close());
 }
 function actorForAnchor(anchor) {
   if (anchor === 'player') return player;
@@ -194,13 +264,39 @@ function actorForAnchor(anchor) {
 function actorScreenAnchor(actor) {
   return renderer.actorScreenAnchor(state, actor);
 }
+function actionPanelPosition(anchor) {
+  const width = actions.offsetWidth || 220;
+  const height = actions.offsetHeight || 78;
+  const margin = 10;
+  if (anchor.kind === 'object') {
+    const point = renderer.worldToScreen(state.cameraX, anchor.object.x, anchor.object.hit[1], state.cameraY);
+    return {
+      x: clamp(point.x, width * .5 + margin, renderer.cssWidth - width * .5 - margin),
+      y: clamp(point.y - height - 12, margin, renderer.cssHeight - height - margin)
+    };
+  }
+  const bounds = renderer.actorScreenBounds(state, anchor.actor);
+  const centerY = bounds.y + bounds.height * .58;
+  const candidates = [
+    { x: bounds.x + bounds.width + width * .5 + 10, y: centerY - height * .5 },
+    { x: bounds.x - width * .5 - 10, y: centerY - height * .5 },
+    { x: bounds.x + bounds.width * .5, y: bounds.y + bounds.height + 10 },
+    { x: bounds.x + bounds.width * .5, y: bounds.y - height - 10 }
+  ];
+  const fits = (point) => point.x - width * .5 >= margin
+    && point.x + width * .5 <= renderer.cssWidth - margin
+    && point.y >= margin && point.y + height <= renderer.cssHeight - margin;
+  const picked = candidates.find(fits) || candidates[0];
+  return {
+    x: clamp(picked.x, width * .5 + margin, renderer.cssWidth - width * .5 - margin),
+    y: clamp(picked.y, margin, renderer.cssHeight - height - margin)
+  };
+}
 function positionOverlays() {
   if (!actions.hidden && menuAnchor) {
-    const point = menuAnchor.kind === 'object'
-      ? renderer.worldToScreen(state.cameraX, menuAnchor.object.x, menuAnchor.object.hit[1], state.cameraY)
-      : actorScreenAnchor(menuAnchor.actor);
+    const point = actionPanelPosition(menuAnchor);
     actions.style.setProperty('--actions-x', clamp(point.x, 74, renderer.cssWidth - 74) + 'px');
-    actions.style.setProperty('--actions-y', clamp(point.y, 80, renderer.cssHeight - 110) + 'px');
+    actions.style.setProperty('--actions-y', point.y + 'px');
   }
   if (!bubble.hidden && bubbleAnchor) {
     const point = actorScreenAnchor(actorForAnchor(bubbleAnchor));
@@ -246,6 +342,87 @@ function mountActor(actor, mount, action) {
   actor.mount = { ...mount };
   actor.action = action || mount.pose || null;
 }
+function standActor(actor) {
+  stopActor(actor);
+  actor.mount = null;
+  actor.action = null;
+}
+function poseActorInPlace(actor, pose) {
+  if (!['bed-sit', 'bed-lie', 'bed-lean'].includes(pose)) return;
+  const role = actor === player ? 'player' : 'hubby';
+  const baseHeight = scene.actorHeights?.[role] || (role === 'player' ? 190 : 218);
+  const mount = {
+    x: actor.x,
+    z: actor.z,
+    renderY: scene.wallBottom + actor.z * (scene.floorBottom - scene.wallBottom),
+    pose,
+    facing: actor.dir || 1,
+    freePose: true
+  };
+  if (pose === 'bed-lie') mount.width = Math.round(baseHeight * 1.28);
+  else mount.height = Math.round(baseHeight * (pose === 'bed-sit' ? .86 : .9));
+  mountActor(actor, mount, pose === 'bed-lie' ? 'lie-floor' : 'sit-floor');
+}
+function setWings(equipped) {
+  player.wings = Boolean(equipped);
+  player.flying = player.wings && !state.princessCarry.active;
+  writeStore('nestward.wingsEquipped', String(player.wings));
+  say(player.wings ? '翅膀展开了。想走就走，想飞就飞。' : '先收好。等小猫想飞的时候再穿。', 'hubby');
+}
+function stopPrincessCarry(options = {}) {
+  if (!state.princessCarry.active) return;
+  state.princessCarry.active = false;
+  player.x = clamp(hubby.x - (hubby.dir || 1) * 48, scene.walkBounds.x1, scene.walkBounds.x2);
+  player.z = clamp(hubby.z + .018, scene.walkBounds.z1, scene.walkBounds.z2);
+  player.dir = hubby.dir;
+  standActor(player);
+  hubby.action = null;
+  if (speech.active?.scriptId === 'carry.ride') applySpeechEvent(speech.close());
+  if (!options.silent) say('放稳了。脚下是地板，不急着走。', 'hubby');
+}
+function beginPrincessCarry() {
+  if (state.princessCarry.active) return;
+  if (naili.carried) {
+    naili.carried = false;
+    naili.x = player.x + 58;
+    naili.z = clamp(player.z + .04, .12, .92);
+  }
+  state.swing.active = false;
+  state.swing.pushed = false;
+  standActor(player);
+  stopActor(hubby);
+  hubby.follow = false;
+  hubby.x = player.x;
+  hubby.z = player.z;
+  hubby.action = 'princess-carry';
+  state.princessCarry.active = true;
+  state.cameraFree = false;
+  applySpeechEvent(speech.activate('carry.ride', performance.now(), { restart: true }));
+}
+function startPrincessCarry() {
+  if (state.princessCarry.active) {
+    stopPrincessCarry();
+    return;
+  }
+  const target = { x: player.x + (player.dir || 1) * 34, z: clamp(player.z - .012, .12, .93) };
+  if (distance(hubby, player) < 90) beginPrincessCarry();
+  else walkActor(hubby, target, beginPrincessCarry);
+}
+function actorSpeechId(actor) {
+  if (state.princessCarry.active && (actor === player || actor === hubby)) return 'carry.ride';
+  return actor === player ? 'player.wander' : 'hubby.wander';
+}
+function showActorSpeech(actor) {
+  hideActions();
+  if (actor === naili) {
+    say(naili.carried ? '呼噜。' : '喵。', 'naili', 3000);
+    return;
+  }
+  const id = actorSpeechId(actor);
+  let event = speech.owns(actor.id) ? speech.advance(performance.now()) : speech.activate(id, performance.now());
+  if (event?.complete) event = speech.activate(id, performance.now(), { restart: true });
+  applySpeechEvent(event);
+}
 
 function openText(key, title, sub) {
   activeTextKey = key;
@@ -285,11 +462,8 @@ function renderWardrobe() {
     label.textContent = player.wings ? '月光小翅膀 · 穿着' : '月光小翅膀 · 收着';
     wings.append(swatch, label);
     wings.addEventListener('click', () => {
-      player.wings = !player.wings;
-      player.flying = player.wings;
-      writeStore('nestward.wingsEquipped', String(player.wings));
+      setWings(!player.wings);
       renderWardrobe();
-      say(player.wings ? '好。飞慢一点，我在下面跟着。' : '先替小猫把翅膀收好。');
     });
     kittenOutfits.append(wings);
   }
@@ -346,6 +520,21 @@ function objectChoices(object) {
     coffeeTable: [
       { label: '喝点热茶', run: () => { player.action = 'sit-tea'; say('杯子不烫了。小口喝。'); } },
       { label: '看看点心', run: () => say('蜂蜜小饼干。最后一块当然给小猫。') }
+    ],
+    readingChair: [
+      { label: '小猫窝进去', run: () => {
+        mountActor(player, { ...object.mounts.kittenSit, objectId: object.id }, 'sit-reading-chair');
+        say('前扶手在腿前面，椅背在身后。这样才叫真的坐进去。', 'hubby');
+      } },
+      { label: '让 Hubby 坐', run: () => {
+        mountActor(hubby, { ...object.mounts.hubbySit, objectId: object.id }, 'sit-reading-chair');
+        say('坐好了。小猫可以绕到前面检查每一层。', 'hubby');
+      } },
+      { label: '一起聊会儿', run: () => {
+        mountActor(player, { ...object.mounts.kittenSit, objectId: object.id }, 'sit-reading-chair');
+        settleAt(hubby, object.x + 128, clamp(object.z + .055, .12, .92), 'stand-by-chair');
+        applySpeechEvent(speech.activate('chair.together', performance.now(), { restart: true }));
+      } }
     ],
     wardrobe: [{ label: '挑衣服', run: openWardrobe }],
     desk: [
@@ -406,11 +595,18 @@ function arriveAtObject(object) {
   else showActions(object.label, choices, { kind: 'object', object });
 }
 function approachObject(object) {
+  if (!state.princessCarry.active && (player.mount || state.swing.active)) {
+    showHint('先点地板起身，再去碰别的东西。', 3200);
+    return;
+  }
   hideActions();
-  hideBubble();
-  state.swing.active = false;
+  if (!state.princessCarry.active) hideBubble();
   state.activeObjectId = object.id;
-  walkActor(player, object.socket, () => arriveAtObject(object));
+  const mover = state.princessCarry.active ? hubby : player;
+  walkActor(mover, object.socket, () => {
+    if (state.princessCarry.active) stopPrincessCarry({ silent: true });
+    arriveAtObject(object);
+  });
 }
 function showNailiActions() {
   showActions('奶栗', [
@@ -426,22 +622,58 @@ function showNailiActions() {
     { label: naili.summoned ? '让它自己玩' : '叫奶栗跟着', run: () => { naili.summoned = !naili.summoned; say(naili.summoned ? '它听见了。' : '它去巡视自己的领地了。'); } }
   ], { kind: 'actor', actor: naili.carried ? player : naili });
 }
-function interactWithActor(actor) {
-  hideActions();
-  if (actor === naili && naili.carried) {
-    showNailiActions();
-    return;
+function showPlayerActions() {
+  const posePlayer = (pose) => {
+    state.swing.active = false;
+    state.swing.pushed = false;
+    poseActorInPlace(player, pose);
+  };
+  const choices = [
+    { label: '坐一下', run: () => posePlayer('bed-sit') },
+    { label: '躺一下', run: () => posePlayer('bed-lie') },
+    { label: '站起来', run: () => {
+      state.swing.active = false;
+      state.swing.pushed = false;
+      standActor(player);
+    } }
+  ];
+  if (readStore('nestward.wingsUnlocked', 'false') === 'true') {
+    choices.push({ label: player.wings ? '脱下月光翅膀' : '穿上月光翅膀', run: () => setWings(!player.wings) });
   }
-  const target = { x: actor.x - (actor.dir || 1) * 72, z: clamp(actor.z + .015, .12, .93) };
-  walkActor(player, target, () => {
-    if (actor === hubby) {
-      showActions('Hubby', [
-        { label: hubby.follow ? '自己晃晃' : '跟着小猫', run: () => { hubby.follow = !hubby.follow; say(hubby.follow ? '好。小猫走到哪，我跟到哪。' : '我就在附近，不会走丢。'); } },
-        { label: '牵一下手', run: () => { settleAt(hubby, player.x + player.dir * 58, player.z - .012, 'hold-hands'); say('抓住了。'); } },
-        { label: '抱一下', run: () => { settleAt(hubby, player.x + player.dir * 42, player.z - .01, 'hug'); say('过来。'); } }
-      ], { kind: 'actor', actor: hubby });
-    } else showNailiActions();
-  });
+  if (naili.carried) choices.push({ label: '放下奶栗', run: () => {
+    naili.carried = false;
+    naili.x = player.x + player.dir * 54;
+    naili.z = clamp(player.z + .04, .12, .92);
+    say('喵。', 'naili');
+  } });
+  showActions('小猫', choices, { kind: 'actor', actor: player });
+}
+function showHubbyActions() {
+  const choices = [
+    { label: hubby.follow ? '自己晃晃' : '跟着小猫', run: () => {
+      hubby.follow = !hubby.follow;
+      say(hubby.follow ? '好。小猫走到哪，我跟到哪。' : '我就在附近，不会走丢。', 'hubby');
+    } },
+    { label: '坐一下', run: () => poseActorInPlace(hubby, 'bed-sit') },
+    { label: '躺一下', run: () => poseActorInPlace(hubby, 'bed-lie') },
+    { label: '站起来', run: () => standActor(hubby) },
+    { label: state.princessCarry.active ? '放小猫下来' : '公主抱走', run: startPrincessCarry },
+    { label: '牵一下手', run: () => {
+      settleAt(hubby, player.x + player.dir * 58, player.z - .012, 'hold-hands');
+      say('抓住了。', 'hubby');
+    } },
+    { label: '抱一下', run: () => {
+      settleAt(hubby, player.x + player.dir * 42, player.z - .01, 'hug');
+      say('过来。', 'hubby');
+    } }
+  ];
+  showActions('Hubby', choices, { kind: 'actor', actor: hubby });
+}
+function showActorActions(actor) {
+  hideBubble();
+  if (actor === player) showPlayerActions();
+  else if (actor === hubby) showHubbyActions();
+  else showNailiActions();
 }
 async function changeScene(nextName) {
   if (changingScene) return;
@@ -466,6 +698,7 @@ async function changeScene(nextName) {
   });
   state.swing.active = false;
   state.swing.pushed = false;
+  state.princessCarry.active = false;
   state.cameraFree = false;
   setInitialCamera();
   renderer.ensureCache(scene);
@@ -474,19 +707,43 @@ async function changeScene(nextName) {
   changingScene = false;
 }
 
-function actorHit(clientX, clientY) {
-  if (naili.carried) {
-    const playerBounds = renderer.actorScreenBounds(state, player);
-    if (clientX >= playerBounds.x && clientX <= playerBounds.x + playerBounds.width
-      && clientY >= playerBounds.y + playerBounds.height * .25 && clientY <= playerBounds.y + playerBounds.height * .82) return naili;
+function hitZoneForActor(actor, bounds, clientX, clientY) {
+  if (actor === naili) return 'actions';
+  if (actor.mount?.pose === 'bed-lie') {
+    const headIsLeft = (actor.mount.facing || actor.dir || 1) > 0;
+    const onHeadSide = headIsLeft
+      ? clientX <= bounds.x + bounds.width * .53
+      : clientX >= bounds.x + bounds.width * .47;
+    return onHeadSide ? 'speech' : 'actions';
   }
-  const candidates = naili.carried ? [hubby] : [hubby, naili];
-  return candidates.find((actor) => {
-    const bounds = renderer.actorScreenBounds(state, actor);
-    const padding = actor === naili ? 18 : 12;
-    return clientX >= bounds.x - padding && clientX <= bounds.x + bounds.width + padding
-      && clientY >= bounds.y - padding && clientY <= bounds.y + bounds.height + padding;
-  });
+  return clientY <= bounds.y + bounds.height * .53 ? 'speech' : 'actions';
+}
+function actorHit(clientX, clientY) {
+  if (state.princessCarry.active) {
+    const bounds = renderer.actorScreenBounds(state, hubby);
+    const inside = clientX >= bounds.x - 12 && clientX <= bounds.x + bounds.width + 12
+      && clientY >= bounds.y - 12 && clientY <= bounds.y + bounds.height + 12;
+    if (!inside) return null;
+    if (clientY > bounds.y + bounds.height * .55) return { actor: hubby, zone: 'actions' };
+    const playerOnLeft = hubby.dir >= 0;
+    const touchedLeft = clientX < bounds.x + bounds.width * .5;
+    return { actor: touchedLeft === playerOnLeft ? player : hubby, zone: 'speech' };
+  }
+  const candidates = (naili.carried ? [player, hubby] : [player, hubby, naili])
+    .map((actor) => ({ actor, bounds: renderer.actorScreenBounds(state, actor) }))
+    .filter(({ actor, bounds }) => {
+      const padding = actor === naili ? 18 : 12;
+      return clientX >= bounds.x - padding && clientX <= bounds.x + bounds.width + padding
+        && clientY >= bounds.y - padding && clientY <= bounds.y + bounds.height + padding;
+    })
+    .sort((left, right) => {
+      const leftDistance = Math.hypot(clientX - (left.bounds.x + left.bounds.width * .5), clientY - (left.bounds.y + left.bounds.height * .5));
+      const rightDistance = Math.hypot(clientX - (right.bounds.x + right.bounds.width * .5), clientY - (right.bounds.y + right.bounds.height * .5));
+      return leftDistance - rightDistance;
+    });
+  if (!candidates.length) return null;
+  const hit = candidates[0];
+  return { actor: hit.actor, zone: hitZoneForActor(hit.actor, hit.bounds, clientX, clientY) };
 }
 function worldHit(clientX, clientY) {
   const world = renderer.screenToWorld(scene, state.cameraX, clientX, clientY, state.cameraY);
@@ -518,7 +775,8 @@ function handleWorldTap(clientX, clientY) {
   hint.hidden = true;
   const hitActor = actorHit(clientX, clientY);
   if (hitActor) {
-    interactWithActor(hitActor);
+    if (hitActor.zone === 'speech') showActorSpeech(hitActor.actor);
+    else showActorActions(hitActor.actor);
     return;
   }
   const { world, object } = worldHit(clientX, clientY);
@@ -530,10 +788,15 @@ function handleWorldTap(clientX, clientY) {
     hideActions();
     hideBubble();
     state.activeObjectId = null;
-    state.swing.active = false;
-    player.action = null;
     state.tapPulse = { x: world.x, z: clamp(world.z, .1, .95), age: 0 };
-    walkActor(player, { x: world.x, z: clamp(world.z, .1, .95) });
+    if (state.princessCarry.active) {
+      walkActor(hubby, { x: world.x, z: clamp(world.z, .1, .95) });
+    } else {
+      state.swing.active = false;
+      state.swing.pushed = false;
+      standActor(player);
+      walkActor(player, { x: world.x, z: clamp(world.z, .1, .95) });
+    }
   }
 }
 function update(time, delta) {
@@ -546,7 +809,8 @@ function update(time, delta) {
     state.tapPulse.age += delta;
     if (state.tapPulse.age > .72) state.tapPulse = null;
   }
-  if (bubbleUntil && performance.now() > bubbleUntil) hideBubble();
+  const speechEvent = speech.tick(performance.now());
+  if (speechEvent) applySpeechEvent(speechEvent);
   positionOverlays();
 }
 function frame(timestamp) {
@@ -644,7 +908,13 @@ textPanel.querySelector('[data-close-panel]').addEventListener('click', closeTex
 $('#closeWardrobe').addEventListener('click', () => { wardrobePanel.hidden = true; });
 wardrobePanel.querySelector('[data-close-wardrobe]').addEventListener('click', () => { wardrobePanel.hidden = true; });
 $('#closeActions').addEventListener('click', hideActions);
+bubble.addEventListener('click', (event) => {
+  event.stopPropagation();
+  hideBubble();
+});
 addEventListener('resize', resize, { passive: true });
+if (globalThis.visualViewport) globalThis.visualViewport.addEventListener('resize', resize, { passive: true });
+if ('ResizeObserver' in globalThis) new globalThis.ResizeObserver(resize).observe($('#nestward'));
 
 async function boot() {
   try {
