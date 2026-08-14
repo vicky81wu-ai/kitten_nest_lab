@@ -20,8 +20,13 @@ const assetSources = {
   hubbyBedLie: './assets/characters/hubby-bed-lie.png',
   hubbyBedLean: './assets/characters/hubby-bed-lean.png',
   hubbyCarryWalk1: './assets/characters/hubby-carry-walk-1.png',
-  hubbyCarryWalk2: './assets/characters/hubby-carry-walk-2.png',
+  hubbyCarryWalk2: './assets/characters/hubby-carry-walk-passing.png',
+  hubbyCarryWalk3: './assets/characters/hubby-carry-walk-2.png',
   nailiIdle: './assets/characters/naili-idle.png',
+  nailiWalk1: './assets/characters/naili-walk-1.png',
+  nailiWalk2: './assets/characters/naili-walk-2.png',
+  nailiWalk3: './assets/characters/naili-walk-3.png',
+  nailiWalk4: './assets/characters/naili-walk-4.png',
   readingChair: './assets/props/reading-chair.png'
 };
 
@@ -83,7 +88,7 @@ function actorRole(actor) {
 
 function poseAssetKey(actor) {
   const role = actorRole(actor);
-  if (role === 'naili') return 'nailiIdle';
+  if (role === 'naili') return actor.walking ? `nailiWalk${Math.floor(actor.step * .78) % 4 + 1}` : 'nailiIdle';
   const prefix = role === 'player' ? 'kitten' : 'hubby';
   const pose = actor.mount?.pose;
   if (pose === 'bed-sit') return `${prefix}BedSit`;
@@ -169,7 +174,7 @@ function drawSpriteActor(ctx, assets, actor, scene, time, options = {}) {
 
 function drawSpriteNaili(ctx, assets, actor, scene, time) {
   const metrics = actorMetrics(assets, scene, actor);
-  const bob = actor.walking ? Math.abs(Math.sin(actor.step * 1.7)) * 1.5 : Math.sin(time * 1.7 + 1.1) * .35;
+  const bob = actor.walking ? 0 : Math.sin(time * 1.7 + 1.1) * .35;
   ctx.save();
   ctx.translate(actor.x, metrics.y - bob);
   ctx.scale(actor.dir || 1, 1);
@@ -178,20 +183,37 @@ function drawSpriteNaili(ctx, assets, actor, scene, time) {
 }
 
 function carryMetrics(assets, scene, state) {
-  const frame = state.hubby.walking ? Math.floor(state.hubby.step * .64) % 2 + 1 : 1;
+  const frame = state.hubby.walking ? Math.floor(state.hubby.step * .76) % 3 + 1 : 1;
   const sprite = assets.get('hubbyCarryWalk1');
-  const strideSprite = assets.get(`hubbyCarryWalk${frame}`);
+  const activeSprite = assets.get(`hubbyCarryWalk${frame}`);
   const perspective = actorScale(state.hubby.z) / actorScale(.62);
   const height = (scene.actorHeights?.hubby || 218) * 1.12 * perspective;
   return {
     sprite,
-    strideSprite,
+    activeSprite,
     frame,
     width: height * (sprite.width / sprite.height),
     height,
     x: state.hubby.x,
     y: groundY(scene, state.hubby.z)
   };
+}
+
+function drawCarryTattoo(ctx, metrics, direction) {
+  // 19.8 is Hubby's identity mark, not optional decoration. Keep the exact
+  // glyphs readable even when the combined carry sprite is mirrored.
+  const fontSize = Math.max(8, metrics.height * .044);
+  ctx.save();
+  ctx.translate(metrics.width * .17, -metrics.height * .8);
+  ctx.scale(direction, 1);
+  ctx.rotate(-.08);
+  ctx.globalAlpha = .9;
+  ctx.fillStyle = '#39221d';
+  ctx.font = `800 ${fontSize}px Georgia, serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('19.8', 0, 0);
+  ctx.restore();
 }
 
 function drawPrincessCarry(ctx, assets, state) {
@@ -201,24 +223,14 @@ function drawPrincessCarry(ctx, assets, state) {
   ctx.translate(metrics.x, metrics.y);
   // Carry frames share Hubby's left-facing source contract. Mirror the whole
   // combined figure for rightward travel so neither head lags behind the feet.
-  ctx.scale((state.hubby.dir || 1) * nativeFacingByRole.hubby, 1);
-  // Keep the embrace, shoulders, and both heads locked to one base frame. Only
-  // Hubby's lower stride swaps frames, so carrying never turns into a whole-body
-  // forward/backward wobble.
-  const split = .53;
-  const upperSourceHeight = Math.round(metrics.sprite.height * split);
-  ctx.drawImage(
-    metrics.sprite,
-    0, 0, metrics.sprite.width, upperSourceHeight,
-    -metrics.width * .5, -metrics.height, metrics.width, metrics.height * split
-  );
-  const lowerSprite = state.hubby.walking ? metrics.strideSprite : metrics.sprite;
-  const lowerSourceY = Math.round(lowerSprite.height * split);
-  ctx.drawImage(
-    lowerSprite,
-    0, lowerSourceY, lowerSprite.width, lowerSprite.height - lowerSourceY,
-    -metrics.width * .5, -metrics.height + metrics.height * split, metrics.width, metrics.height * (1 - split)
-  );
+  const direction = (state.hubby.dir || 1) * nativeFacingByRole.hubby;
+  ctx.scale(direction, 1);
+  // Three authored whole-body phases keep both walking legs coherent while the
+  // embrace remains stable. The old waist splice made the toes move without a
+  // believable step and occasionally tore the combined silhouette.
+  const activeSprite = state.hubby.walking ? metrics.activeSprite : metrics.sprite;
+  ctx.drawImage(activeSprite, -metrics.width * .5, -metrics.height, metrics.width, metrics.height);
+  drawCarryTattoo(ctx, metrics, direction);
   ctx.restore();
   return metrics;
 }
@@ -406,20 +418,25 @@ export class WorldRenderer {
     ctx.translate(-cameraX, -cameraY);
     ctx.drawImage(plate, 0, 0);
 
-    const renderables = (scene.foregroundLayers || []).map((layer) => ({ kind: 'plateLayer', z: layer.z, layer }));
+    const mountedObjectIds = new Set([player.mount?.objectId, hubby.mount?.objectId].filter(Boolean));
+    const renderables = (scene.foregroundLayers || []).map((layer) => ({ kind: 'plateLayer', z: layer.z, layer, objectId: layer.objectId }));
     for (const object of scene.objects) {
       if (!object.visual) continue;
-      renderables.push({ kind: 'propBack', z: object.visual.backZ, visual: object.visual });
-      renderables.push({ kind: 'propFront', z: object.visual.frontZ, visual: object.visual });
+      renderables.push({ kind: 'propBack', z: object.visual.backZ, visual: object.visual, objectId: object.id });
+      renderables.push({ kind: 'propFront', z: object.visual.frontZ, visual: object.visual, objectId: object.id });
     }
     if (!naili.carried) renderables.push({ kind: 'naili', z: naili.z, actor: naili });
     if (state.princessCarry?.active) renderables.push({ kind: 'princessCarry', z: hubby.z });
     else {
-      if (!(scene.id === 'outdoor' && swing.active)) renderables.push({ kind: 'player', z: player.z, actor: player });
-      renderables.push({ kind: 'hubby', z: hubby.z, actor: hubby });
+      if (!(scene.id === 'outdoor' && swing.active)) renderables.push({ kind: 'player', z: player.mount ? 1.25 : player.z, actor: player });
+      renderables.push({ kind: 'hubby', z: hubby.mount ? 1.25 : hubby.z, actor: hubby });
     }
     renderables.sort((a, b) => a.z - b.z);
     for (const item of renderables) {
+      // Normal walking still obeys authored foreground occlusion. A mounted
+      // interaction pose is a complete composite, so its own object's mask may
+      // not amputate hands, legs, or half a reclining body.
+      if ((item.kind === 'plateLayer' || item.kind === 'propFront') && mountedObjectIds.has(item.objectId)) continue;
       if (item.kind === 'plateLayer') drawPlateLayer(ctx, plate, item.layer);
       if (item.kind === 'propBack') drawPropLayer(ctx, this.assets, item.visual, false);
       if (item.kind === 'propFront') drawPropLayer(ctx, this.assets, item.visual, true);

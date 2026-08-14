@@ -1,4 +1,4 @@
-import { SCENES, WORLD_HEIGHT, clamp, distance, findPath, pointInsideHit, seededRandom } from './world-model.js';
+import { SCENES, WORLD_HEIGHT, clamp, distance, findPath, nearestWalkable, pointInsideHit, seededRandom } from './world-model.js';
 import { WorldRenderer } from './world-renderer.js';
 import { SpeechRuntime } from './speech-runtime.js';
 
@@ -34,7 +34,7 @@ function makeActor(id, spawn, extra) {
   return Object.assign({
     id, x: spawn.x, z: spawn.z, path: [], afterMove: null,
     dir: id === 'hubby' ? -1 : 1, walking: false, step: 0,
-    action: null, mount: null, nextThink: 0
+    travelDir: null, action: null, mount: null, nextThink: 0
   }, extra);
 }
 
@@ -147,6 +147,7 @@ function resize() {
 function stopActor(actor) {
   actor.path.length = 0;
   actor.walking = false;
+  actor.travelDir = null;
   actor.afterMove = null;
 }
 function walkActor(actor, target, afterMove, options = {}) {
@@ -155,8 +156,14 @@ function walkActor(actor, target, afterMove, options = {}) {
     actor.mount = null;
   }
   if (actor === player || (state.princessCarry.active && actor === hubby)) state.cameraFree = false;
+  const journeyDx = target.x - actor.x;
+  actor.travelDir = Math.abs(journeyDx) > 24 ? (journeyDx > 0 ? 1 : -1) : null;
+  if (actor.travelDir) actor.dir = actor.travelDir;
   actor.path = findPath(scene, actor, target);
   actor.afterMove = afterMove || null;
+  if (!actor.path.length) {
+    actor.travelDir = null;
+  }
   if (!actor.path.length && afterMove) {
     actor.afterMove = null;
     afterMove();
@@ -175,13 +182,17 @@ function updateActor(actor, delta) {
   const step = actor.speed * delta;
   actor.walking = true;
   actor.step += delta * (actor === naili ? 11 : 8.5);
-  if (Math.abs(dx) > 2) actor.dir = dx > 0 ? 1 : -1;
+  // A* may insert tiny left/right correction segments around furniture. Those
+  // are path geometry, not a request to flip the artwork every few pixels.
+  if (actor.travelDir) actor.dir = actor.travelDir;
+  else if (Math.abs(dx) > 18) actor.dir = dx > 0 ? 1 : -1;
   if (metric <= step + 1) {
     actor.x = target.x;
     actor.z = target.z;
     actor.path.shift();
     if (!actor.path.length) {
       actor.walking = false;
+      actor.travelDir = null;
       const callback = actor.afterMove;
       actor.afterMove = null;
       if (callback) callback();
@@ -608,6 +619,26 @@ function arriveAtObject(object) {
   if (choices.length === 1 && !carrying) choices[0].run();
   else showActions(object.label, choices, { kind: 'object', object });
 }
+
+function interactionRange(object) {
+  return object.interactionRadius || clamp(Math.max(138, object.w * .56), 138, 205);
+}
+
+function isNearObject(actor, object) {
+  return distance(actor, object) <= interactionRange(object);
+}
+
+function nearestApproachPoint(actor, object) {
+  const dx = actor.x - object.x;
+  const dz = (actor.z - object.z) * 520;
+  const metric = Math.max(1, Math.hypot(dx, dz));
+  const stopDistance = interactionRange(object) * .76;
+  return nearestWalkable(scene, {
+    x: object.x + dx / metric * stopDistance,
+    z: object.z + dz / metric * stopDistance / 520
+  });
+}
+
 function approachObject(object) {
   if (!state.princessCarry.active && (player.mount || state.swing.active)) {
     showHint('先点地板起身，再去碰别的东西。', 3200);
@@ -617,7 +648,14 @@ function approachObject(object) {
   if (!state.princessCarry.active) hideBubble();
   state.activeObjectId = object.id;
   const mover = state.princessCarry.active ? hubby : player;
-  walkActor(mover, object.socket, () => arriveAtObject(object));
+  // Nearby actors interact exactly where they stand. From farther away they
+  // approach the closest edge of the interaction envelope instead of snapping
+  // to one ceremonial socket shared by every direction of arrival.
+  if (isNearObject(mover, object)) {
+    arriveAtObject(object);
+    return;
+  }
+  walkActor(mover, nearestApproachPoint(mover, object), () => arriveAtObject(object));
 }
 function showNailiActions() {
   showActions('奶栗', [

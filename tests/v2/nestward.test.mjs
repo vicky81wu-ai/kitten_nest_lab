@@ -101,13 +101,18 @@ test('refined actors walk in frames while the camera supports drag and pinch ins
   const runtime = await read('../../v2/nestward/nestward.js');
   assert.match(renderer, /kittenWalk4/);
   assert.match(renderer, /hubbyWalk4/);
+  assert.match(renderer, /nailiWalk4/);
   assert.match(renderer, /nativeFacingByRole = \{ player: 1, hubby: -1, naili: 1 \}/);
   assert.match(renderer, /const direction = facing \* metrics\.nativeFacing/);
   assert.match(renderer, /Math\.floor\(actor\.step \* \.72\) % 4 \+ 1/);
   assert.doesNotMatch(renderer, /% 2 \? 4 : 2/);
   assert.match(renderer, /assets\.get\('hubbyCarryWalk1'\)/);
-  assert.match(renderer, /const split = \.53/);
-  assert.match(renderer, /const lowerSprite = state\.hubby\.walking \? metrics\.strideSprite : metrics\.sprite/);
+  assert.match(renderer, /hubbyCarryWalk3/);
+  assert.match(renderer, /% 3 \+ 1/);
+  assert.match(renderer, /const activeSprite = state\.hubby\.walking \? metrics\.activeSprite : metrics\.sprite/);
+  assert.doesNotMatch(renderer, /const split = \.53/);
+  assert.match(renderer, /drawCarryTattoo/);
+  assert.match(renderer, /fillText\('19\.8'/);
   assert.match(renderer, /imageSmoothingEnabled = true/);
   assert.match(runtime, /activePointers/);
   assert.match(runtime, /beginPinch/);
@@ -190,12 +195,44 @@ test('actor body zones, carry walking, and immersive viewport sizing remain expl
   assert.match(runtime, /脱下月光翅膀/);
   assert.match(renderer, /hubby-carry-walk-1\.png/);
   assert.match(renderer, /hubby-carry-walk-2\.png/);
+  assert.match(renderer, /hubby-carry-walk-passing\.png/);
+  assert.match(renderer, /naili-walk-4\.png/);
   assert.match(renderer, /state\.hubby\.dir \|\| 1\) \* nativeFacingByRole\.hubby/);
   assert.doesNotMatch(renderer, /drawGardenGate/);
   assert.match(renderer, /parentElement\?\.getBoundingClientRect/);
-  assert.doesNotMatch(css, /height:100dvh/);
+  assert.match(css, /html,body\{[^}]*height:100vh;height:100dvh;height:100lvh;[^}]*min-height:100vh;min-height:100dvh;min-height:100lvh/);
+  assert.match(css, /\.nestward-shell\{[^}]*height:100vh;height:100dvh;height:100lvh;/);
   assert.match(css, /--kitten-voice:#d85b86/);
   assert.match(css, /pointer-events:auto/);
+});
+
+test('mounted composites outrank their own occlusion while nearby interaction does not snap to a socket', async () => {
+  const renderer = await read('../../v2/nestward/world-renderer.js');
+  const runtime = await read('../../v2/nestward/nestward.js');
+  assert.match(renderer, /mountedObjectIds/);
+  assert.match(renderer, /mountedObjectIds\.has\(item\.objectId\)/);
+  assert.match(runtime, /function isNearObject/);
+  assert.match(runtime, /function nearestApproachPoint/);
+  assert.match(runtime, /if \(isNearObject\(mover, object\)\)/);
+  assert.doesNotMatch(runtime, /walkActor\(mover, object\.socket/);
+});
+
+test('authored red-line floor corridors stay walkable indoors and outdoors', async () => {
+  const { SCENES, isBlocked } = await import('../../v2/nestward/world-model.js');
+  const indoorFloor = [
+    { x: 300, z: .38 },
+    { x: 610, z: .37 },
+    { x: 900, z: .48 },
+    { x: 1300, z: .48 }
+  ];
+  const outdoorFloor = [
+    { x: 850, z: .48 },
+    { x: 790, z: .52 },
+    { x: 1185, z: .52 },
+    { x: 1290, z: .48 }
+  ];
+  for (const point of indoorFloor) assert.equal(isBlocked(SCENES.indoor, point), false, `indoor ${point.x},${point.z} is blocked`);
+  for (const point of outdoorFloor) assert.equal(isBlocked(SCENES.outdoor, point), false, `outdoor ${point.x},${point.z} is blocked`);
 });
 
 test('garden interaction silhouettes leave the central path as real floor', async () => {
@@ -206,7 +243,7 @@ test('garden interaction silhouettes leave the central path as real floor', asyn
     assert.equal(swallowedBy, undefined, `central path point ${point.x},${point.y} was swallowed by ${swallowedBy?.id}`);
   }
   const swing = interactive.find((object) => object.id === 'swing');
-  assert.equal(swing.swingMount.renderY, 510);
+  assert.equal(swing.swingMount.renderY, 500);
 });
 
 test('an early ResizeObserver callback cannot outrun Nestward asset preload', async () => {

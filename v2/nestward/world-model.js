@@ -15,23 +15,29 @@ export function seededRandom(seed = 198) {
 const indoorObjects = [
   {
     id: 'bed', label: '床', x: 245, z: .31, w: 470, d: .21,
-    hit: [0, 270, 470, 650], block: [0, 470, .04, .31], socket: { x: 430, z: .42 },
+    hit: [0, 270, 470, 620],
+    hitPolygons: [[[0, 286], [404, 286], [454, 588], [0, 588]]],
+    block: [0, 430, .04, .26], socket: { x: 430, z: .42 }, interactionRadius: 190,
     slots: { kitten: { x: 405, z: .44 }, hubby: { x: 470, z: .44 } },
     mounts: {
-      kittenSit: { x: 348, z: .325, renderY: 570, pose: 'bed-sit', height: 188, facing: -1 },
-      kittenLie: { x: 248, z: .285, renderY: 474, pose: 'bed-lie', width: 310, facing: 1 },
-      kittenLean: { x: 352, z: .326, renderY: 568, pose: 'bed-lean', height: 184, facing: -1 },
-      hubbySit: { x: 236, z: .305, renderY: 566, pose: 'bed-sit', height: 218, facing: 1 },
-      hubbyLean: { x: 230, z: .304, renderY: 566, pose: 'bed-lean', height: 212, facing: 1 }
+      kittenSit: { objectId: 'bed', x: 292, z: .325, renderY: 570, pose: 'bed-sit', height: 188, facing: -1 },
+      kittenLie: { objectId: 'bed', x: 248, z: .285, renderY: 474, pose: 'bed-lie', width: 310, facing: 1 },
+      kittenLean: { objectId: 'bed', x: 300, z: .326, renderY: 568, pose: 'bed-lean', height: 184, facing: -1 },
+      hubbySit: { objectId: 'bed', x: 222, z: .305, renderY: 566, pose: 'bed-sit', height: 218, facing: 1 },
+      hubbyLean: { objectId: 'bed', x: 218, z: .304, renderY: 566, pose: 'bed-lean', height: 212, facing: 1 }
     }
   },
   { id: 'windowSeat', label: '窗边', x: 300, z: .2, w: 245, d: .12, hit: [185, 90, 410, 365], socket: { x: 470, z: .42 }, slots: { kitten: { x: 285, z: .42 }, hubby: { x: 350, z: .42 } } },
-  { id: 'wardrobe', label: '衣柜', x: 535, z: .25, w: 235, d: .18, hit: [420, 105, 640, 560], block: [420, 640, .04, .3], socket: { x: 610, z: .43 } },
-  { id: 'sofa', label: '沙发', x: 970, z: .3, w: 345, d: .2, hit: [790, 320, 1145, 590], block: [790, 1145, .04, .31], socket: { x: 810, z: .43 }, slots: { kitten: { x: 930, z: .47 }, hubby: { x: 1000, z: .47 } } },
-  { id: 'coffeeTable', label: '茶几', x: 1000, z: .51, w: 265, d: .14, hit: [865, 490, 1130, 690], block: [865, 1130, .17, .4], socket: { x: 1000, z: .5 } },
+  {
+    id: 'wardrobe', label: '衣柜', x: 535, z: .25, w: 235, d: .18,
+    hit: [420, 105, 640, 530], hitPolygons: [[[430, 118], [634, 118], [634, 510], [430, 510]]],
+    block: [440, 630, .04, .245], socket: { x: 610, z: .43 }, interactionRadius: 176
+  },
+  { id: 'sofa', label: '沙发', x: 970, z: .3, w: 345, d: .2, hit: [790, 320, 1145, 580], block: [800, 1135, .04, .27], socket: { x: 810, z: .43 }, slots: { kitten: { x: 930, z: .47 }, hubby: { x: 1000, z: .47 } } },
+  { id: 'coffeeTable', label: '茶几', x: 1000, z: .51, w: 265, d: .14, hit: [865, 490, 1130, 650], block: [880, 1120, .18, .33], socket: { x: 1000, z: .5 } },
   {
     id: 'readingChair', label: '绿绒阅读椅', x: 720, z: .43, w: 210, d: .18,
-    hit: [610, 425, 830, 735], block: [670, 770, .2, .47], socket: { x: 855, z: .56 },
+    hit: [610, 425, 830, 715], block: [676, 764, .24, .43], socket: { x: 855, z: .56 }, interactionRadius: 182,
     visual: {
       asset: 'readingChair', x: 615, y: 430, width: 210, height: 291, backZ: .29, frontZ: .5,
       frontPolygons: [
@@ -40,13 +46,13 @@ const indoorObjects = [
       ]
     },
     mounts: {
-      kittenSit: { x: 720, z: .43, renderY: 681, pose: 'bed-sit', height: 231, facing: -1 },
-      hubbySit: { x: 720, z: .43, renderY: 681, pose: 'bed-sit', height: 265, facing: 1 }
+      kittenSit: { objectId: 'readingChair', x: 720, z: .43, renderY: 681, pose: 'bed-sit', height: 231, facing: -1 },
+      hubbySit: { objectId: 'readingChair', x: 720, z: .43, renderY: 681, pose: 'bed-sit', height: 265, facing: 1 }
     }
   },
-  { id: 'desk', label: '小书桌', x: 1250, z: .32, w: 245, d: .18, hit: [1125, 330, 1370, 620], block: [1125, 1370, .04, .33], socket: { x: 1240, z: .39 } },
+  { id: 'desk', label: '小书桌', x: 1250, z: .32, w: 245, d: .18, hit: [1125, 330, 1370, 582], block: [1135, 1360, .04, .28], socket: { x: 1240, z: .39 } },
   { id: 'board', label: '留言墙', x: 1240, z: .11, w: 210, d: .03, hit: [1135, 170, 1350, 390], socket: { x: 1200, z: .39 } },
-  { id: 'door', label: '院门', x: 1440, z: .26, w: 175, d: .12, hit: [1365, 135, 1535, 625], socket: { x: 1370, z: .39 }, direct: true }
+  { id: 'door', label: '院门', x: 1440, z: .26, w: 175, d: .12, hit: [1365, 135, 1535, 595], socket: { x: 1370, z: .39 }, interactionRadius: 160, direct: true }
 ];
 
 const outdoorObjects = [
@@ -57,7 +63,7 @@ const outdoorObjects = [
     id: 'swing', label: '秋千', x: 710, z: .34, w: 210, d: .2,
     hit: [605, 260, 820, 560], socket: { x: 870, z: .19 },
     hitPolygons: [[[605, 260], [820, 260], [820, 486], [605, 486]]],
-    swingMount: { x: 754, renderY: 510, height: 135, facing: -1 },
+    swingMount: { x: 754, renderY: 500, height: 135, facing: -1 },
     slots: { hubbyPush: { x: 840, z: .19 } }
   },
   {
@@ -72,14 +78,28 @@ const outdoorObjects = [
     hitPolygons: [[[875, 596], [1088, 574], [1110, 735], [850, 735]]],
     block: [900, 1110, .36, .55], socket: { x: 940, z: .68 }, slots: { hubbyServe: { x: 895, z: .67 } }
   },
-  { id: 'fountain', label: '许愿喷泉', x: 1080, z: .38, w: 285, d: .2, hit: [935, 285, 1230, 625], block: [935, 1230, .03, .38], socket: { x: 1145, z: .52 } },
+  {
+    id: 'fountain', label: '许愿喷泉', x: 1080, z: .38, w: 285, d: .2,
+    hit: [935, 285, 1230, 590],
+    hitPolygons: [[[1000, 286], [1168, 286], [1216, 470], [1192, 568], [974, 568], [944, 470]]],
+    block: [965, 1200, .03, .31], socket: { x: 1145, z: .52 }, interactionRadius: 195
+  },
   {
     id: 'gardenGate', label: '花园门', x: 786, z: .18, w: 150, d: .08,
-    hit: [710, 250, 870, 495], hitPolygons: [[[728, 250], [850, 250], [850, 438], [728, 438]]],
+    hit: [710, 250, 870, 455], hitPolygons: [[[744, 266], [834, 266], [834, 420], [744, 420]]],
     socket: { x: 790, z: .68 }, stateKey: 'gardenGateOpen', futureExit: 'orchardPath'
   },
-  { id: 'pond', label: '萤火池塘', x: 1360, z: .63, w: 350, d: .17, hit: [1180, 570, 1535, 875], block: [1180, 1536, .42, .79], socket: { x: 1135, z: .7 }, slots: { naili: { x: 1110, z: .74 } } },
-  { id: 'bower', label: '藤架深处', x: 1370, z: .34, w: 300, d: .2, hit: [1220, 250, 1535, 570], block: [1220, 1536, .03, .24], socket: { x: 1290, z: .36 }, slots: { kitten: { x: 1325, z: .36 }, hubby: { x: 1390, z: .36 } } }
+  {
+    id: 'pond', label: '萤火池塘', x: 1385, z: .67, w: 300, d: .14,
+    hit: [1190, 610, 1535, 875],
+    hitPolygons: [[[1270, 610], [1535, 570], [1535, 875], [1192, 875], [1192, 720]]],
+    block: [1270, 1536, .57, .79], socket: { x: 1135, z: .7 }, slots: { naili: { x: 1110, z: .74 } }
+  },
+  {
+    id: 'bower', label: '藤架深处', x: 1390, z: .3, w: 260, d: .17,
+    hit: [1245, 260, 1535, 525], hitPolygons: [[[1260, 272], [1535, 250], [1535, 505], [1260, 505]]],
+    block: [1270, 1536, .03, .2], socket: { x: 1290, z: .36 }, slots: { kitten: { x: 1325, z: .36 }, hubby: { x: 1390, z: .36 } }
+  }
 ];
 
 export const SCENES = {
@@ -95,14 +115,13 @@ export const SCENES = {
     objects: indoorObjects,
     actorHeights: { player: 257, hubby: 294, naili: 76 },
     foregroundLayers: [{
-      id: 'bed-front', z: .35,
+      id: 'bed-front', objectId: 'bed', z: .35,
       polygons: [[[0, 482], [414, 452], [470, 650], [0, 650]]]
     }],
     obstacles: [
       ...indoorObjects.flatMap((object) => object.block ? [{ x1: object.block[0], x2: object.block[1], z1: object.block[2], z2: object.block[3] }] : []),
-      { x1: 640, x2: 805, z1: .04, z2: .31 },
-      { x1: 0, x2: 215, z1: .43, z2: .98 },
-      { x1: 1150, x2: 1536, z1: .46, z2: .98 }
+      { x1: 650, x2: 795, z1: .04, z2: .27 },
+      { x1: 0, x2: 112, z1: .65, z2: .98 }
     ]
   },
   outdoor: {
@@ -135,7 +154,7 @@ export function actorScale(z) {
   return .72 + z * .31;
 }
 
-export function isBlocked(scene, point, paddingX = 30, paddingZ = .045) {
+export function isBlocked(scene, point, paddingX = 20, paddingZ = .03) {
   const bounds = scene.walkBounds || { x1: 70, x2: scene.width - 70, z1: .08, z2: .96 };
   if (point.x < bounds.x1 || point.x > bounds.x2 || point.z < bounds.z1 || point.z > bounds.z2) return true;
   return scene.obstacles.some((obstacle) => point.x >= obstacle.x1 - paddingX
