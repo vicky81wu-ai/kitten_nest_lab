@@ -186,3 +186,10 @@ test('actor body zones, carry walking, and immersive viewport sizing remain expl
   assert.match(css, /--kitten-voice:#d85b86/);
   assert.match(css, /pointer-events:auto/);
 });
+
+test('an early ResizeObserver callback cannot outrun Nestward asset preload', async () => {
+  const renderer = await read('../../v2/nestward/world-renderer.js');
+  assert.match(renderer, /this\.ready = false/);
+  assert.match(renderer, /this\.ready = true/);
+  assert.match(renderer, /if \(currentScene && this\.ready\) this\.ensureCache\(currentScene\)/);
+});

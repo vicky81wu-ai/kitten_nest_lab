@@ -273,6 +273,7 @@ export class WorldRenderer {
     this.ctx = canvas.getContext('2d', { alpha: false });
     this.cache = new Map();
     this.assets = new Map();
+    this.ready = false;
     this.cssWidth = innerWidth;
     this.cssHeight = innerHeight;
     this.dpr = 1;
@@ -282,9 +283,11 @@ export class WorldRenderer {
   }
 
   async preload() {
+    this.ready = false;
     const loaded = await Promise.all(Object.entries(assetSources).map(async ([key, source]) => [key, await loadBitmap(source)]));
     loaded.forEach(([key, bitmap]) => this.assets.set(key, bitmap));
     this.cache.clear();
+    this.ready = true;
   }
 
   resize(currentScene) {
@@ -299,7 +302,11 @@ export class WorldRenderer {
     this.ctx.imageSmoothingEnabled = true;
     this.baseScale = this.cssHeight / WORLD_HEIGHT;
     this.scale = this.baseScale * this.zoom;
-    if (currentScene) this.ensureCache(currentScene);
+    // ResizeObserver can fire as soon as the shell enters layout, before the
+    // world plates finish decoding. Resizing the backing canvas is safe at
+    // that point; cache construction is deferred until preload owns every
+    // required bitmap so first launch cannot fail on a harmless early resize.
+    if (currentScene && this.ready) this.ensureCache(currentScene);
   }
 
   setZoom(value) {
