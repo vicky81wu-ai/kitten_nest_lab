@@ -1,0 +1,17 @@
+{
+  "id": "/cloud",
+  "name": "Kitten Nest",
+  "short_name": "Kitten Nest",
+  "description": "A private little nest and the world around it.",
+  "start_url": "/cloud",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "portrait-primary",
+  "background_color": "#211713",
+  "theme_color": "#2b1718",
+  "icons": [
+    { "src": "/v2/icons/nest-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/v2/icons/nest-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

@@ -69,3 +69,54 @@ test('Nestward browser modules parse as JavaScript', () => {
     assert.equal(result.status, 0, `${file} failed syntax parsing:\n${result.stderr}`);
   }
 });
+
+test('Nestward uses one shared standalone PWA scope without creating a second home entry', async () => {
+  const nest = await read('../../v2/index.html');
+  const world = await read('../../v2/nestward/index.html');
+  const webmanifest = JSON.parse(await read('../../v2/manifest.webmanifest'));
+  assert.match(nest, /href="\/v2\/manifest\.webmanifest"/);
+  assert.match(world, /href="\/v2\/manifest\.webmanifest"/);
+  assert.equal(webmanifest.scope, '/');
+  assert.equal(webmanifest.start_url, '/cloud');
+  const manifest = JSON.parse(await read('../../v2/data/nest-manifest.v2.json'));
+  const entries = Object.values(manifest.objects).filter((object) => object.action?.target === '/v2/nestward/');
+  assert.deepEqual(entries.map((object) => object.id), ['home.nestwardEnterHot']);
+});
+
+test('the indoor bed is a mounted interaction with authored poses and foreground occlusion', async () => {
+  const { SCENES } = await import('../../v2/nestward/world-model.js');
+  const bed = SCENES.indoor.objects.find((object) => object.id === 'bed');
+  assert.equal(bed.mounts.kittenLie.pose, 'bed-lie');
+  assert.equal(bed.mounts.hubbyLean.pose, 'bed-lean');
+  assert.ok(SCENES.indoor.foregroundLayers.some((layer) => layer.id === 'bed-front'));
+  const renderer = await read('../../v2/nestward/world-renderer.js');
+  assert.match(renderer, /drawPlateLayer/);
+  assert.match(renderer, /kittenBedLie/);
+  assert.match(renderer, /hubbyBedLean/);
+  assert.doesNotMatch(renderer, /rotate\(-1\.28/);
+});
+
+test('refined actors walk in frames while the camera supports drag and pinch inspection', async () => {
+  const renderer = await read('../../v2/nestward/world-renderer.js');
+  const runtime = await read('../../v2/nestward/nestward.js');
+  assert.match(renderer, /kittenWalk4/);
+  assert.match(renderer, /hubbyWalk4/);
+  assert.match(renderer, /nativeFacingByRole = \{ player: 1, hubby: -1, naili: 1 \}/);
+  assert.match(renderer, /const direction = facing \* metrics\.nativeFacing/);
+  assert.match(renderer, /imageSmoothingEnabled = true/);
+  assert.match(runtime, /activePointers/);
+  assert.match(runtime, /beginPinch/);
+  assert.match(runtime, /state\.cameraFree = true/);
+  assert.match(runtime, /renderer\.actorScreenAnchor/);
+});
+
+test('future CG portals are opt-in long presses and the garden gate owns explicit state', async () => {
+  const runtime = await read('../../v2/nestward/nestward.js');
+  const { SCENES } = await import('../../v2/nestward/world-model.js');
+  assert.match(runtime, /object\?\.cgPortal\?\.route/);
+  assert.match(runtime, /object\.cgPortal\.holdMs \|\| 1100/);
+  assert.match(runtime, /gardenGateOpen/);
+  const gate = SCENES.outdoor.objects.find((object) => object.id === 'gardenGate');
+  assert.equal(gate.futureExit, 'orchardPath');
+  assert.equal(Object.values(SCENES).flatMap((scene) => scene.objects).some((object) => object.cgPortal), false);
+});

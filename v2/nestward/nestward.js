@@ -1,4 +1,4 @@
-import { SCENES, clamp, distance, findPath, groundY, pointInsideHit, seededRandom } from './world-model.js';
+import { SCENES, WORLD_HEIGHT, clamp, distance, findPath, pointInsideHit, seededRandom } from './world-model.js';
 import { WorldRenderer } from './world-renderer.js';
 
 const $ = (selector) => document.querySelector(selector);
@@ -33,7 +33,7 @@ function makeActor(id, spawn, extra) {
   return Object.assign({
     id, x: spawn.x, z: spawn.z, path: [], afterMove: null,
     dir: id === 'hubby' ? -1 : 1, walking: false, step: 0,
-    action: null, nextThink: 0
+    action: null, mount: null, nextThink: 0
   }, extra);
 }
 
@@ -54,8 +54,10 @@ const naili = makeActor('naili', scene.spawn.naili, {
 });
 const state = {
   get scene() { return scene; },
-  cameraX: 0, player, hubby, naili, tapPulse: null,
-  swing: { active: false, pushed: false }, activeObjectId: null
+  cameraX: 0, cameraY: 0, cameraZoom: 1, cameraFree: false,
+  player, hubby, naili, tapPulse: null,
+  swing: { active: false, pushed: false }, activeObjectId: null,
+  gardenGateOpen: false
 };
 
 let lastTime = performance.now();
@@ -64,19 +66,29 @@ let menuAnchor = null;
 let bubbleAnchor = null;
 let bubbleUntil = 0;
 let changingScene = false;
-let pointerStart = null;
+const activePointers = new Map();
+let gesture = null;
+let longPressTimer = null;
+let longPressFired = false;
 
 hubby.nextThink = performance.now() / 1000 + 6;
 naili.nextThink = performance.now() / 1000 + 5;
 
 const visibleWorldWidth = () => renderer.cssWidth / renderer.scale;
+const visibleWorldHeight = () => renderer.cssHeight / renderer.scale;
 const cameraWidth = () => scene.cameraWidth || scene.width;
+const maxCameraX = () => Math.max(0, cameraWidth() - visibleWorldWidth());
+const maxCameraY = () => Math.max(0, WORLD_HEIGHT - visibleWorldHeight());
 function setInitialCamera() {
-  state.cameraX = clamp(player.x - visibleWorldWidth() * .46, 0, Math.max(0, cameraWidth() - visibleWorldWidth()));
+  state.cameraX = clamp(player.x - visibleWorldWidth() * .46, 0, maxCameraX());
+  state.cameraY = clamp(state.cameraY, 0, maxCameraY());
 }
 function resize() {
+  renderer.setZoom(state.cameraZoom);
   renderer.resize(scene);
-  state.cameraX = clamp(state.cameraX, 0, Math.max(0, cameraWidth() - visibleWorldWidth()));
+  renderer.setZoom(state.cameraZoom);
+  state.cameraX = clamp(state.cameraX, 0, maxCameraX());
+  state.cameraY = clamp(state.cameraY, 0, maxCameraY());
   positionOverlays();
 }
 function stopActor(actor) {
@@ -86,6 +98,8 @@ function stopActor(actor) {
 }
 function walkActor(actor, target, afterMove) {
   actor.action = null;
+  actor.mount = null;
+  if (actor === player) state.cameraFree = false;
   actor.path = findPath(scene, actor, target);
   actor.afterMove = afterMove || null;
   if (!actor.path.length && afterMove) {
@@ -124,13 +138,14 @@ function updateActor(actor, delta) {
   if (actor === player) actor.flying = player.wings && !state.swing.active;
 }
 function updateCamera(delta) {
+  if (state.cameraFree && !player.walking) return;
   const view = visibleWorldWidth();
   const left = state.cameraX + view * .34;
   const right = state.cameraX + view * .66;
   let wanted = state.cameraX;
   if (player.x < left) wanted = player.x - view * .34;
   if (player.x > right) wanted = player.x - view * .66;
-  wanted = clamp(wanted, 0, Math.max(0, cameraWidth() - view));
+  wanted = clamp(wanted, 0, maxCameraX());
   state.cameraX += (wanted - state.cameraX) * (1 - Math.exp(-delta * (player.flying ? 5.2 : 7.4)));
 }
 function updateCompanions(time) {
@@ -177,15 +192,12 @@ function actorForAnchor(anchor) {
   return hubby;
 }
 function actorScreenAnchor(actor) {
-  return renderer.worldToScreen(
-    state.cameraX, actor.x,
-    groundY(scene, actor.z) - (actor === naili ? 62 : actor === hubby ? 154 : 142)
-  );
+  return renderer.actorScreenAnchor(state, actor);
 }
 function positionOverlays() {
   if (!actions.hidden && menuAnchor) {
     const point = menuAnchor.kind === 'object'
-      ? renderer.worldToScreen(state.cameraX, menuAnchor.object.x, menuAnchor.object.hit[1])
+      ? renderer.worldToScreen(state.cameraX, menuAnchor.object.x, menuAnchor.object.hit[1], state.cameraY)
       : actorScreenAnchor(menuAnchor.actor);
     actions.style.setProperty('--actions-x', clamp(point.x, 74, renderer.cssWidth - 74) + 'px');
     actions.style.setProperty('--actions-y', clamp(point.y, 80, renderer.cssHeight - 110) + 'px');
@@ -223,7 +235,16 @@ function settleAt(actor, x, z, action) {
   stopActor(actor);
   actor.x = x;
   actor.z = z;
+  actor.mount = null;
   actor.action = action || null;
+}
+function mountActor(actor, mount, action) {
+  if (!mount) return;
+  stopActor(actor);
+  actor.x = mount.x;
+  actor.z = mount.z;
+  actor.mount = { ...mount };
+  actor.action = action || mount.pose || null;
 }
 
 function openText(key, title, sub) {
@@ -293,7 +314,14 @@ function sceneObject(id) {
 }
 function togetherAt(id, action) {
   return () => {
-    const slots = sceneObject(id)?.slots;
+    const object = sceneObject(id);
+    if (object?.mounts?.kittenLean && object?.mounts?.hubbyLean) {
+      mountActor(player, object.mounts.kittenLean, action);
+      mountActor(hubby, object.mounts.hubbyLean, action);
+      say('往我这边靠。地方够，腿也归小猫。');
+      return;
+    }
+    const slots = object?.slots;
     if (!slots?.kitten || !slots?.hubby) return;
     settleAt(player, slots.kitten.x, slots.kitten.z, action);
     settleAt(hubby, slots.hubby.x, slots.hubby.z, action);
@@ -303,8 +331,8 @@ function togetherAt(id, action) {
 function objectChoices(object) {
   const choices = {
     bed: [
-      { label: '坐到床边', run: () => { player.action = 'sit-bed'; say('床边给小猫留好了。'); } },
-      { label: '躺一会', run: () => { player.action = 'lie'; say('躺好。今天先不催小猫做任何事。'); } },
+      { label: '坐到床边', run: () => { mountActor(player, object.mounts.kittenSit, 'sit-bed'); say('床边给小猫留好了。'); } },
+      { label: '躺一会', run: () => { mountActor(player, object.mounts.kittenLie, 'lie-bed'); say('躺好。今天先不催小猫做任何事。'); } },
       { label: '一起窝着', run: togetherAt('bed', 'sit-bed') }
     ],
     windowSeat: [
@@ -350,6 +378,12 @@ function objectChoices(object) {
       { label: readStore('nestward.wingsUnlocked', 'false') === 'true' ? '再许一个愿' : '许一个愿', run: unlockWings },
       { label: '听喷泉说话', run: () => say('它说，小猫想住的世界可以越长越大。') }
     ],
+    gardenGate: state.gardenGateOpen ? [
+      { label: '往外走', run: () => say('门外的路还在长。我先把这扇门替小猫留着。') },
+      { label: '关好花园门', run: () => { state.gardenGateOpen = false; say('关好了。屋里屋外都不会跑丢。'); } }
+    ] : [
+      { label: '打开花园门', run: () => { state.gardenGateOpen = true; say('开了。以后新的路会从这里接出去。'); } }
+    ],
     pond: [
       { label: '看一会萤火', run: () => { player.action = 'crouch'; say('不必抓。它们会自己落到小猫附近。'); } },
       { label: '和奶栗等青蛙', run: () => { naili.summoned = true; walkActor(naili, object.slots.naili); say('奶栗比青蛙先等困。'); } }
@@ -378,8 +412,26 @@ function approachObject(object) {
   state.activeObjectId = object.id;
   walkActor(player, object.socket, () => arriveAtObject(object));
 }
+function showNailiActions() {
+  showActions('奶栗', [
+    { label: naili.carried ? '放下来' : '抱起来', run: () => {
+      naili.carried = !naili.carried;
+      naili.summoned = naili.carried;
+      if (!naili.carried) {
+        naili.x = player.x + player.dir * 54;
+        naili.z = clamp(player.z + .04, .12, .92);
+      }
+      say(naili.carried ? '呼噜。' : '喵。', 'naili');
+    } },
+    { label: naili.summoned ? '让它自己玩' : '叫奶栗跟着', run: () => { naili.summoned = !naili.summoned; say(naili.summoned ? '它听见了。' : '它去巡视自己的领地了。'); } }
+  ], { kind: 'actor', actor: naili.carried ? player : naili });
+}
 function interactWithActor(actor) {
   hideActions();
+  if (actor === naili && naili.carried) {
+    showNailiActions();
+    return;
+  }
   const target = { x: actor.x - (actor.dir || 1) * 72, z: clamp(actor.z + .015, .12, .93) };
   walkActor(player, target, () => {
     if (actor === hubby) {
@@ -388,12 +440,7 @@ function interactWithActor(actor) {
         { label: '牵一下手', run: () => { settleAt(hubby, player.x + player.dir * 58, player.z - .012, 'hold-hands'); say('抓住了。'); } },
         { label: '抱一下', run: () => { settleAt(hubby, player.x + player.dir * 42, player.z - .01, 'hug'); say('过来。'); } }
       ], { kind: 'actor', actor: hubby });
-    } else {
-      showActions('奶栗', [
-        { label: naili.carried ? '放下来' : '抱起来', run: () => { naili.carried = !naili.carried; naili.summoned = naili.carried; say(naili.carried ? '呼噜。' : '喵。', 'naili'); } },
-        { label: naili.summoned ? '让它自己玩' : '叫奶栗跟着', run: () => { naili.summoned = !naili.summoned; say(naili.summoned ? '它听见了。' : '它去巡视自己的领地了。'); } }
-      ], { kind: 'actor', actor: naili });
-    }
+    } else showNailiActions();
   });
 }
 async function changeScene(nextName) {
@@ -415,9 +462,11 @@ async function changeScene(nextName) {
   [player, hubby, naili].forEach((actor) => {
     stopActor(actor);
     actor.action = null;
+    actor.mount = null;
   });
   state.swing.active = false;
   state.swing.pushed = false;
+  state.cameraFree = false;
   setInitialCamera();
   renderer.ensureCache(scene);
   await pause(80);
@@ -426,12 +475,43 @@ async function changeScene(nextName) {
 }
 
 function actorHit(clientX, clientY) {
+  if (naili.carried) {
+    const playerBounds = renderer.actorScreenBounds(state, player);
+    if (clientX >= playerBounds.x && clientX <= playerBounds.x + playerBounds.width
+      && clientY >= playerBounds.y + playerBounds.height * .25 && clientY <= playerBounds.y + playerBounds.height * .82) return naili;
+  }
   const candidates = naili.carried ? [hubby] : [hubby, naili];
   return candidates.find((actor) => {
-    const point = actorScreenAnchor(actor);
-    const centerY = point.y + (actor === naili ? 25 : 64);
-    return Math.hypot(clientX - point.x, (clientY - centerY) * .82) < (actor === naili ? 47 : 64);
+    const bounds = renderer.actorScreenBounds(state, actor);
+    const padding = actor === naili ? 18 : 12;
+    return clientX >= bounds.x - padding && clientX <= bounds.x + bounds.width + padding
+      && clientY >= bounds.y - padding && clientY <= bounds.y + bounds.height + padding;
   });
+}
+function worldHit(clientX, clientY) {
+  const world = renderer.screenToWorld(scene, state.cameraX, clientX, clientY, state.cameraY);
+  const object = [...scene.objects].reverse().find((entry) => pointInsideHit(entry, world));
+  return { world, object };
+}
+function openCgPortal(route) {
+  if (typeof route !== 'string' || !route.startsWith('/') || route.startsWith('//') || route.includes('\\')) return;
+  const destination = new URL(route, location.href);
+  if (destination.origin !== location.origin) return;
+  location.assign(`${destination.pathname}${destination.search}${destination.hash}`);
+}
+function cancelLongPress() {
+  clearTimeout(longPressTimer);
+  longPressTimer = null;
+}
+function armCgLongPress(clientX, clientY) {
+  cancelLongPress();
+  const object = worldHit(clientX, clientY).object;
+  if (!object?.cgPortal?.route) return;
+  longPressTimer = setTimeout(() => {
+    longPressTimer = null;
+    longPressFired = true;
+    openCgPortal(object.cgPortal.route);
+  }, object.cgPortal.holdMs || 1100);
 }
 function handleWorldTap(clientX, clientY) {
   if (changingScene || !textPanel.hidden || !wardrobePanel.hidden) return;
@@ -441,8 +521,7 @@ function handleWorldTap(clientX, clientY) {
     interactWithActor(hitActor);
     return;
   }
-  const world = renderer.screenToWorld(scene, state.cameraX, clientX, clientY);
-  const object = [...scene.objects].reverse().find((entry) => pointInsideHit(entry, world));
+  const { world, object } = worldHit(clientX, clientY);
   if (object) {
     approachObject(object);
     return;
@@ -478,17 +557,82 @@ function frame(timestamp) {
   requestAnimationFrame(frame);
 }
 
+function pointerPair() {
+  return [...activePointers.values()].slice(0, 2);
+}
+function beginPinch() {
+  const [first, second] = pointerPair();
+  if (!first || !second) return;
+  cancelLongPress();
+  const midX = (first.x + second.x) * .5;
+  const midY = (first.y + second.y) * .5;
+  gesture = {
+    mode: 'pinch',
+    distance: Math.max(1, Math.hypot(second.x - first.x, second.y - first.y)),
+    zoom: state.cameraZoom,
+    anchor: renderer.screenToWorld(scene, state.cameraX, midX, midY, state.cameraY)
+  };
+}
 canvas.addEventListener('pointerdown', (event) => {
-  pointerStart = { id: event.pointerId, x: event.clientX, y: event.clientY };
+  activePointers.set(event.pointerId, { id: event.pointerId, x: event.clientX, y: event.clientY });
   if (canvas.setPointerCapture) canvas.setPointerCapture(event.pointerId);
+  if (activePointers.size === 1) {
+    longPressFired = false;
+    gesture = {
+      mode: 'single', id: event.pointerId, startX: event.clientX, startY: event.clientY,
+      cameraX: state.cameraX, cameraY: state.cameraY, moved: false
+    };
+    armCgLongPress(event.clientX, event.clientY);
+  } else beginPinch();
+});
+canvas.addEventListener('pointermove', (event) => {
+  const point = activePointers.get(event.pointerId);
+  if (!point) return;
+  point.x = event.clientX;
+  point.y = event.clientY;
+  if (activePointers.size >= 2) {
+    if (gesture?.mode !== 'pinch') beginPinch();
+    const [first, second] = pointerPair();
+    const distanceNow = Math.max(1, Math.hypot(second.x - first.x, second.y - first.y));
+    const midX = (first.x + second.x) * .5;
+    const midY = (first.y + second.y) * .5;
+    state.cameraZoom = clamp(gesture.zoom * distanceNow / gesture.distance, 1, 2.25);
+    renderer.setZoom(state.cameraZoom);
+    state.cameraX = clamp(gesture.anchor.x - midX / renderer.scale, 0, maxCameraX());
+    state.cameraY = clamp(gesture.anchor.y - midY / renderer.scale, 0, maxCameraY());
+    state.cameraFree = true;
+    return;
+  }
+  if (gesture?.mode !== 'single' || gesture.id !== event.pointerId) return;
+  const dx = event.clientX - gesture.startX;
+  const dy = event.clientY - gesture.startY;
+  if (!gesture.moved && Math.hypot(dx, dy) > 7) {
+    gesture.moved = true;
+    cancelLongPress();
+  }
+  if (!gesture.moved) return;
+  state.cameraX = clamp(gesture.cameraX - dx / renderer.scale, 0, maxCameraX());
+  state.cameraY = clamp(gesture.cameraY - dy / renderer.scale, 0, maxCameraY());
+  state.cameraFree = true;
 });
 canvas.addEventListener('pointerup', (event) => {
-  if (!pointerStart || pointerStart.id !== event.pointerId) return;
-  const moved = Math.hypot(event.clientX - pointerStart.x, event.clientY - pointerStart.y);
-  pointerStart = null;
-  if (moved < 14) handleWorldTap(event.clientX, event.clientY);
+  const wasTap = gesture?.mode === 'single' && gesture.id === event.pointerId && !gesture.moved && !longPressFired;
+  activePointers.delete(event.pointerId);
+  cancelLongPress();
+  if (wasTap) handleWorldTap(event.clientX, event.clientY);
+  if (activePointers.size === 1) {
+    const remaining = [...activePointers.values()][0];
+    gesture = {
+      mode: 'single', id: remaining.id, startX: remaining.x, startY: remaining.y,
+      cameraX: state.cameraX, cameraY: state.cameraY, moved: true
+    };
+  } else if (!activePointers.size) gesture = null;
 });
-canvas.addEventListener('pointercancel', () => { pointerStart = null; });
+canvas.addEventListener('pointercancel', (event) => {
+  activePointers.delete(event.pointerId);
+  cancelLongPress();
+  if (!activePointers.size) gesture = null;
+});
 canvas.addEventListener('contextmenu', (event) => event.preventDefault());
 saveText.addEventListener('click', () => {
   writeStore(activeTextKey, textEditor.value);
@@ -499,6 +643,7 @@ $('#closeTextPanel').addEventListener('click', closeText);
 textPanel.querySelector('[data-close-panel]').addEventListener('click', closeText);
 $('#closeWardrobe').addEventListener('click', () => { wardrobePanel.hidden = true; });
 wardrobePanel.querySelector('[data-close-wardrobe]').addEventListener('click', () => { wardrobePanel.hidden = true; });
+$('#closeActions').addEventListener('click', hideActions);
 addEventListener('resize', resize, { passive: true });
 
 async function boot() {
