@@ -19,7 +19,7 @@ const indoorObjects = [
     slots: { kitten: { x: 405, z: .44 }, hubby: { x: 470, z: .44 } },
     mounts: {
       kittenSit: { x: 348, z: .325, renderY: 570, pose: 'bed-sit', height: 188, facing: -1 },
-      kittenLie: { x: 248, z: .285, renderY: 474, pose: 'bed-lie', width: 338, facing: 1 },
+      kittenLie: { x: 248, z: .285, renderY: 474, pose: 'bed-lie', width: 310, facing: 1 },
       kittenLean: { x: 352, z: .326, renderY: 568, pose: 'bed-lean', height: 184, facing: -1 },
       hubbySit: { x: 236, z: .305, renderY: 566, pose: 'bed-sit', height: 218, facing: 1 },
       hubbyLean: { x: 230, z: .304, renderY: 566, pose: 'bed-lean', height: 212, facing: 1 }
@@ -29,6 +29,22 @@ const indoorObjects = [
   { id: 'wardrobe', label: '衣柜', x: 535, z: .25, w: 235, d: .18, hit: [420, 105, 640, 560], block: [420, 640, .04, .3], socket: { x: 610, z: .43 } },
   { id: 'sofa', label: '沙发', x: 970, z: .3, w: 345, d: .2, hit: [790, 320, 1145, 590], block: [790, 1145, .04, .31], socket: { x: 810, z: .43 }, slots: { kitten: { x: 930, z: .47 }, hubby: { x: 1000, z: .47 } } },
   { id: 'coffeeTable', label: '茶几', x: 1000, z: .51, w: 265, d: .14, hit: [865, 490, 1130, 690], block: [865, 1130, .17, .4], socket: { x: 1000, z: .5 } },
+  {
+    id: 'readingChair', label: '绿绒阅读椅', x: 720, z: .43, w: 210, d: .18,
+    hit: [610, 425, 830, 735], block: [670, 770, .2, .47], socket: { x: 855, z: .56 },
+    visual: {
+      asset: 'readingChair', x: 615, y: 430, width: 210, height: 291, backZ: .29, frontZ: .5,
+      frontPolygons: [
+        [[615, 545], [676, 548], [680, 675], [615, 690]],
+        [[764, 548], [825, 545], [825, 690], [760, 675]],
+        [[646, 610], [794, 610], [800, 689], [640, 689]]
+      ]
+    },
+    mounts: {
+      kittenSit: { x: 720, z: .43, renderY: 681, pose: 'bed-sit', height: 231, facing: -1 },
+      hubbySit: { x: 720, z: .43, renderY: 681, pose: 'bed-sit', height: 265, facing: 1 }
+    }
+  },
   { id: 'desk', label: '小书桌', x: 1250, z: .32, w: 245, d: .18, hit: [1125, 330, 1370, 620], block: [1125, 1370, .04, .33], socket: { x: 1240, z: .39 } },
   { id: 'board', label: '留言墙', x: 1240, z: .11, w: 210, d: .03, hit: [1135, 170, 1350, 390], socket: { x: 1200, z: .39 } },
   { id: 'door', label: '院门', x: 1440, z: .26, w: 175, d: .12, hit: [1365, 135, 1535, 625], socket: { x: 1370, z: .39 }, direct: true }
@@ -38,7 +54,12 @@ const outdoorObjects = [
   { id: 'door', label: '回屋', x: 210, z: .31, w: 210, d: .15, hit: [90, 230, 310, 615], socket: { x: 360, z: .43 }, direct: true },
   { id: 'mailbox', label: '邮箱', x: 365, z: .41, w: 125, d: .12, hit: [300, 430, 435, 650], block: [300, 435, .04, .35], socket: { x: 455, z: .54 } },
   { id: 'bench', label: '树下长椅', x: 500, z: .36, w: 205, d: .16, hit: [405, 350, 610, 555], block: [405, 610, .04, .27], socket: { x: 515, z: .5 }, slots: { kitten: { x: 460, z: .5 }, hubby: { x: 510, z: .5 } } },
-  { id: 'swing', label: '秋千', x: 710, z: .34, w: 210, d: .2, hit: [605, 260, 820, 560], socket: { x: 870, z: .19 }, slots: { hubbyPush: { x: 840, z: .19 } } },
+  {
+    id: 'swing', label: '秋千', x: 710, z: .34, w: 210, d: .2,
+    hit: [605, 260, 820, 560], socket: { x: 870, z: .19 },
+    swingMount: { x: 754, renderY: 520, height: 135, facing: -1 },
+    slots: { hubbyPush: { x: 840, z: .19 } }
+  },
   { id: 'garden', label: '花圃', x: 720, z: .53, w: 325, d: .18, hit: [550, 500, 885, 760], block: [550, 885, .26, .58], socket: { x: 610, z: .69 }, slots: { naili: { x: 760, z: .69 } } },
   { id: 'teaTable', label: '院子小桌', x: 965, z: .57, w: 250, d: .16, hit: [840, 520, 1110, 735], block: [840, 1110, .28, .55], socket: { x: 940, z: .68 }, slots: { hubbyServe: { x: 895, z: .67 } } },
   { id: 'fountain', label: '许愿喷泉', x: 1080, z: .38, w: 285, d: .2, hit: [935, 285, 1230, 625], block: [935, 1230, .03, .38], socket: { x: 1145, z: .52 } },
@@ -61,7 +82,7 @@ export const SCENES = {
       fromOutdoor: { player: { x: 1345, z: .47 }, hubby: { x: 1270, z: .52 }, naili: { x: 1220, z: .64 } }
     },
     objects: indoorObjects,
-    actorHeights: { player: 190, hubby: 218, naili: 76 },
+    actorHeights: { player: 257, hubby: 294, naili: 76 },
     foregroundLayers: [{
       id: 'bed-front', z: .35,
       polygons: [[[0, 482], [414, 452], [470, 650], [0, 650]]]

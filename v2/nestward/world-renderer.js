@@ -19,7 +19,10 @@ const assetSources = {
   hubbyBedSit: './assets/characters/hubby-bed-sit.png',
   hubbyBedLie: './assets/characters/hubby-bed-lie.png',
   hubbyBedLean: './assets/characters/hubby-bed-lean.png',
-  nailiIdle: './assets/characters/naili-idle.png'
+  hubbyCarryWalk1: './assets/characters/hubby-carry-walk-1.png',
+  hubbyCarryWalk2: './assets/characters/hubby-carry-walk-2.png',
+  nailiIdle: './assets/characters/naili-idle.png',
+  readingChair: './assets/props/reading-chair.png'
 };
 
 // Source artwork is normalized at render time: Kitten/Naili face right,
@@ -86,7 +89,11 @@ function poseAssetKey(actor) {
   if (pose === 'bed-sit') return `${prefix}BedSit`;
   if (pose === 'bed-lie') return `${prefix}BedLie`;
   if (pose === 'bed-lean') return `${prefix}BedLean`;
-  if (actor.walking) return `${prefix}Walk${Math.floor(actor.step * .72) % 4 + 1}`;
+  // The first generated walk sheet mixed two incompatible viewing angles.
+  // Frames 2/4 form the stable directional pair; mirroring the whole figure
+  // supplies the opposite travel direction without alternating his feet
+  // between left- and right-facing artwork.
+  if (actor.walking) return `${prefix}Walk${Math.floor(actor.step * .72) % 2 ? 4 : 2}`;
   return `${prefix}Idle`;
 }
 
@@ -170,6 +177,49 @@ function drawSpriteNaili(ctx, assets, actor, scene, time) {
   ctx.restore();
 }
 
+function carryMetrics(assets, scene, state) {
+  const frame = Math.floor(state.hubby.step * .72) % 2 + 1;
+  const sprite = assets.get(`hubbyCarryWalk${frame}`);
+  const perspective = actorScale(state.hubby.z) / actorScale(.62);
+  const height = (scene.actorHeights?.hubby || 218) * 1.12 * perspective;
+  return {
+    sprite,
+    width: height * (sprite.width / sprite.height),
+    height,
+    x: state.hubby.x,
+    y: groundY(scene, state.hubby.z)
+  };
+}
+
+function drawPrincessCarry(ctx, assets, state) {
+  const metrics = carryMetrics(assets, state.scene, state);
+  ellipse(ctx, metrics.x, metrics.y + 2, metrics.height * .17, metrics.height * .045, 'rgba(40,23,20,.23)');
+  ctx.save();
+  ctx.translate(metrics.x, metrics.y);
+  // Carry frames share Hubby's left-facing source contract. Mirror the whole
+  // combined figure for rightward travel so neither head lags behind the feet.
+  ctx.scale((state.hubby.dir || 1) * nativeFacingByRole.hubby, 1);
+  ctx.drawImage(metrics.sprite, -metrics.width * .5, -metrics.height, metrics.width, metrics.height);
+  ctx.restore();
+  return metrics;
+}
+
+function drawPropLayer(ctx, assets, visual, front = false) {
+  const sprite = assets.get(visual.asset);
+  if (!sprite) return;
+  ctx.save();
+  if (front) {
+    ctx.beginPath();
+    for (const polygon of visual.frontPolygons || []) {
+      polygon.forEach(([x, y], index) => index ? ctx.lineTo(x, y) : ctx.moveTo(x, y));
+      ctx.closePath();
+    }
+    ctx.clip();
+  }
+  ctx.drawImage(sprite, visual.x, visual.y, visual.width, visual.height);
+  ctx.restore();
+}
+
 function drawPlateLayer(ctx, plate, layer) {
   ctx.save();
   ctx.beginPath();
@@ -179,28 +229,6 @@ function drawPlateLayer(ctx, plate, layer) {
   }
   ctx.clip();
   ctx.drawImage(plate, 0, 0);
-  ctx.restore();
-}
-
-function drawGardenGate(ctx, open) {
-  if (!open) return;
-  ctx.save();
-  ctx.fillStyle = 'rgba(35,39,26,.78)';
-  ctx.beginPath();
-  ctx.moveTo(750, 310);
-  ctx.lineTo(833, 305);
-  ctx.lineTo(846, 473);
-  ctx.lineTo(739, 474);
-  ctx.closePath();
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(89,64,42,.9)';
-  ctx.lineWidth = 7;
-  ctx.beginPath();
-  ctx.moveTo(741, 470);
-  ctx.lineTo(706, 335);
-  ctx.moveTo(841, 470);
-  ctx.lineTo(878, 336);
-  ctx.stroke();
   ctx.restore();
 }
 
@@ -260,13 +288,14 @@ export class WorldRenderer {
   }
 
   resize(currentScene) {
-    this.cssWidth = innerWidth;
-    this.cssHeight = innerHeight;
+    const rect = this.canvas.parentElement?.getBoundingClientRect();
+    this.cssWidth = Math.max(1, Math.round(rect?.width || innerWidth));
+    this.cssHeight = Math.max(1, Math.round(rect?.height || innerHeight));
     this.dpr = Math.min(devicePixelRatio || 1, 2);
     this.canvas.width = Math.round(this.cssWidth * this.dpr);
     this.canvas.height = Math.round(this.cssHeight * this.dpr);
-    this.canvas.style.width = `${this.cssWidth}px`;
-    this.canvas.style.height = `${this.cssHeight}px`;
+    this.canvas.style.width = '100%';
+    this.canvas.style.height = '100%';
     this.ctx.imageSmoothingEnabled = true;
     this.baseScale = this.cssHeight / WORLD_HEIGHT;
     this.scale = this.baseScale * this.zoom;
@@ -302,11 +331,38 @@ export class WorldRenderer {
   }
 
   actorScreenAnchor(state, actor) {
+    if (state.princessCarry?.active && (actor === state.player || actor === state.hubby)) {
+      const metrics = carryMetrics(this.assets, state.scene, state);
+      const offset = actor === state.player ? -metrics.width * .17 : metrics.width * .12;
+      return this.worldToScreen(state.cameraX, metrics.x + offset, metrics.y - metrics.height - 12, state.cameraY || 0);
+    }
+    if (state.swing?.active && actor === state.player) {
+      const object = state.scene.objects.find((entry) => entry.id === 'swing');
+      const mount = object?.swingMount;
+      const display = mount ? { ...actor, x: mount.x, z: .3, mount: { ...mount, pose: 'bed-sit' } } : actor;
+      const metrics = actorMetrics(this.assets, state.scene, display);
+      return this.worldToScreen(state.cameraX, display.x, metrics.y - metrics.height - 12, state.cameraY || 0);
+    }
     const metrics = actorMetrics(this.assets, state.scene, actor);
     return this.worldToScreen(state.cameraX, actor.x, metrics.y - metrics.height - 12, state.cameraY || 0);
   }
 
   actorScreenBounds(state, actor) {
+    if (state.princessCarry?.active && (actor === state.player || actor === state.hubby)) {
+      const metrics = carryMetrics(this.assets, state.scene, state);
+      const topLeft = this.worldToScreen(state.cameraX, metrics.x - metrics.width * .5, metrics.y - metrics.height, state.cameraY || 0);
+      return { x: topLeft.x, y: topLeft.y, width: metrics.width * this.scale, height: metrics.height * this.scale };
+    }
+    if (state.swing?.active && actor === state.player) {
+      const object = state.scene.objects.find((entry) => entry.id === 'swing');
+      const mount = object?.swingMount;
+      if (mount) {
+        const display = { ...actor, x: mount.x, z: .3, mount: { ...mount, pose: 'bed-sit' } };
+        const metrics = actorMetrics(this.assets, state.scene, display);
+        const topLeft = this.worldToScreen(state.cameraX, display.x - metrics.width * .5, metrics.y - metrics.height, state.cameraY || 0);
+        return { x: topLeft.x, y: topLeft.y, width: metrics.width * this.scale, height: metrics.height * this.scale };
+      }
+    }
     const metrics = actorMetrics(this.assets, state.scene, actor);
     const topLeft = this.worldToScreen(state.cameraX, actor.x - metrics.width * .5, metrics.y - metrics.height, state.cameraY || 0);
     return { x: topLeft.x, y: topLeft.y, width: metrics.width * this.scale, height: metrics.height * this.scale };
@@ -323,15 +379,25 @@ export class WorldRenderer {
     ctx.scale(this.scale, this.scale);
     ctx.translate(-cameraX, -cameraY);
     ctx.drawImage(plate, 0, 0);
-    if (scene.id === 'outdoor') drawGardenGate(ctx, state.gardenGateOpen);
 
     const renderables = (scene.foregroundLayers || []).map((layer) => ({ kind: 'plateLayer', z: layer.z, layer }));
+    for (const object of scene.objects) {
+      if (!object.visual) continue;
+      renderables.push({ kind: 'propBack', z: object.visual.backZ, visual: object.visual });
+      renderables.push({ kind: 'propFront', z: object.visual.frontZ, visual: object.visual });
+    }
     if (!naili.carried) renderables.push({ kind: 'naili', z: naili.z, actor: naili });
-    if (!(scene.id === 'outdoor' && swing.active)) renderables.push({ kind: 'player', z: player.z, actor: player });
-    renderables.push({ kind: 'hubby', z: hubby.z, actor: hubby });
+    if (state.princessCarry?.active) renderables.push({ kind: 'princessCarry', z: hubby.z });
+    else {
+      if (!(scene.id === 'outdoor' && swing.active)) renderables.push({ kind: 'player', z: player.z, actor: player });
+      renderables.push({ kind: 'hubby', z: hubby.z, actor: hubby });
+    }
     renderables.sort((a, b) => a.z - b.z);
     for (const item of renderables) {
       if (item.kind === 'plateLayer') drawPlateLayer(ctx, plate, item.layer);
+      if (item.kind === 'propBack') drawPropLayer(ctx, this.assets, item.visual, false);
+      if (item.kind === 'propFront') drawPropLayer(ctx, this.assets, item.visual, true);
+      if (item.kind === 'princessCarry') drawPrincessCarry(ctx, this.assets, state);
       if (item.kind === 'player') {
         const metrics = actorMetrics(this.assets, scene, player);
         drawActorShadow(ctx, player, metrics, player.flying ? .12 : .22);
@@ -346,14 +412,16 @@ export class WorldRenderer {
     }
 
     if (scene.id === 'outdoor' && swing.active) {
+      const swingObject = scene.objects.find((entry) => entry.id === 'swing');
+      const mount = swingObject?.swingMount || { x: 754, renderY: 520, height: 135, facing: -1 };
       const angle = Math.sin(time * 2.25) * (swing.pushed ? .17 : .11);
-      const centerX = 710 + Math.sin(angle) * 46;
-      const centerY = 520 + Math.cos(angle) * 10;
+      const centerX = mount.x + Math.sin(angle) * 46;
+      const centerY = mount.renderY + Math.cos(angle) * 10;
       ctx.save();
       ctx.translate(centerX, centerY);
       ctx.rotate(-angle * .35);
       drawSpriteActor(ctx, this.assets, {
-        ...player, x: 0, z: .3, mount: { renderY: 0, pose: 'bed-sit', height: 135, facing: -1 }, flying: false, dir: 1
+        ...player, x: 0, z: .3, mount: { renderY: 0, pose: 'bed-sit', height: mount.height, facing: mount.facing }, flying: false, dir: 1
       }, scene, time);
       ctx.restore();
     }
