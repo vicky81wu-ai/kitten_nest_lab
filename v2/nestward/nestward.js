@@ -118,6 +118,7 @@ let activeTextKey = '';
 let menuAnchor = null;
 let bubbleAnchor = null;
 let changingScene = false;
+let actionPanelArmed = false;
 const activePointers = new Map();
 let gesture = null;
 let longPressTimer = null;
@@ -305,12 +306,16 @@ function positionOverlays() {
   }
 }
 function hideActions() {
+  actionPanelArmed = false;
   actions.hidden = true;
   actionButtons.replaceChildren();
   menuAnchor = null;
   state.activeObjectId = null;
 }
 function showActions(title, choices, anchor) {
+  // A menu may be mounted underneath the finger during the canvas pointerup.
+  // It must not accept that same gesture's synthetic click as a choice.
+  actionPanelArmed = false;
   actionTitle.textContent = title;
   actionButtons.replaceChildren();
   choices.forEach((choice) => {
@@ -590,8 +595,17 @@ function arriveAtObject(object) {
     changeScene(sceneName === 'indoor' ? 'outdoor' : 'indoor');
     return;
   }
-  const choices = objectChoices(object);
-  if (choices.length === 1) choices[0].run();
+  const carrying = state.princessCarry.active;
+  const choices = objectChoices(object).map((choice) => carrying ? {
+    ...choice,
+    run: () => {
+      stopPrincessCarry({ silent: true });
+      choice.run();
+    }
+  } : choice);
+  // While carrying, even a single-action object waits for an explicit choice.
+  // Merely arriving or inspecting the menu never puts Kitten down.
+  if (choices.length === 1 && !carrying) choices[0].run();
   else showActions(object.label, choices, { kind: 'object', object });
 }
 function approachObject(object) {
@@ -603,10 +617,7 @@ function approachObject(object) {
   if (!state.princessCarry.active) hideBubble();
   state.activeObjectId = object.id;
   const mover = state.princessCarry.active ? hubby : player;
-  walkActor(mover, object.socket, () => {
-    if (state.princessCarry.active) stopPrincessCarry({ silent: true });
-    arriveAtObject(object);
-  });
+  walkActor(mover, object.socket, () => arriveAtObject(object));
 }
 function showNailiActions() {
   showActions('奶栗', [
@@ -649,6 +660,12 @@ function showPlayerActions() {
   showActions('小猫', choices, { kind: 'actor', actor: player });
 }
 function showHubbyActions() {
+  if (state.princessCarry.active) {
+    showActions('Hubby', [
+      { label: '放小猫下来', run: () => stopPrincessCarry() }
+    ], { kind: 'actor', actor: hubby });
+    return;
+  }
   const choices = [
     { label: hubby.follow ? '自己晃晃' : '跟着小猫', run: () => {
       hubby.follow = !hubby.follow;
@@ -677,6 +694,7 @@ function showActorActions(actor) {
 }
 async function changeScene(nextName) {
   if (changingScene) return;
+  const carryWasActive = state.princessCarry.active;
   changingScene = true;
   hideActions();
   hideBubble();
@@ -698,7 +716,13 @@ async function changeScene(nextName) {
   });
   state.swing.active = false;
   state.swing.pushed = false;
-  state.princessCarry.active = false;
+  state.princessCarry.active = carryWasActive;
+  if (carryWasActive) {
+    player.x = hubby.x;
+    player.z = hubby.z;
+    player.dir = hubby.dir;
+    hubby.action = 'princess-carry';
+  }
   state.cameraFree = false;
   setInitialCamera();
   renderer.ensureCache(scene);
@@ -714,7 +738,9 @@ function hitZoneForActor(actor, bounds, clientX, clientY) {
     const onHeadSide = headIsLeft
       ? clientX <= bounds.x + bounds.width * .53
       : clientX >= bounds.x + bounds.width * .47;
-    return onHeadSide ? 'speech' : 'actions';
+    // A reclining actor talks from the lower/leg side; the head and upper torso
+    // open their action menu, matching the spatial rule used in the artwork.
+    return onHeadSide ? 'actions' : 'speech';
   }
   return clientY <= bounds.y + bounds.height * .53 ? 'speech' : 'actions';
 }
@@ -907,6 +933,15 @@ $('#closeTextPanel').addEventListener('click', closeText);
 textPanel.querySelector('[data-close-panel]').addEventListener('click', closeText);
 $('#closeWardrobe').addEventListener('click', () => { wardrobePanel.hidden = true; });
 wardrobePanel.querySelector('[data-close-wardrobe]').addEventListener('click', () => { wardrobePanel.hidden = true; });
+actions.addEventListener('pointerdown', () => { actionPanelArmed = true; }, true);
+actions.addEventListener('click', (event) => {
+  if (!actionPanelArmed && event.detail !== 0) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    return;
+  }
+  actionPanelArmed = false;
+}, true);
 $('#closeActions').addEventListener('click', hideActions);
 bubble.addEventListener('click', (event) => {
   event.stopPropagation();

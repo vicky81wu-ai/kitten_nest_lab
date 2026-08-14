@@ -36,8 +36,7 @@ const indoorObjects = [
       asset: 'readingChair', x: 615, y: 430, width: 210, height: 291, backZ: .29, frontZ: .5,
       frontPolygons: [
         [[615, 545], [676, 548], [680, 675], [615, 690]],
-        [[764, 548], [825, 545], [825, 690], [760, 675]],
-        [[646, 610], [794, 610], [800, 689], [640, 689]]
+        [[764, 548], [825, 545], [825, 690], [760, 675]]
       ]
     },
     mounts: {
@@ -57,15 +56,27 @@ const outdoorObjects = [
   {
     id: 'swing', label: '秋千', x: 710, z: .34, w: 210, d: .2,
     hit: [605, 260, 820, 560], socket: { x: 870, z: .19 },
-    swingMount: { x: 754, renderY: 520, height: 135, facing: -1 },
+    hitPolygons: [[[605, 260], [820, 260], [820, 486], [605, 486]]],
+    swingMount: { x: 754, renderY: 510, height: 135, facing: -1 },
     slots: { hubbyPush: { x: 840, z: .19 } }
   },
-  { id: 'garden', label: '花圃', x: 720, z: .53, w: 325, d: .18, hit: [550, 500, 885, 760], block: [550, 885, .26, .58], socket: { x: 610, z: .69 }, slots: { naili: { x: 760, z: .69 } } },
-  { id: 'teaTable', label: '院子小桌', x: 965, z: .57, w: 250, d: .16, hit: [840, 520, 1110, 735], block: [840, 1110, .28, .55], socket: { x: 940, z: .68 }, slots: { hubbyServe: { x: 895, z: .67 } } },
+  {
+    id: 'garden', label: '花圃', x: 720, z: .53, w: 325, d: .18,
+    hit: [550, 500, 885, 760],
+    hitPolygons: [[[550, 610], [746, 588], [790, 760], [550, 760]]],
+    block: [550, 748, .42, .58], socket: { x: 610, z: .69 }, slots: { naili: { x: 760, z: .69 } }
+  },
+  {
+    id: 'teaTable', label: '院子小桌', x: 965, z: .57, w: 250, d: .16,
+    hit: [840, 520, 1110, 735],
+    hitPolygons: [[[875, 596], [1088, 574], [1110, 735], [850, 735]]],
+    block: [900, 1110, .36, .55], socket: { x: 940, z: .68 }, slots: { hubbyServe: { x: 895, z: .67 } }
+  },
   { id: 'fountain', label: '许愿喷泉', x: 1080, z: .38, w: 285, d: .2, hit: [935, 285, 1230, 625], block: [935, 1230, .03, .38], socket: { x: 1145, z: .52 } },
   {
     id: 'gardenGate', label: '花园门', x: 786, z: .18, w: 150, d: .08,
-    hit: [710, 250, 870, 495], socket: { x: 790, z: .68 }, stateKey: 'gardenGateOpen', futureExit: 'orchardPath'
+    hit: [710, 250, 870, 495], hitPolygons: [[[728, 250], [850, 250], [850, 438], [728, 438]]],
+    socket: { x: 790, z: .68 }, stateKey: 'gardenGateOpen', futureExit: 'orchardPath'
   },
   { id: 'pond', label: '萤火池塘', x: 1360, z: .63, w: 350, d: .17, hit: [1180, 570, 1535, 875], block: [1180, 1536, .42, .79], socket: { x: 1135, z: .7 }, slots: { naili: { x: 1110, z: .74 } } },
   { id: 'bower', label: '藤架深处', x: 1370, z: .34, w: 300, d: .2, hit: [1220, 250, 1535, 570], block: [1220, 1536, .03, .24], socket: { x: 1290, z: .36 }, slots: { kitten: { x: 1325, z: .36 }, hubby: { x: 1390, z: .36 } } }
@@ -217,6 +228,19 @@ function simplifyPath(path) {
 }
 
 export function pointInsideHit(object, point) {
+  if (object.hitPolygons?.length) {
+    return object.hitPolygons.some((polygon) => {
+      let inside = false;
+      for (let index = 0, previous = polygon.length - 1; index < polygon.length; previous = index, index += 1) {
+        const [x1, y1] = polygon[index];
+        const [x2, y2] = polygon[previous];
+        const crosses = (y1 > point.y) !== (y2 > point.y)
+          && point.x < (x2 - x1) * (point.y - y1) / (y2 - y1) + x1;
+        if (crosses) inside = !inside;
+      }
+      return inside;
+    });
+  }
   const [x1, y1, x2, y2] = object.hit;
   return point.x >= x1 && point.x <= x2 && point.y >= y1 && point.y <= y2;
 }

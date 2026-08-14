@@ -51,7 +51,7 @@ An object may now own a `visual` prop with independent `backZ` and `frontZ`
 passes. `frontPolygons` clip only the portions that must cover a mounted actor.
 The green reading chair is the reference implementation: the chair back renders
 behind the sitter, the sitter renders at the authored mount, and the arms plus
-seat rail render in front. This is the accepted proof that future separable
+their front edges render in front without masking the sitter's legs. This is the accepted proof that future separable
 furniture can provide real occlusion without baking every character pose into a
 full-scene image.
 
@@ -81,7 +81,9 @@ Character bodies use two semantic touch zones. The upper body owns speech; the
 lower body owns local actions and poses. Mounted characters stay mounted while
 their speech or action menu is inspected. A clear-floor tap is the ordinary way
 to leave a mount and resume walking. Kitten and Hubby may also sit, lie, stand,
-or lean on clear floor through the same authored pose assets.
+or lean on clear floor through the same authored pose assets. For a reclining
+pose the same spatial intent rotates with the body: the head/upper-torso side
+owns actions and the lower/leg side owns speech.
 
 Speech is data-driven through `speech-runtime.js` rather than one-off timers.
 Scripts declare ordered turns, speaker, duration, playback (`manual`, `auto`, or
@@ -94,9 +96,16 @@ token while Hubby copy remains dark ink.
 Princess carry is one combined two-frame actor state. Hubby owns movement and
 camera follow while Kitten stays synchronized to him; their complete combined
 sprite mirrors as one unit for travel direction. The carry script may alternate
-natural Hubby and Kitten lines while moving. A destination object can end the
-carry silently at its approach socket and continue into that object's normal
-interaction.
+natural Hubby and Kitten lines while moving. Carry persists through doors,
+scene changes, arrival at an object, and opening or closing a context menu.
+Arriving while carried always presents an explicit choice, including for a
+single-action object; selecting that object action puts Kitten down immediately
+before executing it. Otherwise only the explicit `放小猫下来` action ends carry.
+
+Action menus are gesture-gated: the pointer that ended on the Canvas and opened
+a menu cannot also activate a newly mounted menu button. A fresh pointerdown in
+the menu is required. This prevents lower-body taps from appearing to skip the
+menu and execute a pose directly on iOS.
 
 ## Current worlds and durable state
 

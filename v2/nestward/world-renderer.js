@@ -89,11 +89,9 @@ function poseAssetKey(actor) {
   if (pose === 'bed-sit') return `${prefix}BedSit`;
   if (pose === 'bed-lie') return `${prefix}BedLie`;
   if (pose === 'bed-lean') return `${prefix}BedLean`;
-  // The first generated walk sheet mixed two incompatible viewing angles.
-  // Frames 2/4 form the stable directional pair; mirroring the whole figure
-  // supplies the opposite travel direction without alternating his feet
-  // between left- and right-facing artwork.
-  if (actor.walking) return `${prefix}Walk${Math.floor(actor.step * .72) % 2 ? 4 : 2}`;
+  // Every source frame owns one phase of the same stride. Direction is handled
+  // independently by mirroring the complete sprite in drawSpriteActor.
+  if (actor.walking) return `${prefix}Walk${Math.floor(actor.step * .72) % 4 + 1}`;
   return `${prefix}Idle`;
 }
 
@@ -149,7 +147,9 @@ function drawWings(ctx, time, flying, height) {
 
 function drawSpriteActor(ctx, assets, actor, scene, time, options = {}) {
   const metrics = actorMetrics(assets, scene, actor);
-  const bob = actor.mount ? 0 : actor.walking ? Math.sin(actor.step * 1.8) * 1.2 : Math.sin(time * 1.35 + (options.phase || 0)) * .42;
+  // The authored walk frames already contain their weight shift. Adding a
+  // procedural bob made the torso pitch forward while the feet appeared still.
+  const bob = actor.mount || actor.walking ? 0 : Math.sin(time * 1.35 + (options.phase || 0)) * .42;
   const lift = actor.flying ? 28 + Math.sin(time * 2.2) * 4 : 0;
   const facing = actor.mount?.facing || actor.dir || 1;
   const direction = facing * metrics.nativeFacing;
@@ -178,12 +178,15 @@ function drawSpriteNaili(ctx, assets, actor, scene, time) {
 }
 
 function carryMetrics(assets, scene, state) {
-  const frame = Math.floor(state.hubby.step * .72) % 2 + 1;
-  const sprite = assets.get(`hubbyCarryWalk${frame}`);
+  const frame = state.hubby.walking ? Math.floor(state.hubby.step * .64) % 2 + 1 : 1;
+  const sprite = assets.get('hubbyCarryWalk1');
+  const strideSprite = assets.get(`hubbyCarryWalk${frame}`);
   const perspective = actorScale(state.hubby.z) / actorScale(.62);
   const height = (scene.actorHeights?.hubby || 218) * 1.12 * perspective;
   return {
     sprite,
+    strideSprite,
+    frame,
     width: height * (sprite.width / sprite.height),
     height,
     x: state.hubby.x,
@@ -199,7 +202,23 @@ function drawPrincessCarry(ctx, assets, state) {
   // Carry frames share Hubby's left-facing source contract. Mirror the whole
   // combined figure for rightward travel so neither head lags behind the feet.
   ctx.scale((state.hubby.dir || 1) * nativeFacingByRole.hubby, 1);
-  ctx.drawImage(metrics.sprite, -metrics.width * .5, -metrics.height, metrics.width, metrics.height);
+  // Keep the embrace, shoulders, and both heads locked to one base frame. Only
+  // Hubby's lower stride swaps frames, so carrying never turns into a whole-body
+  // forward/backward wobble.
+  const split = .53;
+  const upperSourceHeight = Math.round(metrics.sprite.height * split);
+  ctx.drawImage(
+    metrics.sprite,
+    0, 0, metrics.sprite.width, upperSourceHeight,
+    -metrics.width * .5, -metrics.height, metrics.width, metrics.height * split
+  );
+  const lowerSprite = state.hubby.walking ? metrics.strideSprite : metrics.sprite;
+  const lowerSourceY = Math.round(lowerSprite.height * split);
+  ctx.drawImage(
+    lowerSprite,
+    0, lowerSourceY, lowerSprite.width, lowerSprite.height - lowerSourceY,
+    -metrics.width * .5, -metrics.height + metrics.height * split, metrics.width, metrics.height * (1 - split)
+  );
   ctx.restore();
   return metrics;
 }

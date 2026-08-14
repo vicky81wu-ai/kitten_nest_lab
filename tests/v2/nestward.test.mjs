@@ -103,6 +103,11 @@ test('refined actors walk in frames while the camera supports drag and pinch ins
   assert.match(renderer, /hubbyWalk4/);
   assert.match(renderer, /nativeFacingByRole = \{ player: 1, hubby: -1, naili: 1 \}/);
   assert.match(renderer, /const direction = facing \* metrics\.nativeFacing/);
+  assert.match(renderer, /Math\.floor\(actor\.step \* \.72\) % 4 \+ 1/);
+  assert.doesNotMatch(renderer, /% 2 \? 4 : 2/);
+  assert.match(renderer, /assets\.get\('hubbyCarryWalk1'\)/);
+  assert.match(renderer, /const split = \.53/);
+  assert.match(renderer, /const lowerSprite = state\.hubby\.walking \? metrics\.strideSprite : metrics\.sprite/);
   assert.match(renderer, /imageSmoothingEnabled = true/);
   assert.match(runtime, /activePointers/);
   assert.match(runtime, /beginPinch/);
@@ -135,7 +140,8 @@ test('the reading chair proves back actor and front occlusion layers from one ob
   assert.equal(chair.visual.asset, 'readingChair');
   assert.ok(chair.visual.backZ < chair.mounts.kittenSit.z);
   assert.ok(chair.visual.frontZ > chair.mounts.kittenSit.z);
-  assert.ok(chair.visual.frontPolygons.length >= 3);
+  assert.equal(chair.visual.frontPolygons.length, 2);
+  assert.ok(chair.visual.frontPolygons.every((polygon) => Math.max(...polygon.map(([x]) => x)) - Math.min(...polygon.map(([x]) => x)) < 80));
   assert.equal(chair.mounts.kittenSit.pose, 'bed-sit');
   assert.equal(chair.mounts.kittenSit.height, 231);
   assert.equal(chair.mounts.hubbySit.height, 265);
@@ -175,6 +181,11 @@ test('actor body zones, carry walking, and immersive viewport sizing remain expl
   const css = await read('../../v2/nestward/nestward.css');
   assert.match(runtime, /hitZoneForActor/);
   assert.match(runtime, /startPrincessCarry/);
+  assert.match(runtime, /const carryWasActive = state\.princessCarry\.active/);
+  assert.match(runtime, /state\.princessCarry\.active = carryWasActive/);
+  assert.match(runtime, /if \(choices\.length === 1 && !carrying\)/);
+  assert.match(runtime, /actionPanelArmed/);
+  assert.match(runtime, /return onHeadSide \? 'actions' : 'speech'/);
   assert.match(runtime, /poseActorInPlace/);
   assert.match(runtime, /脱下月光翅膀/);
   assert.match(renderer, /hubby-carry-walk-1\.png/);
@@ -185,6 +196,17 @@ test('actor body zones, carry walking, and immersive viewport sizing remain expl
   assert.doesNotMatch(css, /height:100dvh/);
   assert.match(css, /--kitten-voice:#d85b86/);
   assert.match(css, /pointer-events:auto/);
+});
+
+test('garden interaction silhouettes leave the central path as real floor', async () => {
+  const { SCENES, pointInsideHit } = await import('../../v2/nestward/world-model.js');
+  const interactive = SCENES.outdoor.objects.filter((object) => ['swing', 'garden', 'teaTable', 'gardenGate'].includes(object.id));
+  for (const point of [{ x: 720, y: 545 }, { x: 835, y: 555 }, { x: 900, y: 570 }]) {
+    const swallowedBy = interactive.find((object) => pointInsideHit(object, point));
+    assert.equal(swallowedBy, undefined, `central path point ${point.x},${point.y} was swallowed by ${swallowedBy?.id}`);
+  }
+  const swing = interactive.find((object) => object.id === 'swing');
+  assert.equal(swing.swingMount.renderY, 510);
 });
 
 test('an early ResizeObserver callback cannot outrun Nestward asset preload', async () => {
