@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="NW Viewport Probe" />
-  <link rel="manifest" href="/v2/manifest.webmanifest" />
+  <link rel="manifest" href="./viewport-probe.webmanifest" />
   <title>NW Viewport Probe</title>
   <style>
     * { box-sizing: border-box; }
@@ -126,7 +126,6 @@
         `body: h=${px(bodyRect.height)} bottom=${px(bottomOf(bodyRect))}`,
         `shell: h=${px(shellRect.height)} bottom=${px(bottomOf(shellRect))}`,
         `body computed height: ${styles.height}`,
-        `safe-bottom probe: ${getComputedStyle(document.documentElement).getPropertyValue('--safe-bottom') || 'env only'}`,
         `display-mode: standalone=${standalone} fullscreen=${fullscreen} browser=${browser}`,
         `href: ${location.href}`
       ].join('\n');
