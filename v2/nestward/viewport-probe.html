@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#281914" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="NW Viewport Probe" />
+  <link rel="manifest" href="/v2/manifest.webmanifest" />
+  <title>NW Viewport Probe</title>
+  <style>
+    * { box-sizing: border-box; }
+    html { margin: 0; width: 100%; background: #7b1f1f; }
+    body {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: auto;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      height: 100dvh;
+      height: 100lvh;
+      min-height: 100vh;
+      min-height: 100dvh;
+      min-height: 100lvh;
+      margin: 0;
+      overflow: hidden;
+      background: #234d36;
+      color: #fff8ef;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", sans-serif;
+    }
+    #shell {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: auto;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      height: 100dvh;
+      height: 100lvh;
+      min-height: 100vh;
+      min-height: 100dvh;
+      min-height: 100lvh;
+      overflow: hidden;
+      background: linear-gradient(180deg, #74465f 0 25%, #5d3f79 25% 50%, #355a7d 50% 75%, #3d6b54 75% 100%);
+    }
+    #readout {
+      position: absolute;
+      z-index: 20;
+      top: max(58px, env(safe-area-inset-top));
+      left: 12px;
+      right: 12px;
+      padding: 12px 13px;
+      border: 1px solid rgba(255,255,255,.35);
+      border-radius: 14px;
+      background: rgba(20,12,15,.76);
+      font: 600 12px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace;
+      white-space: pre-wrap;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    .marker {
+      position: fixed;
+      z-index: 30;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      pointer-events: none;
+    }
+    #vvMarker { background: #ffe66d; }
+    #docMarker { background: #ff7f50; }
+    #shellMarker { background: #82ffbd; }
+    #legend {
+      position: absolute;
+      z-index: 21;
+      left: 12px;
+      bottom: max(12px, env(safe-area-inset-bottom));
+      padding: 8px 10px;
+      border-radius: 12px;
+      background: rgba(20,12,15,.72);
+      font-size: 11px;
+      line-height: 1.45;
+    }
+  </style>
+</head>
+<body>
+  <main id="shell">
+    <pre id="readout">measuring…</pre>
+    <div id="vvMarker" class="marker"></div>
+    <div id="docMarker" class="marker"></div>
+    <div id="shellMarker" class="marker"></div>
+    <div id="legend">yellow = visualViewport bottom<br>orange = documentElement bottom<br>mint = shell bottom<br>red outside body = document root exposure</div>
+  </main>
+  <script>
+    const shell = document.querySelector('#shell');
+    const readout = document.querySelector('#readout');
+    const vvMarker = document.querySelector('#vvMarker');
+    const docMarker = document.querySelector('#docMarker');
+    const shellMarker = document.querySelector('#shellMarker');
+
+    function px(value) { return Number.isFinite(value) ? `${value.toFixed(2)}px` : 'n/a'; }
+    function bottomOf(rect) { return rect ? rect.bottom : NaN; }
+    function place(marker, y) { marker.style.top = `${Math.max(0, y - 3)}px`; }
+
+    function measure() {
+      const vv = window.visualViewport;
+      const docRect = document.documentElement.getBoundingClientRect();
+      const bodyRect = document.body.getBoundingClientRect();
+      const shellRect = shell.getBoundingClientRect();
+      const vvBottom = vv ? vv.offsetTop + vv.height : innerHeight;
+      const standalone = matchMedia('(display-mode: standalone)').matches;
+      const fullscreen = matchMedia('(display-mode: fullscreen)').matches;
+      const browser = matchMedia('(display-mode: browser)').matches;
+      const styles = getComputedStyle(document.body);
+
+      readout.textContent = [
+        `screen: ${screen.width} × ${screen.height}`,
+        `avail: ${screen.availWidth} × ${screen.availHeight}`,
+        `inner: ${innerWidth} × ${innerHeight}`,
+        `outer: ${outerWidth} × ${outerHeight}`,
+        `visualViewport: ${vv ? `${px(vv.width)} × ${px(vv.height)} top=${px(vv.offsetTop)} bottom=${px(vvBottom)}` : 'none'}`,
+        `documentElement: h=${px(document.documentElement.clientHeight)} rectBottom=${px(bottomOf(docRect))}`,
+        `body: h=${px(bodyRect.height)} bottom=${px(bottomOf(bodyRect))}`,
+        `shell: h=${px(shellRect.height)} bottom=${px(bottomOf(shellRect))}`,
+        `body computed height: ${styles.height}`,
+        `safe-bottom probe: ${getComputedStyle(document.documentElement).getPropertyValue('--safe-bottom') || 'env only'}`,
+        `display-mode: standalone=${standalone} fullscreen=${fullscreen} browser=${browser}`,
+        `href: ${location.href}`
+      ].join('\n');
+
+      place(vvMarker, vvBottom);
+      place(docMarker, bottomOf(docRect));
+      place(shellMarker, bottomOf(shellRect));
+    }
+
+    addEventListener('resize', measure, { passive: true });
+    if (visualViewport) {
+      visualViewport.addEventListener('resize', measure, { passive: true });
+      visualViewport.addEventListener('scroll', measure, { passive: true });
+    }
+    if ('ResizeObserver' in window) new ResizeObserver(measure).observe(shell);
+    measure();
+    setTimeout(measure, 250);
+    setTimeout(measure, 1200);
+  </script>
+</body>
+</html>
