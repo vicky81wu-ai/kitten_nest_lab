@@ -45,7 +45,15 @@
       min-height: 100dvh;
       min-height: 100lvh;
       overflow: hidden;
-      background: linear-gradient(180deg, #74465f 0 25%, #5d3f79 25% 50%, #355a7d 50% 75%, #3d6b54 75% 100%);
+      background: #214932;
+    }
+    #probeCanvas {
+      position: absolute;
+      inset: 0;
+      display: block;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
     }
     #readout {
       position: absolute;
@@ -88,14 +96,17 @@
 </head>
 <body>
   <main id="shell">
+    <canvas id="probeCanvas"></canvas>
     <pre id="readout">measuring…</pre>
     <div id="vvMarker" class="marker"></div>
     <div id="docMarker" class="marker"></div>
     <div id="shellMarker" class="marker"></div>
-    <div id="legend">yellow = visualViewport bottom<br>orange = documentElement bottom<br>mint = shell bottom<br>red outside body = document root exposure</div>
+    <div id="legend">canvas bands should reach physical bottom<br>yellow = visualViewport bottom<br>orange = documentElement bottom<br>mint = shell bottom</div>
   </main>
   <script>
     const shell = document.querySelector('#shell');
+    const canvas = document.querySelector('#probeCanvas');
+    const ctx = canvas.getContext('2d');
     const readout = document.querySelector('#readout');
     const vvMarker = document.querySelector('#vvMarker');
     const docMarker = document.querySelector('#docMarker');
@@ -105,16 +116,38 @@
     function bottomOf(rect) { return rect ? rect.bottom : NaN; }
     function place(marker, y) { marker.style.top = `${Math.max(0, y - 3)}px`; }
 
+    function paintCanvas(shellRect) {
+      const dpr = Math.min(devicePixelRatio || 1, 3);
+      const cssWidth = Math.max(1, Math.round(shellRect.width));
+      const cssHeight = Math.max(1, Math.round(shellRect.height));
+      canvas.width = Math.round(cssWidth * dpr);
+      canvas.height = Math.round(cssHeight * dpr);
+      canvas.style.width = '100%';
+      canvas.style.height = '100%';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const bands = ['#7d4962', '#624580', '#365f86', '#3e7659'];
+      const band = cssHeight / bands.length;
+      bands.forEach((color, index) => {
+        ctx.fillStyle = color;
+        ctx.fillRect(0, index * band, cssWidth, band + 1);
+      });
+      ctx.fillStyle = '#f5cc63';
+      ctx.fillRect(0, cssHeight - 6, cssWidth, 6);
+      return { dpr, cssWidth, cssHeight };
+    }
+
     function measure() {
       const vv = window.visualViewport;
       const docRect = document.documentElement.getBoundingClientRect();
       const bodyRect = document.body.getBoundingClientRect();
       const shellRect = shell.getBoundingClientRect();
+      const canvasRect = canvas.getBoundingClientRect();
       const vvBottom = vv ? vv.offsetTop + vv.height : innerHeight;
       const standalone = matchMedia('(display-mode: standalone)').matches;
       const fullscreen = matchMedia('(display-mode: fullscreen)').matches;
       const browser = matchMedia('(display-mode: browser)').matches;
       const styles = getComputedStyle(document.body);
+      const painted = paintCanvas(shellRect);
 
       readout.textContent = [
         `screen: ${screen.width} × ${screen.height}`,
@@ -125,6 +158,8 @@
         `documentElement: h=${px(document.documentElement.clientHeight)} rectBottom=${px(bottomOf(docRect))}`,
         `body: h=${px(bodyRect.height)} bottom=${px(bottomOf(bodyRect))}`,
         `shell: h=${px(shellRect.height)} bottom=${px(bottomOf(shellRect))}`,
+        `canvas rect: h=${px(canvasRect.height)} bottom=${px(bottomOf(canvasRect))}`,
+        `canvas backing: ${canvas.width} × ${canvas.height} dpr=${painted.dpr}`,
         `body computed height: ${styles.height}`,
         `display-mode: standalone=${standalone} fullscreen=${fullscreen} browser=${browser}`,
         `href: ${location.href}`
