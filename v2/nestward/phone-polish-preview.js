@@ -11,12 +11,11 @@ const outdoorDoor = outdoor.objects.find((object) => object.id === 'door');
 const bench = outdoor.objects.find((object) => object.id === 'bench');
 const fountain = outdoor.objects.find((object) => object.id === 'fountain');
 
-// Indoor doorway calibration: use the authored indoor return anchor as the
-// physical threshold. The previous .74 depth drove the actor far down into the
-// room/table area; this returns the direct-door target to the painted sill.
+// Exact phone-calibrated indoor -> outdoor transition target. The actor must
+// physically reach this painted doorway point before the direct scene switch.
 Object.assign(indoorDoor, {
-  x: 1345,
-  z: .47,
+  x: 1394,
+  z: .167,
   interactionRadius: 1,
   hitPolygons: [[[1366, 150], [1535, 150], [1535, 558], [1366, 558]]]
 });
@@ -26,18 +25,17 @@ indoor.entry.fromOutdoor = {
   naili: { ...indoor.entry.fromOutdoor.naili }
 };
 
-// Outdoor doorway / entry calibration from phone acceptance: compared with the
-// last build, move the landing left and slightly deeper so Kitten stands on the
-// middle of the broad upper stair tread. This exact point is also the return-to-
-// indoor transition target.
+// Exact phone-calibrated outdoor landing / return target. This single point is
+// both Kitten's entry after leaving the house and the point she reaches before
+// switching back indoors.
 Object.assign(outdoorDoor, {
-  x: 145,
-  z: .335,
+  x: 153,
+  z: .299,
   interactionRadius: 1,
   hitPolygons: [[[90, 230], [310, 230], [310, 615], [90, 615]]]
 });
 outdoor.entry.fromIndoor = {
-  player: { x: 145, z: .335 },
+  player: { x: 153, z: .299 },
   hubby: { ...outdoor.entry.fromIndoor.hubby },
   naili: { ...outdoor.entry.fromIndoor.naili }
 };
