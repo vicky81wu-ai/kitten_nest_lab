@@ -50,9 +50,9 @@ const indoorObjects = [
       hubbySit: { objectId: 'readingChair', x: 720, z: .43, renderY: 681, pose: 'bed-sit', height: 265, facing: 1 }
     }
   },
-  { id: 'desk', label: '小书桌', x: 1250, z: .32, w: 245, d: .18, hit: [1125, 330, 1370, 582], block: [1135, 1360, .04, .28], socket: { x: 1240, z: .39 } },
+  { id: 'desk', label: '小书桌', x: 1250, z: .32, w: 245, d: .18, hit: [1125, 330, 1370, 525], block: [1135, 1360, .04, .1], socket: { x: 1240, z: .39 } },
   { id: 'board', label: '留言墙', x: 1240, z: .11, w: 210, d: .03, hit: [1135, 170, 1350, 390], socket: { x: 1200, z: .39 } },
-  { id: 'door', label: '院门', x: 1440, z: .26, w: 175, d: .12, hit: [1365, 135, 1535, 595], socket: { x: 1370, z: .39 }, interactionRadius: 160, direct: true }
+  { id: 'door', label: '院门', x: 1440, z: .26, w: 175, d: .12, hit: [1365, 135, 1535, 525], socket: { x: 1370, z: .39 }, interactionRadius: 160, direct: true }
 ];
 
 const outdoorObjects = [
@@ -116,7 +116,7 @@ export const SCENES = {
     actorHeights: { player: 257, hubby: 294, naili: 76 },
     foregroundLayers: [{
       id: 'bed-front', objectId: 'bed', z: .35,
-      polygons: [[[0, 482], [414, 452], [470, 650], [0, 650]]]
+      polygons: []
     }],
     obstacles: [
       ...indoorObjects.flatMap((object) => object.block ? [{ x1: object.block[0], x2: object.block[1], z1: object.block[2], z2: object.block[3] }] : []),
@@ -131,7 +131,7 @@ export const SCENES = {
       player: { x: 370, z: .58 }, hubby: { x: 470, z: .62 }, naili: { x: 535, z: .73 }
     },
     entry: {
-      fromIndoor: { player: { x: 350, z: .58 }, hubby: { x: 455, z: .62 }, naili: { x: 525, z: .73 } }
+      fromIndoor: { player: { x: 255, z: .52 }, hubby: { x: 285, z: .52 }, naili: { x: 350, z: .64 } }
     },
     objects: outdoorObjects,
     actorHeights: { player: 156, hubby: 184, naili: 70 },
