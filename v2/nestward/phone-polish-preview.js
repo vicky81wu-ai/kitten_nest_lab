@@ -11,12 +11,12 @@ const outdoorDoor = outdoor.objects.find((object) => object.id === 'door');
 const bench = outdoor.objects.find((object) => object.id === 'bench');
 const fountain = outdoor.objects.find((object) => object.id === 'fountain');
 
-// Indoor doorway calibration from the accepted screenshot. The generic direct
-// door approach walks almost to object.x/z, so make that point the painted
-// threshold rather than the old interaction-envelope center.
+// Indoor doorway calibration: use the authored indoor return anchor as the
+// physical threshold. The previous .74 depth drove the actor far down into the
+// room/table area; this returns the direct-door target to the painted sill.
 Object.assign(indoorDoor, {
-  x: 1298,
-  z: .74,
+  x: 1345,
+  z: .47,
   interactionRadius: 1,
   hitPolygons: [[[1366, 150], [1535, 150], [1535, 558], [1366, 558]]]
 });
@@ -26,16 +26,18 @@ indoor.entry.fromOutdoor = {
   naili: { ...indoor.entry.fromOutdoor.naili }
 };
 
-// Outdoor threshold / default Kitten entry: keep the accepted depth but shift
-// the solo landing left onto the middle of the broad top stair platform.
+// Outdoor doorway / entry calibration from phone acceptance: compared with the
+// last build, move the landing left and slightly deeper so Kitten stands on the
+// middle of the broad upper stair tread. This exact point is also the return-to-
+// indoor transition target.
 Object.assign(outdoorDoor, {
-  x: 210,
-  z: .255,
+  x: 145,
+  z: .335,
   interactionRadius: 1,
-  hitPolygons: [[[118, 245], [310, 245], [310, 505], [118, 505]]]
+  hitPolygons: [[[90, 230], [310, 230], [310, 615], [90, 615]]]
 });
 outdoor.entry.fromIndoor = {
-  player: { x: 210, z: .255 },
+  player: { x: 145, z: .335 },
   hubby: { ...outdoor.entry.fromIndoor.hubby },
   naili: { ...outdoor.entry.fromIndoor.naili }
 };
@@ -44,7 +46,7 @@ outdoor.entry.fromIndoor = {
 // Retain only the solid masonry strip at the far-left edge; the landing and
 // steps themselves are navigable authored floor.
 const houseGuard = outdoor.obstacles.find((obstacle) => obstacle.x1 === 0 && obstacle.x2 === 320 && obstacle.z1 === .03 && obstacle.z2 === .4);
-if (houseGuard) Object.assign(houseGuard, { x2: 118, z2: .34 });
+if (houseGuard) Object.assign(houseGuard, { x2: 82, z2: .27 });
 
 // Bench interaction owns only the visible back + seat. Legs and the path in
 // front remain floor taps. A tiny strip above the back is intentionally kept.
@@ -55,33 +57,34 @@ Object.assign(bench, {
 
 // The formal model still carries a broad bench collision rectangle even after
 // its hotspot was tightened. Remove that copied blocker for phone acceptance:
-// the painted legs and the red-marked path in front are valid floor.
+// the painted legs and the path in front are valid floor.
 const benchBlockIndex = outdoor.obstacles.findIndex((obstacle) => obstacle.x1 === 405 && obstacle.x2 === 610 && obstacle.z1 === .04 && obstacle.z2 === .27);
 if (benchBlockIndex >= 0) outdoor.obstacles.splice(benchBlockIndex, 1);
 
-// Fountain interaction hugs the fountain body plus its lower-left yellow lamp;
-// the central garden path to the left is floor rather than a giant hotspot.
+// Fountain hotspot is deliberately much smaller than its stone footprint:
+// narrow upright column + the visible water surface. The stone pool wall is not
+// interactive, so taps beside it remain floor taps all the way toward the gate.
 Object.assign(fountain, {
+  hit: [980, 280, 1200, 548],
   hitPolygons: [
-    [[1042, 286], [1172, 286], [1218, 458], [1200, 586], [1034, 586], [1028, 480]],
-    [[980, 452], [1038, 452], [1042, 566], [978, 566]]
+    [[1060, 286], [1148, 286], [1170, 472], [1038, 472]],
+    [[1000, 472], [1030, 454], [1086, 446], [1144, 454], [1180, 476], [1190, 505], [1170, 530], [1088, 542], [1012, 530], [990, 504]]
   ]
 });
 
-// Likewise replace the old broad fountain collision with two narrow physical
-// blockers: fountain body + the small yellow lamp. The marked gate-side path
-// stays walkable without making the lamp itself a walk-through tile.
+// Replace the old broad fountain collision with only the physical central body
+// and the lower-left yellow lamp. The gate-side red-marked corridor remains
+// walkable right up to the gate bottom while the lamp itself stays solid.
 const fountainBlockIndex = outdoor.obstacles.findIndex((obstacle) => obstacle.x1 === 965 && obstacle.x2 === 1200 && obstacle.z1 === .03 && obstacle.z2 === .31);
 if (fountainBlockIndex >= 0) {
   outdoor.obstacles.splice(fountainBlockIndex, 1,
-    { x1: 1045, x2: 1205, z1: .05, z2: .29 },
-    { x1: 985, x2: 1030, z1: .18, z2: .30 }
+    { x1: 1055, x2: 1195, z1: .05, z2: .275 },
+    { x1: 990, x2: 1018, z1: .20, z2: .285 }
   );
 }
 
-// Naili gets the same grounded visual cue as the people. This is deliberately
-// branch-local for phone acceptance; after approval it should move into the
-// canonical renderer next to drawSpriteNaili rather than remain a monkey patch.
+// Naili gets the same grounded visual cue as the people. Accepted on phone:
+// keep the doubled footprint and let the paws overlap the ellipse slightly.
 const originalRender = WorldRenderer.prototype.render;
 WorldRenderer.prototype.render = function renderWithNailiShadow(state, time) {
   originalRender.call(this, state, time);
