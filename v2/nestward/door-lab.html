@@ -5,140 +5,64 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <title>NW Door Lab</title>
 <style>
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;min-height:100%;background:#17100e;color:#fff7ef;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC",sans-serif}body{padding:max(10px,env(safe-area-inset-top)) 10px max(18px,env(safe-area-inset-bottom))}.top{position:sticky;top:0;z-index:50;padding:7px 0 9px;background:linear-gradient(#17100e 86%,rgba(23,16,14,0))}.title{font-size:18px;font-weight:850}.sub{margin-top:3px;color:#d5c4ba;font-size:11px;line-height:1.48}.tabs,.tools,.points,.nudge{display:flex;gap:6px;flex-wrap:wrap}.tabs{margin-top:9px}.tabs button,.tools button,.points button,.nudge button,.copy{border:1px solid rgba(255,255,255,.15);background:#2a201d;color:#fff7ef;border-radius:11px;padding:8px 9px;font:700 12px/1.1 inherit}.tabs button.active,.points button.active,.tools button.active{background:#fff1e3;color:#3d2c26}.fixed{opacity:.62}.readout{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-top:7px}.pill{padding:6px 8px;border-radius:999px;background:#2b211e;font:700 12px ui-monospace,SFMono-Regular,Menlo,monospace}.copy{margin-left:auto;background:#724359}.viewport{position:relative;height:66vh;min-height:470px;max-height:760px;margin-top:7px;overflow-x:auto;overflow-y:hidden;border:1px solid rgba(255,255,255,.12);border-radius:17px;background:#0e0b0a;box-shadow:0 14px 44px rgba(0,0,0,.3);scrollbar-width:none}.viewport::-webkit-scrollbar{display:none}.world{position:relative;height:100%;touch-action:none;user-select:none;-webkit-user-select:none}.bg,.maskImg{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none}.bg{z-index:1}.pathSvg{position:absolute;inset:0;z-index:2;overflow:visible;pointer-events:none}.sprite{position:absolute;transform:translate(-50%,-100%);transform-origin:50% 100%;filter:drop-shadow(0 4px 3px rgba(0,0,0,.25));touch-action:none;z-index:3}.sprite.kitten{z-index:5}.sprite.carry{z-index:5}.sprite.active{filter:drop-shadow(0 0 7px rgba(255,236,120,.95)) drop-shadow(0 5px 3px rgba(0,0,0,.28))}.mark{position:absolute;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;z-index:7}.mark.fixed{width:18px;height:18px;border:3px solid #78d8ff;box-shadow:0 0 0 3px rgba(0,0,0,.45)}.mark.live{width:17px;height:17px;border:3px solid #ffed78;box-shadow:0 0 0 3px rgba(0,0,0,.45),0 0 14px rgba(255,237,120,.7)}.label{position:absolute;transform:translate(-50%,-100%);z-index:8;white-space:nowrap;padding:4px 6px;border-radius:8px;background:rgba(24,18,16,.82);font-size:10px;font-weight:800;pointer-events:none}.maskImg{z-index:4;display:none}.vertexLayer{position:absolute;inset:0;z-index:12;pointer-events:none}.vertex{position:absolute;width:18px;height:18px;border:3px solid #fff;border-radius:50%;transform:translate(-50%,-50%);pointer-events:auto;touch-action:none;box-shadow:0 0 0 2px rgba(0,0,0,.45)}.hint{position:absolute;left:10px;bottom:10px;z-index:20;max-width:78%;padding:7px 9px;border-radius:11px;background:rgba(20,15,13,.8);font-size:11px;line-height:1.4;pointer-events:none}.section{margin-top:8px;padding:9px;border:1px solid rgba(255,255,255,.09);border-radius:14px;background:#211916}.sectionTitle{font-size:12px;font-weight:850;margin-bottom:7px}.nudge{margin-top:7px}.nudge button{flex:1;min-width:72px}.output{margin-top:8px;padding:9px;border-radius:13px;background:#120e0d;color:#f5e8de;font:11px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;overflow:auto}.legend{margin-top:6px;color:#c9b6aa;font-size:10px;line-height:1.45}.tiny{font-size:10px;color:#cbb8ad;margin-top:5px}.play{background:#35504a!important}.danger{background:#5b3434!important}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;min-height:100%;background:#17100e;color:#fff7ef;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC",sans-serif}body{padding:max(10px,env(safe-area-inset-top)) 10px max(18px,env(safe-area-inset-bottom))}.title{font-size:18px;font-weight:850}.sub{margin-top:4px;color:#d5c4ba;font-size:11px;line-height:1.45}.tabs,.targetBar,.toolBar,.nudge{display:flex;gap:6px;flex-wrap:wrap}.tabs{margin-top:10px}.tabs button,.targetBar button,.toolBar button,.nudge button,.copy{border:1px solid rgba(255,255,255,.15);background:#2a201d;color:#fff7ef;border-radius:11px;padding:9px 10px;font:700 12px/1.15 inherit}.tabs button.active,.targetBar button.active,.toolBar button.active{background:#fff1e3;color:#3d2c26}.viewport{position:relative;height:68vh;min-height:500px;max-height:780px;margin-top:10px;overflow-x:auto;overflow-y:hidden;border:1px solid rgba(255,255,255,.12);border-radius:18px;background:#0e0b0a;box-shadow:0 14px 44px rgba(0,0,0,.3);scrollbar-width:none}.viewport::-webkit-scrollbar{display:none}.world{position:relative;height:100%;touch-action:none;user-select:none;-webkit-user-select:none}.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none;z-index:1}.pathSvg{position:absolute;inset:0;z-index:2;overflow:visible;pointer-events:none}.sprite{position:absolute;z-index:5;transform:translate(-50%,-100%);transform-origin:50% 100%;filter:drop-shadow(0 0 7px rgba(255,236,120,.92)) drop-shadow(0 5px 3px rgba(0,0,0,.28));touch-action:none}.mark{position:absolute;z-index:8;width:18px;height:18px;border-radius:50%;transform:translate(-50%,-50%);pointer-events:none}.mark.fixed{border:3px solid #78d8ff;box-shadow:0 0 0 3px rgba(0,0,0,.45)}.mark.live{border:3px solid #ffed78;box-shadow:0 0 0 3px rgba(0,0,0,.45),0 0 14px rgba(255,237,120,.72)}.vertexLayer{position:absolute;inset:0;z-index:12;pointer-events:none}.vertex{position:absolute;width:18px;height:18px;border:3px solid #fff;border-radius:50%;transform:translate(-50%,-50%);pointer-events:auto;touch-action:none;box-shadow:0 0 0 2px rgba(0,0,0,.45)}.hud{position:absolute;z-index:20;left:10px;top:10px;max-width:78%;padding:8px 10px;border-radius:12px;background:rgba(20,15,13,.82);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);pointer-events:none}.hudName{font-size:12px;font-weight:850}.hudXY{margin-top:3px;color:#ffef9b;font:700 11px ui-monospace,SFMono-Regular,Menlo,monospace}.fixedNote{position:absolute;z-index:19;right:10px;bottom:10px;padding:6px 8px;border-radius:10px;background:rgba(20,15,13,.72);font-size:10px;color:#aee7ff;pointer-events:none}.panel{margin-top:9px;padding:10px;border:1px solid rgba(255,255,255,.09);border-radius:14px;background:#211916}.panelTitle{font-size:12px;font-weight:850;margin-bottom:7px}.nudge{margin-top:7px}.nudge button{flex:1;min-width:72px}.copy{width:100%;margin-top:9px;background:#724359}.tiny{margin-top:6px;color:#cbb8ad;font-size:10px;line-height:1.45}.play{background:#35504a!important}.danger{background:#5b3434!important}.outputWrap{margin-top:9px;border:1px solid rgba(255,255,255,.08);border-radius:13px;background:#120e0d}.outputWrap summary{padding:9px 10px;cursor:pointer;font-size:11px;font-weight:800;color:#dbcac0}.output{margin:0;padding:0 10px 10px;color:#f5e8de;font:11px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;overflow:auto}.modeHint{margin-top:7px;color:#d8c8bd;font-size:11px;line-height:1.4}
 </style>
 </head>
 <body>
-<div class="top">
-  <div class="title">NW Door Lab · 门系统总校准</div>
-  <div class="sub">你已经敲定的两个锚点锁死不动。这里只调：小猫回户内 B 点、Hubby 四个门点、公主抱两边锚点、门里外 hotspot、以及只在“户外→户内”时遮 Hubby 的门框 mask。</div>
-  <div class="tabs"><button id="tabIndoor">户内</button><button id="tabOutdoor">户外</button></div>
-  <div class="readout"><span class="pill" id="xyOut">x=— z=—</span><span class="pill" id="modeOut">点位模式</span><button class="copy" id="copyAll">复制全部参数</button></div>
+<div class="title">NW Door Lab · 单目标校准</div>
+<div class="sub">一次只显示当前正在调的一个人物或一个轮廓。蓝圈只是已锁定锚点参考，不再把所有角色和标签堆在门口。</div>
+<div class="tabs"><button id="tabIndoor">户内</button><button id="tabOutdoor">户外</button></div>
+<div class="viewport" id="viewport"><div class="world" id="world"><img class="bg" id="bg"><svg class="pathSvg" id="pathSvg"></svg><img class="sprite" id="sprite"><div class="mark fixed" id="fixedMark"></div><div class="mark live" id="liveMark"></div><div class="vertexLayer" id="vertexLayer"></div><div class="hud"><div class="hudName" id="hudName"></div><div class="hudXY" id="hudXY"></div></div><div class="fixedNote" id="fixedNote"></div></div></div>
+<div class="panel">
+  <div class="panelTitle">现在调谁</div>
+  <div class="targetBar" id="pointButtons"></div>
+  <div class="nudge" id="nudge"><button data-dx="-5">← x−5</button><button data-dx="5">x+5 →</button><button data-dz="-.01">↑ z−.01</button><button data-dz=".01">↓ z+.01</button></div>
+  <div class="modeHint" id="pointHint"></div>
 </div>
-<div class="section">
-  <div class="sectionTitle">当前场景要调的点</div>
-  <div class="points" id="pointButtons"></div>
-  <div class="nudge"><button data-dx="-5">← x−5</button><button data-dx="5">x+5 →</button><button data-dz="-.01">↑ z−.01</button><button data-dz=".01">↓ z+.01</button></div>
+<div class="panel">
+  <div class="panelTitle">门热点 / 过渡遮挡</div>
+  <div class="toolBar" id="polyButtons"></div>
+  <div class="toolBar" style="margin-top:6px"><button id="undoPoly">撤销一点</button><button id="clearPoly" class="danger">清空当前轮廓</button><button id="playArrival" class="play">播放“我先进→Hubby再进”</button></div>
+  <div class="tiny">选中轮廓后，画面会隐藏人物，只显示当前这一条 polygon。直接点图加顶点；白点可拖。其他 hotspot / mask 一律不显示。</div>
 </div>
-<div class="section">
-  <div class="sectionTitle">门框 / 热区</div>
-  <div class="tools" id="polyButtons"></div>
-  <div class="tools" style="margin-top:6px"><button id="undoPoly">撤销一点</button><button id="clearPoly" class="danger">清空当前图形</button><button id="toggleMask">预览门框遮挡</button><button id="playArrival" class="play">播放“我先进→Hubby再进”</button></div>
-  <div class="tiny">绘制时直接在图上连续点；白色顶点可继续拖。hotspot 和 mask 用的是 world image 的 x/y 像素，不是 z。</div>
-</div>
-<div class="viewport" id="viewport">
-  <div class="world" id="world">
-    <img class="bg" id="bg">
-    <svg class="pathSvg" id="pathSvg"></svg>
-    <div id="sprites"></div>
-    <img class="maskImg" id="maskImg">
-    <div class="vertexLayer" id="vertexLayer"></div>
-    <div class="hint" id="hint"></div>
-  </div>
-</div>
-<pre class="output" id="output"></pre>
-<div class="legend">蓝圈 = 已锁定的小猫门锚点；黄圈 = 当前可调点。室内播放顺序固定为：小猫从 A → B，等小猫到 B 后，Hubby 才从 A 附近出现并走到他的户内落点；doorway mask 只用于这段 Hubby 入门动画，不作为日常永久遮挡。</div>
+<button class="copy" id="copyAll">复制全部参数</button>
+<details class="outputWrap"><summary>展开查看全部参数</summary><pre class="output" id="output"></pre></details>
 <script>
 const W=1536,H=1024;
-const fixed={
- kittenIndoorA:{scene:'indoor',x:1394,z:.167,label:'小猫户内 A · 已锁',role:'kitten'},
- kittenOutdoorAnchor:{scene:'outdoor',x:153,z:.299,label:'小猫户外锚点 · 已锁',role:'kitten'}
-};
-const scenes={
- indoor:{bg:'./assets/indoor-world.webp',wallBottom:465,floorBottom:1024,heights:{kitten:257,hubby:294,carry:329}},
- outdoor:{bg:'./assets/outdoor-world.webp',wallBottom:390,floorBottom:1024,heights:{kitten:156,hubby:184,carry:206}}
-};
-const defaults={
- points:{
-  kittenIndoorB:{scene:'indoor',x:1288,z:.57,label:'小猫回户内 B',role:'kitten'},
-  hubbyIndoorExit:{scene:'indoor',x:1394,z:.20,label:'Hubby 户内→户外切换点',role:'hubby'},
-  hubbyIndoorArrival:{scene:'indoor',x:1320,z:.52,label:'Hubby 回户内最终落点',role:'hubby'},
-  hubbyOutdoorEntry:{scene:'outdoor',x:285,z:.52,label:'Hubby 出户外起始点',role:'hubby'},
-  hubbyOutdoorReturn:{scene:'outdoor',x:190,z:.33,label:'Hubby 回户内切换点',role:'hubby'},
-  carryIndoorAnchor:{scene:'indoor',x:1394,z:.167,label:'公主抱 · 户内锚点',role:'carry'},
-  carryOutdoorAnchor:{scene:'outdoor',x:245,z:.42,label:'公主抱 · 户外锚点',role:'carry'}
- },
- polys:{
-  indoorHotspot:{scene:'indoor',label:'户内门 hotspot',kind:'hotspot',points:[[1375,155],[1532,155],[1532,510],[1375,510]]},
-  outdoorHotspot:{scene:'outdoor',label:'户外门 hotspot',kind:'hotspot',points:[[112,235],[275,235],[275,455],[112,455]]},
-  indoorHubbyMask:{scene:'indoor',label:'Hubby 入户门框 mask',kind:'mask',points:[[1430,150],[1536,150],[1536,615],[1405,615],[1418,420]]}
- }
-};
-const storageKey='nw.doorLab.v1';
-let saved={};try{saved=JSON.parse(localStorage.getItem(storageKey)||'{}')}catch{}
-let data=structuredClone(defaults);
-if(saved.points) for(const [k,v] of Object.entries(saved.points)) if(data.points[k]) Object.assign(data.points[k],v);
-if(saved.polys) for(const [k,v] of Object.entries(saved.polys)) if(data.polys[k]&&Array.isArray(v.points)) data.polys[k].points=v.points;
-let sceneName='indoor', selectedPoint='kittenIndoorB', selectedPoly=null, draggingPoint=null, draggingVertex=null, maskPreview=true, animating=false;
-const $=s=>document.querySelector(s);const viewport=$('#viewport'),world=$('#world'),bg=$('#bg'),sprites=$('#sprites'),pathSvg=$('#pathSvg'),vertexLayer=$('#vertexLayer'),maskImg=$('#maskImg'),hint=$('#hint'),xyOut=$('#xyOut'),modeOut=$('#modeOut'),output=$('#output');
-const actorScale=z=>.72+z*.31;const groundY=(s,z)=>s.wallBottom+z*(s.floorBottom-s.wallBottom);
-function dims(){const h=viewport.clientHeight;return{scale:h/H,w:W*h/H,h}}
-function save(){localStorage.setItem(storageKey,JSON.stringify(data))}
-function pointPx(p){const d=dims(),s=scenes[p.scene];return{x:p.x*d.scale,y:groundY(s,p.z)*d.scale}}
-function imgPx(x,y){const d=dims();return{x:x*d.scale,y:y*d.scale}}
-function spriteSrc(role){return role==='hubby'?'./assets/characters/hubby-idle.png':role==='carry'?'./assets/characters/hubby-carry-walk-1.png':'./assets/characters/kitten-idle.png'}
-function makeSprite(p,id,isFixed=false){
- const d=dims(),pos=pointPx(p),s=scenes[p.scene],el=document.createElement('img');el.src=spriteSrc(p.role);el.className=`sprite ${p.role==='kitten'?'kitten':p.role==='carry'?'carry':''} ${id===selectedPoint?'active':''}`;el.dataset.id=id;el.style.left=`${pos.x}px`;el.style.top=`${pos.y}px`;const base=s.heights[p.role]||180;el.style.height=`${base*(actorScale(p.z)/actorScale(.62))*d.scale}px`;el.style.width='auto';if(!isFixed){el.addEventListener('pointerdown',e=>{e.stopPropagation();selectedPoly=null;selectedPoint=id;draggingPoint=id;el.setPointerCapture(e.pointerId);render(false)});el.addEventListener('pointermove',e=>{if(draggingPoint===id)setPointFromPointer(id,e)});el.addEventListener('pointerup',()=>draggingPoint=null);el.addEventListener('pointercancel',()=>draggingPoint=null)}else el.style.opacity='.38';sprites.appendChild(el);
- const mark=document.createElement('div');mark.className=`mark ${isFixed?'fixed':'live'}`;mark.style.left=`${pos.x}px`;mark.style.top=`${pos.y}px`;sprites.appendChild(mark);
- const lab=document.createElement('div');lab.className='label';lab.textContent=p.label;lab.style.left=`${pos.x}px`;lab.style.top=`${Math.max(18,pos.y-(base*(actorScale(p.z)/actorScale(.62))*d.scale)-3)}px`;sprites.appendChild(lab);
-}
-function renderPaths(){
- pathSvg.setAttribute('width',dims().w);pathSvg.setAttribute('height',dims().h);pathSvg.setAttribute('viewBox',`0 0 ${dims().w} ${dims().h}`);let html='';
- if(sceneName==='indoor'){
-  const a=pointPx(fixed.kittenIndoorA),b=pointPx(data.points.kittenIndoorB),h=pointPx(data.points.hubbyIndoorArrival);
-  html+=`<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="#ff9ec2" stroke-width="3" stroke-dasharray="8 7" opacity=".9"/>`;
-  html+=`<line x1="${a.x}" y1="${a.y}" x2="${h.x}" y2="${h.y}" stroke="#8bd1ff" stroke-width="3" stroke-dasharray="8 7" opacity=".8"/>`;
- }
- for(const [key,poly] of Object.entries(data.polys)){
-  if(poly.scene!==sceneName||poly.points.length<2)continue;const pts=poly.points.map(([x,y])=>{const p=imgPx(x,y);return`${p.x},${p.y}`}).join(' ');const fill=poly.kind==='mask'?'rgba(100,190,255,.14)':'rgba(255,125,165,.14)';const stroke=poly.kind==='mask'?'#71cfff':'#ff84aa';html+=`<polygon points="${pts}" fill="${fill}" stroke="${stroke}" stroke-width="3" stroke-dasharray="${key===selectedPoly?'0':'7 5'}"/>`;
- }
- pathSvg.innerHTML=html;
-}
-function renderVertices(){vertexLayer.innerHTML='';if(!selectedPoly)return;const poly=data.polys[selectedPoly];if(!poly||poly.scene!==sceneName)return;poly.points.forEach(([x,y],i)=>{const p=imgPx(x,y),v=document.createElement('div');v.className='vertex';v.style.left=`${p.x}px`;v.style.top=`${p.y}px`;v.dataset.i=i;v.addEventListener('pointerdown',e=>{e.stopPropagation();draggingVertex=i;v.setPointerCapture(e.pointerId)});v.addEventListener('pointermove',e=>{if(draggingVertex===i)setVertexFromPointer(i,e)});v.addEventListener('pointerup',()=>draggingVertex=null);v.addEventListener('pointercancel',()=>draggingVertex=null);vertexLayer.appendChild(v)})}
-function applyMask(){const poly=data.polys.indoorHubbyMask;if(sceneName!=='indoor'||!maskPreview||poly.points.length<3){maskImg.style.display='none';return}const pts=poly.points.map(([x,y])=>`${x/W*100}% ${y/H*100}%`).join(',');maskImg.src=scenes.indoor.bg;maskImg.style.clipPath=`polygon(${pts})`;maskImg.style.display='block'}
-function pointButtons(){const box=$('#pointButtons');box.innerHTML='';for(const [id,p] of Object.entries(data.points)){if(p.scene!==sceneName)continue;const b=document.createElement('button');b.textContent=p.label;b.classList.toggle('active',selectedPoint===id&&!selectedPoly);b.onclick=()=>{selectedPoly=null;selectedPoint=id;render(false)};box.appendChild(b)}const f=Object.values(fixed).filter(p=>p.scene===sceneName);f.forEach(p=>{const b=document.createElement('button');b.textContent=p.label;b.className='fixed';b.disabled=true;box.appendChild(b)})}
-function polyButtons(){const box=$('#polyButtons');box.innerHTML='';for(const [id,p] of Object.entries(data.polys)){if(p.scene!==sceneName)continue;const b=document.createElement('button');b.textContent=`勾 ${p.label}`;b.classList.toggle('active',selectedPoly===id);b.onclick=()=>{selectedPoly=id;selectedPoint=null;render(false)};box.appendChild(b)}}
-function outputText(){const p=data.points,q=data.polys;return[
-'// 已锁定，不再调',
-`kittenIndoorA: { x: 1394, z: 0.167 }`,
-`kittenOutdoorAnchor: { x: 153, z: 0.299 }`,
-'',
-'// 新校准',
-`kittenIndoorB: { x: ${Math.round(p.kittenIndoorB.x)}, z: ${p.kittenIndoorB.z.toFixed(3)} }`,
-`hubbyIndoorExitTarget: { x: ${Math.round(p.hubbyIndoorExit.x)}, z: ${p.hubbyIndoorExit.z.toFixed(3)} }`,
-`hubbyOutdoorEntryTarget: { x: ${Math.round(p.hubbyOutdoorEntry.x)}, z: ${p.hubbyOutdoorEntry.z.toFixed(3)} }`,
-`hubbyOutdoorReturnTarget: { x: ${Math.round(p.hubbyOutdoorReturn.x)}, z: ${p.hubbyOutdoorReturn.z.toFixed(3)} }`,
-`hubbyIndoorArrivalTarget: { x: ${Math.round(p.hubbyIndoorArrival.x)}, z: ${p.hubbyIndoorArrival.z.toFixed(3)} }`,
-`carryIndoorAnchor: { x: ${Math.round(p.carryIndoorAnchor.x)}, z: ${p.carryIndoorAnchor.z.toFixed(3)} }`,
-`carryOutdoorAnchor: { x: ${Math.round(p.carryOutdoorAnchor.x)}, z: ${p.carryOutdoorAnchor.z.toFixed(3)} }`,
-`indoorDoorHotspot: ${JSON.stringify(q.indoorHotspot.points)}`,
-`outdoorDoorHotspot: ${JSON.stringify(q.outdoorHotspot.points)}`,
-`indoorHubbyArrivalMask: ${JSON.stringify(q.indoorHubbyMask.points)}`,
-'',
-'// 过渡规则',
-'outdoorToIndoor: Kitten A -> Kitten B; then Hubby enters from doorway -> Hubby indoor arrival; mask affects Hubby only during this transition.'
-].join('\n')}
-function render(recenter=false){
- const d=dims();world.style.width=`${d.w}px`;world.style.height=`${d.h}px`;bg.src=scenes[sceneName].bg;bg.style.width=`${d.w}px`;bg.style.height=`${d.h}px`;maskImg.style.width=`${d.w}px`;maskImg.style.height=`${d.h}px`;sprites.innerHTML='';
- for(const [id,p] of Object.entries(fixed))if(p.scene===sceneName)makeSprite(p,id,true);for(const [id,p] of Object.entries(data.points))if(p.scene===sceneName)makeSprite(p,id,false);
- renderPaths();renderVertices();applyMask();pointButtons();polyButtons();
- $('#tabIndoor').classList.toggle('active',sceneName==='indoor');$('#tabOutdoor').classList.toggle('active',sceneName==='outdoor');
- if(selectedPoint){const p=data.points[selectedPoint];xyOut.textContent=p?`x=${Math.round(p.x)} z=${p.z.toFixed(3)}`:'x=— z=—';modeOut.textContent='点位模式'}else if(selectedPoly){const poly=data.polys[selectedPoly];xyOut.textContent=`${poly.points.length} 个顶点`;modeOut.textContent=poly.kind==='mask'?'门框 mask':'hotspot'}else{xyOut.textContent='x=— z=—';modeOut.textContent='点位模式'}
- hint.textContent=selectedPoly?`正在勾：${data.polys[selectedPoly].label}。点空白处加顶点，拖白点微调。`:(selectedPoint?`正在调：${data.points[selectedPoint].label}。点地板或拖人物。`:'选择一个点位或图形。');
- output.textContent=outputText();save();
- if(recenter){requestAnimationFrame(()=>{let target=0;if(sceneName==='indoor')target=Math.max(0,d.w-viewport.clientWidth*1.02);viewport.scrollLeft=target})}
-}
-function worldCoord(e){const r=world.getBoundingClientRect(),d=dims();return{x:(e.clientX-r.left)/d.scale,y:(e.clientY-r.top)/d.scale}}
-function setPointFromPointer(id,e){const c=worldCoord(e),p=data.points[id],s=scenes[p.scene];p.x=Math.max(70,Math.min(1466,c.x));p.z=Math.max(.05,Math.min(.94,(c.y-s.wallBottom)/(s.floorBottom-s.wallBottom)));render(false)}
-function setVertexFromPointer(i,e){if(!selectedPoly)return;const c=worldCoord(e);data.polys[selectedPoly].points[i]=[Math.round(Math.max(0,Math.min(W,c.x))),Math.round(Math.max(0,Math.min(H,c.y)))];render(false)}
-world.addEventListener('pointerdown',e=>{if(animating)return;if(selectedPoly){const c=worldCoord(e);data.polys[selectedPoly].points.push([Math.round(c.x),Math.round(c.y)]);render(false)}else if(selectedPoint)setPointFromPointer(selectedPoint,e)});
-$('#tabIndoor').onclick=()=>{sceneName='indoor';selectedPoint='kittenIndoorB';selectedPoly=null;render(true)};$('#tabOutdoor').onclick=()=>{sceneName='outdoor';selectedPoint='hubbyOutdoorEntry';selectedPoly=null;render(true)};
-document.querySelectorAll('.nudge button').forEach(b=>b.onclick=()=>{if(!selectedPoint)return;const p=data.points[selectedPoint];if(b.dataset.dx)p.x+=Number(b.dataset.dx);if(b.dataset.dz)p.z+=Number(b.dataset.dz);render(false)});
-$('#undoPoly').onclick=()=>{if(!selectedPoly)return;data.polys[selectedPoly].points.pop();render(false)};$('#clearPoly').onclick=()=>{if(!selectedPoly)return;data.polys[selectedPoly].points=[];render(false)};$('#toggleMask').onclick=()=>{maskPreview=!maskPreview;$('#toggleMask').textContent=maskPreview?'隐藏门框遮挡预览':'显示门框遮挡预览';render(false)};
-function tweenSprite(el,from,to,duration){return new Promise(resolve=>{const t0=performance.now();function step(now){const t=Math.min(1,(now-t0)/duration),ease=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;const x=from.x+(to.x-from.x)*ease,z=from.z+(to.z-from.z)*ease,p={scene:'indoor',x,z},pos=pointPx(p);el.style.left=`${pos.x}px`;el.style.top=`${pos.y}px`;if(t<1)requestAnimationFrame(step);else resolve()}requestAnimationFrame(step)})}
-$('#playArrival').onclick=async()=>{if(sceneName!=='indoor'){sceneName='indoor';selectedPoint='kittenIndoorB';selectedPoly=null;render(true);await new Promise(r=>setTimeout(r,120))}if(animating)return;animating=true;maskPreview=true;render(false);[...sprites.children].forEach(el=>el.style.opacity='.16');const a=fixed.kittenIndoorA,b=data.points.kittenIndoorB,h=data.points.hubbyIndoorArrival;const k=document.createElement('img');k.src=spriteSrc('kitten');k.className='sprite kitten';const hs=document.createElement('img');hs.src=spriteSrc('hubby');hs.className='sprite';sprites.append(k,hs);const d=dims();k.style.height=`${scenes.indoor.heights.kitten*(actorScale(a.z)/actorScale(.62))*d.scale}px`;hs.style.height=`${scenes.indoor.heights.hubby*(actorScale(a.z)/actorScale(.62))*d.scale}px`;k.style.width=hs.style.width='auto';const ap=pointPx(a);for(const el of [k,hs]){el.style.left=`${ap.x}px`;el.style.top=`${ap.y}px`}hs.style.opacity='0';await tweenSprite(k,a,b,900);hs.style.opacity='1';await tweenSprite(hs,a,h,1050);await new Promise(r=>setTimeout(r,650));animating=false;render(false)};
-$('#copyAll').onclick=async()=>{const text=outputText();try{await navigator.clipboard.writeText(text);$('#copyAll').textContent='已复制';setTimeout(()=>$('#copyAll').textContent='复制全部参数',1200)}catch{prompt('复制参数',text)}};
-addEventListener('resize',()=>render(false));render(true);
+const fixed={kittenIndoorA:{scene:'indoor',x:1394,z:.167,label:'已锁：小猫户内 A'},kittenOutdoorAnchor:{scene:'outdoor',x:153,z:.299,label:'已锁：小猫户外锚点'}};
+const scenes={indoor:{bg:'./assets/indoor-world.webp',wallBottom:465,floorBottom:1024,heights:{kitten:257,hubby:294,carry:329}},outdoor:{bg:'./assets/outdoor-world.webp',wallBottom:390,floorBottom:1024,heights:{kitten:156,hubby:184,carry:206}}};
+const defaults={points:{
+ kittenIndoorB:{scene:'indoor',x:1288,z:.57,label:'小猫回户内 B',role:'kitten'},
+ hubbyIndoorExit:{scene:'indoor',x:1394,z:.20,label:'Hubby 户内→户外切换点',role:'hubby'},
+ hubbyIndoorArrival:{scene:'indoor',x:1320,z:.52,label:'Hubby 回户内最终落点',role:'hubby'},
+ hubbyOutdoorEntry:{scene:'outdoor',x:285,z:.52,label:'Hubby 出户外起始点',role:'hubby'},
+ hubbyOutdoorReturn:{scene:'outdoor',x:190,z:.33,label:'Hubby 回户内切换点',role:'hubby'},
+ carryIndoorAnchor:{scene:'indoor',x:1394,z:.167,label:'公主抱 · 户内锚点',role:'carry'},
+ carryOutdoorAnchor:{scene:'outdoor',x:245,z:.42,label:'公主抱 · 户外锚点',role:'carry'}
+},polys:{
+ indoorHotspot:{scene:'indoor',label:'户内门 hotspot',kind:'hotspot',points:[[1375,155],[1532,155],[1532,510],[1375,510]]},
+ outdoorHotspot:{scene:'outdoor',label:'户外门 hotspot',kind:'hotspot',points:[[112,235],[275,235],[275,455],[112,455]]},
+ indoorHubbyMask:{scene:'indoor',label:'Hubby 入户门框 mask',kind:'mask',points:[[1430,150],[1536,150],[1536,615],[1405,615],[1418,420]]}
+}};
+const storageKey='nw.doorLab.v2';let saved={};try{saved=JSON.parse(localStorage.getItem(storageKey)||'{}')}catch{};let data=structuredClone(defaults);if(saved.points)for(const[k,v]of Object.entries(saved.points))if(data.points[k])Object.assign(data.points[k],v);if(saved.polys)for(const[k,v]of Object.entries(saved.polys))if(data.polys[k]&&Array.isArray(v.points))data.polys[k].points=v.points;
+let sceneName='indoor',selectedPoint='kittenIndoorB',selectedPoly=null,dragging=false,dragVertex=null,animating=false;
+const $=s=>document.querySelector(s),viewport=$('#viewport'),world=$('#world'),bg=$('#bg'),pathSvg=$('#pathSvg'),sprite=$('#sprite'),fixedMark=$('#fixedMark'),liveMark=$('#liveMark'),vertexLayer=$('#vertexLayer'),hudName=$('#hudName'),hudXY=$('#hudXY'),fixedNote=$('#fixedNote'),output=$('#output'),pointButtons=$('#pointButtons'),polyButtons=$('#polyButtons'),nudge=$('#nudge'),pointHint=$('#pointHint');
+const actorScale=z=>.72+z*.31,groundY=(s,z)=>s.wallBottom+z*(s.floorBottom-s.wallBottom);function dims(){const h=viewport.clientHeight;return{scale:h/H,w:W*h/H,h}}function save(){localStorage.setItem(storageKey,JSON.stringify(data))}function pointPx(p){const d=dims(),s=scenes[p.scene];return{x:p.x*d.scale,y:groundY(s,p.z)*d.scale}}function imgPx(x,y){const d=dims();return{x:x*d.scale,y:y*d.scale}}function src(role){return role==='hubby'?'./assets/characters/hubby-idle.png':role==='carry'?'./assets/characters/hubby-carry-walk-1.png':'./assets/characters/kitten-idle.png'}
+function fixedForScene(){return sceneName==='indoor'?fixed.kittenIndoorA:fixed.kittenOutdoorAnchor}
+function renderButtons(){pointButtons.innerHTML='';for(const[k,p]of Object.entries(data.points)){if(p.scene!==sceneName)continue;const b=document.createElement('button');b.textContent=p.label;b.classList.toggle('active',selectedPoint===k&&!selectedPoly);b.onclick=()=>{selectedPoint=k;selectedPoly=null;render()};pointButtons.appendChild(b)}polyButtons.innerHTML='';for(const[k,p]of Object.entries(data.polys)){if(p.scene!==sceneName)continue;const b=document.createElement('button');b.textContent=p.label;b.classList.toggle('active',selectedPoly===k);b.onclick=()=>{selectedPoly=k;selectedPoint=null;render()};polyButtons.appendChild(b)}}
+function renderPoint(){const p=selectedPoint&&data.points[selectedPoint];const f=fixedForScene(),fp=pointPx(f);fixedMark.style.display='block';fixedMark.style.left=`${fp.x}px`;fixedMark.style.top=`${fp.y}px`;fixedNote.textContent=f.label;if(!p||p.scene!==sceneName||selectedPoly){sprite.style.display='none';liveMark.style.display='none';nudge.style.display='none';return}nudge.style.display='flex';const d=dims(),pos=pointPx(p),s=scenes[sceneName];sprite.style.display='block';sprite.src=src(p.role);sprite.style.left=`${pos.x}px`;sprite.style.top=`${pos.y}px`;sprite.style.height=`${(s.heights[p.role]||180)*(actorScale(p.z)/actorScale(.62))*d.scale}px`;liveMark.style.display='block';liveMark.style.left=`${pos.x}px`;liveMark.style.top=`${pos.y}px`;hudName.textContent=p.label;hudXY.textContent=`x=${Math.round(p.x)}  z=${p.z.toFixed(3)}`;pointHint.textContent='直接点地板或拖人物脚底；画面只显示当前这个目标。'}
+function renderPoly(){pathSvg.setAttribute('width',dims().w);pathSvg.setAttribute('height',dims().h);pathSvg.setAttribute('viewBox',`0 0 ${dims().w} ${dims().h}`);vertexLayer.innerHTML='';if(!selectedPoly){pathSvg.innerHTML='';return}const poly=data.polys[selectedPoly];if(!poly||poly.scene!==sceneName)return;const pts=poly.points.map(([x,y])=>{const p=imgPx(x,y);return`${p.x},${p.y}`}).join(' '),stroke=poly.kind==='mask'?'#71cfff':'#ff84aa',fill=poly.kind==='mask'?'rgba(100,190,255,.18)':'rgba(255,125,165,.17)';pathSvg.innerHTML=poly.points.length>1?`<polygon points="${pts}" fill="${fill}" stroke="${stroke}" stroke-width="3"/>`:'';poly.points.forEach(([x,y],i)=>{const q=imgPx(x,y),v=document.createElement('div');v.className='vertex';v.style.left=`${q.x}px`;v.style.top=`${q.y}px`;v.onpointerdown=e=>{e.stopPropagation();dragVertex=i;v.setPointerCapture(e.pointerId)};v.onpointermove=e=>{if(dragVertex===i)setVertex(i,e)};v.onpointerup=()=>dragVertex=null;v.onpointercancel=()=>dragVertex=null;vertexLayer.appendChild(v)});hudName.textContent=poly.label;hudXY.textContent=`${poly.points.length} 个顶点`;pointHint.textContent='现在是轮廓模式：人物已隐藏，只看这一条线。'}
+function render(recenter=false){const d=dims();world.style.width=`${d.w}px`;world.style.height=`${d.h}px`;bg.src=scenes[sceneName].bg;renderButtons();renderPoint();renderPoly();if(selectedPoly){sprite.style.display='none';liveMark.style.display='none';nudge.style.display='none'}document.querySelector('#tabIndoor').classList.toggle('active',sceneName==='indoor');document.querySelector('#tabOutdoor').classList.toggle('active',sceneName==='outdoor');updateOutput();save();if(recenter)requestAnimationFrame(()=>{const f=pointPx(fixedForScene());viewport.scrollLeft=Math.max(0,f.x-viewport.clientWidth*.58)})}
+function worldCoords(e){const r=world.getBoundingClientRect(),d=dims();return{x:(e.clientX-r.left)/d.scale,y:(e.clientY-r.top)/d.scale}}
+function setPoint(e){if(!selectedPoint||selectedPoly)return;const q=worldCoords(e),p=data.points[selectedPoint],s=scenes[sceneName];p.x=Math.max(70,Math.min(1466,q.x));p.z=Math.max(.05,Math.min(.94,(q.y-s.wallBottom)/(s.floorBottom-s.wallBottom)));render()}
+function setVertex(i,e){if(!selectedPoly)return;const q=worldCoords(e);data.polys[selectedPoly].points[i]=[Math.max(0,Math.min(W,q.x)),Math.max(0,Math.min(H,q.y))];render()}
+world.onpointerdown=e=>{if(selectedPoly){if(e.target.classList.contains('vertex'))return;const q=worldCoords(e);data.polys[selectedPoly].points.push([Math.round(q.x),Math.round(q.y)]);render();return}dragging=true;world.setPointerCapture(e.pointerId);setPoint(e)};world.onpointermove=e=>{if(dragging&&!selectedPoly)setPoint(e)};world.onpointerup=()=>dragging=false;world.onpointercancel=()=>dragging=false;sprite.onpointerdown=e=>{e.stopPropagation();dragging=true;sprite.setPointerCapture(e.pointerId)};sprite.onpointermove=e=>{if(dragging)setPoint(e)};sprite.onpointerup=()=>dragging=false;
+document.querySelector('#tabIndoor').onclick=()=>{sceneName='indoor';selectedPoly=null;selectedPoint='kittenIndoorB';render(true)};document.querySelector('#tabOutdoor').onclick=()=>{sceneName='outdoor';selectedPoly=null;selectedPoint='hubbyOutdoorEntry';render(true)};document.querySelectorAll('.nudge button').forEach(b=>b.onclick=()=>{if(!selectedPoint)return;const p=data.points[selectedPoint];if(b.dataset.dx)p.x+=Number(b.dataset.dx);if(b.dataset.dz)p.z+=Number(b.dataset.dz);render()});document.querySelector('#undoPoly').onclick=()=>{if(selectedPoly&&data.polys[selectedPoly].points.length){data.polys[selectedPoly].points.pop();render()}};document.querySelector('#clearPoly').onclick=()=>{if(selectedPoly){data.polys[selectedPoly].points=[];render()}};
+function updateOutput(){output.textContent=`// 已锁\nkittenIndoorA: { x: 1394, z: 0.167 }\nkittenOutdoorAnchor: { x: 153, z: 0.299 }\n\n// 新校准\n${Object.entries(data.points).map(([k,p])=>`${k}: { x: ${Math.round(p.x)}, z: ${p.z.toFixed(3)} }`).join('\n')}\n\n${Object.entries(data.polys).map(([k,p])=>`${k}: ${JSON.stringify(p.points.map(([x,y])=>[Math.round(x),Math.round(y)]))}`).join('\n')}`}
+document.querySelector('#copyAll').onclick=async()=>{updateOutput();const text=output.textContent;try{await navigator.clipboard.writeText(text);const b=document.querySelector('#copyAll');b.textContent='已复制全部参数';setTimeout(()=>b.textContent='复制全部参数',1200)}catch{prompt('复制参数',text)}};
+function animate(el,from,to,duration){return new Promise(resolve=>{const start=performance.now();function tick(t){const k=Math.min(1,(t-start)/duration),e=k*k*(3-2*k),x=from.x+(to.x-from.x)*e,z=from.z+(to.z-from.z)*e,s=scenes.indoor,d=dims(),pos={x:x*d.scale,y:groundY(s,z)*d.scale};el.style.left=`${pos.x}px`;el.style.top=`${pos.y}px`;el.style.height=`${s.heights[el.dataset.role||'kitten']*(actorScale(z)/actorScale(.62))*d.scale}px`;if(k<1)requestAnimationFrame(tick);else resolve()}requestAnimationFrame(tick)})}
+document.querySelector('#playArrival').onclick=async()=>{if(sceneName!=='indoor'||animating)return;animating=true;selectedPoly=null;selectedPoint='kittenIndoorB';render();const a=fixed.kittenIndoorA,b=data.points.kittenIndoorB,h=data.points.hubbyIndoorArrival;sprite.dataset.role='kitten';sprite.src=src('kitten');await animate(sprite,a,b,850);await new Promise(r=>setTimeout(r,180));sprite.dataset.role='hubby';sprite.src=src('hubby');await animate(sprite,a,h,1050);sprite.dataset.role='';selectedPoint='hubbyIndoorArrival';render();animating=false};
+addEventListener('resize',()=>render());render(true);
 </script>
 </body>
 </html>
