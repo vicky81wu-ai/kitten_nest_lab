@@ -59,7 +59,8 @@ const state = {
   player, hubby, naili, tapPulse: null,
   swing: { active: false, pushed: false }, activeObjectId: null,
   princessCarry: { active: false },
-  gardenGateOpen: false
+  gardenGateOpen: false,
+  doorTravel: false
 };
 
 const speech = new SpeechRuntime({
@@ -160,6 +161,7 @@ function walkActor(actor, target, afterMove, options = {}) {
   actor.travelDir = Math.abs(journeyDx) > 24 ? (journeyDx > 0 ? 1 : -1) : null;
   if (actor.travelDir) actor.dir = actor.travelDir;
   actor.path = findPath(scene, actor, target);
+  if (options.exactTarget && actor.path.length) actor.path[actor.path.length - 1] = { x: target.x, z: target.z };
   actor.afterMove = afterMove || null;
   if (!actor.path.length) {
     actor.travelDir = null;
@@ -182,8 +184,6 @@ function updateActor(actor, delta) {
   const step = actor.speed * delta;
   actor.walking = true;
   actor.step += delta * (actor === naili ? 11 : 8.5);
-  // A* may insert tiny left/right correction segments around furniture. Those
-  // are path geometry, not a request to flip the artwork every few pixels.
   if (actor.travelDir) actor.dir = actor.travelDir;
   else if (Math.abs(dx) > 18) actor.dir = dx > 0 ? 1 : -1;
   if (metric <= step + 1) {
@@ -234,6 +234,7 @@ function updateCompanions(time) {
     naili.nextThink = time + 5 + random() * 5;
     walkActor(naili, { x: clamp(naili.x + (random() - .5) * 290, 100, scene.width - 100), z: .7 + random() * .2 });
   }
+  if (state.doorTravel) return;
   if (state.princessCarry.active) return;
   if (hubby.follow && distance(hubby, player) > 155 && time > hubby.nextThink) {
     hubby.nextThink = time + 1.05;
@@ -324,8 +325,6 @@ function hideActions() {
   state.activeObjectId = null;
 }
 function showActions(title, choices, anchor) {
-  // A menu may be mounted underneath the finger during the canvas pointerup.
-  // It must not accept that same gesture's synthetic click as a choice.
   actionPanelArmed = false;
   actionTitle.textContent = title;
   actionButtons.replaceChildren();
@@ -614,8 +613,6 @@ function arriveAtObject(object) {
       choice.run();
     }
   } : choice);
-  // While carrying, even a single-action object waits for an explicit choice.
-  // Merely arriving or inspecting the menu never puts Kitten down.
   if (choices.length === 1 && !carrying) choices[0].run();
   else showActions(object.label, choices, { kind: 'object', object });
 }
@@ -639,6 +636,33 @@ function nearestApproachPoint(actor, object) {
   });
 }
 
+function approachDoor(object) {
+  hideActions();
+  hideBubble();
+  state.activeObjectId = object.id;
+  state.doorTravel = true;
+  const nextName = sceneName === 'indoor' ? 'outdoor' : 'indoor';
+  const doorway = scene.doorway || {};
+  if (state.princessCarry.active) {
+    const target = doorway.carryAnchor || { x: object.x, z: object.z };
+    walkActor(hubby, target, () => changeScene(nextName), { exactTarget: true });
+    return;
+  }
+  const playerTarget = sceneName === 'indoor'
+    ? (doorway.kittenA || { x: object.x, z: object.z })
+    : (doorway.kittenAnchor || { x: object.x, z: object.z });
+  const hubbyTarget = sceneName === 'indoor'
+    ? (doorway.hubbyExit || playerTarget)
+    : (doorway.hubbyReturn || playerTarget);
+  let ready = 0;
+  const arrive = () => {
+    ready += 1;
+    if (ready === 2) changeScene(nextName);
+  };
+  walkActor(player, playerTarget, arrive, { exactTarget: true });
+  walkActor(hubby, hubbyTarget, arrive, { exactTarget: true });
+}
+
 function approachObject(object) {
   if (!state.princessCarry.active && (player.mount || state.swing.active)) {
     showHint('先点地板起身，再去碰别的东西。', 3200);
@@ -647,10 +671,11 @@ function approachObject(object) {
   hideActions();
   if (!state.princessCarry.active) hideBubble();
   state.activeObjectId = object.id;
+  if (object.direct) {
+    approachDoor(object);
+    return;
+  }
   const mover = state.princessCarry.active ? hubby : player;
-  // Nearby actors interact exactly where they stand. From farther away they
-  // approach the closest edge of the interaction envelope instead of snapping
-  // to one ceremonial socket shared by every direction of arrival.
   if (isNearObject(mover, object)) {
     arriveAtObject(object);
     return;
@@ -744,8 +769,17 @@ async function changeScene(nextName) {
   canvas.dataset.scene = sceneName;
   const entryKey = previous === 'indoor' ? 'fromIndoor' : 'fromOutdoor';
   const entry = scene.entry[entryKey] || scene.spawn;
-  Object.assign(player, entry.player);
-  Object.assign(hubby, entry.hubby);
+  if (carryWasActive) {
+    const anchor = scene.doorway?.carryAnchor || entry.hubby || entry.player;
+    Object.assign(hubby, anchor);
+    Object.assign(player, anchor);
+  } else if (previous === 'outdoor' && sceneName === 'indoor') {
+    Object.assign(player, scene.doorway?.kittenA || entry.player);
+    Object.assign(hubby, scene.doorway?.hubbyExit || entry.hubby);
+  } else {
+    Object.assign(player, entry.player);
+    Object.assign(hubby, entry.hubby);
+  }
   if (!naili.carried) Object.assign(naili, entry.naili);
   [player, hubby, naili].forEach((actor) => {
     stopActor(actor);
@@ -767,6 +801,18 @@ async function changeScene(nextName) {
   await pause(80);
   transition.classList.remove('show');
   changingScene = false;
+
+  if (!carryWasActive && previous === 'outdoor' && sceneName === 'indoor') {
+    const kittenB = scene.doorway?.kittenB;
+    const hubbyArrival = scene.doorway?.hubbyArrival;
+    if (kittenB && hubbyArrival) {
+      walkActor(player, kittenB, () => {
+        walkActor(hubby, hubbyArrival, () => { state.doorTravel = false; }, { exactTarget: true });
+      }, { exactTarget: true });
+      return;
+    }
+  }
+  state.doorTravel = false;
 }
 
 function hitZoneForActor(actor, bounds, clientX, clientY) {
@@ -776,8 +822,6 @@ function hitZoneForActor(actor, bounds, clientX, clientY) {
     const onHeadSide = headIsLeft
       ? clientX <= bounds.x + bounds.width * .53
       : clientX >= bounds.x + bounds.width * .47;
-    // A reclining actor talks from the lower/leg side; the head and upper torso
-    // open their action menu, matching the spatial rule used in the artwork.
     return onHeadSide ? 'actions' : 'speech';
   }
   return clientY <= bounds.y + bounds.height * .53 ? 'speech' : 'actions';
@@ -835,7 +879,7 @@ function armCgLongPress(clientX, clientY) {
   }, object.cgPortal.holdMs || 1100);
 }
 function handleWorldTap(clientX, clientY) {
-  if (changingScene || !textPanel.hidden || !wardrobePanel.hidden) return;
+  if (changingScene || state.doorTravel || !textPanel.hidden || !wardrobePanel.hidden) return;
   hint.hidden = true;
   const hitActor = actorHit(clientX, clientY);
   if (hitActor) {

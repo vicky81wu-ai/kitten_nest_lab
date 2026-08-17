@@ -4,6 +4,20 @@ export const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 export const lerp = (from, to, amount) => from + (to - from) * amount;
 export const distance = (a, b) => Math.hypot(a.x - b.x, (a.z - b.z) * 520);
 
+export const DOOR_CALIBRATION = {
+  kittenIndoorA: { x: 1394, z: .167 },
+  kittenOutdoorAnchor: { x: 153, z: .299 },
+  kittenIndoorB: { x: 1241, z: .291 },
+  hubbyIndoorExit: { x: 1466, z: .190 },
+  hubbyIndoorArrival: { x: 1353, z: .159 },
+  hubbyOutdoorEntry: { x: 197, z: .298 },
+  hubbyOutdoorReturn: { x: 190, z: .330 },
+  carryIndoorAnchor: { x: 1381, z: .202 },
+  carryOutdoorAnchor: { x: 227, z: .338 },
+  indoorHotspot: [[1365, 161], [1478, 159], [1483, 434], [1356, 400]],
+  outdoorHotspot: [[112, 235], [275, 235], [275, 455], [112, 455]]
+};
+
 export function seededRandom(seed = 198) {
   let value = seed >>> 0;
   return () => {
@@ -50,15 +64,27 @@ const indoorObjects = [
       hubbySit: { objectId: 'readingChair', x: 720, z: .43, renderY: 681, pose: 'bed-sit', height: 265, facing: 1 }
     }
   },
-  { id: 'desk', label: '小书桌', x: 1250, z: .32, w: 245, d: .18, hit: [1125, 330, 1370, 582], block: [1135, 1360, .04, .28], socket: { x: 1240, z: .39 } },
+  { id: 'desk', label: '小书桌', x: 1250, z: .32, w: 245, d: .18, hit: [1125, 330, 1370, 525], block: [1135, 1360, .04, .1], socket: { x: 1240, z: .39 } },
   { id: 'board', label: '留言墙', x: 1240, z: .11, w: 210, d: .03, hit: [1135, 170, 1350, 390], socket: { x: 1200, z: .39 } },
-  { id: 'door', label: '院门', x: 1440, z: .26, w: 175, d: .12, hit: [1365, 135, 1535, 595], socket: { x: 1370, z: .39 }, interactionRadius: 160, direct: true }
+  {
+    id: 'door', label: '院门', x: DOOR_CALIBRATION.kittenIndoorA.x, z: DOOR_CALIBRATION.kittenIndoorA.z, w: 175, d: .12,
+    hit: [1356, 159, 1483, 434], hitPolygons: [DOOR_CALIBRATION.indoorHotspot],
+    socket: { x: 1370, z: .39 }, interactionRadius: 1, direct: true
+  }
 ];
 
 const outdoorObjects = [
-  { id: 'door', label: '回屋', x: 210, z: .31, w: 210, d: .15, hit: [90, 230, 310, 615], socket: { x: 360, z: .43 }, direct: true },
+  {
+    id: 'door', label: '回屋', x: DOOR_CALIBRATION.kittenOutdoorAnchor.x, z: DOOR_CALIBRATION.kittenOutdoorAnchor.z, w: 210, d: .15,
+    hit: [112, 235, 275, 455], hitPolygons: [DOOR_CALIBRATION.outdoorHotspot],
+    socket: { x: 360, z: .43 }, interactionRadius: 1, direct: true
+  },
   { id: 'mailbox', label: '邮箱', x: 365, z: .41, w: 125, d: .12, hit: [300, 430, 435, 650], block: [300, 435, .04, .35], socket: { x: 455, z: .54 } },
-  { id: 'bench', label: '树下长椅', x: 500, z: .36, w: 205, d: .16, hit: [405, 350, 610, 555], block: [405, 610, .04, .27], socket: { x: 515, z: .5 }, slots: { kitten: { x: 460, z: .5 }, hubby: { x: 510, z: .5 } } },
+  {
+    id: 'bench', label: '树下长椅', x: 500, z: .36, w: 205, d: .16,
+    hit: [405, 346, 610, 494], hitPolygons: [[[405, 346], [610, 346], [610, 494], [405, 494]]],
+    socket: { x: 515, z: .5 }, slots: { kitten: { x: 460, z: .5 }, hubby: { x: 510, z: .5 } }
+  },
   {
     id: 'swing', label: '秋千', x: 710, z: .34, w: 210, d: .2,
     hit: [605, 260, 820, 560], socket: { x: 870, z: .19 },
@@ -80,9 +106,12 @@ const outdoorObjects = [
   },
   {
     id: 'fountain', label: '许愿喷泉', x: 1080, z: .38, w: 285, d: .2,
-    hit: [935, 285, 1230, 590],
-    hitPolygons: [[[1000, 286], [1168, 286], [1216, 470], [1192, 568], [974, 568], [944, 470]]],
-    block: [965, 1200, .03, .31], socket: { x: 1145, z: .52 }, interactionRadius: 195
+    hit: [990, 286, 1190, 542],
+    hitPolygons: [
+      [[1060, 286], [1148, 286], [1170, 472], [1038, 472]],
+      [[1000, 472], [1030, 454], [1086, 446], [1144, 454], [1180, 476], [1190, 505], [1170, 530], [1088, 542], [1012, 530], [990, 504]]
+    ],
+    block: [1055, 1195, .05, .275], socket: { x: 1145, z: .52 }, interactionRadius: 195
   },
   {
     id: 'gardenGate', label: '花园门', x: 786, z: .18, w: 150, d: .08,
@@ -110,13 +139,25 @@ export const SCENES = {
       player: { x: 650, z: .7 }, hubby: { x: 770, z: .66 }, naili: { x: 555, z: .79 }
     },
     entry: {
-      fromOutdoor: { player: { x: 1345, z: .47 }, hubby: { x: 1270, z: .52 }, naili: { x: 1220, z: .64 } }
+      fromOutdoor: {
+        player: { ...DOOR_CALIBRATION.kittenIndoorA },
+        hubby: { ...DOOR_CALIBRATION.hubbyIndoorArrival },
+        naili: { x: 1220, z: .64 }
+      }
+    },
+    doorway: {
+      kittenA: DOOR_CALIBRATION.kittenIndoorA,
+      kittenB: DOOR_CALIBRATION.kittenIndoorB,
+      hubbyExit: DOOR_CALIBRATION.hubbyIndoorExit,
+      hubbyArrival: DOOR_CALIBRATION.hubbyIndoorArrival,
+      carryAnchor: DOOR_CALIBRATION.carryIndoorAnchor,
+      hotspot: DOOR_CALIBRATION.indoorHotspot
     },
     objects: indoorObjects,
     actorHeights: { player: 257, hubby: 294, naili: 76 },
     foregroundLayers: [{
       id: 'bed-front', objectId: 'bed', z: .35,
-      polygons: [[[0, 482], [414, 452], [470, 650], [0, 650]]]
+      polygons: []
     }],
     obstacles: [
       ...indoorObjects.flatMap((object) => object.block ? [{ x1: object.block[0], x2: object.block[1], z1: object.block[2], z2: object.block[3] }] : []),
@@ -131,13 +172,25 @@ export const SCENES = {
       player: { x: 370, z: .58 }, hubby: { x: 470, z: .62 }, naili: { x: 535, z: .73 }
     },
     entry: {
-      fromIndoor: { player: { x: 350, z: .58 }, hubby: { x: 455, z: .62 }, naili: { x: 525, z: .73 } }
+      fromIndoor: {
+        player: { ...DOOR_CALIBRATION.kittenOutdoorAnchor },
+        hubby: { ...DOOR_CALIBRATION.hubbyOutdoorEntry },
+        naili: { x: 525, z: .73 }
+      }
+    },
+    doorway: {
+      kittenAnchor: DOOR_CALIBRATION.kittenOutdoorAnchor,
+      hubbyEntry: DOOR_CALIBRATION.hubbyOutdoorEntry,
+      hubbyReturn: DOOR_CALIBRATION.hubbyOutdoorReturn,
+      carryAnchor: DOOR_CALIBRATION.carryOutdoorAnchor,
+      hotspot: DOOR_CALIBRATION.outdoorHotspot
     },
     objects: outdoorObjects,
     actorHeights: { player: 156, hubby: 184, naili: 70 },
     obstacles: [
       ...outdoorObjects.flatMap((object) => object.block ? [{ x1: object.block[0], x2: object.block[1], z1: object.block[2], z2: object.block[3] }] : []),
-      { x1: 0, x2: 320, z1: .03, z2: .4 }
+      { x1: 990, x2: 1018, z1: .20, z2: .285 },
+      { x1: 0, x2: 82, z1: .03, z2: .27 }
     ]
   }
 };

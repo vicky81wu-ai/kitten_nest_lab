@@ -30,10 +30,6 @@ const assetSources = {
   readingChair: './assets/props/reading-chair.png'
 };
 
-// Source artwork is normalized at render time: Kitten/Naili face right,
-// while every Hubby idle/walk source faces left. Movement direction then
-// mirrors the complete figure, including his head, instead of leaving him
-// looking behind himself while walking right.
 const nativeFacingByRole = { player: 1, hubby: -1, naili: 1 };
 
 async function loadBitmap(relativeSource) {
@@ -94,8 +90,6 @@ function poseAssetKey(actor) {
   if (pose === 'bed-sit') return `${prefix}BedSit`;
   if (pose === 'bed-lie') return `${prefix}BedLie`;
   if (pose === 'bed-lean') return `${prefix}BedLean`;
-  // Every source frame owns one phase of the same stride. Direction is handled
-  // independently by mirroring the complete sprite in drawSpriteActor.
   if (actor.walking) return `${prefix}Walk${Math.floor(actor.step * .72) % 4 + 1}`;
   return `${prefix}Idle`;
 }
@@ -120,6 +114,11 @@ function drawActorShadow(ctx, actor, metrics, alpha = .24) {
   if (actor.mount) return;
   const liftSpread = actor.flying ? 1.28 : 1;
   ellipse(ctx, actor.x, metrics.y + 2, metrics.height * .16 * liftSpread, metrics.height * .043, `rgba(40,23,20,${alpha})`);
+}
+
+function drawNailiShadow(ctx, actor, metrics) {
+  if (actor.mount) return;
+  ellipse(ctx, actor.x, metrics.y, metrics.height * .34, Math.max(3, metrics.height * .086), 'rgba(40,23,20,.18)');
 }
 
 function drawWings(ctx, time, flying, height) {
@@ -152,8 +151,6 @@ function drawWings(ctx, time, flying, height) {
 
 function drawSpriteActor(ctx, assets, actor, scene, time, options = {}) {
   const metrics = actorMetrics(assets, scene, actor);
-  // The authored walk frames already contain their weight shift. Adding a
-  // procedural bob made the torso pitch forward while the feet appeared still.
   const bob = actor.mount || actor.walking ? 0 : Math.sin(time * 1.35 + (options.phase || 0)) * .42;
   const lift = actor.flying ? 28 + Math.sin(time * 2.2) * 4 : 0;
   const facing = actor.mount?.facing || actor.dir || 1;
@@ -200,8 +197,6 @@ function carryMetrics(assets, scene, state) {
 }
 
 function drawCarryTattoo(ctx, metrics, direction) {
-  // 19.8 is Hubby's identity mark, not optional decoration. Keep the exact
-  // glyphs readable even when the combined carry sprite is mirrored.
   const fontSize = Math.max(8, metrics.height * .044);
   ctx.save();
   ctx.translate(metrics.width * .17, -metrics.height * .8);
@@ -221,13 +216,8 @@ function drawPrincessCarry(ctx, assets, state) {
   ellipse(ctx, metrics.x, metrics.y + 2, metrics.height * .17, metrics.height * .045, 'rgba(40,23,20,.23)');
   ctx.save();
   ctx.translate(metrics.x, metrics.y);
-  // Carry frames share Hubby's left-facing source contract. Mirror the whole
-  // combined figure for rightward travel so neither head lags behind the feet.
   const direction = (state.hubby.dir || 1) * nativeFacingByRole.hubby;
   ctx.scale(direction, 1);
-  // Three authored whole-body phases keep both walking legs coherent while the
-  // embrace remains stable. The old waist splice made the toes move without a
-  // believable step and occasionally tore the combined silhouette.
   const activeSprite = state.hubby.walking ? metrics.activeSprite : metrics.sprite;
   ctx.drawImage(activeSprite, -metrics.width * .5, -metrics.height, metrics.width, metrics.height);
   drawCarryTattoo(ctx, metrics, direction);
@@ -333,10 +323,6 @@ export class WorldRenderer {
     this.ctx.imageSmoothingEnabled = true;
     this.baseScale = this.cssHeight / WORLD_HEIGHT;
     this.scale = this.baseScale * this.zoom;
-    // ResizeObserver can fire as soon as the shell enters layout, before the
-    // world plates finish decoding. Resizing the backing canvas is safe at
-    // that point; cache construction is deferred until preload owns every
-    // required bitmap so first launch cannot fail on a harmless early resize.
     if (currentScene && this.ready) this.ensureCache(currentScene);
   }
 
@@ -433,9 +419,6 @@ export class WorldRenderer {
     }
     renderables.sort((a, b) => a.z - b.z);
     for (const item of renderables) {
-      // Normal walking still obeys authored foreground occlusion. A mounted
-      // interaction pose is a complete composite, so its own object's mask may
-      // not amputate hands, legs, or half a reclining body.
       if ((item.kind === 'plateLayer' || item.kind === 'propFront') && mountedObjectIds.has(item.objectId)) continue;
       if (item.kind === 'plateLayer') drawPlateLayer(ctx, plate, item.layer);
       if (item.kind === 'propBack') drawPropLayer(ctx, this.assets, item.visual, false);
@@ -451,7 +434,11 @@ export class WorldRenderer {
         drawActorShadow(ctx, hubby, metrics, .23);
         drawSpriteActor(ctx, this.assets, hubby, scene, time, { phase: 2 });
       }
-      if (item.kind === 'naili') drawSpriteNaili(ctx, this.assets, naili, scene, time);
+      if (item.kind === 'naili') {
+        const metrics = actorMetrics(this.assets, scene, naili);
+        drawNailiShadow(ctx, naili, metrics);
+        drawSpriteNaili(ctx, this.assets, naili, scene, time);
+      }
     }
 
     if (scene.id === 'outdoor' && swing.active) {
