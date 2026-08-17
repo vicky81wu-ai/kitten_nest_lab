@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>NW 坐标校准器</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;min-height:100%;background:#17100e;color:#fff7ef;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC",sans-serif}body{padding:max(12px,env(safe-area-inset-top)) 10px max(18px,env(safe-area-inset-bottom))}.top{position:sticky;top:0;z-index:20;padding:8px 0 10px;background:linear-gradient(#17100e 82%,rgba(23,16,14,0))}.title{font-size:18px;font-weight:800}.sub{margin-top:4px;color:#d6c5bb;font-size:12px;line-height:1.45}.tabs{display:flex;gap:7px;margin-top:10px}.tabs button,.copy,.nudge button{border:1px solid rgba(255,255,255,.15);background:#2a201d;color:#fff7ef;border-radius:12px;padding:9px 11px;font:inherit;font-weight:700}.tabs button.active{background:#fff1e3;color:#3d2c26}.readout{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:9px}.pill{padding:6px 9px;border-radius:999px;background:#2b211e;font:700 13px ui-monospace,SFMono-Regular,Menlo,monospace}.copy{margin-left:auto;background:#693f50}.viewport{position:relative;height:68vh;min-height:470px;max-height:760px;margin-top:8px;overflow-x:auto;overflow-y:hidden;border:1px solid rgba(255,255,255,.12);border-radius:18px;background:#0e0b0a;box-shadow:0 14px 44px rgba(0,0,0,.28);scrollbar-width:none}.viewport::-webkit-scrollbar{display:none}.world{position:relative;height:100%;touch-action:none;user-select:none;-webkit-user-select:none}.world>img.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none}.actor{position:absolute;transform:translate(-50%,-100%);transform-origin:50% 100%;pointer-events:none;filter:drop-shadow(0 4px 3px rgba(0,0,0,.25))}.foot{position:absolute;width:18px;height:18px;border:3px solid #ffef78;border-radius:50%;transform:translate(-50%,-50%);pointer-events:none;box-shadow:0 0 0 3px rgba(0,0,0,.45),0 0 18px rgba(255,239,120,.8)}.crossV,.crossH{position:absolute;pointer-events:none;background:rgba(255,239,120,.65)}.crossV{width:1px;height:36px;transform:translate(-.5px,-18px)}.crossH{height:1px;width:36px;transform:translate(-18px,-.5px)}.hint{position:absolute;left:12px;bottom:12px;max-width:75%;padding:8px 10px;border-radius:12px;background:rgba(20,15,13,.78);font-size:12px;line-height:1.45;pointer-events:none}.nudge{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:8px}.nudge button{padding:8px 4px;font-size:13px}.output{margin-top:10px;padding:10px;border-radius:14px;background:#211916;color:#f6e9df;font:12px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap}.note{margin-top:8px;color:#c9b7ad;font-size:11px;line-height:1.45}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="title">NW 坐标校准器</div>
+  <div class="sub">直接点地板或拖动人物脚底。两个点会同时保存。黄圈中心就是最终 world 坐标。</div>
+  <div class="tabs"><button id="tabIndoor">① 室内 → 室外切换点</button><button id="tabOutdoor">② 室外起始 / 回室内切换点</button></div>
+  <div class="readout"><span class="pill" id="xOut">x=0</span><span class="pill" id="zOut">z=0</span><button class="copy" id="copyAll">复制两组参数</button></div>
+</div>
+<div class="viewport" id="viewport"><div class="world" id="world"><img class="bg" id="bg"><img class="actor" id="actor" src="./assets/characters/kitten-idle.png"><div class="foot" id="foot"></div><div class="crossV" id="crossV"></div><div class="crossH" id="crossH"></div><div class="hint" id="hint"></div></div></div>
+<div class="nudge"><button data-dx="-5">← x−5</button><button data-dx="5">x+5 →</button><button data-dz="-.01">↑ z−.01</button><button data-dz=".01">↓ z+.01</button></div>
+<pre class="output" id="output"></pre>
+<div class="note">这页只读正式资源，不写游戏状态、不碰 Supabase。参数只存在当前浏览器 localStorage；把“复制两组参数”的内容发回 Chat 就行。</div>
+<script>
+const WORLD_W=1536,WORLD_H=1024;
+const scenes={
+ indoor:{name:'室内 → 室外门槛',bg:'./assets/indoor-world.webp',wallBottom:465,floorBottom:1024,actorHeight:257,initial:{x:1345,z:.47},scroll:1},
+ outdoor:{name:'室外起始 / 回室内切换点',bg:'./assets/outdoor-world.webp',wallBottom:390,floorBottom:1024,actorHeight:156,initial:{x:145,z:.335},scroll:0}
+};
+const key='nw.calibrator.v1';
+let saved={};try{saved=JSON.parse(localStorage.getItem(key)||'{}')}catch{}
+let values={indoor:{...scenes.indoor.initial,...saved.indoor},outdoor:{...scenes.outdoor.initial,...saved.outdoor}};
+let active='outdoor';
+const viewport=document.querySelector('#viewport'),world=document.querySelector('#world'),bg=document.querySelector('#bg'),actor=document.querySelector('#actor'),foot=document.querySelector('#foot'),crossV=document.querySelector('#crossV'),crossH=document.querySelector('#crossH'),hint=document.querySelector('#hint'),xOut=document.querySelector('#xOut'),zOut=document.querySelector('#zOut'),output=document.querySelector('#output');
+const actorScale=z=>.72+z*.31;
+const groundY=(scene,z)=>scene.wallBottom+z*(scene.floorBottom-scene.wallBottom);
+function dims(){const h=viewport.clientHeight;return{scale:h/WORLD_H,w:WORLD_W*h/WORLD_H,h}}
+function save(){localStorage.setItem(key,JSON.stringify(values))}
+function render(recenter=false){
+ const s=scenes[active],v=values[active],d=dims();world.style.width=`${d.w}px`;world.style.height=`${d.h}px`;bg.src=s.bg;
+ const px=v.x*d.scale,py=groundY(s,v.z)*d.scale;
+ const ah=s.actorHeight*(actorScale(v.z)/actorScale(.62))*d.scale;
+ actor.style.left=`${px}px`;actor.style.top=`${py}px`;actor.style.height=`${ah}px`;actor.style.width='auto';
+ for(const el of [foot,crossV,crossH]){el.style.left=`${px}px`;el.style.top=`${py}px`}
+ xOut.textContent=`x=${Math.round(v.x)}`;zOut.textContent=`z=${v.z.toFixed(3)}`;
+ hint.textContent=`${s.name} · 点/拖人物脚底到准确位置`;
+ document.querySelector('#tabIndoor').classList.toggle('active',active==='indoor');document.querySelector('#tabOutdoor').classList.toggle('active',active==='outdoor');
+ output.textContent=`indoorDoorTarget: { x: ${Math.round(values.indoor.x)}, z: ${values.indoor.z.toFixed(3)} }\noutdoorEntryAndReturnTarget: { x: ${Math.round(values.outdoor.x)}, z: ${values.outdoor.z.toFixed(3)} }`;
+ if(recenter){requestAnimationFrame(()=>{const target=Math.max(0,px-viewport.clientWidth*.52);viewport.scrollLeft=target})}
+ save();
+}
+function setFromPointer(e){const r=world.getBoundingClientRect(),d=dims();const x=(e.clientX-r.left)/d.scale;const y=(e.clientY-r.top)/d.scale;const s=scenes[active];values[active].x=Math.max(70,Math.min(1466,x));values[active].z=Math.max(.05,Math.min(.94,(y-s.wallBottom)/(s.floorBottom-s.wallBottom)));render(false)}
+let dragging=false;
+world.addEventListener('pointerdown',e=>{dragging=true;world.setPointerCapture(e.pointerId);setFromPointer(e)});
+world.addEventListener('pointermove',e=>{if(dragging)setFromPointer(e)});
+world.addEventListener('pointerup',()=>dragging=false);world.addEventListener('pointercancel',()=>dragging=false);
+document.querySelector('#tabIndoor').onclick=()=>{active='indoor';render(true)};document.querySelector('#tabOutdoor').onclick=()=>{active='outdoor';render(true)};
+document.querySelectorAll('.nudge button').forEach(b=>b.onclick=()=>{const v=values[active];if(b.dataset.dx)v.x+=Number(b.dataset.dx);if(b.dataset.dz)v.z+=Number(b.dataset.dz);render(false)});
+document.querySelector('#copyAll').onclick=async()=>{const text=`indoorDoorTarget: { x: ${Math.round(values.indoor.x)}, z: ${values.indoor.z.toFixed(3)} }\noutdoorEntryAndReturnTarget: { x: ${Math.round(values.outdoor.x)}, z: ${values.outdoor.z.toFixed(3)} }`;try{await navigator.clipboard.writeText(text);document.querySelector('#copyAll').textContent='已复制';setTimeout(()=>document.querySelector('#copyAll').textContent='复制两组参数',1200)}catch{prompt('复制参数',text)}};
+addEventListener('resize',()=>render(false));render(true);
+</script>
+</body>
+</html>
