@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>NW Door Mask Lab</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;min-height:100%;background:#17100e;color:#fff7ef;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC",sans-serif}body{padding:max(10px,env(safe-area-inset-top)) 10px max(16px,env(safe-area-inset-bottom))}.top{position:sticky;top:0;z-index:50;background:linear-gradient(#17100e 88%,rgba(23,16,14,0));padding:7px 0 9px}.title{font-size:18px;font-weight:850}.sub{font-size:11px;line-height:1.5;color:#d4c3b9;margin-top:3px}.bar{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.bar button,.bar select,.copy{border:1px solid rgba(255,255,255,.15);background:#2a201d;color:#fff7ef;border-radius:11px;padding:8px 10px;font:700 12px/1.1 inherit}.bar button.active{background:#fff1e3;color:#3d2c26}.bar button.paint{background:#31516a}.bar button.erase{background:#623e3e}.bar button.good{background:#365549}.bar button.danger{background:#5e3434}.range{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;margin-top:7px;padding:7px 9px;border-radius:12px;background:#211916;font-size:11px;color:#dbcac0}.range input{width:100%}.viewport{position:relative;height:68vh;min-height:500px;max-height:800px;overflow:auto;border:1px solid rgba(255,255,255,.12);border-radius:17px;background:#0e0b0a;box-shadow:0 14px 44px rgba(0,0,0,.3);-webkit-overflow-scrolling:touch;overscroll-behavior:contain}.world{position:relative;transform-origin:0 0}.bg,.hubby,.preview,.editor,.polySvg,.vertexLayer{position:absolute;left:0;top:0}.bg{width:100%;height:100%;z-index:1;pointer-events:none}.hubby{z-index:3;transform:translate(-50%,-100%);transform-origin:50% 100%;filter:drop-shadow(0 5px 4px rgba(0,0,0,.28));pointer-events:none}.preview{z-index:4;pointer-events:none;display:none}.editor{z-index:5;pointer-events:none}.polySvg{z-index:6;overflow:visible;pointer-events:none}.vertexLayer{z-index:7;width:100%;height:100%;pointer-events:none}.vertex{position:absolute;width:18px;height:18px;border-radius:50%;border:3px solid white;box-shadow:0 0 0 2px rgba(0,0,0,.45);transform:translate(-50%,-50%);touch-action:none;pointer-events:auto}.cross{position:absolute;z-index:8;width:20px;height:20px;border:3px solid #ffe978;border-radius:50%;transform:translate(-50%,-50%);pointer-events:none;box-shadow:0 0 0 3px rgba(0,0,0,.42)}.badge{position:absolute;z-index:9;left:10px;top:10px;padding:7px 9px;border-radius:11px;background:rgba(20,15,13,.84);font-size:11px;line-height:1.4;pointer-events:none}.section{margin-top:9px;padding:9px;border:1px solid rgba(255,255,255,.09);border-radius:14px;background:#211916}.sectionTitle{font-size:12px;font-weight:850}.tiny{font-size:10px;line-height:1.45;color:#c9b7ad;margin-top:5px}.status{font:700 11px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;background:#110e0d;border-radius:12px;padding:8px;margin-top:8px;color:#f4e7dc;max-height:130px;overflow:auto}.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="title">NW Door Mask Lab · 专门描门框</div>
+  <div class="sub">只做“户外→户内时遮 Hubby”的临时门框 mask。默认是手掌模式：拖动页面只会平移，绝不会新增点。需要画时再切画笔或 Polygon。横竖屏都会重新把门口拉回视野。</div>
+  <div class="bar" id="modeBar">
+    <button data-mode="hand" class="active">✋ 平移</button>
+    <button data-mode="brush" class="paint">🖌 画笔</button>
+    <button data-mode="erase" class="erase">⌫ 橡皮</button>
+    <button data-mode="polygon">△ Polygon</button>
+    <button id="centerDoor">回到门口</button>
+  </div>
+  <div class="range"><span>放大</span><input id="zoom" type="range" min="1" max="5" step="0.1" value="2.8"><b id="zoomOut">2.8×</b></div>
+  <div class="range"><span>笔刷</span><input id="brushSize" type="range" min="4" max="80" step="1" value="22"><b id="brushOut">22px</b></div>
+</div>
+<div class="viewport" id="viewport">
+  <div class="world" id="world">
+    <img class="bg" id="bg" src="./assets/indoor-world.webp">
+    <img class="hubby" id="hubby" src="./assets/characters/hubby-idle.png">
+    <canvas class="preview" id="preview" width="1536" height="1024"></canvas>
+    <canvas class="editor" id="editor" width="1536" height="1024"></canvas>
+    <svg class="polySvg" id="polySvg" viewBox="0 0 1536 1024" preserveAspectRatio="none"></svg>
+    <div class="vertexLayer" id="vertexLayer"></div>
+    <div class="cross" id="foot"></div>
+    <div class="badge" id="badge">平移模式 · 放大后拖动画面</div>
+  </div>
+</div>
+<div class="section">
+  <div class="sectionTitle">真实遮挡预览</div>
+  <div class="range"><span>Hubby 进门</span><input id="hubbyProgress" type="range" min="0" max="100" step="1" value="35"><b id="hubbyOut">35%</b></div>
+  <div class="bar"><button id="previewBrush" class="good active">用画笔 mask 预览</button><button id="previewPoly" class="good">用 Polygon 预览</button><button id="togglePreview">开启真实遮挡</button></div>
+  <div class="tiny">真实遮挡开启后，mask 区域会把原背景重新盖到 Hubby 身上，效果接近最终“从门框后逐渐显现”。这里只预览，不改 NW runtime。</div>
+</div>
+<div class="section">
+  <div class="sectionTitle">画笔方案（推荐先试）</div>
+  <div class="bar"><button id="undoStroke">撤销一笔</button><button id="clearBrush" class="danger">清空画笔</button><button id="copyBrush" class="copy">复制画笔数据</button><button id="downloadBrush">下载 mask PNG</button></div>
+  <div class="tiny">画笔数据保存的是你每一笔的 world 像素轨迹，不需要把 PNG 交给我也能复现；PNG 只是备用。</div>
+</div>
+<div class="section">
+  <div class="sectionTitle">Polygon 方案</div>
+  <div class="bar"><button id="undoPoint">撤销一点</button><button id="clearPoly" class="danger">清空 Polygon</button><button id="copyPoly" class="copy">复制 Polygon</button></div>
+  <div class="tiny">只有切到 Polygon 模式时，点图才会新增顶点。白色顶点可以拖。平移/画笔/橡皮模式都不会偷偷新增点。</div>
+</div>
+<pre class="status" id="status"></pre>
+<script>
+const W=1536,H=1024,scene={wallBottom:465,floorBottom:1024};
+const accepted={kittenIndoorA:{x:1394,z:.167},hubbyIndoorExit:{x:1466,z:.190},hubbyIndoorArrival:{x:1353,z:.159}};
+const storageKey='nw.doorMaskLab.v1';
+let saved={};try{saved=JSON.parse(localStorage.getItem(storageKey)||'{}')}catch{}
+let mode='hand',zoom=Number(saved.zoom)||2.8,brushSize=Number(saved.brushSize)||22,strokes=Array.isArray(saved.strokes)?saved.strokes:[],polygon=Array.isArray(saved.polygon)?saved.polygon:[],previewSource=saved.previewSource==='polygon'?'polygon':'brush',previewOn=false,activeStroke=null,dragVertex=null;
+const $=s=>document.querySelector(s),viewport=$('#viewport'),world=$('#world'),bg=$('#bg'),hubby=$('#hubby'),preview=$('#preview'),editor=$('#editor'),polySvg=$('#polySvg'),vertexLayer=$('#vertexLayer'),foot=$('#foot'),badge=$('#badge'),status=$('#status'),zoomInput=$('#zoom'),brushInput=$('#brushSize');
+const brushCanvas=document.createElement('canvas');brushCanvas.width=W;brushCanvas.height=H;const bctx=brushCanvas.getContext('2d');const ectx=editor.getContext('2d'),pctx=preview.getContext('2d');
+const actorScale=z=>.72+z*.31,groundY=z=>scene.wallBottom+z*(scene.floorBottom-scene.wallBottom);
+function baseScale(){return viewport.clientWidth/W}function scale(){return baseScale()*zoom}
+function save(){localStorage.setItem(storageKey,JSON.stringify({zoom,brushSize,strokes,polygon,previewSource}))}
+function setWorldSize(){const s=scale();world.style.width=`${W*s}px`;world.style.height=`${H*s}px`;for(const el of [preview,editor,polySvg,vertexLayer]){el.style.width=`${W*s}px`;el.style.height=`${H*s}px`}bg.style.width=`${W*s}px`;bg.style.height=`${H*s}px`;renderHubby();renderPolygon();renderEditor()}
+function preserveZoom(next){const old=scale(),cx=(viewport.scrollLeft+viewport.clientWidth/2)/old,cy=(viewport.scrollTop+viewport.clientHeight/2)/old;zoom=next;setWorldSize();const n=scale();requestAnimationFrame(()=>{viewport.scrollLeft=Math.max(0,cx*n-viewport.clientWidth/2);viewport.scrollTop=Math.max(0,cy*n-viewport.clientHeight/2)});save()}
+function centerDoor(){const s=scale();requestAnimationFrame(()=>{viewport.scrollLeft=Math.max(0,1390*s-viewport.clientWidth*.64);viewport.scrollTop=Math.max(0,520*s-viewport.clientHeight*.48)})}
+function posFromEvent(e){const r=world.getBoundingClientRect(),s=scale();return{x:Math.max(0,Math.min(W,(e.clientX-r.left)/s)),y:Math.max(0,Math.min(H,(e.clientY-r.top)/s))}}
+function redrawBrush(){bctx.clearRect(0,0,W,H);for(const stroke of strokes){if(!stroke.points?.length)continue;bctx.save();bctx.lineCap='round';bctx.lineJoin='round';bctx.lineWidth=stroke.size;bctx.strokeStyle='#fff';bctx.globalCompositeOperation=stroke.erase?'destination-out':'source-over';bctx.beginPath();const [first,...rest]=stroke.points;bctx.moveTo(first[0],first[1]);if(!rest.length)bctx.lineTo(first[0]+.01,first[1]+.01);for(const p of rest)bctx.lineTo(p[0],p[1]);bctx.stroke();bctx.restore()}renderEditor();renderPreview()}
+function renderEditor(){ectx.clearRect(0,0,W,H);ectx.save();ectx.globalAlpha=.42;ectx.drawImage(brushCanvas,0,0);ectx.globalCompositeOperation='source-in';ectx.fillStyle='#55c8ff';ectx.fillRect(0,0,W,H);ectx.restore();editor.style.opacity=previewOn&&previewSource==='brush'?'.12':'1'}
+function polygonMaskCanvas(){const c=document.createElement('canvas');c.width=W;c.height=H;const cctx=c.getContext('2d');if(polygon.length>=3){cctx.fillStyle='#fff';cctx.beginPath();cctx.moveTo(polygon[0][0],polygon[0][1]);for(let i=1;i<polygon.length;i++)cctx.lineTo(polygon[i][0],polygon[i][1]);cctx.closePath();cctx.fill()}return c}
+function renderPreview(){if(!previewOn){preview.style.display='none';return}preview.style.display='block';pctx.clearRect(0,0,W,H);pctx.save();pctx.drawImage(bg,0,0,W,H);pctx.globalCompositeOperation='destination-in';pctx.drawImage(previewSource==='brush'?brushCanvas:polygonMaskCanvas(),0,0);pctx.restore()}
+function renderPolygon(){const pts=polygon.map(p=>p.join(',')).join(' ');polySvg.innerHTML=polygon.length>=2?`<polygon points="${pts}" fill="rgba(255,128,177,.18)" stroke="#ff83ae" stroke-width="4" vector-effect="non-scaling-stroke"/>`:'';polySvg.style.opacity=previewOn&&previewSource==='polygon'?'.14':'1';vertexLayer.innerHTML='';if(mode!=='polygon')return;const s=scale();polygon.forEach((p,i)=>{const v=document.createElement('div');v.className='vertex';v.style.left=`${p[0]*s}px`;v.style.top=`${p[1]*s}px`;v.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();dragVertex=i;v.setPointerCapture(e.pointerId)});v.addEventListener('pointermove',e=>{if(dragVertex!==i)return;e.preventDefault();const q=posFromEvent(e);polygon[i]=[Math.round(q.x),Math.round(q.y)];renderPolygon();renderPreview()});v.addEventListener('pointerup',()=>{dragVertex=null;save()});v.addEventListener('pointercancel',()=>dragVertex=null);vertexLayer.appendChild(v)})}
+function renderHubby(){const t=Number($('#hubbyProgress').value)/100,a=accepted.hubbyIndoorExit,b=accepted.hubbyIndoorArrival,x=a.x+(b.x-a.x)*t,z=a.z+(b.z-a.z)*t,s=scale(),y=groundY(z),height=294*(actorScale(z)/actorScale(.62))*s;hubby.style.left=`${x*s}px`;hubby.style.top=`${y*s}px`;hubby.style.height=`${height}px`;hubby.style.width='auto';foot.style.left=`${x*s}px`;foot.style.top=`${y*s}px`;$('#hubbyOut').textContent=`${Math.round(t*100)}%`}
+function setMode(next){mode=next;document.querySelectorAll('#modeBar [data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));world.style.touchAction=mode==='hand'?'auto':'none';badge.textContent=mode==='hand'?'平移模式 · 拖动画面，不会画任何东西':mode==='brush'?'画笔模式 · 在门框要遮 Hubby 的区域涂':mode==='erase'?'橡皮模式 · 擦掉画多的 mask':'Polygon 模式 · 点图新增顶点，白点可拖';renderPolygon()}
+function addStrokePoint(e){const q=posFromEvent(e),last=activeStroke.points.at(-1);if(!last||Math.hypot(q.x-last[0],q.y-last[1])>2)activeStroke.points.push([Math.round(q.x),Math.round(q.y)])}
+world.addEventListener('pointerdown',e=>{if(mode==='hand')return;if(mode==='polygon'){e.preventDefault();const q=posFromEvent(e);polygon.push([Math.round(q.x),Math.round(q.y)]);renderPolygon();renderPreview();save();return}e.preventDefault();activeStroke={erase:mode==='erase',size:brushSize,points:[]};addStrokePoint(e);world.setPointerCapture(e.pointerId)});
+world.addEventListener('pointermove',e=>{if(!activeStroke)return;e.preventDefault();addStrokePoint(e);const temp=[...strokes,activeStroke];const old=strokes;strokes=temp;redrawBrush();strokes=old});
+function endStroke(){if(!activeStroke)return;if(activeStroke.points.length)strokes.push(activeStroke);activeStroke=null;redrawBrush();save()}
+world.addEventListener('pointerup',endStroke);world.addEventListener('pointercancel',endStroke);
+document.querySelectorAll('#modeBar [data-mode]').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));
+$('#centerDoor').onclick=centerDoor;zoomInput.value=zoom;$('#zoomOut').textContent=`${zoom.toFixed(1)}×`;zoomInput.oninput=()=>{const next=Number(zoomInput.value);$('#zoomOut').textContent=`${next.toFixed(1)}×`;preserveZoom(next)};brushInput.value=brushSize;$('#brushOut').textContent=`${brushSize}px`;brushInput.oninput=()=>{brushSize=Number(brushInput.value);$('#brushOut').textContent=`${brushSize}px`;save()};
+$('#hubbyProgress').oninput=renderHubby;
+$('#previewBrush').onclick=()=>{previewSource='brush';$('#previewBrush').classList.add('active');$('#previewPoly').classList.remove('active');renderEditor();renderPolygon();renderPreview();save()};$('#previewPoly').onclick=()=>{previewSource='polygon';$('#previewPoly').classList.add('active');$('#previewBrush').classList.remove('active');renderEditor();renderPolygon();renderPreview();save()};
+$('#togglePreview').onclick=()=>{previewOn=!previewOn;$('#togglePreview').textContent=previewOn?'关闭真实遮挡':'开启真实遮挡';renderEditor();renderPolygon();renderPreview()};
+$('#undoStroke').onclick=()=>{strokes.pop();redrawBrush();save()};$('#clearBrush').onclick=()=>{if(confirm('清空画笔 mask？')){strokes=[];redrawBrush();save()}};$('#undoPoint').onclick=()=>{polygon.pop();renderPolygon();renderPreview();save()};$('#clearPoly').onclick=()=>{if(confirm('清空 Polygon？')){polygon=[];renderPolygon();renderPreview();save()}};
+async function copyText(text,button){try{await navigator.clipboard.writeText(text);const old=button.textContent;button.textContent='已复制';setTimeout(()=>button.textContent=old,1200)}catch{prompt('复制参数',text)}}
+$('#copyBrush').onclick=()=>copyText(`indoorHubbyMaskBrush: ${JSON.stringify({canvas:[W,H],strokes})}`,$('#copyBrush'));$('#copyPoly').onclick=()=>copyText(`indoorHubbyMaskPolygon: ${JSON.stringify(polygon)}`,$('#copyPoly'));
+$('#downloadBrush').onclick=()=>{const source=previewSource==='polygon'?polygonMaskCanvas():brushCanvas;source.toBlob(blob=>{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=previewSource==='polygon'?'indoor-hubby-mask-polygon.png':'indoor-hubby-mask-brush.png';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500)},'image/png')};
+function updateStatus(){status.textContent=`已收下的门点/热点不在这里重调：\nkittenIndoorA {1394,.167} · kittenOutdoorAnchor {153,.299}\nkittenIndoorB {1241,.291}\nhubbyIndoorExit {1466,.190} · hubbyIndoorArrival {1353,.159}\nhubbyOutdoorEntry {197,.298} · hubbyOutdoorReturn {190,.330}\ncarryIndoorAnchor {1381,.202} · carryOutdoorAnchor {227,.338}\nindoorHotspot ${JSON.stringify([[1365,161],[1478,159],[1483,434],[1356,400]])}\noutdoorHotspot ${JSON.stringify([[112,235],[275,235],[275,455],[112,455]])}\n\nmask：画笔 ${strokes.length} 笔 · Polygon ${polygon.length} 点`;}
+const oldSave=save;save=function(){oldSave();updateStatus()};
+bg.addEventListener('load',()=>{redrawBrush();setWorldSize();renderPreview();centerDoor();updateStatus()},{once:true});
+if(bg.complete){redrawBrush();setWorldSize();renderPreview();setTimeout(centerDoor,50);updateStatus()}
+addEventListener('resize',()=>{setWorldSize();setTimeout(centerDoor,80)});addEventListener('orientationchange',()=>setTimeout(()=>{setWorldSize();centerDoor()},180));
+setMode('hand');$('#previewBrush').classList.toggle('active',previewSource==='brush');$('#previewPoly').classList.toggle('active',previewSource==='polygon');
+</script>
+</body>
+</html>
