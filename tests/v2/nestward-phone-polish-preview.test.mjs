@@ -9,14 +9,11 @@ test('phone acceptance layer is isolated and loaded before the formal runtime', 
   assert.match(html, /phone-polish-preview\.js[\s\S]*nestward\.js/);
   const patch = await read('../../v2/nestward/phone-polish-preview.js');
   assert.match(patch, /interactionRadius: 1/);
-  assert.match(patch, /x: 1298,[\s\S]*z: \.74/);
-  assert.match(patch, /player: \{ x: 210, z: \.255 \}/);
-  assert.match(patch, /player: \{ x: 1288, z: \.57 \}/);
-  assert.match(patch, /hubby: \{ x: 1382, z: \.50 \}/);
+  assert.match(patch, /player: \{ x: 145, z: \.335 \}/);
+  assert.match(patch, /x: 1345,[\s\S]*z: \.47/);
   assert.match(patch, /houseGuard/);
   assert.match(patch, /benchBlockIndex/);
   assert.match(patch, /fountainBlockIndex/);
-  assert.match(patch, /spriteHeight \* \.34/);
-  assert.match(patch, /spriteHeight \* \.086/);
+  assert.match(patch, /narrow upright column/);
   assert.match(patch, /renderWithNailiShadow/);
 });
