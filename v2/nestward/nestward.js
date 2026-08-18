@@ -1,6 +1,4 @@
-import { installDoorAwayIntegration } from './door-away-integration.js';
-import { installDoorAwayFacingSync } from './door-away-facing.js';
+import { installDoorAwayIntegrationV2 } from './door-away-integration-v2.js';
 
-installDoorAwayIntegration();
-installDoorAwayFacingSync();
+installDoorAwayIntegrationV2();
 await import('./nestward-core.js');
