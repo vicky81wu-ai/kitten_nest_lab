@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+<title>NW Door Transition Lab</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;background:#17100e;color:#fff7ef;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC",sans-serif}body{padding:max(10px,env(safe-area-inset-top)) 10px max(20px,env(safe-area-inset-bottom))}.top{position:sticky;top:0;z-index:50;background:#17100e;padding:6px 0 8px}.title{font-size:19px;font-weight:850}.sub{font-size:11px;line-height:1.48;color:#d3c0b7;margin-top:4px}.bar{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}.bar button{border:1px solid rgba(255,255,255,.17);background:#2a201d;color:#fff7ef;border-radius:11px;padding:8px 10px;font:750 12px/1.1 inherit}.bar button.active{outline:2px solid #fff4e9}.blue{background:#345d77!important}.gold{background:#79601f!important}.cream{background:#70594c!important}.green{background:#173f32!important}.range{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;margin-top:7px;background:#211916;border-radius:12px;padding:7px 9px;font-size:11px}.range input{width:100%}.viewport{position:relative;height:68vh;min-height:520px;max-height:850px;overflow:auto;border:1px solid rgba(255,255,255,.12);border-radius:16px;background:#0e0b0a;-webkit-overflow-scrolling:touch}.stageSizer{position:relative}.world{position:absolute;left:0;top:0;width:1536px;height:1024px;transform-origin:0 0}.bg,.foreground{position:absolute;inset:0;width:1536px;height:1024px;pointer-events:none}.bg{z-index:1}.actor{position:absolute;z-index:8;transform:translate(-50%,-100%);transform-origin:50% 100%;user-select:none;-webkit-user-drag:none;touch-action:none;filter:drop-shadow(0 5px 4px rgba(0,0,0,.28));cursor:grab}.actor.dragging{cursor:grabbing;filter:drop-shadow(0 8px 6px rgba(0,0,0,.4))}.foreground{z-index:12}.marker{position:absolute;z-index:14;width:20px;height:20px;border-radius:50%;transform:translate(-50%,-50%);border:3px solid #fff;box-shadow:0 0 0 3px rgba(0,0,0,.45);pointer-events:none}.m1{background:#58d6ff}.m2{background:#ffd449}.mh{background:#fff7ef}.badge{position:absolute;z-index:20;left:12px;top:12px;padding:7px 9px;border-radius:10px;background:rgba(20,15,13,.86);font-size:11px;font-weight:800;pointer-events:none}.section{margin-top:9px;padding:9px;background:#211916;border-radius:14px;border:1px solid rgba(255,255,255,.09)}.sectionTitle{font-weight:850;font-size:12px}.tiny{font-size:10px;color:#c9b7ad;line-height:1.5;margin-top:5px}.coords{font:10px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;background:#110e0d;border-radius:12px;padding:8px;margin-top:8px}.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="title">NW Door Transition Lab · 场景切换锚点</div>
+  <div class="sub">这页只校准场景切换，不改 Door Away。户内：小猫 point1 在室内、point2 在 B 区，Hubby 一个点；出门时小猫到 point1 后开启 B，再走 point2。进屋时反向：point2 在 B 下出现 → point1 → 撤 B。户外：小猫 / Hubby 各一个点，同时作为到达点与切回点。</div>
+  <div class="bar"><button id="tabIndoor" class="active">户内</button><button id="tabOutdoor">户外</button><button id="copyAll" class="green">复制全部参数</button></div>
+  <div class="range"><span>放大</span><input id="zoom" type="range" min="1" max="10" step="0.25" value="2.5"><b id="zoomOut">2.5×</b></div>
+</div>
+
+<div id="indoorControls" class="section">
+  <div class="sectionTitle">户内 · 直接拖人物，拖好后确认</div>
+  <div class="bar">
+    <button id="editP1" class="blue active">调小猫 point1</button>
+    <button id="editP2" class="gold">调小猫 point2</button>
+    <button id="confirmKitten" class="cream">确认当前小猫点</button>
+    <button id="confirmHubby" class="cream">确认 Hubby 点</button>
+    <button id="runPreview" class="blue">▶ 循环预览 B 遮挡</button>
+    <button id="stopPreview">■ 停止</button>
+  </div>
+  <div class="range"><span>预览速度</span><input id="previewSpeed" type="range" min="0.35" max="1.5" step="0.05" value="0.75"><b id="previewSpeedOut">0.75×</b></div>
+  <div class="tiny">蓝点 = 小猫 point1，黄点 = 小猫 point2，白点 = Hubby 户内点。循环只用于看门框关系：正常 → 开 B → point1→point2 → point2→point1 → 撤 B → 重来。</div>
+</div>
+
+<div id="outdoorControls" class="section hidden">
+  <div class="sectionTitle">户外 · 两个人各一个点</div>
+  <div class="bar"><button id="confirmOutdoorKitten" class="cream">确认小猫户外点</button><button id="confirmOutdoorHubby" class="cream">确认 Hubby 户外点</button></div>
+  <div class="tiny">直接拖小猫 / Hubby 人物到你要的位置，再分别按确认。这个点同时记作该人物户外到达点与户外切回点。</div>
+</div>
+
+<div class="viewport" id="viewport"><div class="stageSizer" id="stageSizer"><div class="world" id="world">
+  <img id="bg" class="bg" src="./assets/indoor-world.webp" alt="" />
+  <img id="kitten" class="actor" src="./assets/characters/kitten-idle.png" alt="小猫" />
+  <img id="hubby" class="actor" src="./assets/characters/hubby-idle.png" alt="Hubby" />
+  <canvas id="foregroundB" class="foreground" width="1536" height="1024" hidden></canvas>
+  <div id="mark1" class="marker m1"></div><div id="mark2" class="marker m2"></div><div id="markHubby" class="marker mh"></div>
+  <div id="badge" class="badge">准备 B 门框…</div>
+</div></div></div>
+
+<div class="section"><div class="sectionTitle">当前已确认坐标</div><pre id="coords" class="coords"></pre></div>
+
+<script type="module">
+import { loadAcceptedDoorAwayCalibration, buildAcceptedDoorAwayMasks } from './door-away-runtime.js';
+
+const W=1536,H=1024;
+const scenes={indoor:{wallBottom:465,floorBottom:1024,bg:'./assets/indoor-world.webp',kittenHeight:156,hubbyHeight:184},outdoor:{wallBottom:390,floorBottom:1024,bg:'./assets/outdoor-world.webp',kittenHeight:156,hubbyHeight:184}};
+const defaults={indoor:{kitten:{point1:{x:1394,z:.167},point2:{x:1460,z:.19}},hubby:{point:{x:1466,z:.190}}},outdoor:{kitten:{point:{x:153,z:.299}},hubby:{point:{x:197,z:.298}}}};
+const key='nw.doorTransitionLab.v1';
+const $=q=>document.querySelector(q),viewport=$('#viewport'),stageSizer=$('#stageSizer'),world=$('#world'),bg=$('#bg'),kitten=$('#kitten'),hubby=$('#hubby'),fgB=$('#foregroundB'),fgc=fgB.getContext('2d'),badge=$('#badge'),coords=$('#coords');
+let saved={};try{saved=JSON.parse(localStorage.getItem(key)||'{}')}catch{}
+let data=saved.data||structuredClone(defaults),sceneName=saved.sceneName||'indoor',zoom=Number(saved.zoom)||2.5,indoorKittenTarget=saved.indoorKittenTarget||'point1',previewSpeed=Number(saved.previewSpeed)||.75;
+let live={indoor:{kitten:{...data.indoor.kitten[indoorKittenTarget]},hubby:{...data.indoor.hubby.point}},outdoor:{kitten:{...data.outdoor.kitten.point},hubby:{...data.outdoor.hubby.point}}};
+let drag=null,maskBReady=false,previewing=false,previewToken=0;
+
+const actorScale=z=>.72+z*.31;
+const groundY=(scene,z)=>scene.wallBottom+z*(scene.floorBottom-scene.wallBottom);
+const groundZ=(scene,y)=>Math.max(.03,Math.min(.98,(y-scene.wallBottom)/(scene.floorBottom-scene.wallBottom)));
+const copy=v=>JSON.parse(JSON.stringify(v));
+function persist(){localStorage.setItem(key,JSON.stringify({data,sceneName,zoom,indoorKittenTarget,previewSpeed}))}
+function baseScale(){return viewport.clientWidth/W}
+function scale(){return baseScale()*zoom}
+function layoutWorld(){const s=scale();world.style.transform=`scale(${s})`;stageSizer.style.width=`${W*s}px`;stageSizer.style.height=`${H*s}px`;$('#zoomOut').textContent=`${zoom.toFixed(2).replace(/0+$/,'').replace(/\.$/,'')}×`;}
+function actorLayout(el,role,pos){const scene=scenes[sceneName],height=(role==='kitten'?scene.kittenHeight:scene.hubbyHeight)*actorScale(pos.z);el.style.left=`${pos.x}px`;el.style.top=`${groundY(scene,pos.z)}px`;el.style.height=`${height}px`;el.style.width='auto';}
+function marker(el,pos){if(sceneName!=='indoor'){el.hidden=true;return}el.hidden=false;el.style.left=`${pos.x}px`;el.style.top=`${groundY(scenes.indoor,pos.z)}px`;}
+function sync(){bg.src=scenes[sceneName].bg;const current=live[sceneName];actorLayout(kitten,'kitten',current.kitten);actorLayout(hubby,'hubby',current.hubby);marker($('#mark1'),data.indoor.kitten.point1);marker($('#mark2'),data.indoor.kitten.point2);marker($('#markHubby'),data.indoor.hubby.point);fgB.hidden=!(sceneName==='indoor'&&fgB.dataset.active==='1');$('#tabIndoor').classList.toggle('active',sceneName==='indoor');$('#tabOutdoor').classList.toggle('active',sceneName==='outdoor');$('#indoorControls').classList.toggle('hidden',sceneName!=='indoor');$('#outdoorControls').classList.toggle('hidden',sceneName!=='outdoor');$('#editP1').classList.toggle('active',indoorKittenTarget==='point1');$('#editP2').classList.toggle('active',indoorKittenTarget==='point2');renderCoords();}
+function renderCoords(){coords.textContent=JSON.stringify({indoor:data.indoor,outdoor:data.outdoor},null,2)}
+function selectIndoorTarget(name){stopPreview();indoorKittenTarget=name;live.indoor.kitten={...data.indoor.kitten[name]};persist();sync();}
+function setB(on){fgB.dataset.active=on&&maskBReady?'1':'0';fgB.hidden=fgB.dataset.active!=='1';}
+
+async function prepareB(){try{const calibration=loadAcceptedDoorAwayCalibration();if(!calibration){badge.textContent='没有找到已验收 A/B；请从同一 Door Lab 固定域名打开';return}badge.textContent='生成已验收 B 门框…';const masks=await buildAcceptedDoorAwayMasks(calibration);await bg.decode().catch(()=>{});fgc.clearRect(0,0,W,H);fgc.drawImage(bg,0,0,W,H);fgc.globalCompositeOperation='destination-in';fgc.drawImage(masks.maskB,0,0);fgc.globalCompositeOperation='source-over';maskBReady=true;badge.textContent='B 门框就绪';setTimeout(()=>{if(badge.textContent==='B 门框就绪')badge.textContent='拖人物 → 确认坐标';},1200)}catch(err){console.error(err);badge.textContent='B 门框生成失败：'+err.message}}
+
+function pointFromEvent(e){const rect=world.getBoundingClientRect(),s=scale(),scene=scenes[sceneName];const x=Math.max(0,Math.min(W,(e.clientX-rect.left)/s));const y=Math.max(scene.wallBottom+2,Math.min(H,(e.clientY-rect.top)/s));return{x,z:groundZ(scene,y)}}
+function beginDrag(role,e){if(previewing)return;e.preventDefault();drag={role,pointerId:e.pointerId};e.currentTarget.classList.add('dragging');e.currentTarget.setPointerCapture?.(e.pointerId)}
+function moveDrag(e){if(!drag||e.pointerId!==drag.pointerId)return;live[sceneName][drag.role]=pointFromEvent(e);sync()}
+function endDrag(e){if(!drag||e.pointerId!==drag.pointerId)return;kitten.classList.remove('dragging');hubby.classList.remove('dragging');drag=null}
+kitten.addEventListener('pointerdown',e=>beginDrag('kitten',e));hubby.addEventListener('pointerdown',e=>beginDrag('hubby',e));window.addEventListener('pointermove',moveDrag,{passive:false});window.addEventListener('pointerup',endDrag);window.addEventListener('pointercancel',endDrag);
+
+$('#editP1').onclick=()=>selectIndoorTarget('point1');$('#editP2').onclick=()=>selectIndoorTarget('point2');
+$('#confirmKitten').onclick=()=>{if(sceneName!=='indoor')return;data.indoor.kitten[indoorKittenTarget]=copy(live.indoor.kitten);persist();sync();flash(`已确认小猫 ${indoorKittenTarget}`)};
+$('#confirmHubby').onclick=()=>{if(sceneName!=='indoor')return;data.indoor.hubby.point=copy(live.indoor.hubby);persist();sync();flash('已确认 Hubby 户内点')};
+$('#confirmOutdoorKitten').onclick=()=>{data.outdoor.kitten.point=copy(live.outdoor.kitten);persist();sync();flash('已确认小猫户外点')};
+$('#confirmOutdoorHubby').onclick=()=>{data.outdoor.hubby.point=copy(live.outdoor.hubby);persist();sync();flash('已确认 Hubby 户外点')};
+function flash(text){badge.textContent=text;setTimeout(()=>{if(badge.textContent===text)badge.textContent='拖人物 → 确认坐标'},900)}
+
+$('#tabIndoor').onclick=()=>{stopPreview();sceneName='indoor';live.indoor.kitten={...data.indoor.kitten[indoorKittenTarget]};live.indoor.hubby={...data.indoor.hubby.point};persist();setB(false);sync()};
+$('#tabOutdoor').onclick=()=>{stopPreview();sceneName='outdoor';live.outdoor.kitten={...data.outdoor.kitten.point};live.outdoor.hubby={...data.outdoor.hubby.point};persist();setB(false);sync()};
+$('#zoom').value=zoom;$('#zoom').oninput=e=>{zoom=Number(e.target.value);persist();layoutWorld()};
+$('#previewSpeed').value=previewSpeed;$('#previewSpeedOut').textContent=`${previewSpeed.toFixed(2)}×`;$('#previewSpeed').oninput=e=>{previewSpeed=Number(e.target.value);$('#previewSpeedOut').textContent=`${previewSpeed.toFixed(2)}×`;persist()};
+
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+async function tween(from,to,duration,token){const start=performance.now();return new Promise(resolve=>{function frame(now){if(!previewing||token!==previewToken)return resolve(false);const t=Math.min(1,(now-start)/duration),q=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;live.indoor.kitten={x:from.x+(to.x-from.x)*q,z:from.z+(to.z-from.z)*q};sync();if(t<1)requestAnimationFrame(frame);else resolve(true)}requestAnimationFrame(frame)})}
+async function previewLoop(){if(sceneName!=='indoor'||previewing)return;if(!maskBReady){flash('B 门框还没就绪');return}previewing=true;const token=++previewToken;const p1=copy(data.indoor.kitten.point1),p2=copy(data.indoor.kitten.point2);live.indoor.hubby=copy(data.indoor.hubby.point);while(previewing&&token===previewToken){live.indoor.kitten=copy(p1);setB(false);sync();await sleep(650/previewSpeed);if(!previewing||token!==previewToken)break;setB(true);const dist=Math.hypot(p2.x-p1.x,(p2.z-p1.z)*560);if(!await tween(p1,p2,Math.max(700,dist*6)/previewSpeed,token))break;await sleep(700/previewSpeed);if(!await tween(p2,p1,Math.max(700,dist*6)/previewSpeed,token))break;await sleep(300/previewSpeed);setB(false);sync();await sleep(700/previewSpeed)} }
+function stopPreview(){previewing=false;previewToken++;setB(false);if(sceneName==='indoor'){live.indoor.kitten={...data.indoor.kitten[indoorKittenTarget]};live.indoor.hubby={...data.indoor.hubby.point};sync()}}
+$('#runPreview').onclick=previewLoop;$('#stopPreview').onclick=stopPreview;
+
+let copyCount=0;$('#copyAll').onclick=async()=>{const payload={canvas:[W,H],namespace:'doorTransition',indoor:{kitten:{point1:copy(data.indoor.kitten.point1),point2:copy(data.indoor.kitten.point2)},hubby:{point:copy(data.indoor.hubby.point)}},outdoor:{kitten:{point:copy(data.outdoor.kitten.point)},hubby:{point:copy(data.outdoor.hubby.point)}},semantics:{indoorExit:'kitten -> point1; enable B; kitten point1 -> point2; scene switch. Hubby uses indoor point.',indoorArrival:'kitten appears point2 under B; point2 -> point1; remove B. Hubby uses indoor point.',outdoor:'each actor uses the same saved point for arrival and scene-switch return'}};const text=JSON.stringify(payload,null,2);let ok=false;try{const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();ok=document.execCommand('copy');ta.remove()}catch{}if(!ok&&navigator.clipboard){try{await navigator.clipboard.writeText(text);ok=true}catch{}}copyCount++;const btn=$('#copyAll');btn.textContent=ok?`已复制 · ${copyCount}`:'复制失败，长按下面坐标';setTimeout(()=>btn.textContent='复制全部参数',1300)};
+
+window.addEventListener('resize',()=>{layoutWorld();sync()});
+layoutWorld();sync();prepareB();
+</script>
+</body></html>
