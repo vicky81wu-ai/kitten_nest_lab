@@ -10,7 +10,7 @@
     if(!r.ok)throw new Error('base lab '+r.status);
     let html=await r.text();
     html=html.replace('<title>NW Door State Lab</title>','<title>NW Door State Lab v3</title>');
-    html=html.replace('</body>','<script src="./door-state-lab-v3-patch.js?rev=1"><\\/script></body>');
+    html=html.replace('</body>','<script src="./door-state-lab-v3-patch.js?rev=2"><\/script></body>');
     document.open();document.write(html);document.close();
   }catch(err){
     document.getElementById('boot').textContent='Door State Lab v3 载入失败：'+err.message;
