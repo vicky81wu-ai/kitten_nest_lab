@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><title>NW Door State Lab v3</title></head>
+<body style="margin:0;background:#17100e;color:#fff7ef;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif">
+<div id="boot" style="padding:24px">正在载入 Door State Lab v3…</div>
+<script>
+(async()=>{
+  try{
+    const r=await fetch('./door-state-lab.html?base=4490f17d',{cache:'no-store'});
+    if(!r.ok)throw new Error('base lab '+r.status);
+    let html=await r.text();
+    html=html.replace('<title>NW Door State Lab</title>','<title>NW Door State Lab v3</title>');
+    html=html.replace('</body>','<script src="./door-state-lab-v3-patch.js?rev=1"><\\/script></body>');
+    document.open();document.write(html);document.close();
+  }catch(err){
+    document.getElementById('boot').textContent='Door State Lab v3 载入失败：'+err.message;
+  }
+})();
+</script>
+</body></html>
