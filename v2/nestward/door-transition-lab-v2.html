@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><title>NW Door Transition Lab v2</title></head>
+<body style="margin:0;background:#17100e;color:#fff7ef;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif">
+<div id="boot" style="padding:24px">正在载入 Door Transition Lab v2…</div>
+<script>
+(async()=>{
+  try{
+    const r=await fetch('./door-transition-lab.html?base=d09f18bb',{cache:'no-store'});
+    if(!r.ok) throw new Error('base lab '+r.status);
+    let html=await r.text();
+    const oldScenes="const scenes={indoor:{wallBottom:465,floorBottom:1024,bg:'./assets/indoor-world.webp',kittenHeight:156,hubbyHeight:184},outdoor:{wallBottom:390,floorBottom:1024,bg:'./assets/outdoor-world.webp',kittenHeight:156,hubbyHeight:184}};";
+    const newScenes="const scenes={indoor:{wallBottom:465,floorBottom:1024,bg:'./assets/indoor-world.webp',kittenHeight:257,hubbyHeight:294},outdoor:{wallBottom:390,floorBottom:1024,bg:'./assets/outdoor-world.webp',kittenHeight:156,hubbyHeight:184}};";
+    const oldLayout="function actorLayout(el,role,pos){const scene=scenes[sceneName],height=(role==='kitten'?scene.kittenHeight:scene.hubbyHeight)*actorScale(pos.z);el.style.left=`${pos.x}px`;el.style.top=`${groundY(scene,pos.z)}px`;el.style.height=`${height}px`;el.style.width='auto';}";
+    const newLayout="function actorLayout(el,role,pos){const scene=scenes[sceneName],perspective=actorScale(pos.z)/actorScale(.62),height=(role==='kitten'?scene.kittenHeight:scene.hubbyHeight)*perspective;el.style.left=`${pos.x}px`;el.style.top=`${groundY(scene,pos.z)}px`;el.style.height=`${height}px`;el.style.width='auto';}";
+    if(!html.includes(oldScenes)) throw new Error('scene sizing signature missing');
+    if(!html.includes(oldLayout)) throw new Error('actor layout signature missing');
+    html=html.replace(oldScenes,newScenes).replace(oldLayout,newLayout);
+    html=html.replace('<title>NW Door Transition Lab</title>','<title>NW Door Transition Lab v2</title>');
+    html=html.replace('NW Door Transition Lab · 场景切换锚点','NW Door Transition Lab v2 · 场景切换锚点');
+    document.open();document.write(html);document.close();
+  }catch(err){
+    document.getElementById('boot').textContent='Door Transition Lab v2 载入失败：'+err.message;
+  }
+})();
+</script>
+</body></html>
