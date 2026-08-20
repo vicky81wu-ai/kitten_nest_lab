@@ -1,59 +1,310 @@
-commit 0fb5127bf96feba8e295f2ac97f59bac2298fcc3
-Author: Codex <codex@openai.com>
-Date:   Thu Aug 20 08:24:10 2026 +0300
-
-    feat(nestward): add clean Door subsystem QA candidate
-
-diff --git a/data/room-config.v1.json b/data/room-config.v1.json
-index a371a56..2747ddc 100644
---- a/data/room-config.v1.json
-+++ b/data/room-config.v1.json
-@@ -1,5 +1,5 @@
- {
--  "version": "0.1.11",
-+  "version": "0.1.12",
-   "status": "foundation-scene-hooks",
-   "note": "Room and scene configuration foundation for Kitten Nest. This file is not a full roomEngine runtime yet. It keeps scene identity, active ports, protected current runtime facts, and directorRef hooks. Long director notes live in docs/DIRECTOR_GUIDE.md.",
-   "currentRuntime": {
-@@ -205,6 +205,41 @@
-       "notes": "Current real front-stage room. CoffeeCorner currently has no physical powder notebook object and no coffeeCorner notebook panel. Object and hotspot details are in data/object-registry.v1.json. CoffeeCorner hotspots must be gated to gameRoom.active. The lap-close variant is a child scene variant, not a separate room."
-     }
-   ],
-+  "isolatedWorlds": [
-+    {
-+      "id": "nestward",
-+      "kind": "canvasWorld",
-+      "label": "Nestward / 窝里窝外",
-+      "entry": "/v2/nestward/",
-+      "runtimeStatus": "activeWithExperimentalDoorSubsystem",
-+      "versionStatus": "canonicalCurrent",
-+      "changePolicy": "mutableWithVersion",
-+      "geometryOwner": "v2/nestward/world-model.js",
-+      "rendererOwner": "v2/nestward/world-renderer.js",
-+      "coordinateSpace": {
-+        "width": 1536,
-+        "height": 1024,
-+        "status": "baseImageLocked"
-+      },
-+      "scenes": [
-+        {
-+          "id": "nestward.indoor",
-+          "assetPath": "v2/nestward/assets/indoor-world.webp"
-+        },
-+        {
-+          "id": "nestward.outdoor",
-+          "assetPath": "v2/nestward/assets/outdoor-world.webp"
-+        }
-+      ],
-+      "activeObjects": [
-+        "nestward.doorHotspot",
-+        "nestward.actorOcclusionPass",
-+        "nestward.doorOcclusionAssets"
-+      ],
-+      "constructionObjects": ["nestward.doorAwayTestControls"],
-+      "runtimeNote": "Nestward is isolated from the /cloud scene stack and does not write protected nest_state. The accepted phone baseline stays active while the exact accepted A/B/walk brush payload is unavailable; the new Door controllers fail closed instead of approximating it."
-+    }
-+  ],
-   "futureScenes": [
-     {
-       "id": "restaurant",
+{
+  "version": "0.1.12",
+  "status": "foundation-scene-hooks",
+  "note": "Room and scene configuration foundation for Kitten Nest. This file is not a full roomEngine runtime yet. It keeps scene identity, active ports, protected current runtime facts, and directorRef hooks. Long director notes live in docs/DIRECTOR_GUIDE.md.",
+  "currentRuntime": {
+    "activeRoomId": "coffeeCorner",
+    "liveEntry": "/cloud",
+    "writerEntry": "/write",
+    "visibleTextPorts": [
+      "coffeeCorner.bubbles",
+      "coffeeCorner.windowWeather",
+      "coffeeCorner.lapCloseBubble"
+    ],
+    "activeScenes": [
+      "home",
+      "coffeeCorner"
+    ],
+    "activeSceneVariants": [
+      "coffeeCorner.lapClose"
+    ],
+    "activeHotspots": [
+      "home.hubbyNoteHot",
+      "coffeeCorner.tattoo19_8",
+      "coffeeCorner.photoWallHot",
+      "coffeeCorner.windowWeatherAdviceHotspot",
+      "coffeeCorner.gameConsoleHotspot",
+      "coffeeCorner.lapEnterHot",
+      "coffeeCorner.lapBackHot",
+      "coffeeCorner.lapChestHot",
+      "coffeeCorner.setupToggleButton"
+    ],
+    "activePanels": [
+      "home.hubbyNotePanel",
+      "coffeeCorner.setupPanel"
+    ],
+    "activeAssetPipelines": [
+      "coffeeCorner.localImageUpload"
+    ],
+    "stableWorkflow": "Alex update package -> /write -> generate drafts -> publish all -> /cloud. The powder notebook currently appears as a physical home object and opens a home-scoped archive-first notebook panel. Setup/local upload remains manually available. CoffeeCorner lap-close is a scene variant with its own upper-left bubble and chest hotspot, not a new room and not the normal rotating coffeeCorner bubble."
+  },
+  "identityPolicy": {
+    "coreRule": "No identity, no binding.",
+    "sceneRule": "Scenes belong in room-config; interactive objects and hotspots belong in object-registry.",
+    "variantRule": "Scene variants belong under their parent scene in room-config. Their hotspots and text ports still need object-registry identity cards.",
+    "ownershipRule": "Every active selector has one primary owner. exclusive:true means no casual selector reuse.",
+    "versionRule": "canonicalCurrent means current official truth, not permanent immutability. Current objects may change later through mutableWithVersion.",
+    "coordinateRule": "Coordinates should be locked to base-image coordinates, not device-specific offsets.",
+    "roomGateRule": "Hotspots and overlays must be gated to their active room element so home and coffeeCorner controls do not leak into each other.",
+    "panelScopeRule": "A panel injected globally into /cloud is not automatically shared. Scope a panel by its actual scene ownership and actual entry points.",
+    "directorRule": "Use directorRef and directorTags here; put long director notes in docs/DIRECTOR_GUIDE.md."
+  },
+  "packageTags": {
+    "coffeeCorner": {
+      "textClass": "Bubble",
+      "implementationType": "bubbleDraft",
+      "target": "coffeeCorner.bubbles",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalCurrent",
+      "changePolicy": "mutableWithVersion"
+    },
+    "coffeeCornerLapClose": {
+      "textClass": "Bubble",
+      "implementationType": "lapCloseStaticBubble",
+      "target": "coffeeCorner.lapCloseBubble",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalCurrent",
+      "changePolicy": "mutableWithVersion"
+    },
+    "windowWeather": {
+      "type": "weatherText",
+      "target": "coffeeCorner.windowWeather",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalCurrent",
+      "changePolicy": "mutableWithVersion"
+    },
+    "hubbyNote": {
+      "textClass": "PermanentNote",
+      "implementationType": "hubbyNoteDraft",
+      "target": "home.hubbyNotePanel",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalCurrent",
+      "changePolicy": "mutableWithVersion"
+    },
+    "home": { "textClass": "Bubble", "target": "home.bubbles", "runtimeStatus": "future" },
+    "restaurant": { "textClass": "Bubble", "target": "restaurant.bubbles", "runtimeStatus": "future" },
+    "fountain": { "textClass": "Bubble", "target": "fountain.bubbles", "runtimeStatus": "future" },
+    "privateRoom": { "textClass": "Bubble", "target": "privateRoom.bubbles", "runtimeStatus": "future" },
+    "bedroom": { "textClass": "Bubble", "target": "bedroom.bubbles", "runtimeStatus": "future" },
+    "photoBooth": { "textClass": "Bubble", "target": "photoBooth.bubbles", "runtimeStatus": "future" }
+  },
+  "scenes": [
+    {
+      "id": "home",
+      "kind": "scene",
+      "label": "主页 / home",
+      "runtimeStatus": "partial",
+      "versionStatus": "canonicalCurrent",
+      "changePolicy": "mutableWithVersion",
+      "section": "indoor",
+      "assetKeys": ["home-day", "home-night"],
+      "defaultAssetPaths": {
+        "day": "assets/rooms/home/day.jpg",
+        "night": "assets/rooms/home/night.jpg"
+      },
+      "coordinateSpace": {
+        "status": "mixed",
+        "activeBaseImageLocked": ["home.clockHandsOverlay", "home.hubbyNoteHot"],
+        "futureMode": "baseImageLocked"
+      },
+      "activeObjects": ["home.clockHandsOverlay"],
+      "activeHotspots": ["home.hubbyNoteHot"],
+      "activePanels": ["home.hubbyNotePanel"],
+      "textPorts": [],
+      "directorRef": "director.scenes.home",
+      "directorTags": ["landing", "dayNight", "entry", "futureNavigation", "powderNotebookHome"],
+      "notes": "Current visual entry/background logic. Not a full text room yet. Home has the current physical powder notebook hotspot. Its archive-first panel is home.hubbyNotePanel. Home-only hotspots and panels must not be treated as coffeeCorner or shared unless a later explicit decision changes that."
+    },
+    {
+      "id": "coffeeCorner",
+      "kind": "scene",
+      "label": "咖啡角",
+      "runtimeStatus": "active",
+      "versionStatus": "canonicalCurrent",
+      "changePolicy": "mutableWithVersion",
+      "section": "indoor",
+      "assetKeys": ["coffee-corner-morning-evening"],
+      "defaultAssetPaths": {
+        "main": "assets/rooms/coffee-corner/morning-evening.jpg"
+      },
+      "coordinateSpace": {
+        "status": "mixed",
+        "activeBaseImageLocked": ["coffeeCorner.tattoo19_8", "coffeeCorner.photoWallHot", "coffeeCorner.lapEnterHot", "coffeeCorner.lapBackHot", "coffeeCorner.lapChestHot"],
+        "legacyViewport": ["coffeeCorner.bubbleOverlay", "coffeeCorner.windowWeatherOverlay"],
+        "futureMode": "baseImageLocked"
+      },
+      "activeObjects": [
+        "coffeeCorner.bubble",
+        "coffeeCorner.windowWeatherDisplay",
+        "coffeeCorner.lapCloseBubble",
+        "coffeeCorner.setupPanel",
+        "coffeeCorner.localImageUpload"
+      ],
+      "activeHotspots": [
+        "coffeeCorner.tattoo19_8",
+        "coffeeCorner.photoWallHot",
+        "coffeeCorner.windowWeatherAdviceHotspot",
+        "coffeeCorner.gameConsoleHotspot",
+        "coffeeCorner.lapEnterHot",
+        "coffeeCorner.lapBackHot",
+        "coffeeCorner.lapChestHot",
+        "coffeeCorner.setupToggleButton"
+      ],
+      "activePanels": [
+        "coffeeCorner.setupPanel"
+      ],
+      "textPorts": [
+        {
+          "id": "coffeeCorner.bubbles",
+          "packageTag": "coffeeCorner",
+          "textClass": "Bubble",
+          "implementationType": "bubbleDraft",
+          "stateFields": ["alexBubble", "alexBubbles", "bubbleIndex"],
+          "runtimeStatus": "active",
+          "directorRef": "director.textPorts.coffeeCornerBubble"
+        },
+        {
+          "id": "coffeeCorner.lapCloseBubble",
+          "packageTag": "coffeeCornerLapClose",
+          "textClass": "Bubble",
+          "implementationType": "lapCloseStaticBubble",
+          "runtimeStatus": "active",
+          "directorRef": "director.textPorts.coffeeCornerLapCloseBubble",
+          "notes": "This upper-left bubble belongs only to the lap-close scene variant and must not inherit the normal coffeeCorner rotating bubble queue."
+        },
+        {
+          "id": "coffeeCorner.windowWeather",
+          "packageTag": "windowWeather",
+          "type": "weatherText",
+          "stateFields": ["windowTemp", "windowDesc"],
+          "runtimeStatus": "active",
+          "directorRef": "director.textPorts.windowWeather"
+        }
+      ],
+      "sceneVariants": [
+        {
+          "id": "coffeeCorner.lapClose",
+          "label": "坐腿近景 / lap-close",
+          "runtimeStatus": "active",
+          "versionStatus": "canonicalCurrent",
+          "changePolicy": "mutableWithVersion",
+          "parentSceneId": "coffeeCorner",
+          "assetId": "room.coffeeCorner.variant.lapClose.01",
+          "assetStoragePath": "assets/rooms/coffee-corner/variants/lap-close-01.jpg",
+          "entryHotspot": "coffeeCorner.lapEnterHot",
+          "returnHotspot": "coffeeCorner.lapBackHot",
+          "localHotspots": ["coffeeCorner.lapChestHot"],
+          "textPorts": ["coffeeCorner.lapCloseBubble"],
+          "directorRef": "director.scenes.coffeeCornerLapClose",
+          "directorTags": ["lapClose", "intimate", "sweetCare", "closeUp", "cuddle", "sceneVariant"],
+          "notes": "A coffeeCorner scene variant entered by tapping Alex's lap/leg area. It is intimate, sweet, and close, but still belongs to coffeeCorner. It uses its own upper-left lapClose bubble, has a lap-only chest hotspot, and hides the normal coffeeCorner bubble while active."
+        }
+      ],
+      "directorRef": "director.scenes.coffeeCorner",
+      "directorTags": ["active", "warm", "domestic", "coffee", "dailyCare", "constructionBase"],
+      "notes": "Current real front-stage room. CoffeeCorner currently has no physical powder notebook object and no coffeeCorner notebook panel. Object and hotspot details are in data/object-registry.v1.json. CoffeeCorner hotspots must be gated to gameRoom.active. The lap-close variant is a child scene variant, not a separate room."
+    }
+  ],
+  "isolatedWorlds": [
+    {
+      "id": "nestward",
+      "kind": "canvasWorld",
+      "label": "Nestward / 窝里窝外",
+      "entry": "/v2/nestward/",
+      "runtimeStatus": "activeWithExperimentalDoorSubsystem",
+      "versionStatus": "canonicalCurrent",
+      "changePolicy": "mutableWithVersion",
+      "geometryOwner": "v2/nestward/world-model.js",
+      "rendererOwner": "v2/nestward/world-renderer.js",
+      "coordinateSpace": {
+        "width": 1536,
+        "height": 1024,
+        "status": "baseImageLocked"
+      },
+      "scenes": [
+        {
+          "id": "nestward.indoor",
+          "assetPath": "v2/nestward/assets/indoor-world.webp"
+        },
+        {
+          "id": "nestward.outdoor",
+          "assetPath": "v2/nestward/assets/outdoor-world.webp"
+        }
+      ],
+      "activeObjects": [
+        "nestward.doorHotspot",
+        "nestward.actorOcclusionPass",
+        "nestward.doorOcclusionAssets"
+      ],
+      "constructionObjects": ["nestward.doorAwayTestControls"],
+      "runtimeNote": "Nestward is isolated from the /cloud scene stack and does not write protected nest_state. The accepted phone baseline stays active while the exact accepted A/B/walk brush payload is unavailable; the new Door controllers fail closed instead of approximating it."
+    }
+  ],
+  "futureScenes": [
+    {
+      "id": "restaurant",
+      "label": "餐厅",
+      "runtimeStatus": "future",
+      "section": "indoor",
+      "directorRef": "director.scenes.restaurant",
+      "notes": "Future room. Do not publish visible restaurant text until the room engine supports separate room text ports."
+    },
+    {
+      "id": "fountain",
+      "label": "许愿池",
+      "runtimeStatus": "future",
+      "section": "outdoor",
+      "directorRef": "director.scenes.fountain",
+      "notes": "Future room. Good candidate for wish notes and ritual interactions."
+    },
+    {
+      "id": "privateRoom",
+      "label": "私密房间",
+      "runtimeStatus": "future",
+      "section": "secret",
+      "directorRef": "director.scenes.privateRoom",
+      "notes": "Future room. Requires deliberate user-side publishing and clear local control."
+    },
+    {
+      "id": "bedroom",
+      "label": "卧室",
+      "runtimeStatus": "future",
+      "section": "indoor",
+      "directorRef": "director.scenes.bedroom",
+      "notes": "Future room with possible notebook and blanket mood widgets. If bedroom has a physical notebook later, create a bedroom-scoped notebook hotspot and panel instead of reusing home.hubbyNoteHot/home.hubbyNotePanel."
+    },
+    {
+      "id": "photoBooth",
+      "label": "拍照亭",
+      "runtimeStatus": "future",
+      "section": "fun",
+      "directorRef": "director.scenes.photoBooth",
+      "notes": "Future room. Keep image/sticker logic separate from bubble/weather state."
+    }
+  ],
+  "architectureNotes": {
+    "doNotBreak": [
+      "/write Alex update package workflow",
+      "coffeeCorner bubble publishing",
+      "19.8 tight coordinate hotspot behavior",
+      "photo wall memories hotspot room-gated base-image coordinate behavior",
+      "single-bubble 19.8 re-show behavior",
+      "windowWeather state fields and weather advice popup",
+      "home powder notebook hotspot",
+      "home hubbyNote archive-first panel",
+      "hubbyNote favorite/delete/soft-delete/key hiding controls",
+      "game console / game menu hotspot",
+      "coffeeCorner lap-close variant enter/return behavior",
+      "coffeeCorner lapCloseBubble must stay separate from normal coffeeCorner bubble queue",
+      "coffeeCorner lapChestHot must stay lap-close-only and not leak into main coffeeCorner",
+      "setup panel manual access",
+      "local image upload override pipeline",
+      "Vercel Hobby function count budget"
+    ],
+    "removedApiFunctions": ["api/room-asset.js", "api/registry.js"],
+    "removedFrontendGuards": ["assets/hubby-note-auth-guard.js"],
+    "currentStaticConfigFiles": ["data/room-config.v1.json", "data/object-registry.v1.json"],
+    "nextRefactorGoal": "Make hotspot and overlay placement configuration-driven inside existing front-end assets without adding new API wrappers. Keep notebook data/control logic separate from future notebook art/layout.",
+    "principle": "Static assets, front-end controllers, and JSON config should carry future world expansion. Do not add more runtime API functions for rooms, image proxies, or hotspot wrappers."
+  }
+}
