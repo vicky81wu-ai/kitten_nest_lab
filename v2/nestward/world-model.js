@@ -18,6 +18,37 @@ export const DOOR_CALIBRATION = {
   outdoorHotspot: [[112, 235], [275, 235], [275, 455], [112, 455]]
 };
 
+export const DOOR_AWAY_CALIBRATION = Object.freeze({
+  point1: Object.freeze({ x: 1337, z: 0.13283289537879497 }),
+  point2: Object.freeze({ x: 1507, z: 0.20824666969097821 }),
+  // Naili clears the doorway before Hubby returns, so the two never settle on
+  // the same threshold point after a walk.
+  nailiReturnAnchor: Object.freeze({ x: 1220, z: 0.48 }),
+  moveSpeed: 1.2,
+  outsideSpeedFactor: 0.9,
+  companionDelaySeconds: 2
+});
+
+export const DOOR_TRANSITION_CALIBRATION = Object.freeze({
+  indoor: Object.freeze({
+    kitten: Object.freeze({
+      point1: Object.freeze({ x: 1389.0143540669856, z: 0.21818010630740092 }),
+      point2: Object.freeze({ x: 1495.823923444976, z: 0.2435980176494252 })
+    }),
+    hubby: Object.freeze({
+      point: Object.freeze({ x: 1360.5971291866026, z: 0.15156764899726935 })
+    })
+  }),
+  outdoor: Object.freeze({
+    kitten: Object.freeze({
+      point: Object.freeze({ x: 137.18660287081337, z: 0.32225861470423944 })
+    }),
+    hubby: Object.freeze({
+      point: Object.freeze({ x: 196.47081339712915, z: 0.28902842135450457 })
+    })
+  })
+});
+
 export function seededRandom(seed = 198) {
   let value = seed >>> 0;
   return () => {

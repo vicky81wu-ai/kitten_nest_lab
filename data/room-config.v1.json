@@ -1,5 +1,5 @@
 {
-  "version": "0.1.11",
+  "version": "0.1.12",
   "status": "foundation-scene-hooks",
   "note": "Room and scene configuration foundation for Kitten Nest. This file is not a full roomEngine runtime yet. It keeps scene identity, active ports, protected current runtime facts, and directorRef hooks. Long director notes live in docs/DIRECTOR_GUIDE.md.",
   "currentRuntime": {
@@ -203,6 +203,41 @@
       "directorRef": "director.scenes.coffeeCorner",
       "directorTags": ["active", "warm", "domestic", "coffee", "dailyCare", "constructionBase"],
       "notes": "Current real front-stage room. CoffeeCorner currently has no physical powder notebook object and no coffeeCorner notebook panel. Object and hotspot details are in data/object-registry.v1.json. CoffeeCorner hotspots must be gated to gameRoom.active. The lap-close variant is a child scene variant, not a separate room."
+    }
+  ],
+  "isolatedWorlds": [
+    {
+      "id": "nestward",
+      "kind": "canvasWorld",
+      "label": "Nestward / 窝里窝外",
+      "entry": "/v2/nestward/",
+      "runtimeStatus": "active",
+      "versionStatus": "accepted",
+      "changePolicy": "mutableWithVersion",
+      "geometryOwner": "v2/nestward/world-model.js",
+      "rendererOwner": "v2/nestward/world-renderer.js",
+      "coordinateSpace": {
+        "width": 1536,
+        "height": 1024,
+        "status": "baseImageLocked"
+      },
+      "scenes": [
+        {
+          "id": "nestward.indoor",
+          "assetPath": "v2/nestward/assets/indoor-world.webp"
+        },
+        {
+          "id": "nestward.outdoor",
+          "assetPath": "v2/nestward/assets/outdoor-world.webp"
+        }
+      ],
+      "activeObjects": [
+        "nestward.doorHotspot",
+        "nestward.actorOcclusionPass",
+        "nestward.doorOcclusionAssets",
+        "nestward.doorAwayControls"
+      ],
+      "runtimeNote": "Nestward is isolated from the /cloud scene stack and does not write protected nest_state. Vicky phone-accepted static A/B/walk assets drive the formal Door controllers; the retained semi-transparent Door Away buttons are temporary until the wall-lamp hotspot is designed."
     }
   ],
   "futureScenes": [
