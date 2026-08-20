@@ -1,4 +1,11 @@
 {
+  "redirects": [
+    {
+      "source": "/nestward-door-qa",
+      "destination": "/v2/nestward/?doorCandidate=1",
+      "permanent": false
+    }
+  ],
   "routes": [
     { "src": "^/$", "dest": "/api/app-assets" },
     { "src": "^/cloud$", "dest": "/v2/index.html" },
