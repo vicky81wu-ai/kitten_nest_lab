@@ -1,0 +1,47 @@
+commit 0fb5127bf96feba8e295f2ac97f59bac2298fcc3
+Author: Codex <codex@openai.com>
+Date:   Thu Aug 20 08:24:10 2026 +0300
+
+    feat(nestward): add clean Door subsystem QA candidate
+
+diff --git a/v2/nestward/assets/door/door-occlusion-manifest.v1.json b/v2/nestward/assets/door/door-occlusion-manifest.v1.json
+new file mode 100644
+index 0000000..be251bb
+--- /dev/null
++++ b/v2/nestward/assets/door/door-occlusion-manifest.v1.json
+@@ -0,0 +1,35 @@
++{
++  "version": "1.0.0",
++  "status": "candidate-baked-awaiting-phone-visual-qa",
++  "reason": "Vicky's phone Notes export has been preserved verbatim and baked into candidate alpha masks. Phone visual QA must promote them explicitly before Door runtime activation.",
++  "canvas": [1536, 1024],
++  "sourceArtwork": "../indoor-world.webp",
++  "calibration": {
++    "path": "./door-away-calibration.v1.json",
++    "sha256": "ea34e79cb8466be314f0b21f9295acaff157359579f2e741d8d8daab133af3f3",
++    "source": "Vicky phone Notes backup supplied 2026-08-20",
++    "acceptance": "provisional-phone-backup-awaiting-visual-qa",
++    "strokeCounts": {
++      "maskA": 152,
++      "maskB": 44,
++      "walk": 44
++    }
++  },
++  "assets": {
++    "maskA": null,
++    "maskB": null,
++    "walk": null
++  },
++  "candidateAssets": {
++    "maskA": "./door-mask-a.candidate-v1.png",
++    "maskB": "./door-mask-b.candidate-v1.png",
++    "walk": "./door-walk.candidate-v1.png"
++  },
++  "candidateSha256": {
++    "maskA": "c8ead22d7cab7905d9e5a1a8d33711b216f5a4e7d93433180f0c1e407ae31d0e",
++    "maskB": "45ae33169b49d66f921aa073c6e019edf7d790317690e4da18a8bcc26c62e831",
++    "walk": "78e39a331573a000cde6a40e84fc9415dc068bbbd7e89741c397762b3d913cd6"
++  },
++  "candidateBuilder": "../../../../scripts/bake-door-occlusion.mjs",
++  "activationPolicy": "fail-closed-to-accepted-phone-baseline"
++}
