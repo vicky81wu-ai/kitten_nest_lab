@@ -1,12 +1,10 @@
 {
-  "redirects": [
-    {
-      "source": "/nestward-door-qa",
-      "destination": "/v2/nestward/?doorCandidate=1",
-      "permanent": false
-    }
-  ],
   "routes": [
+    {
+      "src": "^/nestward-door-qa$",
+      "headers": { "Location": "/v2/nestward/?doorCandidate=1" },
+      "status": 307
+    },
     { "src": "^/$", "dest": "/api/app-assets" },
     { "src": "^/cloud$", "dest": "/v2/index.html" },
     { "src": "^/cloud-weather$", "dest": "/api/app-weather" },
