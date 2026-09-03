@@ -1,0 +1,1 @@
+naili-hd.avif is the root-normalized 128px-cell atlas for the dynamic Naili lab. 159 frames total: idle 0-47, rise/run 48-113, stop/sit 114-158.
