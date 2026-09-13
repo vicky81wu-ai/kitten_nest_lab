@@ -107,18 +107,13 @@ jobs:
           mv /tmp/ph/polyhaven-bermuda-grass-meshopt.glb v2/nestward/assets/premium/polyhaven-bermuda-grass.glb
           ls -lh v2/nestward/assets/premium/*.glb
 
-      - name: Publish packed GLBs as release assets
+      - name: Commit packed GLBs directly into experiment branch
         shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          TAG='premium-garden-v1'
-          gh release delete "$TAG" --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag || true
-          gh release create "$TAG" \
-            v2/nestward/assets/premium/polyhaven-jacaranda.glb \
-            v2/nestward/assets/premium/polyhaven-bermuda-grass.glb \
-            --repo "$GITHUB_REPOSITORY" \
-            --title 'Premium garden web GLBs' \
-            --notes 'Poly Haven CC0 assets repacked to binary GLB with Meshopt geometry compression. No mesh simplification.' \
-            --prerelease
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add v2/nestward/assets/premium/polyhaven-jacaranda.glb
+          git add v2/nestward/assets/premium/polyhaven-bermuda-grass.glb
+          git commit -m 'Add direct premium garden GLBs for Vercel'
+          git push origin HEAD:experiment/3d-garden-world
