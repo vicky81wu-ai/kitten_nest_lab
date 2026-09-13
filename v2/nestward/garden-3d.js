@@ -3,6 +3,7 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { SSAOPass } from 'three/addons/postprocessing/SSAOPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 import { createTerrain } from './vendor/luminous-lake/world/terrain.js';
 import { createWater } from './vendor/luminous-lake/world/water.js';
 import { createSky } from './vendor/luminous-lake/world/sky.js';
@@ -124,6 +125,24 @@ async function boot() {
   scene.add(sky.group);
   scene.environment = sky.envTexture;
   scene.fog = sky.fog;
+
+  // A small CC0 Poly Haven HDRI is used for PBR reflections only. The visible
+  // sky remains Luminous Lake's controllable bright-noon dome.
+  status('加载自然 HDR 环境反射…');
+  try {
+    const hdr = await new RGBELoader().loadAsync(
+      'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/meadow_2_1k.hdr'
+    );
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    pmrem.compileEquirectangularShader();
+    const envRT = pmrem.fromEquirectangular(hdr);
+    scene.environment = envRT.texture;
+    hdr.dispose();
+    pmrem.dispose();
+  } catch (err) {
+    console.warn('[garden-max] HDR environment fallback', err);
+    scene.environment = sky.envTexture;
+  }
   sky.fog.near = isMobile ? 165 : 185;
   sky.fog.far = isMobile ? 410 : 470;
   sky.sunLight.castShadow = true;
