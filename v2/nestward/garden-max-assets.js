@@ -297,8 +297,13 @@ export async function loadMaxAssets({
     hook.rotation.y = .06;
     rawBoat.add(hook);
 
+    // The imported source is authored in real metres: 2.255 × 2.207 × 10.6 m.
+    // NW's current kitten billboard is 5.22 world units tall, so preserve the
+    // existing character scale and map the real boat proportionally to it
+    // instead of shrinking the boat to a toy. This makes the 10.6 m hull
+    // roughly 32.18 NW world units long and restores human-scale cabin height.
     const boatVisual = asNormalizedHolder(rawBoat, {
-      targetLongest: 5.7,
+      targetLongest: 32.18,
       bottom: 0,
       centerXZ: true,
       rotateLongestToX: true
