@@ -17,7 +17,7 @@ import {
   createFairies,
   createBillboardCharacter
 } from './garden-hq-visuals.js';
-import { createTerrainPbrMaterial, createTexturedMeadow } from './garden-pbr-terrain.js';
+import { createTerrainPbrMaterial } from './garden-pbr-terrain.js';
 import { loadMaxAssets } from './garden-max-assets.js';
 
 const $ = (q) => document.querySelector(q);
@@ -37,7 +37,7 @@ const clamp = THREE.MathUtils.clamp;
 const WIND = .16;
 const CALM = .76;
 // Showcase stays in bright noon. No automatic day/night cycle.
-const TIME_OF_DAY = .50;
+const TIME_OF_DAY = .36;
 
 let hintTimer = 0;
 function status(s) {
@@ -91,7 +91,7 @@ async function boot() {
   renderer.setSize(innerWidth, innerHeight, false);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.08;
+  renderer.toneMappingExposure = 1.02;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
@@ -126,25 +126,37 @@ async function boot() {
   scene.environment = sky.envTexture;
   scene.fog = sky.fog;
 
-  // A small CC0 Poly Haven HDRI is used for PBR reflections only. The visible
-  // sky remains Luminous Lake's controllable bright-noon dome.
-  status('加载自然 HDR 环境反射…');
+  // Premium atmosphere pass. Use Poly Haven's real Misty Dawn panorama as
+  // both the visible horizon and PBR light source, rather than a synthetic blue
+  // dome. Keep the dynamic sun lights from Luminous Lake, but hide its visual sky.
+  status('加载 Misty Dawn 真实天空、晨雾和环境光…');
   try {
     const hdr = await new RGBELoader().loadAsync(
-      'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/meadow_2_1k.hdr'
+      'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/misty_dawn_2k.hdr'
     );
+    hdr.mapping = THREE.EquirectangularReflectionMapping;
+    scene.background = hdr;
+    if ('backgroundIntensity' in scene) scene.backgroundIntensity = .92;
+    if ('backgroundBlurriness' in scene) scene.backgroundBlurriness = .055;
+
     const pmrem = new THREE.PMREMGenerator(renderer);
     pmrem.compileEquirectangularShader();
     const envRT = pmrem.fromEquirectangular(hdr);
     scene.environment = envRT.texture;
-    hdr.dispose();
     pmrem.dispose();
+
+    // Re-parent only the dynamic light rig, then hide the old generated dome,
+    // clouds and sprites so the photographed HDRI is the visible sky.
+    scene.add(sky.sunLight, sky.sunLight.target, sky.hemi, sky.ambient);
+    sky.group.visible = false;
   } catch (err) {
-    console.warn('[garden-max] HDR environment fallback', err);
+    console.warn('[garden-max] Misty Dawn HDR fallback', err);
     scene.environment = sky.envTexture;
   }
-  sky.fog.near = isMobile ? 165 : 185;
-  sky.fog.far = isMobile ? 410 : 470;
+
+  // Real aerial perspective: closer, softer mist instead of the previous
+  // crystal-clear 400 m mobile horizon.
+  scene.fog = new THREE.FogExp2(0xb9c8c4, isMobile ? .0044 : .0036);
   sky.sunLight.castShadow = true;
   sky.sunLight.shadow.mapSize.set(isMobile ? 1536 : 2048, isMobile ? 1536 : 2048);
   sky.sunLight.shadow.camera.left = -72;
@@ -157,8 +169,8 @@ async function boot() {
 
   // Independent daylight fill prevents mobile shadow maps from turning the shore
   // into a silhouette while preserving directional modelling.
-  const fill = new THREE.HemisphereLight(0xf0f8ff, 0x6e805d, .88);
-  const ambientFill = new THREE.AmbientLight(0xffffff, .12);
+  const fill = new THREE.HemisphereLight(0xe8f2ef, 0x596853, .42);
+  const ambientFill = new THREE.AmbientLight(0xfff7ea, .07);
   scene.add(fill, ambientFill);
 
   const cottageX = 78.5, cottageZ = -11.5;
@@ -172,21 +184,13 @@ async function boot() {
     return false;
   };
 
-  status('种真实草叶、岸边芦苇和野花…');
+  // The previous foliage-atlas cards produced black/flat clumps on iPhone.
+  // Premium ground cover now comes from real 3D GLB grass, ferns and scrub in
+  // loadMaxAssets(), so keep the card meadow out of this comparison build.
+  status('切换到全 3D 草丛和林下植被…');
   let meadow = null;
-  try {
-    meadow = await createTexturedMeadow({
-      renderer,
-      heightAt: terrain.heightAt,
-      isMobile,
-      exclude: excludeNear
-    });
-    scene.add(meadow.group);
-  } catch (err) {
-    console.warn('[garden-max] textured meadow failed', err);
-  }
 
-  status('载入真实树、灌木、房子和船…');
+  status('载入真实针叶林、草丛、房子和 150 万面游艇…');
   const maxAssets = await loadMaxAssets({
     scene,
     renderer,
@@ -670,8 +674,8 @@ async function boot() {
   requestAnimationFrame(() => {
     loading.classList.add('done');
     const note = maxAssets.failed.length
-      ? '高精度湖岸已开。个别外部资产走了备用版本。'
-      : '高精度湖岸已开。近景树、房子、草地、船和材质都换成真实资产。';
+      ? '晨雾森林版已开。个别外部资产走了备用版本。'
+      : '晨雾森林版已开。Misty Dawn 天空、3D 草丛、针叶林和高模游艇都已载入。';
     say(note, 4300);
   });
 }
