@@ -91,6 +91,13 @@ async function loadPrepared(url, renderer, options = {}) {
   return root;
 }
 
+function asNormalizedHolder(root, norm) {
+  normalizeModel(root, norm);
+  const holder = new THREE.Group();
+  holder.add(root);
+  return holder;
+}
+
 function clonePlaced(template, x, y, z, scale, rotationY, shadow = false) {
   const c = template.clone(true);
   c.position.set(x, y, z);
@@ -144,8 +151,7 @@ export async function loadMaxAssets({
   await Promise.all(natureEntries.map(async ([key, url, norm]) => {
     try {
       const root = await loadPrepared(url, renderer, { castShadow: false, receiveShadow: true });
-      normalizeModel(root, norm);
-      models[key] = root;
+      models[key] = asNormalizedHolder(root, norm);
       result.loaded.push(key);
     } catch (err) {
       console.warn('[garden-max] model failed', key, err);
@@ -195,8 +201,8 @@ export async function loadMaxAssets({
 
   onProgress('载入高细节湖边小屋…');
   try {
-    const house = await loadPrepared(URLS.cottage, renderer, { castShadow: true, receiveShadow: true });
-    normalizeModel(house, { targetLongest: 11.6, bottom: 0, centerXZ: true });
+    const rawHouse = await loadPrepared(URLS.cottage, renderer, { castShadow: true, receiveShadow: true });
+    const house = asNormalizedHolder(rawHouse, { targetLongest: 11.6, bottom: 0, centerXZ: true });
     house.position.set(cottagePosition.x, heightAt(cottagePosition.x, cottagePosition.z) + .04, cottagePosition.z);
     house.rotation.y = -Math.PI * .46;
     house.traverse((o) => {
@@ -215,9 +221,9 @@ export async function loadMaxAssets({
 
   onProgress('载入可驾驶高细节木船…');
   try {
-    const boatVisual = await loadPrepared(URLS.boat, renderer, { castShadow: true, receiveShadow: true });
-    normalizeModel(boatVisual, { targetLongest: 5.7, bottom: 0, centerXZ: true, rotateLongestToX: true });
-    // Lift slightly so hull sits in the water rather than on top of it.
+    const rawBoat = await loadPrepared(URLS.boat, renderer, { castShadow: true, receiveShadow: true });
+    const boatVisual = asNormalizedHolder(rawBoat, { targetLongest: 5.7, bottom: 0, centerXZ: true, rotateLongestToX: true });
+    // Sink the normalized hull slightly into the water.
     boatVisual.position.y = -.28;
     result.boatRoot.add(boatVisual);
     result.loaded.push('boat');
