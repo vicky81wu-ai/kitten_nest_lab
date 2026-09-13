@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover,user-scalable=no" />
+  <meta name="theme-color" content="#9dbfc0" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Kitten Nest · 湖岸试验场</title>
+  <link rel="stylesheet" href="./garden-3d.css" />
+</head>
+<body>
+<main id="app">
+  <canvas id="world3d"></canvas>
+  <div id="loading"><div class="orb"></div><div><b>湖面正在醒来</b><span id="loadingText">铺水、种树、叫醒小精灵…</span></div></div>
+  <header>
+    <button id="back">‹</button>
+    <div class="title"><b>湖岸试验场</b><span id="mode">岸上散步</span></div>
+    <button id="help">?</button>
+  </header>
+  <div id="hint" hidden></div>
+  <section id="helpPanel" hidden><div class="card"><button id="closeHelp">×</button><h1>怎么逛</h1><p>左下摇杆移动。右半屏拖动转镜头。靠近码头木船后，右下按钮可以上船；上船后摇杆控制航向和速度。</p><p>电脑可用 WASD / 方向键。这个页面只在实验分支，不改老 NW 正式版。</p></div></section>
+  <div id="stick"><div class="ring"></div><div id="knob"></div></div>
+  <div id="cameraPad"></div>
+  <button id="action">去码头</button>
+  <div class="tip">靠近码头可以上船 · 湖面可自由航行</div>
+</main>
+<script type="module" src="./garden-3d.js"></script>
+</body>
+</html>
