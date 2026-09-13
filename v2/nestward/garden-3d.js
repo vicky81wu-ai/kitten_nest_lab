@@ -17,7 +17,7 @@ import {
   createFairies,
   createBillboardCharacter
 } from './garden-hq-visuals.js';
-import { createTerrainPbrMaterial } from './garden-pbr-terrain.js';
+import { createTerrainPbrMaterial } from './garden-pbr-terrain.js?v=polyhaven-ground-74e57e56';
 import { loadMaxAssets } from './garden-max-assets.js?v=premium-direct-d955b07e';
 
 const $ = (q) => document.querySelector(q);
