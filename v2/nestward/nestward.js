@@ -630,7 +630,7 @@ function objectChoices(object) {
       { label: '听喷泉说话', run: () => say('它说，小猫想住的世界可以越长越大。') }
     ],
     gardenGate: state.gardenGateOpen ? [
-      { label: '往外走', run: () => say('门外的路还在长。我先把这扇门替小猫留着。') },
+      { label: '往外走 · 3D 湖岸', run: () => { try { localStorage.setItem('nestward.garden3d.entry', String(Date.now())); } catch {} window.location.href = './garden-3d.html'; } },
       { label: '关好花园门', run: () => { state.gardenGateOpen = false; say('关好了。屋里屋外都不会跑丢。'); } }
     ] : [
       { label: '打开花园门', run: () => { state.gardenGateOpen = true; say('开了。以后新的路会从这里接出去。'); } }
