@@ -1,0 +1,114 @@
+name: Build premium Poly Haven garden assets
+
+on:
+  push:
+    branches:
+      - experiment/3d-garden-world
+    paths:
+      - .github/workflows/build-premium-garden-assets.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: experiment/3d-garden-world
+
+      - name: Download Poly Haven glTF packages and pack binary GLB
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/ph v2/nestward/assets/premium
+          cat > /tmp/ph/fetch.py <<'PY'
+          import json, os, sys, urllib.request, pathlib, subprocess
+
+          UA={"User-Agent":"KittenNestAssetBuilder/1.0"}
+          outdir=pathlib.Path("v2/nestward/assets/premium")
+          outdir.mkdir(parents=True, exist_ok=True)
+
+          def get_json(url):
+              req=urllib.request.Request(url,headers=UA)
+              with urllib.request.urlopen(req,timeout=60) as r:
+                  return json.load(r)
+
+          def download(url,path):
+              path.parent.mkdir(parents=True,exist_ok=True)
+              req=urllib.request.Request(url,headers=UA)
+              with urllib.request.urlopen(req,timeout=120) as r, open(path,"wb") as f:
+                  while True:
+                      b=r.read(1024*1024)
+                      if not b: break
+                      f.write(b)
+
+          def find_nodes(obj,path=()):
+              found=[]
+              if isinstance(obj,dict):
+                  u=obj.get("url")
+                  if isinstance(u,str) and u.lower().split("?")[0].endswith(".gltf"):
+                      found.append((path,obj))
+                  for k,v in obj.items():
+                      found += find_nodes(v,path+(str(k),))
+              elif isinstance(obj,list):
+                  for i,v in enumerate(obj):
+                      found += find_nodes(v,path+(str(i),))
+              return found
+
+          def pick(files,res):
+              nodes=find_nodes(files)
+              scored=[]
+              for path,node in nodes:
+                  p="/".join(path).lower()
+                  score=0
+                  if res in p: score += 100
+                  if "gltf" in p: score += 20
+                  if "blend" in p or "usd" in p or "fbx" in p: score -= 30
+                  scored.append((score,path,node))
+              if not scored: raise RuntimeError("No glTF candidate")
+              scored.sort(key=lambda x:x[0],reverse=True)
+              return scored[0][2]
+
+          def build(slug,name,res="2k"):
+              files=get_json(f"https://api.polyhaven.com/files/{slug}")
+              node=pick(files,res)
+              work=pathlib.Path("/tmp/ph")/slug
+              if work.exists():
+                  import shutil; shutil.rmtree(work)
+              work.mkdir(parents=True)
+              root=work/(pathlib.Path(node["url"].split("?")[0]).name or f"{slug}.gltf")
+              download(node["url"],root)
+              inc=node.get("include",{})
+              if isinstance(inc,dict):
+                  for rel,meta in inc.items():
+                      if isinstance(meta,dict) and isinstance(meta.get("url"),str):
+                          download(meta["url"],work/rel)
+              dest=outdir/f"{name}.glb"
+              subprocess.run(["npx","--yes","@gltf-transform/cli@4.2.1","copy",str(root),str(dest)],check=True)
+              mb=dest.stat().st_size/1024/1024
+              print(slug,"=>",dest,round(mb,2),"MB")
+              if mb>95 and res!="1k":
+                  print("Too large; rebuilding 1k")
+                  dest.unlink()
+                  return build(slug,name,"1k")
+              return dest
+
+          build("jacaranda_tree","polyhaven-jacaranda")
+          build("grass_bermuda_01","polyhaven-bermuda-grass")
+          PY
+          python /tmp/ph/fetch.py
+          ls -lh v2/nestward/assets/premium/*.glb
+
+      - name: Commit packed GLBs
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add v2/nestward/assets/premium/polyhaven-jacaranda.glb v2/nestward/assets/premium/polyhaven-bermuda-grass.glb
+          git commit -m 'Add premium Poly Haven Jacaranda and Bermuda grass GLBs'
+          git push origin HEAD:experiment/3d-garden-world
