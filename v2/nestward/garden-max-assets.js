@@ -14,6 +14,13 @@ const URLS = {
   oak: 'https://cdn.3dassets.dev/assets/28312/v1/model.glb',
   cottage: 'https://cdn.3dassets.dev/assets/32485/v1/model.glb',
   highBoat: 'https://cdn.jsdelivr.net/gh/bob6664569/open-water@main/site/assets/boats/motoryacht_10.7r.glb',
+  coniferTall: 'https://cdn.3dassets.dev/assets/32683/v1/model.glb',
+  coniferMid: 'https://cdn.3dassets.dev/assets/32684/v1/model.glb',
+  coniferYoung: 'https://cdn.3dassets.dev/assets/32685/v1/model.glb',
+  undergrowth: 'https://cdn.3dassets.dev/assets/32689/v1/model.glb',
+  fern: 'https://cdn.3dassets.dev/assets/32690/v1/model.glb',
+  grassClump: 'https://cdn.3dassets.dev/assets/28386/v1/model.glb',
+  fallenLog: 'https://cdn.3dassets.dev/assets/32687/v1/model.glb',
   boatHull: 'https://cdn.3dassets.dev/assets/31642/v1/model.glb',
   boatRudder: 'https://cdn.3dassets.dev/assets/31644/v1/model.glb',
   boatVent: 'https://cdn.3dassets.dev/assets/31646/v1/model.glb',
@@ -124,6 +131,38 @@ function validSpot(x, z, heightAt, exclude) {
   return h > .35 && h < 9.5 && !exclude(x, z);
 }
 
+function makeInstancedCopies(template, matrices, name, { castShadow = false, receiveShadow = true } = {}) {
+  const group = new THREE.Group();
+  group.name = name;
+  template.updateMatrixWorld(true);
+  const composed = new THREE.Matrix4();
+
+  template.traverse((o) => {
+    if (!o.isMesh || !o.geometry || !o.material) return;
+    const inst = new THREE.InstancedMesh(o.geometry, o.material, matrices.length);
+    inst.name = name + '-' + (o.name || 'mesh');
+    inst.castShadow = castShadow;
+    inst.receiveShadow = receiveShadow;
+    inst.frustumCulled = true;
+    for (let i = 0; i < matrices.length; i++) {
+      composed.multiplyMatrices(matrices[i], o.matrixWorld);
+      inst.setMatrixAt(i, composed);
+    }
+    inst.instanceMatrix.needsUpdate = true;
+    group.add(inst);
+  });
+  return group;
+}
+
+function placementMatrix(x, y, z, scale, yaw, tiltX = 0, tiltZ = 0) {
+  const d = new THREE.Object3D();
+  d.position.set(x, y, z);
+  d.rotation.set(tiltX, yaw, tiltZ);
+  d.scale.setScalar(scale);
+  d.updateMatrix();
+  return d.matrix.clone();
+}
+
 function meshTriangleCount(mesh) {
   if (!mesh?.isMesh || !mesh.geometry?.getAttribute('position')) return 0;
   const g = mesh.geometry;
@@ -150,66 +189,114 @@ export async function loadMaxAssets({
   result.natureGroup.name = 'max-asset-nature';
   result.boatRoot.name = 'max-detail-boat-root';
 
-  onProgress('载入真实树木和灌木模型…');
+  onProgress('铺真实针叶林、蕨类和立体林下植被…');
   const natureEntries = [
-    ['mapleA', URLS.mapleA, { targetHeight: 8.0 }],
-    ['mapleB', URLS.mapleB, { targetHeight: 7.2 }],
-    ['birch', URLS.birch, { targetHeight: 8.7 }],
-    ['oak', URLS.oak, { targetHeight: 7.0 }],
-    ['bushLarge', URLS.bushLarge, { targetHeight: 1.7 }],
-    ['bushSmall', URLS.bushSmall, { targetHeight: 1.05 }]
+    ['coniferTall', URLS.coniferTall],
+    ['coniferMid', URLS.coniferMid],
+    ['coniferYoung', URLS.coniferYoung],
+    ['undergrowth', URLS.undergrowth],
+    ['fern', URLS.fern],
+    ['grassClump', URLS.grassClump],
+    ['fallenLog', URLS.fallenLog]
   ];
 
   const models = {};
-  await Promise.all(natureEntries.map(async ([key, url, norm]) => {
+  await Promise.all(natureEntries.map(async ([key, url]) => {
     try {
-      const root = await loadPrepared(url, renderer, { castShadow: false, receiveShadow: true });
-      models[key] = asNormalizedHolder(root, norm);
+      models[key] = await loadPrepared(url, renderer, { castShadow: false, receiveShadow: true });
       result.loaded.push(key);
     } catch (err) {
-      console.warn('[garden-max] model failed', key, err);
+      console.warn('[garden-max] premium nature failed', key, err);
       result.failed.push(key);
     }
   }));
 
-  const rnd = seededRandom(2026091315);
-  const treeKeys = ['mapleA', 'mapleB', 'birch', 'oak'].filter((k) => models[k]);
-  const treeTarget = isMobile ? 36 : 52;
-  const trees = [];
+  const rnd = seededRandom(202609132109);
+  const treePoints = [];
+  const treeMatrices = { coniferTall: [], coniferMid: [], coniferYoung: [] };
+  const treeTarget = isMobile ? 118 : 170;
   let attempts = 0;
-  while (trees.length < treeTarget && attempts++ < treeTarget * 60 && treeKeys.length) {
-    // Concentrate true modeled trees around the shore/playable cottage zone.
+  while (treePoints.length < treeTarget && attempts++ < treeTarget * 80) {
     const ang = rnd() * Math.PI * 2;
-    const r = 58 + Math.pow(rnd(), .88) * 55;
+    const r = 63 + Math.pow(rnd(), .72) * 92;
     const x = Math.cos(ang) * r;
     const z = Math.sin(ang) * r;
-    if (!validSpot(x, z, heightAt, exclude)) continue;
+    const h = heightAt(x, z);
+    if (h < .65 || h > 13.5 || exclude(x, z)) continue;
+
     let crowded = false;
-    for (const p of trees) {
-      if (Math.hypot(p.x - x, p.z - z) < 4.0) { crowded = true; break; }
+    for (const p of treePoints) {
+      if (Math.hypot(p.x - x, p.z - z) < 3.2) { crowded = true; break; }
     }
     if (crowded) continue;
-    const key = treeKeys[Math.floor(rnd() * treeKeys.length)];
-    const scale = .72 + rnd() * .65;
-    const shadow = trees.length < (isMobile ? 12 : 24);
-    const c = clonePlaced(models[key], x, heightAt(x, z), z, scale, rnd() * Math.PI * 2, shadow);
-    result.natureGroup.add(c);
-    trees.push({ x, z });
+
+    const pick = rnd();
+    const key = pick < .45 ? 'coniferTall' : (pick < .82 ? 'coniferMid' : 'coniferYoung');
+    if (!models[key]) continue;
+    const s = .82 + rnd() * .52;
+    treeMatrices[key].push(placementMatrix(x, h, z, s, rnd() * Math.PI * 2));
+    treePoints.push({ x, z });
   }
 
-  const bushKeys = ['bushLarge', 'bushSmall'].filter((k) => models[k]);
-  const bushTarget = isMobile ? 58 : 82;
-  for (let i = 0, tries = 0; i < bushTarget && tries < bushTarget * 35 && bushKeys.length; tries++) {
-    const ang = rnd() * Math.PI * 2;
-    const r = 54 + Math.pow(rnd(), .8) * 48;
-    const x = Math.cos(ang) * r;
-    const z = Math.sin(ang) * r;
-    if (!validSpot(x, z, heightAt, exclude)) continue;
-    const key = bushKeys[Math.floor(rnd() * bushKeys.length)];
-    const scale = .55 + rnd() * .72;
-    result.natureGroup.add(clonePlaced(models[key], x, heightAt(x, z), z, scale, rnd() * Math.PI * 2, false));
-    i++;
+  for (const key of Object.keys(treeMatrices)) {
+    if (!models[key] || !treeMatrices[key].length) continue;
+    result.natureGroup.add(makeInstancedCopies(
+      models[key],
+      treeMatrices[key],
+      'premium-' + key,
+      { castShadow: !isMobile, receiveShadow: true }
+    ));
   }
+
+  function scatterGround(key, count, r0, r1, hMin, hMax, scaleMin, scaleMax, seedOffset) {
+    if (!models[key]) return;
+    const rr = seededRandom(202609132109 + seedOffset);
+    const matrices = [];
+    let tries = 0;
+    while (matrices.length < count && tries++ < count * 40) {
+      const ang = rr() * Math.PI * 2;
+      const r = r0 + Math.pow(rr(), .88) * (r1 - r0);
+      const x = Math.cos(ang) * r;
+      const z = Math.sin(ang) * r;
+      const h = heightAt(x, z);
+      if (h < hMin || h > hMax || exclude(x, z)) continue;
+      const s = scaleMin + rr() * (scaleMax - scaleMin);
+      matrices.push(placementMatrix(
+        x, h + .015, z, s, rr() * Math.PI * 2,
+        (rr() - .5) * .025, (rr() - .5) * .025
+      ));
+    }
+    result.natureGroup.add(makeInstancedCopies(
+      models[key], matrices, 'premium-' + key,
+      { castShadow: false, receiveShadow: true }
+    ));
+  }
+
+  // Mesh ground cover: no billboard cards. The near shore gets real 3D clumps,
+  // while the existing PBR terrain carries the distant meadow colour.
+  scatterGround('grassClump', isMobile ? 760 : 1250, 54, 108, .38, 7.8, .72, 1.55, 31);
+  scatterGround('undergrowth', isMobile ? 250 : 390, 58, 118, .55, 9.2, .70, 1.35, 47);
+  scatterGround('fern', isMobile ? 135 : 220, 61, 122, .65, 8.0, .68, 1.32, 59);
+
+  if (models.fallenLog) {
+    const rr = seededRandom(202609132781);
+    const logs = [];
+    let tries = 0;
+    while (logs.length < (isMobile ? 10 : 16) && tries++ < 500) {
+      const ang = rr() * Math.PI * 2;
+      const r = 66 + rr() * 50;
+      const x = Math.cos(ang) * r;
+      const z = Math.sin(ang) * r;
+      const h = heightAt(x, z);
+      if (h < .7 || h > 7.5 || exclude(x, z)) continue;
+      logs.push(placementMatrix(x, h + .02, z, .78 + rr() * .34, rr() * Math.PI * 2));
+    }
+    result.natureGroup.add(makeInstancedCopies(
+      models.fallenLog, logs, 'premium-fallen-log',
+      { castShadow: !isMobile, receiveShadow: true }
+    ));
+  }
+
   // Textured mossy rocks replace the old close-up dodecahedron placeholders.
   try {
     onProgress('摆真实苔石和岸边细节…');
@@ -292,7 +379,7 @@ export async function loadMaxAssets({
 }
 
 export const MAX_ASSET_SOURCES = {
-  quaterniusNature: 'CC0 — Quaternius Ultimate Stylized Nature',
+  quaterniusNature: 'CC0 — 3DAssets.dev damp conifer forest set (tall/mid/young conifers, undergrowth, ferns, grass, mossy logs)',
   cottage: 'CC0 — 3DAssets.dev asset 32485',
   boat: 'CC BY 4.0 — motoryacht 35 by angelo raffaele catalano; original ~1.5M-triangle binary GLB, no decimation',
   oak: 'CC0 — 3DAssets.dev asset 28312',
