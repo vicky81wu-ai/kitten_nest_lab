@@ -1,8 +1,5 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
-import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
-import JSZip from 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm';
 import { seededRandom } from './garden-hq-visuals.js';
 
 const loader = new GLTFLoader();
@@ -16,7 +13,7 @@ const URLS = {
   bushSmall: './assets/3d-cc0/Bush_Small_Flowers.gltf',
   oak: 'https://cdn.3dassets.dev/assets/28312/v1/model.glb',
   cottage: 'https://cdn.3dassets.dev/assets/32485/v1/model.glb',
-  shipEeZip: './assets/ship-ee-source.zip',
+  highBoat: 'https://cdn.jsdelivr.net/gh/bob6664569/open-water@main/site/assets/boats/motoryacht_10.7r.glb',
   boatHull: 'https://cdn.3dassets.dev/assets/31642/v1/model.glb',
   boatRudder: 'https://cdn.3dassets.dev/assets/31644/v1/model.glb',
   boatVent: 'https://cdn.3dassets.dev/assets/31646/v1/model.glb',
@@ -131,78 +128,6 @@ function meshTriangleCount(mesh) {
   if (!mesh?.isMesh || !mesh.geometry?.getAttribute('position')) return 0;
   const g = mesh.geometry;
   return Math.floor((g.index ? g.index.count : g.getAttribute('position').count) / 3);
-}
-
-function baseName(path = '') {
-  return path.replace(/\\/g, '/').split('/').pop().toLowerCase();
-}
-
-function rewriteMtlTexturePaths(text, blobByBase) {
-  const mapKeys = /^(\s*(?:map_Ka|map_Kd|map_Ks|map_Ke|map_d|map_bump|bump|norm|disp)\s+)(.*)$/i;
-  return text.split(/\r?\n/).map((line) => {
-    const m = line.match(mapKeys);
-    if (!m) return line;
-    const rhs = m[2].trim();
-    const tokens = rhs.split(/\s+/);
-    for (let i = tokens.length - 1; i >= 0; i--) {
-      const key = baseName(tokens[i].replace(/^["']|["']$/g, ''));
-      const blob = blobByBase.get(key);
-      if (blob) {
-        tokens[i] = blob;
-        break;
-      }
-    }
-    return m[1] + tokens.join(' ');
-  }).join('\n');
-}
-
-async function loadShipEEFromZip(renderer) {
-  const response = await fetch(URLS.shipEeZip, { cache: 'force-cache' });
-  if (!response.ok) throw new Error('Ship EE archive HTTP ' + response.status);
-
-  const archive = await response.arrayBuffer();
-  const zip = await JSZip.loadAsync(archive);
-  const entries = Object.values(zip.files).filter((x) => !x.dir);
-
-  const objEntries = entries.filter((x) => /\.obj$/i.test(x.name) && !/__MACOSX/i.test(x.name));
-  if (!objEntries.length) throw new Error('Ship EE archive contains no OBJ');
-
-  // Pick the largest OBJ: this keeps the full source model rather than a preview/LOD.
-  let objEntry = objEntries[0];
-  for (const e of objEntries) {
-    if ((e._data?.uncompressedSize || 0) > (objEntry._data?.uncompressedSize || 0)) objEntry = e;
-  }
-  const objText = await objEntry.async('text');
-
-  const blobByBase = new Map();
-  for (const e of entries) {
-    if (!/\.(?:png|jpe?g|webp|gif|bmp)$/i.test(e.name)) continue;
-    const bytes = await e.async('blob');
-    blobByBase.set(baseName(e.name), URL.createObjectURL(bytes));
-  }
-
-  const objLoader = new OBJLoader();
-  const mtllib = objText.match(/^\s*mtllib\s+(.+)$/mi)?.[1]?.trim();
-  if (mtllib) {
-    const wanted = baseName(mtllib.replace(/^["']|["']$/g, ''));
-    const mtlEntry = entries.find((e) => baseName(e.name) === wanted)
-      || entries.find((e) => /\.mtl$/i.test(e.name));
-    if (mtlEntry) {
-      let mtlText = await mtlEntry.async('text');
-      mtlText = rewriteMtlTexturePaths(mtlText, blobByBase);
-      const materials = new MTLLoader().parse(mtlText, '');
-      materials.preload();
-      objLoader.setMaterials(materials);
-    }
-  }
-
-  const root = objLoader.parse(objText);
-  prep(root, renderer, { castShadow: true, receiveShadow: true });
-
-  let triangles = 0;
-  root.traverse((o) => { triangles += meshTriangleCount(o); });
-  console.info('[garden-max] Ship EE source triangles', triangles);
-  return { root, triangles };
 }
 
 export async function loadMaxAssets({
@@ -330,29 +255,34 @@ export async function loadMaxAssets({
     result.failed.push('cottage');
   }
 
-  onProgress('载入 Ship EE 原始约 98 万三角面模型（不减面）…');
+  onProgress('载入原始约 150 万三角面的二进制 GLB 游艇（不减面）…');
   try {
-    // Ship EE by gogiart is used as the pretty near-1M sail-ship stress test.
-    // Its public OBJ archive is loaded intact: no decimation, no runtime LOD
-    // and no triangle-budget pass.
-    const { root: rawBoat, triangles } = await loadShipEEFromZip(renderer);
-    rawBoat.name = 'gogiart-ship-ee-full-source';
+    // Clean diagnostic: this is the exact browser-ready source that the earlier
+    // 480k yacht test simplified at runtime. Here we load the original GLB as-is:
+    // no OBJ text parsing, no ZIP inflation, no decimation, no runtime LOD.
+    const rawBoat = await loadPrepared(URLS.highBoat, renderer, {
+      castShadow: true,
+      receiveShadow: true
+    });
+    rawBoat.name = 'motoryacht-full-1p5m-glb-test';
+
+    let triangles = 0;
+    rawBoat.traverse((o) => { triangles += meshTriangleCount(o); });
+    console.info('[garden-max] full binary GLB yacht triangles', triangles);
 
     const boatVisual = asNormalizedHolder(rawBoat, {
-      // Keep this historic sail ship large enough to read as a real vessel in
-      // NW, but do not alter its mesh density.
-      targetLongest: 58,
+      targetLongest: 32.48,
       bottom: 0,
       centerXZ: true,
       rotateLongestToX: true
     });
-    boatVisual.position.y = -.42;
+    boatVisual.position.y = -.30;
     result.boatRoot.add(boatVisual);
     result.boatTriangles = triangles;
-    result.boatPassengerY = 5.9;
+    result.boatPassengerY = 1.10;
     result.loaded.push('boat');
   } catch (err) {
-    console.warn('[garden-max] full Ship EE failed', err);
+    console.warn('[garden-max] full 1.5M binary GLB yacht failed', err);
     result.failed.push('boat');
   }
   result.boatRoot.position.copy(boatPosition);
@@ -364,7 +294,7 @@ export async function loadMaxAssets({
 export const MAX_ASSET_SOURCES = {
   quaterniusNature: 'CC0 — Quaternius Ultimate Stylized Nature',
   cottage: 'CC0 — 3DAssets.dev asset 32485',
-  boat: 'CC BY 4.0 — Ship EE by gogiart; full 975.9k-triangle source, no decimation',
+  boat: 'CC BY 4.0 — motoryacht 35 by angelo raffaele catalano; original ~1.5M-triangle binary GLB, no decimation',
   oak: 'CC0 — 3DAssets.dev asset 28312',
   boulder: 'CC0 — 3DAssets.dev asset 32688'
 };
