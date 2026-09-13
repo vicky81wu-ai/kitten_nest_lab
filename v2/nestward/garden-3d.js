@@ -410,7 +410,7 @@ async function boot() {
     // Real-scale 10.6 m narrowboat is ~32 NW units long at the current
     // character scale, so allow boarding from the dock beside the hull
     // instead of requiring the avatar to reach the boat's centre in water.
-    return avatar.group.position.distanceTo(boatRoot.position) < 18.0;
+    return avatar.group.position.distanceTo(boatRoot.position) < 34.0;
   }
   function updateAction() {
     if (boatState.active) {
@@ -452,7 +452,7 @@ async function boot() {
   const forward = new THREE.Vector3();
   const right = new THREE.Vector3();
   const dir = new THREE.Vector3();
-  const localPassenger = new THREE.Vector3(.05, 1.10, .05);
+  const localPassenger = new THREE.Vector3(.05, maxAssets.boatPassengerY ?? 1.10, .05);
   const passengerWorld = new THREE.Vector3();
 
   function inputVector() {
