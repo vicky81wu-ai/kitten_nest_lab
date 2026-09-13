@@ -13,7 +13,12 @@ const URLS = {
   bushSmall: './assets/3d-cc0/Bush_Small_Flowers.gltf',
   oak: 'https://cdn.3dassets.dev/assets/28312/v1/model.glb',
   cottage: 'https://cdn.3dassets.dev/assets/32485/v1/model.glb',
-  boat: 'https://cdn.3dassets.dev/assets/19553/v1/model.glb',
+  boatHull: 'https://cdn.3dassets.dev/assets/31642/v1/model.glb',
+  boatRudder: 'https://cdn.3dassets.dev/assets/31644/v1/model.glb',
+  boatVent: 'https://cdn.3dassets.dev/assets/31646/v1/model.glb',
+  boatChimney: 'https://cdn.3dassets.dev/assets/31647/v1/model.glb',
+  boatRope: 'https://cdn.3dassets.dev/assets/31648/v1/model.glb',
+  boatHook: 'https://cdn.3dassets.dev/assets/31650/v1/model.glb',
   boulder: 'https://cdn.3dassets.dev/assets/32688/v1/model.glb'
 };
 
@@ -243,16 +248,67 @@ export async function loadMaxAssets({
     result.failed.push('cottage');
   }
 
-  onProgress('载入可驾驶高细节木船…');
+  onProgress('载入约 4.5 万三角面的可驾驶木船…');
   try {
-    const rawBoat = await loadPrepared(URLS.boat, renderer, { castShadow: true, receiveShadow: true });
-    const boatVisual = asNormalizedHolder(rawBoat, { targetLongest: 5.7, bottom: 0, centerXZ: true, rotateLongestToX: true });
-    // Sink the normalized hull slightly into the water.
+    // Keep this test deliberately isolated to the boat: the world, water, dock,
+    // controls and camera stay untouched. These CC0 pieces come from one
+    // real-scale canal-boat kit and are assembled before a single normalization.
+    // Visible triangle count: 29,916 hull + 1,036 rudder + 2×1,536 vents
+    // + 1,584 chimney + 8,304 rope coil + 1,344 boat hook = 45,256 tris.
+    const [
+      hull,
+      rudder,
+      ventA,
+      ventB,
+      chimney,
+      rope,
+      hook
+    ] = await Promise.all([
+      loadPrepared(URLS.boatHull, renderer, { castShadow: true, receiveShadow: true }),
+      loadPrepared(URLS.boatRudder, renderer, { castShadow: true, receiveShadow: true }),
+      loadPrepared(URLS.boatVent, renderer, { castShadow: true, receiveShadow: true }),
+      loadPrepared(URLS.boatVent, renderer, { castShadow: true, receiveShadow: true }),
+      loadPrepared(URLS.boatChimney, renderer, { castShadow: true, receiveShadow: true }),
+      loadPrepared(URLS.boatRope, renderer, { castShadow: true, receiveShadow: true }),
+      loadPrepared(URLS.boatHook, renderer, { castShadow: true, receiveShadow: true })
+    ]);
+
+    const rawBoat = new THREE.Group();
+    rawBoat.name = 'cc0-canal-boat-45256-tris';
+    rawBoat.add(hull);
+
+    // The source kit uses metres, +Y up and +Z forward. Mount the companion
+    // pieces in source-space so they scale/rotate together with the hull.
+    rudder.position.set(0, .04, -5.22);
+    rawBoat.add(rudder);
+
+    ventA.position.set(-.43, 2.03, .95);
+    ventB.position.set(.43, 2.03, .12);
+    rawBoat.add(ventA, ventB);
+
+    chimney.position.set(.52, 1.98, -1.05);
+    rawBoat.add(chimney);
+
+    rope.position.set(-.42, .62, -3.70);
+    rope.rotation.y = .42;
+    rawBoat.add(rope);
+
+    hook.position.set(.82, .72, -2.45);
+    hook.rotation.y = .06;
+    rawBoat.add(hook);
+
+    const boatVisual = asNormalizedHolder(rawBoat, {
+      targetLongest: 5.7,
+      bottom: 0,
+      centerXZ: true,
+      rotateLongestToX: true
+    });
+    // Preserve the previous boat's waterline and interaction envelope.
     boatVisual.position.y = -.28;
     result.boatRoot.add(boatVisual);
     result.loaded.push('boat');
   } catch (err) {
-    console.warn('[garden-max] boat failed', err);
+    console.warn('[garden-max] 45k boat failed', err);
     result.failed.push('boat');
   }
   result.boatRoot.position.copy(boatPosition);
@@ -264,7 +320,7 @@ export async function loadMaxAssets({
 export const MAX_ASSET_SOURCES = {
   quaterniusNature: 'CC0 — Quaternius Ultimate Stylized Nature',
   cottage: 'CC0 — 3DAssets.dev asset 32485',
-  boat: 'CC0 — 3DAssets.dev asset 19553',
+  boat: 'CC0 — 3DAssets.dev Canal Boats kit; 45,256-triangle assembled boat',
   oak: 'CC0 — 3DAssets.dev asset 28312',
   boulder: 'CC0 — 3DAssets.dev asset 32688'
 };
