@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { MeshoptSimplifier } from 'https://cdn.jsdelivr.net/npm/meshoptimizer@0.25.0/meshopt_simplifier.module.js';
+import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
+import JSZip from 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm';
 import { seededRandom } from './garden-hq-visuals.js';
 
 const loader = new GLTFLoader();
@@ -14,7 +16,7 @@ const URLS = {
   bushSmall: './assets/3d-cc0/Bush_Small_Flowers.gltf',
   oak: 'https://cdn.3dassets.dev/assets/28312/v1/model.glb',
   cottage: 'https://cdn.3dassets.dev/assets/32485/v1/model.glb',
-  highBoat: 'https://cdn.jsdelivr.net/gh/bob6664569/open-water@main/site/assets/boats/motoryacht_10.7r.glb',
+  ship3pZip: './assets/ship3p-source.zip',
   boatHull: 'https://cdn.3dassets.dev/assets/31642/v1/model.glb',
   boatRudder: 'https://cdn.3dassets.dev/assets/31644/v1/model.glb',
   boatVent: 'https://cdn.3dassets.dev/assets/31646/v1/model.glb',
@@ -131,72 +133,76 @@ function meshTriangleCount(mesh) {
   return Math.floor((g.index ? g.index.count : g.getAttribute('position').count) / 3);
 }
 
-async function simplifyRootToBudget(root, targetTriangles = 480000) {
-  await MeshoptSimplifier.ready;
+function baseName(path = '') {
+  return path.replace(/\\/g, '/').split('/').pop().toLowerCase();
+}
 
-  const candidates = [];
-  let fixedTriangles = 0;
-  let sourceTriangles = 0;
-
-  root.traverse((o) => {
-    if (!o.isMesh || !o.geometry?.getAttribute('position')) return;
-    const tris = meshTriangleCount(o);
-    sourceTriangles += tris;
-
-    // GLTFLoader normally creates one Three mesh per glTF primitive. Skip rare
-    // multi-material/grouped or non-indexed geometries rather than risk damaging
-    // material ranges in this visual test.
-    const g = o.geometry;
-    if (!g.index || (g.groups?.length || 0) > 1 || tris < 64) {
-      fixedTriangles += tris;
-      return;
-    }
-    candidates.push({ mesh: o, tris });
-  });
-
-  const reducibleSource = candidates.reduce((s, x) => s + x.tris, 0);
-  const reducibleTarget = Math.max(0, targetTriangles - fixedTriangles);
-  const ratio = reducibleSource > 0 ? Math.min(1, reducibleTarget / reducibleSource) : 1;
-
-  for (const { mesh, tris } of candidates) {
-    if (ratio >= .995) continue;
-    const g = mesh.geometry;
-    const pos = g.getAttribute('position');
-    const positions = new Float32Array(pos.count * 3);
-    for (let i = 0; i < pos.count; i++) {
-      positions[i * 3] = pos.getX(i);
-      positions[i * 3 + 1] = pos.getY(i);
-      positions[i * 3 + 2] = pos.getZ(i);
-    }
-
-    const src = new Uint32Array(g.index.count);
-    for (let i = 0; i < g.index.count; i++) src[i] = g.index.getX(i);
-
-    const wanted = Math.max(3, Math.floor((src.length * ratio) / 3) * 3);
-    let simplified;
-    try {
-      [simplified] = MeshoptSimplifier.simplify(src, positions, 3, wanted, .06, ['Permissive']);
-      // Some CAD-like meshes can get stuck on seams. Only use the aggressive
-      // fallback when the normal simplifier is still far over the requested LOD.
-      if (simplified.length > wanted * 1.18) {
-        [simplified] = MeshoptSimplifier.simplifySloppy(src, positions, 3, null, wanted, .08);
+function rewriteMtlTexturePaths(text, blobByBase) {
+  const mapKeys = /^(\s*(?:map_Ka|map_Kd|map_Ks|map_Ke|map_d|map_bump|bump|norm|disp)\s+)(.*)$/i;
+  return text.split(/\r?\n/).map((line) => {
+    const m = line.match(mapKeys);
+    if (!m) return line;
+    const rhs = m[2].trim();
+    const tokens = rhs.split(/\s+/);
+    for (let i = tokens.length - 1; i >= 0; i--) {
+      const key = baseName(tokens[i].replace(/^["']|["']$/g, ''));
+      const blob = blobByBase.get(key);
+      if (blob) {
+        tokens[i] = blob;
+        break;
       }
-    } catch (err) {
-      console.warn('[garden-max] meshopt simplify skipped on mesh', mesh.name, err);
-      continue;
     }
+    return m[1] + tokens.join(' ');
+  }).join('\n');
+}
 
-    if (simplified?.length >= 3 && simplified.length < src.length) {
-      g.setIndex(new THREE.BufferAttribute(simplified, 1));
-      g.computeBoundingBox();
-      g.computeBoundingSphere();
+async function loadShip3PFromZip(renderer) {
+  const response = await fetch(URLS.ship3pZip, { cache: 'force-cache' });
+  if (!response.ok) throw new Error('Ship 3P archive HTTP ' + response.status);
+
+  const archive = await response.arrayBuffer();
+  const zip = await JSZip.loadAsync(archive);
+  const entries = Object.values(zip.files).filter((x) => !x.dir);
+
+  const objEntries = entries.filter((x) => /\.obj$/i.test(x.name) && !/__MACOSX/i.test(x.name));
+  if (!objEntries.length) throw new Error('Ship 3P archive contains no OBJ');
+
+  // Pick the largest OBJ: this keeps the full source model rather than a preview/LOD.
+  let objEntry = objEntries[0];
+  for (const e of objEntries) {
+    if ((e._data?.uncompressedSize || 0) > (objEntry._data?.uncompressedSize || 0)) objEntry = e;
+  }
+  const objText = await objEntry.async('text');
+
+  const blobByBase = new Map();
+  for (const e of entries) {
+    if (!/\.(?:png|jpe?g|webp|gif|bmp)$/i.test(e.name)) continue;
+    const bytes = await e.async('blob');
+    blobByBase.set(baseName(e.name), URL.createObjectURL(bytes));
+  }
+
+  const objLoader = new OBJLoader();
+  const mtllib = objText.match(/^\s*mtllib\s+(.+)$/mi)?.[1]?.trim();
+  if (mtllib) {
+    const wanted = baseName(mtllib.replace(/^["']|["']$/g, ''));
+    const mtlEntry = entries.find((e) => baseName(e.name) === wanted)
+      || entries.find((e) => /\.mtl$/i.test(e.name));
+    if (mtlEntry) {
+      let mtlText = await mtlEntry.async('text');
+      mtlText = rewriteMtlTexturePaths(mtlText, blobByBase);
+      const materials = new MTLLoader().parse(mtlText, '');
+      materials.preload();
+      objLoader.setMaterials(materials);
     }
   }
 
-  let finalTriangles = 0;
-  root.traverse((o) => { finalTriangles += meshTriangleCount(o); });
-  console.info('[garden-max] yacht LOD', { sourceTriangles, finalTriangles, targetTriangles });
-  return { sourceTriangles, finalTriangles };
+  const root = objLoader.parse(objText);
+  prep(root, renderer, { castShadow: true, receiveShadow: true });
+
+  let triangles = 0;
+  root.traverse((o) => { triangles += meshTriangleCount(o); });
+  console.info('[garden-max] Ship 3P source triangles', triangles);
+  return { root, triangles };
 }
 
 export async function loadMaxAssets({
@@ -324,69 +330,31 @@ export async function loadMaxAssets({
     result.failed.push('cottage');
   }
 
-  onProgress('载入并整理约 48 万三角面的高精度游艇…');
+  onProgress('载入 Ship 3P 原始约 120 万三角面模型（不减面）…');
   try {
-    // Source: motoryacht 35 by angelo raffaele catalano, CC BY 4.0.
-    // The browser-ready source is ~1.5M triangles. For this comparison build
-    // we reduce only its index buffers to a ~480k-triangle LOD while retaining
-    // the original vertex attributes, materials and textures.
-    const rawBoat = await loadPrepared(URLS.highBoat, renderer, {
-      castShadow: true,
-      receiveShadow: true
-    });
-    const lodInfo = await simplifyRootToBudget(rawBoat, 480000);
+    // Victoria 1.5M is freely downloadable on Sketchfab but its archive requires
+    // authenticated download access. Per the requested fallback order, this
+    // build uses Ship 3P by gogiart instead. The source archive is loaded intact:
+    // no decimation, no runtime LOD and no triangle-budget pass.
+    const { root: rawBoat, triangles } = await loadShip3PFromZip(renderer);
+    rawBoat.name = 'gogiart-ship-3p-full-source';
 
-    rawBoat.name = 'motoryacht-480k-test';
     const boatVisual = asNormalizedHolder(rawBoat, {
-      // Source is a ~10.7 m motor yacht. Keep it at the same real-world class
-      // as the previous 10.6 m narrowboat instead of toy-scaling it.
-      targetLongest: 32.48,
+      // Keep this historic sail ship large enough to read as a real vessel in
+      // NW, but do not alter its mesh density.
+      targetLongest: 58,
       bottom: 0,
       centerXZ: true,
       rotateLongestToX: true
     });
-    boatVisual.position.y = -.30;
+    boatVisual.position.y = -.42;
     result.boatRoot.add(boatVisual);
-    result.boatTriangles = lodInfo.finalTriangles;
+    result.boatTriangles = triangles;
+    result.boatPassengerY = 5.9;
     result.loaded.push('boat');
   } catch (err) {
-    console.warn('[garden-max] 480k yacht failed; falling back to 45k canal boat', err);
-    try {
-      const [
-        hull, rudder, ventA, ventB, chimney, rope, hook
-      ] = await Promise.all([
-        loadPrepared(URLS.boatHull, renderer, { castShadow: true, receiveShadow: true }),
-        loadPrepared(URLS.boatRudder, renderer, { castShadow: true, receiveShadow: true }),
-        loadPrepared(URLS.boatVent, renderer, { castShadow: true, receiveShadow: true }),
-        loadPrepared(URLS.boatVent, renderer, { castShadow: true, receiveShadow: true }),
-        loadPrepared(URLS.boatChimney, renderer, { castShadow: true, receiveShadow: true }),
-        loadPrepared(URLS.boatRope, renderer, { castShadow: true, receiveShadow: true }),
-        loadPrepared(URLS.boatHook, renderer, { castShadow: true, receiveShadow: true })
-      ]);
-      const fallback = new THREE.Group();
-      fallback.add(hull);
-      rudder.position.set(0, .04, -5.22);
-      ventA.position.set(-.43, 2.03, .95);
-      ventB.position.set(.43, 2.03, .12);
-      chimney.position.set(.52, 1.98, -1.05);
-      rope.position.set(-.42, .62, -3.70);
-      rope.rotation.y = .42;
-      hook.position.set(.82, .72, -2.45);
-      fallback.add(rudder, ventA, ventB, chimney, rope, hook);
-      const boatVisual = asNormalizedHolder(fallback, {
-        targetLongest: 32.18,
-        bottom: 0,
-        centerXZ: true,
-        rotateLongestToX: true
-      });
-      boatVisual.position.y = -.28;
-      result.boatRoot.add(boatVisual);
-      result.boatTriangles = 45256;
-      result.loaded.push('boat');
-    } catch (fallbackErr) {
-      console.warn('[garden-max] fallback boat failed', fallbackErr);
-      result.failed.push('boat');
-    }
+    console.warn('[garden-max] full Ship 3P failed', err);
+    result.failed.push('boat');
   }
   result.boatRoot.position.copy(boatPosition);
   scene.add(result.boatRoot);
@@ -397,7 +365,7 @@ export async function loadMaxAssets({
 export const MAX_ASSET_SOURCES = {
   quaterniusNature: 'CC0 — Quaternius Ultimate Stylized Nature',
   cottage: 'CC0 — 3DAssets.dev asset 32485',
-  boat: 'CC BY 4.0 — motoryacht 35 by angelo raffaele catalano; ~480k-triangle runtime LOD from 1.5M source',
+  boat: 'CC BY 4.0 — Ship 3P by gogiart; full ~1.2M-triangle source, no decimation',
   oak: 'CC0 — 3DAssets.dev asset 28312',
   boulder: 'CC0 — 3DAssets.dev asset 32688'
 };
