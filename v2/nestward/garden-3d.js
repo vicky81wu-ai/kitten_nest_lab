@@ -190,7 +190,7 @@ async function boot() {
   status('切换到全 3D 草丛和林下植被…');
   let meadow = null;
 
-  status('载入真实针叶林、草丛、房子和 150 万面游艇…');
+  status('载入写真级树木、草地、房子和 150 万面游艇…');
   const maxAssets = await loadMaxAssets({
     scene,
     renderer,
@@ -246,6 +246,7 @@ async function boot() {
     animals.fireflyPoints,
     fairies.points,
     avatar.group,
+    maxAssets.natureGroup,
     ...(meadow ? [meadow.group] : [])
   ];
 
@@ -675,7 +676,7 @@ async function boot() {
     loading.classList.add('done');
     const note = maxAssets.failed.length
       ? '晨雾森林版已开。个别外部资产走了备用版本。'
-      : '晨雾森林版已开。Misty Dawn 天空、3D 草丛、针叶林和高模游艇都已载入。';
+      : '写真植被版已开。Misty Dawn 天空、Poly Haven 高模树草和高模游艇都已载入。';
     say(note, 4300);
   });
 }
