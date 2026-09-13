@@ -358,7 +358,10 @@ async function boot() {
 
   function nearBoat() {
     if (boatState.active) return false;
-    return avatar.group.position.distanceTo(boatRoot.position) < 6.0;
+    // Real-scale 10.6 m narrowboat is ~32 NW units long at the current
+    // character scale, so allow boarding from the dock beside the hull
+    // instead of requiring the avatar to reach the boat's centre in water.
+    return avatar.group.position.distanceTo(boatRoot.position) < 18.0;
   }
   function updateAction() {
     if (boatState.active) {
