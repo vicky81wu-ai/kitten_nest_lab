@@ -220,6 +220,7 @@ async function boot() {
 
   status('接回 NW 高清人物和走路帧…');
   const avatar = createBillboardCharacter('./assets/characters/kitten-idle.png', { width: 2.78, height: 5.22 });
+  avatar.sprite.castShadow = false; // use the soft ground blob; never cast a rectangular billboard shadow
   scene.add(avatar.group);
   avatar.group.position.set(69.5, terrain.heightAt(69.5, -1) + .03, -1);
 
@@ -237,9 +238,11 @@ async function boot() {
     sky.cloudGroup,
     sky.moonHalo,
     sky.stars,
+    animals.group,
     animals.fireflyPoints,
     fairies.points,
-    avatar.group
+    avatar.group,
+    ...(meadow ? [meadow.group] : [])
   ];
 
   status('加近景环境遮蔽和接触阴影…');
@@ -253,7 +256,11 @@ async function boot() {
   composer.addPass(renderPass);
   composer.addPass(ssaoPass);
   composer.addPass(outputPass);
-  let ssaoEnabled = true;
+  // Foliage uses alpha cards. Mobile SSAO override materials would treat those
+  // cards as opaque rectangles, so keep SSAO for desktop and use real shadows
+  // plus the daylight fill on iPhone.
+  ssaoPass.enabled = !isMobile;
+  let ssaoEnabled = !isMobile;
   composer.setPixelRatio(Math.min(devicePixelRatio || 1, isMobile ? 1.15 : 1.6));
 
   const move = { x: 0, y: 0 };
