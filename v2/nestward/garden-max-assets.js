@@ -24,7 +24,6 @@ const URLS = {
   boatChimney: 'https://cdn.3dassets.dev/assets/31647/v1/model.glb',
   boatRope: 'https://cdn.3dassets.dev/assets/31648/v1/model.glb',
   boatHook: 'https://cdn.3dassets.dev/assets/31650/v1/model.glb',
-  boulder: 'https://cdn.3dassets.dev/assets/32688/v1/model.glb'
 };
 
 function prep(root, renderer, { castShadow = true, receiveShadow = true } = {}) {
@@ -208,11 +207,12 @@ export async function loadMaxAssets({
     // GPU instancing. This gives us million-plus visible tree triangles without
     // multiplying the 62 MB source asset in memory.
     const treeSpots = [
-      [88.5, -27.0, 1.00, .38],
-      [104.0, -8.5, .92, 2.12],
-      [96.0, 18.0, 1.08, 4.46],
-      [118.0, 28.0, .88, 5.65],
-      [121.0, -34.0, 1.04, 3.31]
+      [61.5, -17.0, 1.00, .38],
+      [74.5, -20.5, .94, 2.12],
+      [84.0, -15.0, 1.08, 4.46],
+      [88.5, 8.5, .92, 5.65],
+      [58.0, 12.0, 1.04, 3.31],
+      [94.0, 20.0, .90, 1.18]
     ];
     const treeMatrices = [];
     for (const [x,z,s,yaw] of treeSpots) {
@@ -228,12 +228,14 @@ export async function loadMaxAssets({
     // Full 224k-triangle Bermuda tufts only in the foreground/hero area.
     // Repetition is broken with scale and yaw; no cheap procedural blade field.
     const grassSpots = [
-      [72.5, 7.4, 1.10, .25],
-      [76.5, 13.0, .92, 1.62],
-      [83.0, 4.6, 1.16, 3.11],
-      [88.0, 10.8, .86, 4.52],
-      [91.5, -2.0, 1.04, 5.62],
-      [68.0, 15.5, .88, 2.72]
+      [66.0, 5.8, 1.12, .25],
+      [70.5, 8.5, 1.00, 1.62],
+      [74.0, 5.5, 1.18, 3.11],
+      [78.5, 9.2, .96, 4.52],
+      [82.0, 4.0, 1.08, 5.62],
+      [62.5, 10.5, .92, 2.72],
+      [86.0, 12.0, .90, 1.07],
+      [71.0, 15.0, .88, 3.88]
     ];
     const grassMatrices = [];
     for (const [x,z,s,yaw] of grassSpots) {
@@ -258,30 +260,8 @@ export async function loadMaxAssets({
     result.failed.push('premiumVegetation');
   }
 
-  // Keep only textured rocks as small accents; the old low-poly conifer,
-  // undergrowth, fern, grass-clump and Old Wood Heart scatter are gone.
-  try {
-    onProgress('摆真实苔石和岸边细节…');
-    const rawRock = await loadPrepared(URLS.boulder, renderer, { castShadow: false, receiveShadow: true });
-    const rockModel = asNormalizedHolder(rawRock, { targetLongest: 2.55, bottom: 0, centerXZ: true });
-    const rockRnd = seededRandom(2026091388);
-    for (let i = 0, tries = 0; i < (isMobile ? 10 : 16) && tries < 400; tries++) {
-      const ang = rockRnd() * Math.PI * 2;
-      const r = 58 + rockRnd() * 42;
-      const x = Math.cos(ang) * r;
-      const z = Math.sin(ang) * r;
-      const h = heightAt(x, z);
-      if (h < .12 || h > 6.2 || exclude(x, z)) continue;
-      const s = .48 + rockRnd() * .92;
-      result.natureGroup.add(clonePlaced(rockModel, x, h, z, s, rockRnd() * Math.PI * 2, false));
-      i++;
-    }
-    result.loaded.push('boulder');
-  } catch (err) {
-    console.warn('[garden-max] boulder failed', err);
-    result.failed.push('boulder');
-  }
-
+  // Low-poly boulders were visually below the premium asset tier and are
+  // intentionally omitted from this comparison build.
   scene.add(result.natureGroup);
 
   onProgress('载入高细节湖边小屋…');
@@ -345,5 +325,4 @@ export const MAX_ASSET_SOURCES = {
   cottage: 'CC0 — 3DAssets.dev asset 32485',
   boat: 'CC BY 4.0 — motoryacht 35 by angelo raffaele catalano; original ~1.5M-triangle binary GLB, no decimation',
   oak: 'CC0 — 3DAssets.dev asset 28312',
-  boulder: 'CC0 — 3DAssets.dev asset 32688'
 };
