@@ -112,7 +112,7 @@ sky.sunLight.shadow.camera.bottom = -65;
 sky.sunLight.shadow.camera.far = 220;
 
 const cottageX = 78, cottageZ = -11;
-const dockInfo = createDock({ heightAt: terrain.heightAt, x: 61.5, z: 0 });
+const dockInfo = createDock({ heightAt: terrain.heightAt, x: 56.5, z: 0 });
 scene.add(dockInfo.group);
 
 const excludeNear = (x, z) => {
@@ -287,7 +287,7 @@ function boardBoat() {
 function leaveBoat() {
   boatState.active = false;
   boatState.speed = 0;
-  avatar.group.position.set(55.8, groundY(55.8, 0), 0);
+  avatar.group.position.set(61.2, groundY(61.2, 0), 0);
   say('回到码头。');
 }
 
