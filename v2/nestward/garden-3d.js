@@ -456,6 +456,11 @@ function frame() {
   worldTime += dt;
 
   sky.update(TIME_OF_DAY, .08, 0, dt, WIND, firstSky);
+  // Keep the sun direction from Luminous Lake, but center the shadow frustum on
+  // the playable cottage/shore instead of the middle of the lake.
+  sky.sunLight.position.x += 60;
+  sky.sunLight.target.position.set(60, 0, 0);
+  sky.sunLight.target.updateMatrixWorld();
   firstSky = false;
 
   water.setCalmLook(CALM);
