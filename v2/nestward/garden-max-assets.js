@@ -1,8 +1,10 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { seededRandom } from './garden-hq-visuals.js';
 
 const loader = new GLTFLoader();
+loader.setMeshoptDecoder(MeshoptDecoder);
 const MAX_ANISO = 8;
 
 const URLS = {
@@ -14,14 +16,8 @@ const URLS = {
   oak: 'https://cdn.3dassets.dev/assets/28312/v1/model.glb',
   cottage: 'https://cdn.3dassets.dev/assets/32485/v1/model.glb',
   highBoat: 'https://cdn.jsdelivr.net/gh/bob6664569/open-water@main/site/assets/boats/motoryacht_10.7r.glb',
-  forestHeart: 'https://cdn.3dassets.dev/assets/28437/v1/model.glb',
-  coniferTall: 'https://cdn.3dassets.dev/assets/32683/v1/model.glb',
-  coniferMid: 'https://cdn.3dassets.dev/assets/32684/v1/model.glb',
-  coniferYoung: 'https://cdn.3dassets.dev/assets/32685/v1/model.glb',
-  undergrowth: 'https://cdn.3dassets.dev/assets/32689/v1/model.glb',
-  fern: 'https://cdn.3dassets.dev/assets/32690/v1/model.glb',
-  grassClump: 'https://cdn.3dassets.dev/assets/28386/v1/model.glb',
-  fallenLog: 'https://cdn.3dassets.dev/assets/32687/v1/model.glb',
+  premiumJacaranda: './assets/premium-jacaranda.glb',
+  premiumBermudaGrass: './assets/premium-bermuda-grass.glb',
   boatHull: 'https://cdn.3dassets.dev/assets/31642/v1/model.glb',
   boatRudder: 'https://cdn.3dassets.dev/assets/31644/v1/model.glb',
   boatVent: 'https://cdn.3dassets.dev/assets/31646/v1/model.glb',
@@ -191,169 +187,99 @@ export async function loadMaxAssets({
   result.natureGroup.name = 'max-asset-nature';
   result.boatRoot.name = 'max-detail-boat-root';
 
-  onProgress('铺真实针叶林、蕨类和立体林下植被…');
-  const natureEntries = [
-    ['coniferTall', URLS.coniferTall],
-    ['coniferMid', URLS.coniferMid],
-    ['coniferYoung', URLS.coniferYoung],
-    ['undergrowth', URLS.undergrowth],
-    ['fern', URLS.fern],
-    ['grassClump', URLS.grassClump],
-    ['fallenLog', URLS.fallenLog]
-  ];
+  onProgress('载入 Poly Haven 31 万面写真树与 22 万面写真草（不减面）…');
+  try {
+    const [rawTree, rawGrass] = await Promise.all([
+      loadPrepared(URLS.premiumJacaranda, renderer, { castShadow: false, receiveShadow: true }),
+      loadPrepared(URLS.premiumBermudaGrass, renderer, { castShadow: false, receiveShadow: true })
+    ]);
 
-  const models = {};
-  await Promise.all(natureEntries.map(async ([key, url]) => {
-    try {
-      models[key] = await loadPrepared(url, renderer, { castShadow: false, receiveShadow: true });
-      result.loaded.push(key);
-    } catch (err) {
-      console.warn('[garden-max] premium nature failed', key, err);
-      result.failed.push(key);
+    let treeTriangles = 0, grassTriangles = 0;
+    rawTree.traverse((o) => { treeTriangles += meshTriangleCount(o); });
+    rawGrass.traverse((o) => { grassTriangles += meshTriangleCount(o); });
+    console.info('[garden-max] premium Poly Haven triangles', { treeTriangles, grassTriangles });
+
+    // Keep the full source geometry. World-size normalization changes only the
+    // transform — it does not simplify, decimate or rebuild either mesh.
+    normalizeModel(rawTree, { targetHeight: 15.8, bottom: 0, centerXZ: true });
+    normalizeModel(rawGrass, { targetLongest: 4.2, bottom: 0, centerXZ: true });
+
+    // A few hero trees share one full-resolution geometry/material set through
+    // GPU instancing. This gives us million-plus visible tree triangles without
+    // multiplying the 62 MB source asset in memory.
+    const treeSpots = [
+      [88.5, -27.0, 1.00, .38],
+      [104.0, -8.5, .92, 2.12],
+      [96.0, 18.0, 1.08, 4.46],
+      [118.0, 28.0, .88, 5.65],
+      [121.0, -34.0, 1.04, 3.31]
+    ];
+    const treeMatrices = [];
+    for (const [x,z,s,yaw] of treeSpots) {
+      const y = heightAt(x,z);
+      if (y > .25) treeMatrices.push(placementMatrix(x,y,z,s,yaw));
     }
-  }));
-
-  const rnd = seededRandom(202609132109);
-  const treePoints = [];
-  const treeMatrices = { coniferTall: [], coniferMid: [], coniferYoung: [] };
-  const treeTarget = isMobile ? 118 : 170;
-  let attempts = 0;
-  while (treePoints.length < treeTarget && attempts++ < treeTarget * 80) {
-    const ang = rnd() * Math.PI * 2;
-    const r = 63 + Math.pow(rnd(), .72) * 92;
-    const x = Math.cos(ang) * r;
-    const z = Math.sin(ang) * r;
-    const h = heightAt(x, z);
-    if (h < .65 || h > 13.5 || exclude(x, z)) continue;
-
-    let crowded = false;
-    for (const p of treePoints) {
-      if (Math.hypot(p.x - x, p.z - z) < 3.2) { crowded = true; break; }
-    }
-    if (crowded) continue;
-
-    const pick = rnd();
-    const key = pick < .45 ? 'coniferTall' : (pick < .82 ? 'coniferMid' : 'coniferYoung');
-    if (!models[key]) continue;
-    const s = .82 + rnd() * .52;
-    treeMatrices[key].push(placementMatrix(x, h, z, s, rnd() * Math.PI * 2));
-    treePoints.push({ x, z });
-  }
-
-  for (const key of Object.keys(treeMatrices)) {
-    if (!models[key] || !treeMatrices[key].length) continue;
-    result.natureGroup.add(makeInstancedCopies(
-      models[key],
-      treeMatrices[key],
-      'premium-' + key,
-      { castShadow: !isMobile, receiveShadow: true }
-    ));
-  }
-
-  function scatterGround(key, count, r0, r1, hMin, hMax, scaleMin, scaleMax, seedOffset) {
-    if (!models[key]) return;
-    const rr = seededRandom(202609132109 + seedOffset);
-    const matrices = [];
-    let tries = 0;
-    while (matrices.length < count && tries++ < count * 40) {
-      const ang = rr() * Math.PI * 2;
-      const r = r0 + Math.pow(rr(), .88) * (r1 - r0);
-      const x = Math.cos(ang) * r;
-      const z = Math.sin(ang) * r;
-      const h = heightAt(x, z);
-      if (h < hMin || h > hMax || exclude(x, z)) continue;
-      const s = scaleMin + rr() * (scaleMax - scaleMin);
-      matrices.push(placementMatrix(
-        x, h + .015, z, s, rr() * Math.PI * 2,
-        (rr() - .5) * .025, (rr() - .5) * .025
-      ));
-    }
-    result.natureGroup.add(makeInstancedCopies(
-      models[key], matrices, 'premium-' + key,
+    const heroTrees = makeInstancedCopies(
+      rawTree, treeMatrices, 'polyhaven-jacaranda-fullres',
       { castShadow: false, receiveShadow: true }
-    ));
-  }
+    );
+    result.natureGroup.add(heroTrees);
 
-  // Mesh ground cover: no billboard cards. The near shore gets real 3D clumps,
-  // while the existing PBR terrain carries the distant meadow colour.
-  scatterGround('grassClump', isMobile ? 760 : 1250, 54, 108, .38, 7.8, .72, 1.55, 31);
-  scatterGround('undergrowth', isMobile ? 250 : 390, 58, 118, .55, 9.2, .70, 1.35, 47);
-  scatterGround('fern', isMobile ? 135 : 220, 61, 122, .65, 8.0, .68, 1.32, 59);
-
-  if (models.fallenLog) {
-    const rr = seededRandom(202609132781);
-    const logs = [];
-    let tries = 0;
-    while (logs.length < (isMobile ? 10 : 16) && tries++ < 500) {
-      const ang = rr() * Math.PI * 2;
-      const r = 66 + rr() * 50;
-      const x = Math.cos(ang) * r;
-      const z = Math.sin(ang) * r;
-      const h = heightAt(x, z);
-      if (h < .7 || h > 7.5 || exclude(x, z)) continue;
-      logs.push(placementMatrix(x, h + .02, z, .78 + rr() * .34, rr() * Math.PI * 2));
+    // Full 224k-triangle Bermuda tufts only in the foreground/hero area.
+    // Repetition is broken with scale and yaw; no cheap procedural blade field.
+    const grassSpots = [
+      [72.5, 7.4, 1.10, .25],
+      [76.5, 13.0, .92, 1.62],
+      [83.0, 4.6, 1.16, 3.11],
+      [88.0, 10.8, .86, 4.52],
+      [91.5, -2.0, 1.04, 5.62],
+      [68.0, 15.5, .88, 2.72]
+    ];
+    const grassMatrices = [];
+    for (const [x,z,s,yaw] of grassSpots) {
+      const y = heightAt(x,z);
+      if (y > .20 && !exclude(x,z)) grassMatrices.push(placementMatrix(x,y+.01,z,s,yaw));
     }
-    result.natureGroup.add(makeInstancedCopies(
-      models.fallenLog, logs, 'premium-fallen-log',
-      { castShadow: !isMobile, receiveShadow: true }
-    ));
+    const heroGrass = makeInstancedCopies(
+      rawGrass, grassMatrices, 'polyhaven-bermuda-fullres',
+      { castShadow: false, receiveShadow: true }
+    );
+    result.natureGroup.add(heroGrass);
+
+    result.premiumTrees = heroTrees;
+    result.premiumGrass = heroGrass;
+    result.treeTriangles = treeTriangles;
+    result.grassTriangles = grassTriangles;
+    result.loaded.push('premiumJacaranda', 'premiumBermudaGrass');
+  } catch (err) {
+    // Deliberately do NOT resurrect the old 500-triangle cone forest here.
+    // If the premium source fails, the photo HDRI remains as distant woodland.
+    console.warn('[garden-max] premium Poly Haven vegetation failed', err);
+    result.failed.push('premiumVegetation');
   }
 
-  // Textured mossy rocks replace the old close-up dodecahedron placeholders.
+  // Keep only textured rocks as small accents; the old low-poly conifer,
+  // undergrowth, fern, grass-clump and Old Wood Heart scatter are gone.
   try {
     onProgress('摆真实苔石和岸边细节…');
     const rawRock = await loadPrepared(URLS.boulder, renderer, { castShadow: false, receiveShadow: true });
     const rockModel = asNormalizedHolder(rawRock, { targetLongest: 2.55, bottom: 0, centerXZ: true });
     const rockRnd = seededRandom(2026091388);
-    for (let i = 0, tries = 0; i < (isMobile ? 14 : 22) && tries < 400; tries++) {
+    for (let i = 0, tries = 0; i < (isMobile ? 10 : 16) && tries < 400; tries++) {
       const ang = rockRnd() * Math.PI * 2;
-      const r = 54 + rockRnd() * 48;
+      const r = 58 + rockRnd() * 42;
       const x = Math.cos(ang) * r;
       const z = Math.sin(ang) * r;
       const h = heightAt(x, z);
       if (h < .12 || h > 6.2 || exclude(x, z)) continue;
       const s = .48 + rockRnd() * .92;
-      result.natureGroup.add(clonePlaced(rockModel, x, h, z, s, rockRnd() * Math.PI * 2, i < 4));
+      result.natureGroup.add(clonePlaced(rockModel, x, h, z, s, rockRnd() * Math.PI * 2, false));
       i++;
     }
     result.loaded.push('boulder');
   } catch (err) {
     console.warn('[garden-max] boulder failed', err);
     result.failed.push('boulder');
-  }
-
-  // One coherent, self-contained forest scene replaces the old "random cheap
-  // trees on empty terrain" look around the cottage. 3DAssets.dev serves this
-  // as a direct binary GLB (no ZIP/OBJ inflation and no runtime decimation), so
-  // it follows the same mobile-safe lesson as the successful 1.5M yacht.
-  onProgress('载入完整温带森林生态块（binary GLB）…');
-  try {
-    const rawForest = await loadPrepared(URLS.forestHeart, renderer, {
-      castShadow: false,
-      receiveShadow: true
-    });
-    let forestTriangles = 0;
-    rawForest.traverse((o) => { forestTriangles += meshTriangleCount(o); });
-    console.info('[garden-max] forest heart triangles', forestTriangles);
-
-    const forest = asNormalizedHolder(rawForest, {
-      targetLongest: 52,
-      bottom: 0,
-      centerXZ: true
-    });
-    // Hero grove behind the cottage: close enough to read as real woodland,
-    // far enough not to swallow the dock or the player spawn.
-    const fx = 103.5, fz = -43.0;
-    forest.position.set(fx, heightAt(fx, fz) - .08, fz);
-    forest.rotation.y = 2.18;
-    forest.name = 'old-wood-heart-hero-grove';
-    result.natureGroup.add(forest);
-    result.forestRoot = forest;
-    result.forestTriangles = forestTriangles;
-    result.loaded.push('forestHeart');
-  } catch (err) {
-    console.warn('[garden-max] forest heart failed', err);
-    result.failed.push('forestHeart');
   }
 
   scene.add(result.natureGroup);
@@ -415,7 +341,7 @@ export async function loadMaxAssets({
 }
 
 export const MAX_ASSET_SOURCES = {
-  quaterniusNature: 'CC0 — 3DAssets.dev damp conifer forest set plus Old Wood Heart full temperate-forest scene (asset 28437)',
+  premiumNature: 'CC0 — Poly Haven Jacaranda Tree + Bermuda Grass 01; full source meshes, Meshopt transport compression only',
   cottage: 'CC0 — 3DAssets.dev asset 32485',
   boat: 'CC BY 4.0 — motoryacht 35 by angelo raffaele catalano; original ~1.5M-triangle binary GLB, no decimation',
   oak: 'CC0 — 3DAssets.dev asset 28312',
