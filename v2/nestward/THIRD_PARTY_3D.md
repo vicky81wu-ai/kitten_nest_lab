@@ -44,6 +44,19 @@ These are used only in this non-custom visual-ceiling experiment. A future Kitte
 - Runtime modules are loaded through jsDelivr via the page import map.
 - EffectComposer + SSAO are used for restrained screen-space contact shading, with automatic mobile fallback.
 
+### motoryacht 35 — high-poly comparison boat
+- Original creator: angelo raffaele catalano
+- Original model: https://sketchfab.com/3d-models/motoryacht-35-0bdd7a0de7254426890bb5745bb7da6d
+- License: CC BY 4.0
+- Browser-ready GLB source used by this experiment: https://github.com/bob6664569/open-water/blob/main/site/assets/boats/motoryacht_10.7r.glb
+- The original model is about 1.5M triangles. This branch generates an approximately 480k-triangle comparison LOD at load time while retaining the source model's materials/textures and keeping a real-world ~10.7 m class scale.
+- This is a temporary visual/performance comparison asset, not the final NW boat.
+
+### meshoptimizer
+- Source: https://github.com/zeux/meshoptimizer
+- License: MIT
+- MeshoptSimplifier is loaded as an ES module from jsDelivr and is used only to produce the ~480k triangle yacht comparison LOD.
+
 ## Techniques studied but not directly copied as assets
 
 The vegetation/LOD and terrain strategy was informed by these MIT projects:
