@@ -33,6 +33,11 @@ These are used only in this non-custom visual-ceiling experiment. A future Kitte
 - The scene uses real albedo/normal data for the PBR shore/grass/rock material instead of multiplying the old dark procedural vertex colors.
 - Vestige foliage cards are also used for grass blades and small flowers.
 
+### Poly Haven HDRI
+- Source: https://polyhaven.com/a/meadow_2
+- License: CC0 1.0
+- The 1K `meadow_2` HDR is used only as the PBR environment/reflection source; the visible sky remains the controllable Luminous Lake sky.
+
 ### Three.js
 - Source: https://github.com/mrdoob/three.js
 - License: MIT
