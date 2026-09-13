@@ -14,6 +14,7 @@ const URLS = {
   oak: 'https://cdn.3dassets.dev/assets/28312/v1/model.glb',
   cottage: 'https://cdn.3dassets.dev/assets/32485/v1/model.glb',
   highBoat: 'https://cdn.jsdelivr.net/gh/bob6664569/open-water@main/site/assets/boats/motoryacht_10.7r.glb',
+  forestHeart: 'https://cdn.3dassets.dev/assets/28437/v1/model.glb',
   coniferTall: 'https://cdn.3dassets.dev/assets/32683/v1/model.glb',
   coniferMid: 'https://cdn.3dassets.dev/assets/32684/v1/model.glb',
   coniferYoung: 'https://cdn.3dassets.dev/assets/32685/v1/model.glb',
@@ -182,6 +183,7 @@ export async function loadMaxAssets({
   const result = {
     natureGroup: new THREE.Group(),
     cottageRoot: null,
+    forestRoot: null,
     boatRoot: new THREE.Group(),
     failed: [],
     loaded: []
@@ -320,6 +322,40 @@ export async function loadMaxAssets({
     result.failed.push('boulder');
   }
 
+  // One coherent, self-contained forest scene replaces the old "random cheap
+  // trees on empty terrain" look around the cottage. 3DAssets.dev serves this
+  // as a direct binary GLB (no ZIP/OBJ inflation and no runtime decimation), so
+  // it follows the same mobile-safe lesson as the successful 1.5M yacht.
+  onProgress('载入完整温带森林生态块（binary GLB）…');
+  try {
+    const rawForest = await loadPrepared(URLS.forestHeart, renderer, {
+      castShadow: false,
+      receiveShadow: true
+    });
+    let forestTriangles = 0;
+    rawForest.traverse((o) => { forestTriangles += meshTriangleCount(o); });
+    console.info('[garden-max] forest heart triangles', forestTriangles);
+
+    const forest = asNormalizedHolder(rawForest, {
+      targetLongest: 52,
+      bottom: 0,
+      centerXZ: true
+    });
+    // Hero grove behind the cottage: close enough to read as real woodland,
+    // far enough not to swallow the dock or the player spawn.
+    const fx = 103.5, fz = -43.0;
+    forest.position.set(fx, heightAt(fx, fz) - .08, fz);
+    forest.rotation.y = 2.18;
+    forest.name = 'old-wood-heart-hero-grove';
+    result.natureGroup.add(forest);
+    result.forestRoot = forest;
+    result.forestTriangles = forestTriangles;
+    result.loaded.push('forestHeart');
+  } catch (err) {
+    console.warn('[garden-max] forest heart failed', err);
+    result.failed.push('forestHeart');
+  }
+
   scene.add(result.natureGroup);
 
   onProgress('载入高细节湖边小屋…');
@@ -379,7 +415,7 @@ export async function loadMaxAssets({
 }
 
 export const MAX_ASSET_SOURCES = {
-  quaterniusNature: 'CC0 — 3DAssets.dev damp conifer forest set (tall/mid/young conifers, undergrowth, ferns, grass, mossy logs)',
+  quaterniusNature: 'CC0 — 3DAssets.dev damp conifer forest set plus Old Wood Heart full temperate-forest scene (asset 28437)',
   cottage: 'CC0 — 3DAssets.dev asset 32485',
   boat: 'CC BY 4.0 — motoryacht 35 by angelo raffaele catalano; original ~1.5M-triangle binary GLB, no decimation',
   oak: 'CC0 — 3DAssets.dev asset 28312',
