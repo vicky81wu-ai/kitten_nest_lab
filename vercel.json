@@ -57,6 +57,14 @@
       "dest": "https://downloadfree3d.com/file/j6lCDA-NoREW4Voq2qRuQg%2C%2C"
     },
     {
+      "src": "^/v2/nestward/assets/premium-jacaranda\\.glb$",
+      "dest": "https://github.com/vicky81wu-ai/kitten_nest_lab/releases/download/premium-garden-v1/polyhaven-jacaranda.glb"
+    },
+    {
+      "src": "^/v2/nestward/assets/premium-bermuda-grass\\.glb$",
+      "dest": "https://github.com/vicky81wu-ai/kitten_nest_lab/releases/download/premium-garden-v1/polyhaven-bermuda-grass.glb"
+    },
+    {
       "src": "^/(.*)$",
       "dest": "/$1"
     }
