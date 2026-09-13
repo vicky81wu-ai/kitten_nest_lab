@@ -5,6 +5,7 @@ import { seededRandom } from './garden-hq-visuals.js';
 const BASE = 'https://cdn.jsdelivr.net/gh/milnet01/Vestige@main/assets/textures/';
 const TERRAIN = BASE + 'terrain/';
 const FOLIAGE = BASE + 'foliage/';
+const PREMIUM_GROUND = './assets/premium-ground/';
 
 const loader = new THREE.TextureLoader();
 
@@ -24,11 +25,11 @@ async function tex(url, options) {
 export async function createTerrainPbrMaterial(renderer) {
   const aniso = Math.min(8, renderer.capabilities.getMaxAnisotropy?.() || 4);
   const [grass, dirt, rock, sand, grassNormal] = await Promise.all([
-    tex(TERRAIN + 'grass_albedo.jpg', { srgb: true, aniso }),
+    tex(PREMIUM_GROUND + 'grass-ground-diff-4k.jpg', { srgb: true, aniso }),
     tex(TERRAIN + 'dirt_albedo.jpg', { srgb: true, aniso }),
     tex(TERRAIN + 'rock_albedo.jpg', { srgb: true, aniso }),
     tex(TERRAIN + 'sand_albedo.jpg', { srgb: true, aniso }),
-    tex(TERRAIN + 'grass_normal.png', { repeat: 54, aniso })
+    tex(PREMIUM_GROUND + 'grass-ground-nor-gl-4k.jpg', { repeat: 42, aniso })
   ]);
 
   const mat = new THREE.MeshStandardMaterial({
@@ -100,7 +101,7 @@ export async function createTerrainPbrMaterial(renderer) {
         }`
       );
   };
-  mat.customProgramCacheKey = () => 'nw-max-pbr-terrain-v4';
+  mat.customProgramCacheKey = () => 'nw-polyhaven-grass-ground-v1';
   return mat;
 }
 
