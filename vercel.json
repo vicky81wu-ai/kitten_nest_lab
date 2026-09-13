@@ -53,6 +53,10 @@
       "dest": "https://downloadfree3d.com/file/wVevjZTd9AHl2c4p9-d-YA%2C%2C"
     },
     {
+      "src": "^/v2/nestward/assets/ship-ee-source\\.zip$",
+      "dest": "https://downloadfree3d.com/file/j6lCDA-NoREW4Voq2qRuQg%2C%2C"
+    },
+    {
       "src": "^/(.*)$",
       "dest": "/$1"
     }
