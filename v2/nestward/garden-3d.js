@@ -268,6 +268,9 @@ async function boot() {
   const boatState = { active: false, speed: 0, yaw: 0 };
   let stickPointer = null;
   let camDrag = null;
+  const camPointers = new Map();
+  let pinchStartDistance = 0;
+  let pinchStartCameraDistance = 0;
   let camYaw = 1.86;
   let camPitch = .31;
   let camDistance = 10.4;
@@ -334,26 +337,72 @@ async function boot() {
   stick.addEventListener('pointerup', releaseStick);
   stick.addEventListener('pointercancel', releaseStick);
 
+  // Camera is fully user-owned: one finger orbits, two fingers pinch-zoom.
+  // Never snap the yaw back after the user rotates it.
+  cameraPad.style.touchAction = 'none';
+
+  function currentPinchDistance() {
+    const pts = [...camPointers.values()];
+    if (pts.length < 2) return 0;
+    return Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+  }
+
   cameraPad.addEventListener('pointerdown', (e) => {
-    camDrag = { id: e.pointerId, x: e.clientX, y: e.clientY };
+    e.preventDefault();
+    camPointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     cameraPad.setPointerCapture(e.pointerId);
+
+    if (camPointers.size === 1) {
+      camDrag = { id: e.pointerId, x: e.clientX, y: e.clientY };
+    } else if (camPointers.size === 2) {
+      camDrag = null;
+      pinchStartDistance = Math.max(1, currentPinchDistance());
+      pinchStartCameraDistance = camDistance;
+    }
   });
+
   cameraPad.addEventListener('pointermove', (e) => {
-    if (!camDrag || camDrag.id !== e.pointerId) return;
+    if (!camPointers.has(e.pointerId)) return;
+    e.preventDefault();
+    camPointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    if (camPointers.size >= 2) {
+      const d = Math.max(1, currentPinchDistance());
+      camDistance = clamp(pinchStartCameraDistance * (pinchStartDistance / d), 5.0, 34);
+      return;
+    }
+
+    if (!camDrag || camDrag.id !== e.pointerId) {
+      camDrag = { id: e.pointerId, x: e.clientX, y: e.clientY };
+      return;
+    }
+
     camYaw -= (e.clientX - camDrag.x) * .0056;
-    camPitch = clamp(camPitch - (e.clientY - camDrag.y) * .0044, .16, .65);
+    camPitch = clamp(camPitch - (e.clientY - camDrag.y) * .0044, .08, 1.12);
     camDrag.x = e.clientX;
     camDrag.y = e.clientY;
   });
-  cameraPad.addEventListener('pointerup', (e) => { if (camDrag?.id === e.pointerId) camDrag = null; });
-  cameraPad.addEventListener('pointercancel', (e) => { if (camDrag?.id === e.pointerId) camDrag = null; });
+
+  function releaseCameraPointer(e) {
+    camPointers.delete(e.pointerId);
+    if (camPointers.size === 1) {
+      const [id, p] = camPointers.entries().next().value;
+      camDrag = { id, x: p.x, y: p.y };
+    } else {
+      camDrag = null;
+    }
+    pinchStartDistance = 0;
+  }
+
+  cameraPad.addEventListener('pointerup', releaseCameraPointer);
+  cameraPad.addEventListener('pointercancel', releaseCameraPointer);
   addEventListener('keydown', (e) => {
     keys.add(e.code);
     if (e.code.startsWith('Arrow')) e.preventDefault();
   });
   addEventListener('keyup', (e) => keys.delete(e.code));
   addEventListener('wheel', (e) => {
-    camDistance = clamp(camDistance + Math.sign(e.deltaY) * .65, 6.3, 16);
+    camDistance = clamp(camDistance + Math.sign(e.deltaY) * .65, 5.0, 34);
   }, { passive: true });
 
   function nearBoat() {
@@ -515,11 +564,8 @@ async function boot() {
   function updateCamera(dt) {
     const target = (boatState.active ? boatRoot.position : avatar.group.position).clone();
     target.y += boatState.active ? 2.0 : 2.45;
-    if (boatState.active && !camDrag) {
-      const behind = boatState.yaw + Math.PI / 2;
-      const d = Math.atan2(Math.sin(behind - camYaw), Math.cos(behind - camYaw));
-      camYaw += d * Math.min(.023, dt * 1.18);
-    }
+    // Deliberately no auto-follow / no yaw recenter. Wherever the user leaves
+    // the camera is where it stays, on foot and while boating.
     const cp = Math.cos(camPitch), sp = Math.sin(camPitch);
     const desired = new THREE.Vector3(
       target.x + Math.sin(camYaw) * cp * camDistance,
