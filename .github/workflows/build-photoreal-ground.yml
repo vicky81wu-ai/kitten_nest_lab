@@ -1,0 +1,102 @@
+name: Build photoreal Poly Haven ground textures
+
+on:
+  push:
+    branches:
+      - experiment/3d-garden-world
+    paths:
+      - .github/workflows/build-photoreal-ground.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: experiment/3d-garden-world
+
+      - name: Download 4K Grass Ground diffuse and OpenGL normal
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p v2/nestward/assets/premium-ground /tmp/ground
+          cat > /tmp/ground/fetch.py <<'PY'
+          import json, pathlib, urllib.request
+
+          UA={"User-Agent":"KittenNestAssetBuilder/1.0"}
+          def get_json(url):
+              req=urllib.request.Request(url,headers=UA)
+              with urllib.request.urlopen(req,timeout=60) as r:
+                  return json.load(r)
+
+          def walk(obj,path=()):
+              if isinstance(obj,dict):
+                  if isinstance(obj.get("url"),str):
+                      yield path,obj
+                  for k,v in obj.items():
+                      yield from walk(v,path+(str(k),))
+              elif isinstance(obj,list):
+                  for i,v in enumerate(obj):
+                      yield from walk(v,path+(str(i),))
+
+          files=get_json("https://api.polyhaven.com/files/grass_ground")
+          nodes=list(walk(files))
+
+          def choose(kind):
+              candidates=[]
+              for path,node in nodes:
+                  p="/".join(path).lower()
+                  u=node["url"].lower().split("?")[0]
+                  if not (u.endswith(".jpg") or u.endswith(".jpeg")):
+                      continue
+                  score=0
+                  if "4k" in p: score+=100
+                  if kind=="diffuse":
+                      if "diff" in p: score+=90
+                      if "albedo" in p: score+=80
+                  else:
+                      if "nor_gl" in p or "normal_gl" in p: score+=110
+                      elif "normal" in p and "dx" not in p: score+=75
+                      if "dx" in p: score-=150
+                  if "preview" in p or "thumb" in p: score-=100
+                  candidates.append((score,path,node))
+              candidates.sort(key=lambda x:x[0],reverse=True)
+              if not candidates or candidates[0][0] < 100:
+                  raise RuntimeError(f"No strong {kind} candidate; best={candidates[:5]}")
+              return candidates[0]
+
+          def download(node,dest):
+              req=urllib.request.Request(node["url"],headers=UA)
+              with urllib.request.urlopen(req,timeout=120) as r, open(dest,"wb") as f:
+                  while True:
+                      b=r.read(1024*1024)
+                      if not b: break
+                      f.write(b)
+
+          for kind,name in [
+              ("diffuse","grass-ground-diff-4k.jpg"),
+              ("normal","grass-ground-nor-gl-4k.jpg")
+          ]:
+              score,path,node=choose(kind)
+              print(kind,score,"/".join(path),node["url"])
+              dest=pathlib.Path("v2/nestward/assets/premium-ground")/name
+              download(node,dest)
+              print(dest,dest.stat().st_size)
+          PY
+          python /tmp/ground/fetch.py
+          ls -lh v2/nestward/assets/premium-ground
+
+      - name: Commit photoreal ground textures
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add v2/nestward/assets/premium-ground
+          git commit -m 'Add Poly Haven 4K photoreal grass ground textures'
+          git push origin HEAD:experiment/3d-garden-world
