@@ -1,0 +1,48 @@
+name: Build Ship EE GLB stress asset
+
+on:
+  push:
+    branches:
+      - experiment/3d-garden-world
+    paths:
+      - .github/workflows/build-ship-ee-glb.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-glb:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: experiment/3d-garden-world
+
+      - name: Download and convert full Ship EE
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/ship-ee/src v2/nestward/assets
+          curl --fail --location --retry 3 --output /tmp/ship-ee/source.zip 'https://downloadfree3d.com/file/j6lCDA-NoREW4Voq2qRuQg%2C%2C'
+          unzip -q /tmp/ship-ee/source.zip -d /tmp/ship-ee/src
+          OBJ="$(find /tmp/ship-ee/src -type f -iname '*.obj' -printf '%s %p\n' | sort -nr | head -1 | cut -d' ' -f2-)"
+          test -n "$OBJ"
+          echo "OBJ=$OBJ"
+          echo "OBJ bytes=$(stat -c%s "$OBJ")"
+          npx --yes obj2gltf@3.2.0 -i "$OBJ" -o v2/nestward/assets/ship-ee-full.glb -b
+          test -s v2/nestward/assets/ship-ee-full.glb
+          echo "GLB bytes=$(stat -c%s v2/nestward/assets/ship-ee-full.glb)"
+          printf '{"source":"Ship EE by gogiart","license":"CC BY 4.0","trianglesAdvertised":975900,"geometryDecimated":false,"lod":false,"conversion":"OBJ to binary GLB via obj2gltf 3.2.0"}\n' > v2/nestward/assets/ship-ee-full.meta.json
+
+      - name: Commit generated binary GLB
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add v2/nestward/assets/ship-ee-full.glb v2/nestward/assets/ship-ee-full.meta.json
+          git commit -m 'Add full Ship EE binary GLB stress asset'
+          git push origin HEAD:experiment/3d-garden-world
