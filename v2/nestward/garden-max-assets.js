@@ -161,7 +161,7 @@ export async function loadMaxAssets({
 
   const rnd = seededRandom(2026091315);
   const treeKeys = ['mapleA', 'mapleB', 'birch', 'oak'].filter((k) => models[k]);
-  const treeTarget = isMobile ? 30 : 48;
+  const treeTarget = isMobile ? 36 : 52;
   const trees = [];
   let attempts = 0;
   while (trees.length < treeTarget && attempts++ < treeTarget * 60 && treeKeys.length) {
@@ -178,14 +178,14 @@ export async function loadMaxAssets({
     if (crowded) continue;
     const key = treeKeys[Math.floor(rnd() * treeKeys.length)];
     const scale = .72 + rnd() * .65;
-    const shadow = trees.length < (isMobile ? 11 : 22);
+    const shadow = trees.length < (isMobile ? 12 : 24);
     const c = clonePlaced(models[key], x, heightAt(x, z), z, scale, rnd() * Math.PI * 2, shadow);
     result.natureGroup.add(c);
     trees.push({ x, z });
   }
 
   const bushKeys = ['bushLarge', 'bushSmall'].filter((k) => models[k]);
-  const bushTarget = isMobile ? 44 : 72;
+  const bushTarget = isMobile ? 58 : 82;
   for (let i = 0, tries = 0; i < bushTarget && tries < bushTarget * 35 && bushKeys.length; tries++) {
     const ang = rnd() * Math.PI * 2;
     const r = 54 + Math.pow(rnd(), .8) * 48;
