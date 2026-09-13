@@ -13,7 +13,8 @@ const URLS = {
   bushSmall: './assets/3d-cc0/Bush_Small_Flowers.gltf',
   oak: 'https://cdn.3dassets.dev/assets/28312/v1/model.glb',
   cottage: 'https://cdn.3dassets.dev/assets/32485/v1/model.glb',
-  boat: 'https://cdn.3dassets.dev/assets/19553/v1/model.glb'
+  boat: 'https://cdn.3dassets.dev/assets/19553/v1/model.glb',
+  boulder: 'https://cdn.3dassets.dev/assets/32688/v1/model.glb'
 };
 
 function prep(root, renderer, { castShadow = true, receiveShadow = true } = {}) {
@@ -197,6 +198,29 @@ export async function loadMaxAssets({
     result.natureGroup.add(clonePlaced(models[key], x, heightAt(x, z), z, scale, rnd() * Math.PI * 2, false));
     i++;
   }
+  // Textured mossy rocks replace the old close-up dodecahedron placeholders.
+  try {
+    onProgress('摆真实苔石和岸边细节…');
+    const rawRock = await loadPrepared(URLS.boulder, renderer, { castShadow: false, receiveShadow: true });
+    const rockModel = asNormalizedHolder(rawRock, { targetLongest: 2.55, bottom: 0, centerXZ: true });
+    const rockRnd = seededRandom(2026091388);
+    for (let i = 0, tries = 0; i < (isMobile ? 14 : 22) && tries < 400; tries++) {
+      const ang = rockRnd() * Math.PI * 2;
+      const r = 54 + rockRnd() * 48;
+      const x = Math.cos(ang) * r;
+      const z = Math.sin(ang) * r;
+      const h = heightAt(x, z);
+      if (h < .12 || h > 6.2 || exclude(x, z)) continue;
+      const s = .48 + rockRnd() * .92;
+      result.natureGroup.add(clonePlaced(rockModel, x, h, z, s, rockRnd() * Math.PI * 2, i < 4));
+      i++;
+    }
+    result.loaded.push('boulder');
+  } catch (err) {
+    console.warn('[garden-max] boulder failed', err);
+    result.failed.push('boulder');
+  }
+
   scene.add(result.natureGroup);
 
   onProgress('载入高细节湖边小屋…');
@@ -241,5 +265,6 @@ export const MAX_ASSET_SOURCES = {
   quaterniusNature: 'CC0 — Quaternius Ultimate Stylized Nature',
   cottage: 'CC0 — 3DAssets.dev asset 32485',
   boat: 'CC0 — 3DAssets.dev asset 19553',
-  oak: 'CC0 — 3DAssets.dev asset 28312'
+  oak: 'CC0 — 3DAssets.dev asset 28312',
+  boulder: 'CC0 — 3DAssets.dev asset 32688'
 };
