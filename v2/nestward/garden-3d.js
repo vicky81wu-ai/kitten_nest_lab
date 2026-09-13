@@ -1,6 +1,6 @@
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js';
-import { Sky } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/objects/Sky.js';
-import { Water } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/objects/Water.js';
+import * as THREE from 'three';
+import { Sky } from 'three/addons/objects/Sky.js';
+import { Water } from 'three/addons/objects/Water.js';
 
 const $ = (q) => document.querySelector(q);
 const canvas = $('#world3d');
