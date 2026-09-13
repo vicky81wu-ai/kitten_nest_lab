@@ -451,22 +451,23 @@ export function createRocks({ heightAt, isMobile = false, seed = 5001, exclude =
   return mesh;
 }
 
-export function createDock({ heightAt, x = 61.5, z = 0 }) {
+export function createDock({ heightAt, x = 56.5, z = 0 }) {
   const group = new THREE.Group();
   group.name = 'hq-dock';
   const woodTex = woodTexture();
   const mat = new THREE.MeshStandardMaterial({ map: woodTex, color: 0x9b7654, roughness: .86 });
   const dark = new THREE.MeshStandardMaterial({ color: 0x5e452f, roughness: .94 });
-  const topY = .56;
-  const length = 17;
+  const length = 12;
   const width = 3.7;
-  for (let i = 0; i < 17; i++) {
+  const shoreX = x + length / 2;
+  const topY = Math.max(.72, heightAt(shoreX, z) + .10);
+  for (let i = 0; i < 12; i++) {
     const plank = new THREE.Mesh(new THREE.BoxGeometry(.92, .16, width), mat);
-    plank.position.set(x - length / 2 + .55 + i, topY, z);
+    plank.position.set(x - length / 2 + .52 + i, topY, z);
     plank.castShadow = plank.receiveShadow = true;
     group.add(plank);
   }
-  for (const px of [x - 7.6, x - 2.5, x + 2.7, x + 7.5]) {
+  for (const px of [x - 5.4, x - 1.8, x + 1.8, x + 5.4]) {
     for (const pz of [-1.55, 1.55]) {
       const post = new THREE.Mesh(new THREE.CylinderGeometry(.11, .15, 2.8, 9), dark);
       post.position.set(px, -.35, z + pz);
@@ -480,7 +481,7 @@ export function createDock({ heightAt, x = 61.5, z = 0 }) {
       new THREE.SphereGeometry(.09, 10, 8),
       new THREE.MeshStandardMaterial({ color: 0xffe4b1, emissive: 0xffb45c, emissiveIntensity: 2.8 })
     );
-    lamp.position.set(x + 7.45, 1.15, z + pz);
+    lamp.position.set(shoreX - .08, topY + .62, z + pz);
     group.add(lamp);
   }
   return { group, x, z, topY, length, width };
