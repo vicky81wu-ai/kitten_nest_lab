@@ -16,7 +16,7 @@ const URLS = {
   bushSmall: './assets/3d-cc0/Bush_Small_Flowers.gltf',
   oak: 'https://cdn.3dassets.dev/assets/28312/v1/model.glb',
   cottage: 'https://cdn.3dassets.dev/assets/32485/v1/model.glb',
-  ship3pZip: './assets/ship3p-source.zip',
+  shipEeZip: './assets/ship-ee-source.zip',
   boatHull: 'https://cdn.3dassets.dev/assets/31642/v1/model.glb',
   boatRudder: 'https://cdn.3dassets.dev/assets/31644/v1/model.glb',
   boatVent: 'https://cdn.3dassets.dev/assets/31646/v1/model.glb',
@@ -156,16 +156,16 @@ function rewriteMtlTexturePaths(text, blobByBase) {
   }).join('\n');
 }
 
-async function loadShip3PFromZip(renderer) {
-  const response = await fetch(URLS.ship3pZip, { cache: 'force-cache' });
-  if (!response.ok) throw new Error('Ship 3P archive HTTP ' + response.status);
+async function loadShipEEFromZip(renderer) {
+  const response = await fetch(URLS.shipEeZip, { cache: 'force-cache' });
+  if (!response.ok) throw new Error('Ship EE archive HTTP ' + response.status);
 
   const archive = await response.arrayBuffer();
   const zip = await JSZip.loadAsync(archive);
   const entries = Object.values(zip.files).filter((x) => !x.dir);
 
   const objEntries = entries.filter((x) => /\.obj$/i.test(x.name) && !/__MACOSX/i.test(x.name));
-  if (!objEntries.length) throw new Error('Ship 3P archive contains no OBJ');
+  if (!objEntries.length) throw new Error('Ship EE archive contains no OBJ');
 
   // Pick the largest OBJ: this keeps the full source model rather than a preview/LOD.
   let objEntry = objEntries[0];
@@ -201,7 +201,7 @@ async function loadShip3PFromZip(renderer) {
 
   let triangles = 0;
   root.traverse((o) => { triangles += meshTriangleCount(o); });
-  console.info('[garden-max] Ship 3P source triangles', triangles);
+  console.info('[garden-max] Ship EE source triangles', triangles);
   return { root, triangles };
 }
 
@@ -330,14 +330,13 @@ export async function loadMaxAssets({
     result.failed.push('cottage');
   }
 
-  onProgress('载入 Ship 3P 原始约 120 万三角面模型（不减面）…');
+  onProgress('载入 Ship EE 原始约 98 万三角面模型（不减面）…');
   try {
-    // Victoria 1.5M is freely downloadable on Sketchfab but its archive requires
-    // authenticated download access. Per the requested fallback order, this
-    // build uses Ship 3P by gogiart instead. The source archive is loaded intact:
-    // no decimation, no runtime LOD and no triangle-budget pass.
-    const { root: rawBoat, triangles } = await loadShip3PFromZip(renderer);
-    rawBoat.name = 'gogiart-ship-3p-full-source';
+    // Ship EE by gogiart is used as the pretty near-1M sail-ship stress test.
+    // Its public OBJ archive is loaded intact: no decimation, no runtime LOD
+    // and no triangle-budget pass.
+    const { root: rawBoat, triangles } = await loadShipEEFromZip(renderer);
+    rawBoat.name = 'gogiart-ship-ee-full-source';
 
     const boatVisual = asNormalizedHolder(rawBoat, {
       // Keep this historic sail ship large enough to read as a real vessel in
@@ -353,7 +352,7 @@ export async function loadMaxAssets({
     result.boatPassengerY = 5.9;
     result.loaded.push('boat');
   } catch (err) {
-    console.warn('[garden-max] full Ship 3P failed', err);
+    console.warn('[garden-max] full Ship EE failed', err);
     result.failed.push('boat');
   }
   result.boatRoot.position.copy(boatPosition);
@@ -365,7 +364,7 @@ export async function loadMaxAssets({
 export const MAX_ASSET_SOURCES = {
   quaterniusNature: 'CC0 — Quaternius Ultimate Stylized Nature',
   cottage: 'CC0 — 3DAssets.dev asset 32485',
-  boat: 'CC BY 4.0 — Ship 3P by gogiart; full ~1.2M-triangle source, no decimation',
+  boat: 'CC BY 4.0 — Ship EE by gogiart; full 975.9k-triangle source, no decimation',
   oak: 'CC0 — 3DAssets.dev asset 28312',
   boulder: 'CC0 — 3DAssets.dev asset 32688'
 };
