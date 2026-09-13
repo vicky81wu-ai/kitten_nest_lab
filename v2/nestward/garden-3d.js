@@ -18,7 +18,7 @@ import {
   createBillboardCharacter
 } from './garden-hq-visuals.js';
 import { createTerrainPbrMaterial } from './garden-pbr-terrain.js';
-import { loadMaxAssets } from './garden-max-assets.js';
+import { loadMaxAssets } from './garden-max-assets.js?v=premium-direct-d955b07e';
 
 const $ = (q) => document.querySelector(q);
 const canvas = $('#world3d');
