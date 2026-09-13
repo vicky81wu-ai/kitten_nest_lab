@@ -8,6 +8,14 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Kitten Nest · 湖岸试验场</title>
   <link rel="stylesheet" href="./garden-3d.css" />
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+    }
+  }
+  </script>
 </head>
 <body>
 <main id="app">
@@ -25,6 +33,16 @@
   <button id="action">去码头</button>
   <div class="tip">靠近码头可以上船 · 湖面可自由航行</div>
 </main>
-<script type="module" src="./garden-3d.js"></script>
+<script>
+    window.addEventListener('error', (e) => {
+      const el = document.getElementById('loadingText');
+      if (el) el.textContent = '加载失败：' + (e.message || '未知错误');
+    });
+    window.addEventListener('unhandledrejection', (e) => {
+      const el = document.getElementById('loadingText');
+      if (el) el.textContent = '加载失败：' + (e.reason?.message || e.reason || '未知错误');
+    });
+  </script>
+  <script type="module" src="./garden-3d.js"></script>
 </body>
 </html>
