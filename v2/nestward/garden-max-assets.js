@@ -17,7 +17,6 @@ const URLS = {
   cottage: 'https://cdn.3dassets.dev/assets/32485/v1/model.glb',
   highBoat: 'https://cdn.jsdelivr.net/gh/bob6664569/open-water@main/site/assets/boats/motoryacht_10.7r.glb',
   premiumJacaranda: './assets/premium/polyhaven-jacaranda.glb',
-  premiumBermudaGrass: './assets/premium/polyhaven-bermuda-grass.glb',
   boatHull: 'https://cdn.3dassets.dev/assets/31642/v1/model.glb',
   boatRudder: 'https://cdn.3dassets.dev/assets/31644/v1/model.glb',
   boatVent: 'https://cdn.3dassets.dev/assets/31646/v1/model.glb',
@@ -186,22 +185,21 @@ export async function loadMaxAssets({
   result.natureGroup.name = 'max-asset-nature';
   result.boatRoot.name = 'max-detail-boat-root';
 
-  onProgress('载入 Poly Haven 31 万面写真树与 22 万面写真草（不减面）…');
+  onProgress('载入 Poly Haven 31 万面写真树（不减面）…');
   try {
-    const [rawTree, rawGrass] = await Promise.all([
-      loadPrepared(URLS.premiumJacaranda, renderer, { castShadow: false, receiveShadow: true }),
-      loadPrepared(URLS.premiumBermudaGrass, renderer, { castShadow: false, receiveShadow: true })
-    ]);
+    const rawTree = await loadPrepared(
+      URLS.premiumJacaranda,
+      renderer,
+      { castShadow: false, receiveShadow: true }
+    );
 
-    let treeTriangles = 0, grassTriangles = 0;
+    let treeTriangles = 0;
     rawTree.traverse((o) => { treeTriangles += meshTriangleCount(o); });
-    rawGrass.traverse((o) => { grassTriangles += meshTriangleCount(o); });
-    console.info('[garden-max] premium Poly Haven triangles', { treeTriangles, grassTriangles });
+    console.info('[garden-max] premium Poly Haven tree triangles', treeTriangles);
 
     // Keep the full source geometry. World-size normalization changes only the
     // transform — it does not simplify, decimate or rebuild either mesh.
     normalizeModel(rawTree, { targetHeight: 15.8, bottom: 0, centerXZ: true });
-    normalizeModel(rawGrass, { targetLongest: 4.2, bottom: 0, centerXZ: true });
 
     // A few hero trees share one full-resolution geometry/material set through
     // GPU instancing. This gives us million-plus visible tree triangles without
@@ -225,39 +223,14 @@ export async function loadMaxAssets({
     );
     result.natureGroup.add(heroTrees);
 
-    // Full 224k-triangle Bermuda tufts only in the foreground/hero area.
-    // Repetition is broken with scale and yaw; no cheap procedural blade field.
-    const grassSpots = [
-      [66.0, 5.8, 1.12, .25],
-      [70.5, 8.5, 1.00, 1.62],
-      [74.0, 5.5, 1.18, 3.11],
-      [78.5, 9.2, .96, 4.52],
-      [82.0, 4.0, 1.08, 5.62],
-      [62.5, 10.5, .92, 2.72],
-      [86.0, 12.0, .90, 1.07],
-      [71.0, 15.0, .88, 3.88]
-    ];
-    const grassMatrices = [];
-    for (const [x,z,s,yaw] of grassSpots) {
-      const y = heightAt(x,z);
-      if (y > .20 && !exclude(x,z)) grassMatrices.push(placementMatrix(x,y+.01,z,s,yaw));
-    }
-    const heroGrass = makeInstancedCopies(
-      rawGrass, grassMatrices, 'polyhaven-bermuda-fullres',
-      { castShadow: false, receiveShadow: true }
-    );
-    result.natureGroup.add(heroGrass);
-
     result.premiumTrees = heroTrees;
-    result.premiumGrass = heroGrass;
     result.treeTriangles = treeTriangles;
-    result.grassTriangles = grassTriangles;
-    result.loaded.push('premiumJacaranda', 'premiumBermudaGrass');
+    result.loaded.push('premiumJacaranda');
   } catch (err) {
     // Deliberately do NOT resurrect the old 500-triangle cone forest here.
     // If the premium source fails, the photo HDRI remains as distant woodland.
     console.warn('[garden-max] premium Poly Haven vegetation failed', err);
-    result.failed.push('premiumVegetation');
+    result.failed.push('premiumTree');
   }
 
   // Low-poly boulders were visually below the premium asset tier and are
@@ -321,7 +294,7 @@ export async function loadMaxAssets({
 }
 
 export const MAX_ASSET_SOURCES = {
-  premiumNature: 'CC0 — Poly Haven Jacaranda Tree + Bermuda Grass 01; full source meshes, Meshopt transport compression only',
+  premiumNature: 'CC0 — Poly Haven Jacaranda Tree; full source mesh, Meshopt transport compression only',
   cottage: 'CC0 — 3DAssets.dev asset 32485',
   boat: 'CC BY 4.0 — motoryacht 35 by angelo raffaele catalano; original ~1.5M-triangle binary GLB, no decimation',
   oak: 'CC0 — 3DAssets.dev asset 28312',
