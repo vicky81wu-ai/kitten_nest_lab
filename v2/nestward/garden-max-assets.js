@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { MeshoptSimplifier } from 'https://cdn.jsdelivr.net/npm/meshoptimizer@0.25.0/meshopt_simplifier.module.js';
 import { seededRandom } from './garden-hq-visuals.js';
 
 const loader = new GLTFLoader();
@@ -13,6 +14,7 @@ const URLS = {
   bushSmall: './assets/3d-cc0/Bush_Small_Flowers.gltf',
   oak: 'https://cdn.3dassets.dev/assets/28312/v1/model.glb',
   cottage: 'https://cdn.3dassets.dev/assets/32485/v1/model.glb',
+  highBoat: 'https://cdn.jsdelivr.net/gh/bob6664569/open-water@main/site/assets/boats/motoryacht_10.7r.glb',
   boatHull: 'https://cdn.3dassets.dev/assets/31642/v1/model.glb',
   boatRudder: 'https://cdn.3dassets.dev/assets/31644/v1/model.glb',
   boatVent: 'https://cdn.3dassets.dev/assets/31646/v1/model.glb',
@@ -121,6 +123,80 @@ function clonePlaced(template, x, y, z, scale, rotationY, shadow = false) {
 function validSpot(x, z, heightAt, exclude) {
   const h = heightAt(x, z);
   return h > .35 && h < 9.5 && !exclude(x, z);
+}
+
+function meshTriangleCount(mesh) {
+  if (!mesh?.isMesh || !mesh.geometry?.getAttribute('position')) return 0;
+  const g = mesh.geometry;
+  return Math.floor((g.index ? g.index.count : g.getAttribute('position').count) / 3);
+}
+
+async function simplifyRootToBudget(root, targetTriangles = 480000) {
+  await MeshoptSimplifier.ready;
+
+  const candidates = [];
+  let fixedTriangles = 0;
+  let sourceTriangles = 0;
+
+  root.traverse((o) => {
+    if (!o.isMesh || !o.geometry?.getAttribute('position')) return;
+    const tris = meshTriangleCount(o);
+    sourceTriangles += tris;
+
+    // GLTFLoader normally creates one Three mesh per glTF primitive. Skip rare
+    // multi-material/grouped or non-indexed geometries rather than risk damaging
+    // material ranges in this visual test.
+    const g = o.geometry;
+    if (!g.index || (g.groups?.length || 0) > 1 || tris < 64) {
+      fixedTriangles += tris;
+      return;
+    }
+    candidates.push({ mesh: o, tris });
+  });
+
+  const reducibleSource = candidates.reduce((s, x) => s + x.tris, 0);
+  const reducibleTarget = Math.max(0, targetTriangles - fixedTriangles);
+  const ratio = reducibleSource > 0 ? Math.min(1, reducibleTarget / reducibleSource) : 1;
+
+  for (const { mesh, tris } of candidates) {
+    if (ratio >= .995) continue;
+    const g = mesh.geometry;
+    const pos = g.getAttribute('position');
+    const positions = new Float32Array(pos.count * 3);
+    for (let i = 0; i < pos.count; i++) {
+      positions[i * 3] = pos.getX(i);
+      positions[i * 3 + 1] = pos.getY(i);
+      positions[i * 3 + 2] = pos.getZ(i);
+    }
+
+    const src = new Uint32Array(g.index.count);
+    for (let i = 0; i < g.index.count; i++) src[i] = g.index.getX(i);
+
+    const wanted = Math.max(3, Math.floor((src.length * ratio) / 3) * 3);
+    let simplified;
+    try {
+      [simplified] = MeshoptSimplifier.simplify(src, positions, 3, wanted, .06, ['Permissive']);
+      // Some CAD-like meshes can get stuck on seams. Only use the aggressive
+      // fallback when the normal simplifier is still far over the requested LOD.
+      if (simplified.length > wanted * 1.18) {
+        [simplified] = MeshoptSimplifier.simplifySloppy(src, positions, 3, null, wanted, .08);
+      }
+    } catch (err) {
+      console.warn('[garden-max] meshopt simplify skipped on mesh', mesh.name, err);
+      continue;
+    }
+
+    if (simplified?.length >= 3 && simplified.length < src.length) {
+      g.setIndex(new THREE.BufferAttribute(simplified, 1));
+      g.computeBoundingBox();
+      g.computeBoundingSphere();
+    }
+  }
+
+  let finalTriangles = 0;
+  root.traverse((o) => { finalTriangles += meshTriangleCount(o); });
+  console.info('[garden-max] yacht LOD', { sourceTriangles, finalTriangles, targetTriangles });
+  return { sourceTriangles, finalTriangles };
 }
 
 export async function loadMaxAssets({
@@ -248,73 +324,69 @@ export async function loadMaxAssets({
     result.failed.push('cottage');
   }
 
-  onProgress('载入约 4.5 万三角面的可驾驶木船…');
+  onProgress('载入并整理约 48 万三角面的高精度游艇…');
   try {
-    // Keep this test deliberately isolated to the boat: the world, water, dock,
-    // controls and camera stay untouched. These CC0 pieces come from one
-    // real-scale canal-boat kit and are assembled before a single normalization.
-    // Visible triangle count: 29,916 hull + 1,036 rudder + 2×1,536 vents
-    // + 1,584 chimney + 8,304 rope coil + 1,344 boat hook = 45,256 tris.
-    const [
-      hull,
-      rudder,
-      ventA,
-      ventB,
-      chimney,
-      rope,
-      hook
-    ] = await Promise.all([
-      loadPrepared(URLS.boatHull, renderer, { castShadow: true, receiveShadow: true }),
-      loadPrepared(URLS.boatRudder, renderer, { castShadow: true, receiveShadow: true }),
-      loadPrepared(URLS.boatVent, renderer, { castShadow: true, receiveShadow: true }),
-      loadPrepared(URLS.boatVent, renderer, { castShadow: true, receiveShadow: true }),
-      loadPrepared(URLS.boatChimney, renderer, { castShadow: true, receiveShadow: true }),
-      loadPrepared(URLS.boatRope, renderer, { castShadow: true, receiveShadow: true }),
-      loadPrepared(URLS.boatHook, renderer, { castShadow: true, receiveShadow: true })
-    ]);
+    // Source: motoryacht 35 by angelo raffaele catalano, CC BY 4.0.
+    // The browser-ready source is ~1.5M triangles. For this comparison build
+    // we reduce only its index buffers to a ~480k-triangle LOD while retaining
+    // the original vertex attributes, materials and textures.
+    const rawBoat = await loadPrepared(URLS.highBoat, renderer, {
+      castShadow: true,
+      receiveShadow: true
+    });
+    const lodInfo = await simplifyRootToBudget(rawBoat, 480000);
 
-    const rawBoat = new THREE.Group();
-    rawBoat.name = 'cc0-canal-boat-45256-tris';
-    rawBoat.add(hull);
-
-    // The source kit uses metres, +Y up and +Z forward. Mount the companion
-    // pieces in source-space so they scale/rotate together with the hull.
-    rudder.position.set(0, .04, -5.22);
-    rawBoat.add(rudder);
-
-    ventA.position.set(-.43, 2.03, .95);
-    ventB.position.set(.43, 2.03, .12);
-    rawBoat.add(ventA, ventB);
-
-    chimney.position.set(.52, 1.98, -1.05);
-    rawBoat.add(chimney);
-
-    rope.position.set(-.42, .62, -3.70);
-    rope.rotation.y = .42;
-    rawBoat.add(rope);
-
-    hook.position.set(.82, .72, -2.45);
-    hook.rotation.y = .06;
-    rawBoat.add(hook);
-
-    // The imported source is authored in real metres: 2.255 × 2.207 × 10.6 m.
-    // NW's current kitten billboard is 5.22 world units tall, so preserve the
-    // existing character scale and map the real boat proportionally to it
-    // instead of shrinking the boat to a toy. This makes the 10.6 m hull
-    // roughly 32.18 NW world units long and restores human-scale cabin height.
+    rawBoat.name = 'motoryacht-480k-test';
     const boatVisual = asNormalizedHolder(rawBoat, {
-      targetLongest: 32.18,
+      // Source is a ~10.7 m motor yacht. Keep it at the same real-world class
+      // as the previous 10.6 m narrowboat instead of toy-scaling it.
+      targetLongest: 32.48,
       bottom: 0,
       centerXZ: true,
       rotateLongestToX: true
     });
-    // Preserve the previous boat's waterline and interaction envelope.
-    boatVisual.position.y = -.28;
+    boatVisual.position.y = -.30;
     result.boatRoot.add(boatVisual);
+    result.boatTriangles = lodInfo.finalTriangles;
     result.loaded.push('boat');
   } catch (err) {
-    console.warn('[garden-max] 45k boat failed', err);
-    result.failed.push('boat');
+    console.warn('[garden-max] 480k yacht failed; falling back to 45k canal boat', err);
+    try {
+      const [
+        hull, rudder, ventA, ventB, chimney, rope, hook
+      ] = await Promise.all([
+        loadPrepared(URLS.boatHull, renderer, { castShadow: true, receiveShadow: true }),
+        loadPrepared(URLS.boatRudder, renderer, { castShadow: true, receiveShadow: true }),
+        loadPrepared(URLS.boatVent, renderer, { castShadow: true, receiveShadow: true }),
+        loadPrepared(URLS.boatVent, renderer, { castShadow: true, receiveShadow: true }),
+        loadPrepared(URLS.boatChimney, renderer, { castShadow: true, receiveShadow: true }),
+        loadPrepared(URLS.boatRope, renderer, { castShadow: true, receiveShadow: true }),
+        loadPrepared(URLS.boatHook, renderer, { castShadow: true, receiveShadow: true })
+      ]);
+      const fallback = new THREE.Group();
+      fallback.add(hull);
+      rudder.position.set(0, .04, -5.22);
+      ventA.position.set(-.43, 2.03, .95);
+      ventB.position.set(.43, 2.03, .12);
+      chimney.position.set(.52, 1.98, -1.05);
+      rope.position.set(-.42, .62, -3.70);
+      rope.rotation.y = .42;
+      hook.position.set(.82, .72, -2.45);
+      fallback.add(rudder, ventA, ventB, chimney, rope, hook);
+      const boatVisual = asNormalizedHolder(fallback, {
+        targetLongest: 32.18,
+        bottom: 0,
+        centerXZ: true,
+        rotateLongestToX: true
+      });
+      boatVisual.position.y = -.28;
+      result.boatRoot.add(boatVisual);
+      result.boatTriangles = 45256;
+      result.loaded.push('boat');
+    } catch (fallbackErr) {
+      console.warn('[garden-max] fallback boat failed', fallbackErr);
+      result.failed.push('boat');
+    }
   }
   result.boatRoot.position.copy(boatPosition);
   scene.add(result.boatRoot);
@@ -325,7 +397,7 @@ export async function loadMaxAssets({
 export const MAX_ASSET_SOURCES = {
   quaterniusNature: 'CC0 — Quaternius Ultimate Stylized Nature',
   cottage: 'CC0 — 3DAssets.dev asset 32485',
-  boat: 'CC0 — 3DAssets.dev Canal Boats kit; 45,256-triangle assembled boat',
+  boat: 'CC BY 4.0 — motoryacht 35 by angelo raffaele catalano; ~480k-triangle runtime LOD from 1.5M source',
   oak: 'CC0 — 3DAssets.dev asset 28312',
   boulder: 'CC0 — 3DAssets.dev asset 32688'
 };
