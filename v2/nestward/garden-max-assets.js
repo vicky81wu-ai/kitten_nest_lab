@@ -346,12 +346,10 @@ export async function loadMaxAssets({
     // GPU instancing. This gives us million-plus visible tree triangles without
     // multiplying the 62 MB source asset in memory.
     const treeSpots = [
-      [61.5, -17.0, 1.00, .38],
-      [74.5, -20.5, .94, 2.12],
-      [84.0, -15.0, 1.08, 4.46],
-      [88.5, 8.5, .92, 5.65],
-      [58.0, 12.0, 1.04, 3.31],
-      [94.0, 20.0, .90, 1.18]
+      [57.5, -21.0, 1.00, .38],
+      [96.0, -24.0, .94, 2.12],
+      [103.0, 10.0, 1.05, 4.46],
+      [58.0, 27.0, .96, 3.31]
     ];
     const treeMatrices = [];
     for (const [x,z,s,yaw] of treeSpots) {
@@ -364,6 +362,16 @@ export async function loadMaxAssets({
     );
     result.natureGroup.add(heroTrees);
 
+    const premiumSakuraTree = applySakuraBloomTint(rawTree.clone(true), 'premium-sakura', .96);
+    const premiumSakura = new THREE.Group();
+    premiumSakura.name = 'premium-sakura-fullres';
+    premiumSakura.add(premiumSakuraTree);
+    premiumSakura.position.set(94.0, heightAt(94.0, -5.0), -5.0);
+    premiumSakura.rotation.y = 2.72;
+    premiumSakura.scale.setScalar(1.04);
+    result.natureGroup.add(premiumSakura);
+    result.premiumSakura = premiumSakura;
+
     result.premiumTrees = heroTrees;
     result.treeTriangles = treeTriangles;
     result.loaded.push('premiumJacaranda');
@@ -372,6 +380,46 @@ export async function loadMaxAssets({
     // If the premium source fails, the photo HDRI remains as distant woodland.
     console.warn('[garden-max] premium Poly Haven vegetation failed', err);
     result.failed.push('premiumTree');
+  }
+
+  onProgress('种第二棵梦幻樱花树…');
+  try {
+    const [rawStylized, rawBlossomA, rawBlossomB] = await Promise.all([
+      loadPrepared(URLS.stylizedSakura, renderer, { castShadow: false, receiveShadow: true }),
+      loadPrepared(URLS.blossomsA, renderer, { castShadow: false, receiveShadow: true }),
+      loadPrepared(URLS.blossomsB, renderer, { castShadow: false, receiveShadow: true })
+    ]);
+    applySakuraBloomTint(rawStylized, 'stylized-sakura', .99);
+    normalizeModel(rawStylized, { targetHeight: 10.8, bottom: 0, centerXZ: true });
+    tintFlowerTemplate(rawBlossomA, 0xffa8d3);
+    tintFlowerTemplate(rawBlossomB, 0xdca7ff);
+    normalizeModel(rawBlossomA, { targetLongest: .78, bottom: 0, centerXZ: true });
+    normalizeModel(rawBlossomB, { targetLongest: .68, bottom: 0, centerXZ: true });
+
+    const stylizedSakura = new THREE.Group();
+    stylizedSakura.name = 'dreamy-stylized-sakura';
+    stylizedSakura.add(rawStylized);
+    const blossomTemplates = [rawBlossomA, rawBlossomB];
+    const crown = [
+      [-2.7,7.1,-.7],[-1.8,8.1,.8],[-.8,8.7,-1.0],[.2,9.1,.8],[1.2,8.4,-.5],[2.3,7.5,.6],
+      [-2.0,6.5,1.2],[-1.0,7.4,1.6],[0,7.9,-1.5],[1.1,7.1,1.5],[2.1,6.6,-1.0],
+      [-1.5,9.2,.2],[.8,9.5,.1],[2.6,8.2,.1],[-2.8,8.0,.6]
+    ];
+    crown.forEach(([x,y,z], i) => {
+      const b = blossomTemplates[i % 2].clone(true);
+      b.position.set(x,y,z);
+      b.rotation.set((i%3)*.12, i*.73, (i%4)*.08);
+      b.scale.multiplyScalar(.86 + (i%5)*.08);
+      stylizedSakura.add(b);
+    });
+    stylizedSakura.position.set(84.5, heightAt(84.5, 16.5), 16.5);
+    stylizedSakura.rotation.y = -.62;
+    result.natureGroup.add(stylizedSakura);
+    result.stylizedSakura = stylizedSakura;
+    result.loaded.push('stylizedSakura');
+  } catch (err) {
+    console.warn('[garden-max] stylized Sakura failed', err);
+    result.failed.push('stylizedSakura');
   }
 
   // Low-poly boulders were visually below the premium asset tier and are
@@ -393,9 +441,92 @@ export async function loadMaxAssets({
     scene.add(house);
     result.cottageRoot = house;
     result.loaded.push('cottage');
+
+    onProgress('把紫藤搭成 BRBRR 爬上小屋墙面…');
+    try {
+      const vineUrls = [URLS.vine1, URLS.vine2, URLS.vine4, URLS.vine5, URLS.vine6, URLS.vine9];
+      const [rawFlowerA, rawFlowerB, ...rawVines] = await Promise.all([
+        loadPrepared(URLS.blossomsA, renderer, { castShadow: false, receiveShadow: true }),
+        loadPrepared(URLS.blossomsB, renderer, { castShadow: false, receiveShadow: true }),
+        ...vineUrls.map((url) => loadPrepared(url, renderer, { castShadow: false, receiveShadow: true }))
+      ]);
+      const vineTemplates = rawVines.map((v) => {
+        normalizeModel(v, { targetHeight: .34, bottom: 0, centerXZ: true });
+        return v;
+      });
+      tintFlowerTemplate(rawFlowerA, 0xc78cff);
+      tintFlowerTemplate(rawFlowerB, 0xf0a3df);
+      normalizeModel(rawFlowerA, { targetLongest: .22, bottom: 0, centerXZ: true });
+      normalizeModel(rawFlowerB, { targetLongest: .20, bottom: 0, centerXZ: true });
+
+      const brbrr = makeBrbrrVineSign(vineTemplates, [rawFlowerA, rawFlowerB]);
+      const houseBox = new THREE.Box3().setFromObject(house);
+      const halfX = Math.max(Math.abs(houseBox.min.x - house.position.x), Math.abs(houseBox.max.x - house.position.x), 3.4);
+      const halfZ = Math.max(Math.abs(houseBox.min.z - house.position.z), Math.abs(houseBox.max.z - house.position.z), 3.4);
+
+      house.updateMatrixWorld(true);
+      const spawnLocal = house.worldToLocal(new THREE.Vector3(69.5, house.position.y + 2.8, -1));
+      if (Math.abs(spawnLocal.x / halfX) > Math.abs(spawnLocal.z / halfZ)) {
+        const sx = Math.sign(spawnLocal.x) || 1;
+        brbrr.position.set(sx * (halfX + .08), 2.35, 0);
+        brbrr.rotation.y = sx > 0 ? Math.PI / 2 : -Math.PI / 2;
+      } else {
+        const sz = Math.sign(spawnLocal.z) || 1;
+        brbrr.position.set(0, 2.35, sz * (halfZ + .08));
+        brbrr.rotation.y = sz > 0 ? 0 : Math.PI;
+      }
+      brbrr.scale.setScalar(.92);
+      house.add(brbrr);
+      result.brbrrWisteria = brbrr;
+      result.loaded.push('brbrrWisteria');
+    } catch (err) {
+      console.warn('[garden-max] BRBRR vine wall failed', err);
+      result.failed.push('brbrrWisteria');
+    }
   } catch (err) {
     console.warn('[garden-max] cottage failed', err);
     result.failed.push('cottage');
+  }
+
+  onProgress('放入会走路的动漫女孩…');
+  try {
+    const girlGltf = await loader.loadAsync(URLS.animatedGirl);
+    const girlRoot = prep(girlGltf.scene || girlGltf.scenes?.[0], renderer, {
+      castShadow: true,
+      receiveShadow: true
+    });
+    const walkClip = (girlGltf.animations || []).find((a) => /walk/i.test(a.name));
+    if (!walkClip) throw new Error('animated girl has no Walk clip');
+    normalizeModel(girlRoot, { targetHeight: 4.05, bottom: 0, centerXZ: true });
+    const girl = new THREE.Group();
+    girl.name = 'animated-kimono-girl-walk';
+    girl.add(girlRoot);
+    scene.add(girl);
+
+    const mixer = new THREE.AnimationMixer(girlRoot);
+    mixer.clipAction(walkClip).setLoop(THREE.LoopRepeat, Infinity).play();
+    const centerX = 91.0, centerZ = 7.0;
+    let prevX = centerX + 5.4, prevZ = centerZ;
+    girl.position.set(prevX, heightAt(prevX, prevZ) + .03, prevZ);
+
+    result.animatedGirl = girl;
+    result.girlWalkClip = walkClip.name;
+    result.loaded.push('animatedGirl');
+    const previousUpdate = result.update;
+    result.update = (dt, time) => {
+      previousUpdate?.(dt, time);
+      mixer.update(dt);
+      const t = time * .28;
+      const x = centerX + Math.cos(t) * 5.4;
+      const z = centerZ + Math.sin(t * 1.18) * 3.7;
+      const dx = x - prevX, dz = z - prevZ;
+      girl.position.set(x, heightAt(x, z) + .03, z);
+      if (Math.hypot(dx, dz) > .0001) girl.rotation.y = Math.atan2(dx, dz) + Math.PI;
+      prevX = x; prevZ = z;
+    };
+  } catch (err) {
+    console.warn('[garden-max] animated girl failed', err);
+    result.failed.push('animatedGirl');
   }
 
   onProgress('载入原始约 150 万三角面的二进制 GLB 游艇（不减面）…');
@@ -436,6 +567,8 @@ export async function loadMaxAssets({
 
 export const MAX_ASSET_SOURCES = {
   premiumNature: 'CC0 — Poly Haven Jacaranda Tree; full source mesh, Meshopt transport compression only',
+  stylizedSakuraAndVines: 'CC0 — Quaternius Stylized Nature MegaKit + Medieval Village MegaKit',
+  animatedGirl: 'CC0 — Quaternius Ultimate Animated Character Pack; Kimono Female with Walk clip',
   cottage: 'CC0 — 3DAssets.dev asset 32485',
   boat: 'CC BY 4.0 — motoryacht 35 by angelo raffaele catalano; original ~1.5M-triangle binary GLB, no decimation',
   oak: 'CC0 — 3DAssets.dev asset 28312',
