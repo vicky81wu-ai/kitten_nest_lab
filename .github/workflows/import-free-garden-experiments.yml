@@ -1,0 +1,101 @@
+name: Import free Sakura, vines and animated girl
+
+on:
+  push:
+    branches:
+      - experiment/3d-garden-world
+    paths:
+      - .github/workflows/import-free-garden-experiments.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: experiment/3d-garden-world
+
+      - name: Download CC0 source packs
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/nature /tmp/chars /tmp/village
+          curl -L --fail --retry 3 \
+            'https://opengameart.org/sites/default/files/stylized_nature_megakitstandard.zip' \
+            -o /tmp/nature.zip
+          curl -L --fail --retry 3 \
+            'https://opengameart.org/sites/default/files/ultimate_animated_character_pack_by_quaternius.zip' \
+            -o /tmp/chars.zip
+          curl -L --fail --retry 3 \
+            'https://opengameart.org/sites/default/files/medieval_village_megakitstandard.zip' \
+            -o /tmp/village.zip
+          unzip -q /tmp/nature.zip -d /tmp/nature
+          unzip -q /tmp/chars.zip -d /tmp/chars
+          unzip -q /tmp/village.zip -d /tmp/village
+
+      - name: Pack stylized tree, blossoms and vine variants as GLB
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install -g @gltf-transform/cli@4.2.1
+          out='v2/nestward/assets/experiment'
+          mkdir -p "$out"
+
+          gltf-transform copy '/tmp/nature/glTF/CommonTree_1.gltf' "$out/stylized-sakura-common.glb"
+          gltf-transform copy '/tmp/nature/glTF/TwistedTree_3.gltf' "$out/stylized-sakura-twisted.glb"
+          gltf-transform copy '/tmp/nature/glTF/Flower_4_Group.gltf' "$out/stylized-blossoms-a.glb"
+          gltf-transform copy '/tmp/nature/glTF/Flower_3_Group.gltf' "$out/stylized-blossoms-b.glb"
+
+          for n in 1 2 4 5 6 9; do
+            gltf-transform copy "/tmp/village/glTF/Prop_Vine${n}.gltf" "$out/vine-${n}.glb"
+          done
+
+          ls -lh "$out"
+
+      - name: Convert animated kimono girl FBX to GLB
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq blender
+          src='/tmp/chars/Ultimate Animated Character Pack - Nov 2019/FBX/Kimono_Female.fbx'
+          out='v2/nestward/assets/experiment/animated-kimono-girl.glb'
+          cat >/tmp/convert_girl.py <<'PY'
+          import bpy, os
+          src=os.environ['SRC']
+          out=os.environ['OUT']
+          bpy.ops.object.select_all(action='SELECT')
+          bpy.ops.object.delete(use_global=False)
+          bpy.ops.import_scene.fbx(filepath=src, automatic_bone_orientation=True)
+          bpy.ops.export_scene.gltf(
+              filepath=out,
+              export_format='GLB',
+              export_animations=True,
+              export_skins=True,
+              export_morph=True,
+              export_yup=True,
+              export_apply=False
+          )
+          PY
+          SRC="$src" OUT="$out" blender -b --python /tmp/convert_girl.py
+          ls -lh "$out"
+          npx --yes @gltf-transform/cli@4.2.1 inspect "$out" || true
+
+      - name: Commit imported experiment assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add v2/nestward/assets/experiment
+          if git diff --cached --quiet; then
+            echo 'No asset changes.'
+            exit 0
+          fi
+          git commit -m 'Import free Sakura experiment assets and animated girl'
+          git push origin HEAD:experiment/3d-garden-world
