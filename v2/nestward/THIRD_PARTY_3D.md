@@ -49,13 +49,34 @@ These are used only in this non-custom visual-ceiling experiment. A future Kitte
 - Original model: https://sketchfab.com/3d-models/motoryacht-35-0bdd7a0de7254426890bb5745bb7da6d
 - License: CC BY 4.0
 - Browser-ready GLB source used by this experiment: https://github.com/bob6664569/open-water/blob/main/site/assets/boats/motoryacht_10.7r.glb
-- The original model is about 1.5M triangles. This branch generates an approximately 480k-triangle comparison LOD at load time while retaining the source model's materials/textures and keeping a real-world ~10.7 m class scale.
+- The original model is about 1.5M triangles. The current experiment loads the original browser-ready binary GLB directly with no runtime decimation or simplification.
 - This is a temporary visual/performance comparison asset, not the final NW boat.
 
 ### meshoptimizer
 - Source: https://github.com/zeux/meshoptimizer
 - License: MIT
-- MeshoptSimplifier is loaded as an ES module from jsDelivr and is used only to produce the ~480k triangle yacht comparison LOD.
+- Used as transport compression for selected GLBs. It is not used to simplify the current 1.5M-triangle yacht.
+
+
+### Quaternius — experiment Sakura / vines / animated Kimono girl
+- Source packs: Ultimate Stylized Nature MegaKit, Medieval Village MegaKit, Ultimate Animated Character Pack
+- Creator: https://quaternius.com
+- Download mirror used for this experiment: OpenGameArt
+- License: CC0 1.0
+- Imported browser-ready experiment assets live under `v2/nestward/assets/experiment/`.
+- The current scene uses two distinct Sakura treatments, six vine shapes plus flower clusters to construct the `BRBRR` cottage-wall planting, and the rigged Kimono Female with the source `Walk` action explicitly exported to GLB.
+
+### Poly Haven — premium Jacaranda + Grass Ground
+- Sources: https://polyhaven.com/a/jacaranda_tree and https://polyhaven.com/a/grass_ground
+- License: CC0 1.0
+- Jacaranda source geometry is retained and Meshopt-compressed for browser transport; no mesh simplification.
+- 4K Grass Ground diffuse and OpenGL normal maps provide the large-area ground surface.
+- One experiment Sakura variant preserves the same full Jacaranda geometry/material detail while recoloring foliage toward blossom pink in-shader.
+
+### Ajimano Sakura photogrammetry experiment
+- Source: https://github.com/code4fukui/vr-ajimano
+- License noted upstream: CC BY Open Data
+- A browser-ready Sakura GLB is retained under the experiment asset folder as a comparison source; it is not the active high-detail hero Sakura.
 
 ## Techniques studied but not directly copied as assets
 
