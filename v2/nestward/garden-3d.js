@@ -18,7 +18,7 @@ import {
   createBillboardCharacter
 } from './garden-hq-visuals.js';
 import { createTerrainPbrMaterial } from './garden-pbr-terrain.js?v=polyhaven-ground-74e57e56';
-import { loadMaxAssets } from './garden-max-assets.js?v=premium-direct-d955b07e';
+import { loadMaxAssets } from './garden-max-assets.js?v=sakura-brbrr-f109417c';
 
 const $ = (q) => document.querySelector(q);
 const canvas = $('#world3d');
@@ -190,7 +190,7 @@ async function boot() {
   status('切换到全 3D 草丛和林下植被…');
   let meadow = null;
 
-  status('载入写真级树木、草地、房子和 150 万面游艇…');
+  status('载入樱花树、BRBRR 紫藤、会走路女孩和 150 万面游艇…');
   const maxAssets = await loadMaxAssets({
     scene,
     renderer,
@@ -247,6 +247,7 @@ async function boot() {
     fairies.points,
     avatar.group,
     maxAssets.natureGroup,
+    ...(maxAssets.animatedGirl ? [maxAssets.animatedGirl] : []),
     ...(meadow ? [meadow.group] : [])
   ];
 
@@ -644,6 +645,7 @@ async function boot() {
       fireflyVis: 0,
       fireflyCap: 0
     });
+    maxAssets.update?.(dt, worldTime);
 
     updateAvatar(dt);
     updateBoat(dt);
@@ -676,7 +678,7 @@ async function boot() {
     loading.classList.add('done');
     const note = maxAssets.failed.length
       ? '晨雾森林版已开。个别外部资产走了备用版本。'
-      : '写真植被版已开。Misty Dawn 天空、Poly Haven 高模树草和高模游艇都已载入。';
+      : '樱花试验版已开。两种樱花、BRBRR 紫藤墙、会走路女孩和高模游艇都已载入。';
     say(note, 4300);
   });
 }
