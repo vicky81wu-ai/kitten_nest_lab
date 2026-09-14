@@ -62,7 +62,7 @@ jobs:
         run: |
           set -euo pipefail
           sudo apt-get update -qq
-          sudo apt-get install -y -qq blender
+          sudo apt-get install -y -qq blender python3-numpy
           src='/tmp/chars/Ultimate Animated Character Pack - Nov 2019/FBX/Kimono_Female.fbx'
           out='v2/nestward/assets/experiment/animated-kimono-girl.glb'
           cat >/tmp/convert_girl.py <<'PY'
