@@ -495,8 +495,10 @@ export async function loadMaxAssets({
       castShadow: true,
       receiveShadow: true
     });
-    const walkClip = (girlGltf.animations || []).find((a) => /walk/i.test(a.name));
-    if (!walkClip) throw new Error('animated girl has no Walk clip');
+    const clips = girlGltf.animations || [];
+    const walkClip = clips.find((a) => /walk/i.test(a.name)) || clips[0];
+    if (!walkClip) throw new Error('animated girl has no exported locomotion clip');
+    console.info('[garden-max] animated girl locomotion clip', walkClip.name);
     normalizeModel(girlRoot, { targetHeight: 4.05, bottom: 0, centerXZ: true });
     const girl = new THREE.Group();
     girl.name = 'animated-kimono-girl-walk';
