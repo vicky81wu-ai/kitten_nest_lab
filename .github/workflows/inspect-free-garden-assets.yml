@@ -40,7 +40,18 @@ jobs:
           echo '=== VILLAGE vine candidates ==='
           find /tmp/village -type f | grep -Ei 'vine|ivy|flower|plant|wall' | head -250 || true
 
-          echo '=== Quaternius women page download hints ==='
-          curl -L --fail --retry 3 'https://quaternius.com/packs/ultimatemodularwomen.html' \
-            | grep -Eoi 'https?[^"''' ]+\.(zip|rar|7z)|href="[^"]+\.(zip|rar|7z)' \
-            | head -50 || true
+          echo '=== Quaternius women page links ==='
+          python - <<'PY'
+          import html.parser, urllib.request
+          class P(html.parser.HTMLParser):
+              def handle_starttag(self, tag, attrs):
+                  if tag.lower() != 'a':
+                      return
+                  d=dict(attrs)
+                  href=d.get('href','')
+                  if href:
+                      print(href)
+          req=urllib.request.Request('https://quaternius.com/packs/ultimatemodularwomen.html',headers={'User-Agent':'Mozilla/5.0'})
+          data=urllib.request.urlopen(req,timeout=60).read().decode('utf-8','ignore')
+          P().feed(data)
+          PY
