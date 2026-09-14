@@ -1,0 +1,46 @@
+name: Inspect free garden asset packs
+
+on:
+  push:
+    branches:
+      - experiment/3d-garden-world
+    paths:
+      - .github/workflows/inspect-free-garden-assets.yml
+  workflow_dispatch:
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download free CC0 packs and inventory useful files
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/nature /tmp/chars /tmp/village
+          curl -L --fail --retry 3 \
+            'https://opengameart.org/sites/default/files/stylized_nature_megakitstandard.zip' \
+            -o /tmp/nature.zip
+          curl -L --fail --retry 3 \
+            'https://opengameart.org/sites/default/files/ultimate_animated_character_pack_by_quaternius.zip' \
+            -o /tmp/chars.zip
+          curl -L --fail --retry 3 \
+            'https://opengameart.org/sites/default/files/medieval_village_megakitstandard.zip' \
+            -o /tmp/village.zip
+          unzip -q /tmp/nature.zip -d /tmp/nature
+          unzip -q /tmp/chars.zip -d /tmp/chars
+          unzip -q /tmp/village.zip -d /tmp/village
+
+          echo '=== NATURE candidates ==='
+          find /tmp/nature -type f | grep -Ei 'cherry|sakura|pink|flower|blossom|tree|vine|ivy|wister' | head -250 || true
+          echo '=== CHARACTER candidates ==='
+          find /tmp/chars -type f | grep -Ei 'female|girl|woman|elf|witch|mage|anime' | head -250 || true
+          echo '=== VILLAGE vine candidates ==='
+          find /tmp/village -type f | grep -Ei 'vine|ivy|flower|plant|wall' | head -250 || true
+
+          echo '=== Quaternius women page download hints ==='
+          curl -L --fail --retry 3 'https://quaternius.com/packs/ultimatemodularwomen.html' \
+            | grep -Eoi 'https?[^"''' ]+\.(zip|rar|7z)|href="[^"]+\.(zip|rar|7z)' \
+            | head -50 || true
