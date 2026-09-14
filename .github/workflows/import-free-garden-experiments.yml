@@ -37,6 +37,9 @@ jobs:
           unzip -q /tmp/nature.zip -d /tmp/nature
           unzip -q /tmp/chars.zip -d /tmp/chars
           unzip -q /tmp/village.zip -d /tmp/village
+          curl -L --fail --retry 3 \
+            'https://raw.githubusercontent.com/code4fukui/vr-ajimano/main/ajimano-sakura-tree.glb' \
+            -o /tmp/ajimano-sakura-tree.glb
 
       - name: Pack stylized tree, blossoms and vine variants as GLB
         shell: bash
@@ -45,6 +48,12 @@ jobs:
           npm install -g @gltf-transform/cli@4.2.1
           out='v2/nestward/assets/experiment'
           mkdir -p "$out"
+
+          echo '=== Ajimano photogrammetry Sakura source ==='
+          gltf-transform inspect /tmp/ajimano-sakura-tree.glb || true
+          gltf-transform copy /tmp/ajimano-sakura-tree.glb "$out/photogrammetry-sakura.glb"
+          gltf-transform meshopt "$out/photogrammetry-sakura.glb" "$out/photogrammetry-sakura-meshopt.glb"
+          mv "$out/photogrammetry-sakura-meshopt.glb" "$out/photogrammetry-sakura.glb"
 
           gltf-transform copy '/tmp/nature/glTF/CommonTree_1.gltf' "$out/stylized-sakura-common.glb"
           gltf-transform copy '/tmp/nature/glTF/TwistedTree_3.gltf' "$out/stylized-sakura-twisted.glb"
@@ -76,6 +85,7 @@ jobs:
               filepath=out,
               export_format='GLB',
               export_animations=True,
+              export_animation_mode='BROADCAST',
               export_skins=True,
               export_morph=True,
               export_yup=True,
