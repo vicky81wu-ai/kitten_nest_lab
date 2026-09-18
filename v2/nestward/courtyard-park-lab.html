@@ -45,6 +45,9 @@
     .walk-up{grid-column:2;grid-row:1}.walk-left{grid-column:1;grid-row:2}.walk-down{grid-column:2;grid-row:2}.walk-right{grid-column:3;grid-row:2}
     .walkhint{position:absolute;z-index:7;left:max(18px,env(safe-area-inset-left));bottom:max(194px,calc(env(safe-area-inset-bottom) + 188px));display:none;padding:7px 9px;border-radius:10px;background:rgba(13,18,14,.54);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.8);font-size:10px;backdrop-filter:blur(12px)}
     .walkhint.show{display:block}
+    .look-surface{position:absolute;z-index:4;right:0;top:0;bottom:0;width:64%;display:none;touch-action:none;cursor:grab}
+    .look-surface.show{display:block}
+    .look-surface:active{cursor:grabbing}
     @media (max-width:640px){
       .card{max-width:calc(100vw - 76px);padding:9px 11px}
       h1{font-size:13px}.meta{font-size:10px}
@@ -82,7 +85,8 @@
       <button id="resetBtn" type="button">归位</button>
     </nav>
 
-    <div id="walkHint" class="walkhint">按住方向键移动 · 在画面里拖动转头</div>
+    <div id="lookSurface" class="look-surface" aria-label="拖动转头"></div>
+    <div id="walkHint" class="walkhint">左侧方向键走路 · 右半屏拖动转头</div>
     <div id="walkPad" class="walkpad" aria-label="第一视角移动">
       <button class="walk-up" data-move="forward" aria-label="向前">↑</button>
       <button class="walk-left" data-move="left" aria-label="向左">←</button>
@@ -107,6 +111,7 @@
       const enterBtn = document.getElementById('enterBtn');
       const walkPad = document.getElementById('walkPad');
       const walkHint = document.getElementById('walkHint');
+      const lookSurface = document.getElementById('lookSurface');
       const params = new URLSearchParams(location.search);
       const coarse = matchMedia('(pointer: coarse)').matches;
       const mode = params.get('mode') === 'fps' ? 'fps' : params.get('mode') === 'orbit' ? 'orbit' : (coarse ? 'orbit' : 'fps');
@@ -116,6 +121,7 @@
       fpsBtn.classList.toggle('active', mode === 'fps');
       walkPad.classList.toggle('show', mode === 'fps');
       walkHint.classList.toggle('show', mode === 'fps');
+      lookSurface.classList.toggle('show', mode === 'fps');
 
       function switchMode(next) {
         const url = new URL(location.href);
@@ -131,61 +137,193 @@
         else if (typeof api.focusOnVisibleGeometries === 'function') api.focusOnVisibleGeometries();
       });
 
-      enterBtn.addEventListener('click', () => {
-        if (!api) return;
-        if (mode !== 'fps') return switchMode('fps');
-        api.getCameraLookAt((err, camera) => {
-          if (err || !camera) return;
-          const p = camera.position.slice();
-          const t = camera.target.slice();
-          const dx = t[0] - p[0], dy = t[1] - p[1];
-          const horizontal = Math.hypot(dx, dy);
-          if (horizontal < .001) return;
-          const travel = Math.max(0, horizontal * .58);
-          const nx = dx / horizontal, ny = dy / horizontal;
-          const nextP = [p[0] + nx * travel, p[1] + ny * travel, p[2]];
-          const nextT = [t[0] + nx * travel, t[1] + ny * travel, t[2]];
-          api.setCameraLookAt(nextP, nextT, 1.2);
+      const v = {
+        add:(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]],
+        sub:(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]],
+        mul:(a,s)=>[a[0]*s,a[1]*s,a[2]*s],
+        dot:(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2],
+        cross:(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],
+        len:(a)=>Math.hypot(a[0],a[1],a[2]),
+        norm(a){ const l=this.len(a)||1; return this.mul(a,1/l); }
+      };
+
+      const fp = {
+        ready:false,
+        initializing:false,
+        position:null,
+        up:null,
+        forward:null,
+        eyeHeight:1,
+        lookDistance:5,
+        pitch:0
+      };
+
+      function rotateAroundAxis(vec, axis, angle) {
+        const u = v.norm(axis);
+        const cos = Math.cos(angle), sin = Math.sin(angle);
+        return v.add(
+          v.add(v.mul(vec, cos), v.mul(v.cross(u, vec), sin)),
+          v.mul(u, v.dot(u, vec) * (1 - cos))
+        );
+      }
+
+      function cameraTarget() {
+        const horizontal = v.norm(fp.forward);
+        const dir = v.norm(v.add(v.mul(horizontal, Math.cos(fp.pitch)), v.mul(fp.up, Math.sin(fp.pitch))));
+        return v.add(fp.position, v.mul(dir, fp.lookDistance));
+      }
+
+      function applyFirstPersonCamera(duration = 0) {
+        if (!api || !fp.ready) return;
+        api.setCameraLookAt(fp.position, cameraTarget(), duration);
+      }
+
+      function pickAt(x, y) {
+        return new Promise((resolve) => {
+          api.pickFromScreen([x, y], (err, hit) => resolve(err ? null : hit || null));
         });
+      }
+
+      async function findEntrySurface(camera) {
+        const dpr = Math.max(1, devicePixelRatio || 1);
+        const w = Math.max(1, iframe.clientWidth) * dpr;
+        const h = Math.max(1, iframe.clientHeight) * dpr;
+        const samples = [
+          [.50,.16],[.42,.18],[.58,.18],[.50,.24],
+          [.34,.17],[.66,.17],[.45,.30],[.55,.30]
+        ];
+        const hits = [];
+        for (const [sx, sy] of samples) {
+          const hit = await pickAt(w * sx, h * sy);
+          if (hit?.position3D && hit?.normal) hits.push(hit);
+        }
+        if (!hits.length) return null;
+
+        const cam = camera.position;
+        hits.forEach((hit) => {
+          let n = v.norm(hit.normal);
+          const towardCamera = v.norm(v.sub(cam, hit.position3D));
+          if (v.dot(n, towardCamera) < 0) n = v.mul(n, -1);
+          hit._normal = n;
+          hit._score = v.dot(n, towardCamera);
+        });
+        hits.sort((a,b) => b._score - a._score);
+        return hits[0];
+      }
+
+      async function enterFirstPerson(force = false) {
+        if (!api || mode !== 'fps' || fp.initializing || (fp.ready && !force)) return;
+        fp.initializing = true;
+        status.textContent = '正在落到院子里…';
+        status.classList.remove('ready');
+
+        api.setUserInteraction(false);
+        api.setCameraEasing('easeLinear');
+
+        api.getCameraLookAt(async (err, camera) => {
+          if (err || !camera) {
+            fp.initializing = false;
+            status.textContent = '第一视角初始化失败';
+            return;
+          }
+
+          const entry = await findEntrySurface(camera);
+          const rawForward = v.sub(camera.target, camera.position);
+          const sceneSpan = Math.max(.001, v.len(rawForward));
+          const eyeHeight = sceneSpan * .028;
+
+          if (entry) {
+            const up = entry._normal || v.norm(entry.normal);
+            let forward = v.sub(rawForward, v.mul(up, v.dot(rawForward, up)));
+            if (v.len(forward) < .001) {
+              const helper = Math.abs(up[2]) < .9 ? [0,0,1] : [0,1,0];
+              forward = v.cross(helper, up);
+            }
+            forward = v.norm(forward);
+
+            fp.up = up;
+            fp.forward = forward;
+            fp.eyeHeight = eyeHeight;
+            fp.lookDistance = Math.max(eyeHeight * 5.5, sceneSpan * .12);
+            fp.position = v.add(entry.position3D, v.mul(up, eyeHeight));
+            fp.pitch = 0;
+            fp.ready = true;
+            applyFirstPersonCamera(.65);
+            status.textContent = '第一视角：左边走路，右边转头';
+            setTimeout(() => status.classList.add('ready'), 1100);
+          } else {
+            // Fallback still takes ownership of the camera, but drops it toward the model target.
+            const up = [0,0,1];
+            let forward = v.sub(rawForward, v.mul(up, v.dot(rawForward, up)));
+            forward = v.len(forward) > .001 ? v.norm(forward) : [0,1,0];
+            fp.up = up;
+            fp.forward = forward;
+            fp.eyeHeight = eyeHeight;
+            fp.lookDistance = Math.max(eyeHeight * 5.5, sceneSpan * .12);
+            fp.position = v.add(camera.target, v.mul(up, eyeHeight));
+            fp.pitch = 0;
+            fp.ready = true;
+            applyFirstPersonCamera(.65);
+            status.textContent = '第一视角已接管';
+            setTimeout(() => status.classList.add('ready'), 1100);
+          }
+          fp.initializing = false;
+        });
+      }
+
+      enterBtn.addEventListener('click', () => {
+        if (mode !== 'fps') return switchMode('fps');
+        enterFirstPerson(true);
       });
 
       let moveTimer = 0;
       let moveVector = null;
       let moveBusy = false;
 
-      function walkTick() {
-        if (!api || !moveVector || moveBusy) return;
+      function snapMove(forwardAmount, strafeAmount) {
+        if (!api || !fp.ready || moveBusy) return;
         moveBusy = true;
-        api.getCameraLookAt((err, camera) => {
-          if (!err && camera && moveVector) {
-            const p = camera.position.slice();
-            const t = camera.target.slice();
-            const fx0 = t[0] - p[0], fy0 = t[1] - p[1];
-            const len = Math.hypot(fx0, fy0) || 1;
-            const fx = fx0 / len, fy = fy0 / len;
-            const rx = fy, ry = -fx;
-            const step = .42;
-            const mx = (fx * moveVector.forward + rx * moveVector.strafe) * step;
-            const my = (fy * moveVector.forward + ry * moveVector.strafe) * step;
-            api.setCameraLookAt(
-              [p[0] + mx, p[1] + my, p[2]],
-              [t[0] + mx, t[1] + my, t[2]],
-              0
-            );
+
+        const right = v.norm(v.cross(fp.forward, fp.up));
+        const step = fp.eyeHeight * .19;
+        const delta = v.add(v.mul(fp.forward, forwardAmount * step), v.mul(right, strafeAmount * step));
+        const candidate = v.add(fp.position, delta);
+
+        const rayStart = v.add(candidate, v.mul(fp.up, fp.eyeHeight * 1.8));
+        const rayEnd = v.add(candidate, v.mul(fp.up, -fp.eyeHeight * 4.5));
+
+        api.pickFromScene(rayStart, rayEnd, (err, hit) => {
+          if (!err && hit?.position3D && hit?.normal) {
+            let n = v.norm(hit.normal);
+            if (v.dot(n, fp.up) < 0) n = v.mul(n, -1);
+            if (v.dot(n, fp.up) > .42) {
+              fp.position = v.add(hit.position3D, v.mul(fp.up, fp.eyeHeight));
+            } else {
+              fp.position = candidate;
+            }
+          } else {
+            fp.position = candidate;
           }
+          applyFirstPersonCamera(0);
           moveBusy = false;
         });
       }
 
+      function walkTick() {
+        if (!moveVector) return;
+        snapMove(moveVector.forward, moveVector.strafe);
+      }
+
       function startWalk(kind) {
         if (mode !== 'fps') return;
+        if (!fp.ready) enterFirstPerson();
         moveVector = kind === 'forward' ? {forward:1,strafe:0}
           : kind === 'back' ? {forward:-1,strafe:0}
           : kind === 'left' ? {forward:0,strafe:-1}
           : {forward:0,strafe:1};
         walkTick();
         clearInterval(moveTimer);
-        moveTimer = setInterval(walkTick, 70);
+        moveTimer = setInterval(walkTick, 58);
       }
 
       function stopWalk() {
@@ -202,11 +340,68 @@
         });
         button.addEventListener('pointerup', stopWalk);
         button.addEventListener('pointercancel', stopWalk);
-        button.addEventListener('pointerleave', (event) => {
-          if (event.buttons === 0) stopWalk();
-        });
+        button.addEventListener('lostpointercapture', stopWalk);
       });
-      addEventListener('blur', stopWalk);
+
+      let looking = false;
+      let lastLookX = 0;
+      let lastLookY = 0;
+
+      lookSurface.addEventListener('pointerdown', (event) => {
+        if (mode !== 'fps') return;
+        event.preventDefault();
+        if (!fp.ready) enterFirstPerson();
+        looking = true;
+        lastLookX = event.clientX;
+        lastLookY = event.clientY;
+        lookSurface.setPointerCapture?.(event.pointerId);
+      });
+
+      lookSurface.addEventListener('pointermove', (event) => {
+        if (!looking || !fp.ready) return;
+        event.preventDefault();
+        const dx = event.clientX - lastLookX;
+        const dy = event.clientY - lastLookY;
+        lastLookX = event.clientX;
+        lastLookY = event.clientY;
+        fp.forward = v.norm(rotateAroundAxis(fp.forward, fp.up, -dx * .0045));
+        fp.pitch = Math.max(-.72, Math.min(.72, fp.pitch - dy * .0036));
+        applyFirstPersonCamera(0);
+      });
+
+      function stopLooking(){ looking = false; }
+      lookSurface.addEventListener('pointerup', stopLooking);
+      lookSurface.addEventListener('pointercancel', stopLooking);
+      lookSurface.addEventListener('lostpointercapture', stopLooking);
+
+      const keyState = new Set();
+      addEventListener('keydown', (event) => {
+        if (mode !== 'fps') return;
+        const k = event.key.toLowerCase();
+        if (['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(k)) {
+          event.preventDefault();
+          keyState.add(k);
+        }
+      });
+      addEventListener('keyup', (event) => keyState.delete(event.key.toLowerCase()));
+
+      let lastKeyMove = 0;
+      function keyboardLoop(ts) {
+        if (mode === 'fps' && fp.ready && ts - lastKeyMove > 55 && keyState.size) {
+          const f = (keyState.has('w') || keyState.has('arrowup') ? 1 : 0) - (keyState.has('s') || keyState.has('arrowdown') ? 1 : 0);
+          const s = (keyState.has('d') || keyState.has('arrowright') ? 1 : 0) - (keyState.has('a') || keyState.has('arrowleft') ? 1 : 0);
+          if (f || s) snapMove(f, s);
+          lastKeyMove = ts;
+        }
+        requestAnimationFrame(keyboardLoop);
+      }
+      requestAnimationFrame(keyboardLoop);
+
+      addEventListener('blur', () => {
+        stopWalk();
+        keyState.clear();
+        stopLooking();
+      });
 
       if (!window.Sketchfab) {
         status.textContent = '3D viewer 加载失败';
@@ -230,9 +425,15 @@
           api = viewerApi;
           api.start();
           api.addEventListener('viewerready', () => {
-            status.classList.add('ready');
             try { api.setShadingStyle('pbr', { type: 'lit' }); } catch (_) {}
-            try { api.setFov(mode === 'fps' ? 62 : 48); } catch (_) {}
+            try { api.setFov(mode === 'fps' ? 68 : 48); } catch (_) {}
+            if (mode === 'fps') {
+              api.setUserInteraction(false);
+              setTimeout(() => enterFirstPerson(), 250);
+            } else {
+              api.setUserInteraction(true);
+              status.classList.add('ready');
+            }
           });
         },
         error() {
