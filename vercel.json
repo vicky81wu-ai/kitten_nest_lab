@@ -1,17 +1,12 @@
 {
   "routes": [
-    { "src": "^/$", "dest": "/api/app-assets" },
-    { "src": "^/cloud$", "dest": "/v2/index.html" },
-    { "src": "^/cloud-weather$", "dest": "/api/app-weather" },
-    { "src": "^/cloud-assets$", "dest": "/api/app-assetctl" },
-    { "src": "^/cloud-bubble$", "dest": "/api/app-bubble" },
-    { "src": "^/cloud-coords$", "dest": "/api/app-coords" },
-    { "src": "^/cloud-hotspot-test$", "dest": "/api/app-coords" },
-    { "src": "^/pwa$", "dest": "/api/app-assets" },
-    { "src": "^/cloudq$", "dest": "/api/app-q" },
-    { "src": "^/nest$", "dest": "/api/app-assets" },
-    { "src": "^/write$", "dest": "/write.html" },
-    { "src": "^/index.html$", "dest": "/api/app-assets" },
-    { "src": "^/(.*)$", "dest": "/$1" }
+    {
+      "src": "^/frank_worlds/(.*)$",
+      "dest": "https://frankfanyiming.github.io/frank_worlds/$1"
+    },
+    {
+      "src": "^/(.*)$",
+      "dest": "https://frankfanyiming.github.io/frank_worlds/$1"
+    }
   ]
 }
