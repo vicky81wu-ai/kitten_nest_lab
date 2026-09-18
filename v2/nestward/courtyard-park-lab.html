@@ -38,12 +38,21 @@
     .status.ready{opacity:0;pointer-events:none}
     .credit{position:absolute;z-index:5;right:max(12px,env(safe-area-inset-right));bottom:max(74px,calc(env(safe-area-inset-bottom) + 66px));max-width:min(76vw,360px);padding:8px 10px;border-radius:12px;background:rgba(11,15,12,.48);border:1px solid rgba(255,255,255,.11);backdrop-filter:blur(14px);color:rgba(255,255,255,.72);font-size:10px;line-height:1.4}
     .credit a{color:#f0d8a7;text-decoration:none}
+    .walkpad{position:absolute;z-index:7;left:max(16px,env(safe-area-inset-left));bottom:max(82px,calc(env(safe-area-inset-bottom) + 76px));display:none;grid-template-columns:54px 54px 54px;grid-template-rows:54px 54px;gap:5px;touch-action:none;user-select:none;-webkit-user-select:none}
+    .walkpad.show{display:grid}
+    .walkpad button{width:54px;height:54px;padding:0;border-radius:17px;background:rgba(13,18,14,.62);border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px);color:#fff;font-size:21px;box-shadow:0 6px 20px rgba(0,0,0,.22);touch-action:none}
+    .walkpad button:active{background:rgba(215,183,122,.26)}
+    .walk-up{grid-column:2;grid-row:1}.walk-left{grid-column:1;grid-row:2}.walk-down{grid-column:2;grid-row:2}.walk-right{grid-column:3;grid-row:2}
+    .walkhint{position:absolute;z-index:7;left:max(18px,env(safe-area-inset-left));bottom:max(194px,calc(env(safe-area-inset-bottom) + 188px));display:none;padding:7px 9px;border-radius:10px;background:rgba(13,18,14,.54);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.8);font-size:10px;backdrop-filter:blur(12px)}
+    .walkhint.show{display:block}
     @media (max-width:640px){
       .card{max-width:calc(100vw - 76px);padding:9px 11px}
       h1{font-size:13px}.meta{font-size:10px}
       .credit{display:none}
       .toolbar{bottom:max(12px,calc(env(safe-area-inset-bottom) + 6px))}
       button{padding:9px 12px}
+      .walkpad{bottom:max(78px,calc(env(safe-area-inset-bottom) + 72px))}
+      .walkhint{bottom:max(192px,calc(env(safe-area-inset-bottom) + 186px))}
     }
   </style>
   <script src="https://static.sketchfab.com/api/sketchfab-viewer-1.12.1.js"></script>
@@ -68,9 +77,18 @@
 
     <nav class="toolbar" aria-label="视角模式">
       <button id="orbitBtn" type="button">环绕看景</button>
-      <button id="fpsBtn" type="button">漫游</button>
+      <button id="fpsBtn" type="button">第一视角</button>
+      <button id="enterBtn" type="button">走进去</button>
       <button id="resetBtn" type="button">归位</button>
     </nav>
+
+    <div id="walkHint" class="walkhint">按住方向键移动 · 在画面里拖动转头</div>
+    <div id="walkPad" class="walkpad" aria-label="第一视角移动">
+      <button class="walk-up" data-move="forward" aria-label="向前">↑</button>
+      <button class="walk-left" data-move="left" aria-label="向左">←</button>
+      <button class="walk-down" data-move="back" aria-label="向后">↓</button>
+      <button class="walk-right" data-move="right" aria-label="向右">→</button>
+    </div>
 
     <div class="credit">
       Scene: <a href="https://sketchfab.com/3d-models/ancient-chinese-courtyard-park-55d8371278844dbbbe43e1f867b5fcde" target="_blank" rel="noopener">Ancient Chinese courtyard Park</a>
@@ -86,6 +104,9 @@
       const orbitBtn = document.getElementById('orbitBtn');
       const fpsBtn = document.getElementById('fpsBtn');
       const resetBtn = document.getElementById('resetBtn');
+      const enterBtn = document.getElementById('enterBtn');
+      const walkPad = document.getElementById('walkPad');
+      const walkHint = document.getElementById('walkHint');
       const params = new URLSearchParams(location.search);
       const coarse = matchMedia('(pointer: coarse)').matches;
       const mode = params.get('mode') === 'fps' ? 'fps' : params.get('mode') === 'orbit' ? 'orbit' : (coarse ? 'orbit' : 'fps');
@@ -93,6 +114,8 @@
 
       orbitBtn.classList.toggle('active', mode === 'orbit');
       fpsBtn.classList.toggle('active', mode === 'fps');
+      walkPad.classList.toggle('show', mode === 'fps');
+      walkHint.classList.toggle('show', mode === 'fps');
 
       function switchMode(next) {
         const url = new URL(location.href);
@@ -107,6 +130,83 @@
         if (typeof api.recenterCamera === 'function') api.recenterCamera();
         else if (typeof api.focusOnVisibleGeometries === 'function') api.focusOnVisibleGeometries();
       });
+
+      enterBtn.addEventListener('click', () => {
+        if (!api) return;
+        if (mode !== 'fps') return switchMode('fps');
+        api.getCameraLookAt((err, camera) => {
+          if (err || !camera) return;
+          const p = camera.position.slice();
+          const t = camera.target.slice();
+          const dx = t[0] - p[0], dy = t[1] - p[1];
+          const horizontal = Math.hypot(dx, dy);
+          if (horizontal < .001) return;
+          const travel = Math.max(0, horizontal * .58);
+          const nx = dx / horizontal, ny = dy / horizontal;
+          const nextP = [p[0] + nx * travel, p[1] + ny * travel, p[2]];
+          const nextT = [t[0] + nx * travel, t[1] + ny * travel, t[2]];
+          api.setCameraLookAt(nextP, nextT, 1.2);
+        });
+      });
+
+      let moveTimer = 0;
+      let moveVector = null;
+      let moveBusy = false;
+
+      function walkTick() {
+        if (!api || !moveVector || moveBusy) return;
+        moveBusy = true;
+        api.getCameraLookAt((err, camera) => {
+          if (!err && camera && moveVector) {
+            const p = camera.position.slice();
+            const t = camera.target.slice();
+            const fx0 = t[0] - p[0], fy0 = t[1] - p[1];
+            const len = Math.hypot(fx0, fy0) || 1;
+            const fx = fx0 / len, fy = fy0 / len;
+            const rx = fy, ry = -fx;
+            const step = .42;
+            const mx = (fx * moveVector.forward + rx * moveVector.strafe) * step;
+            const my = (fy * moveVector.forward + ry * moveVector.strafe) * step;
+            api.setCameraLookAt(
+              [p[0] + mx, p[1] + my, p[2]],
+              [t[0] + mx, t[1] + my, t[2]],
+              0
+            );
+          }
+          moveBusy = false;
+        });
+      }
+
+      function startWalk(kind) {
+        if (mode !== 'fps') return;
+        moveVector = kind === 'forward' ? {forward:1,strafe:0}
+          : kind === 'back' ? {forward:-1,strafe:0}
+          : kind === 'left' ? {forward:0,strafe:-1}
+          : {forward:0,strafe:1};
+        walkTick();
+        clearInterval(moveTimer);
+        moveTimer = setInterval(walkTick, 70);
+      }
+
+      function stopWalk() {
+        moveVector = null;
+        clearInterval(moveTimer);
+        moveTimer = 0;
+      }
+
+      walkPad.querySelectorAll('[data-move]').forEach((button) => {
+        button.addEventListener('pointerdown', (event) => {
+          event.preventDefault();
+          button.setPointerCapture?.(event.pointerId);
+          startWalk(button.dataset.move);
+        });
+        button.addEventListener('pointerup', stopWalk);
+        button.addEventListener('pointercancel', stopWalk);
+        button.addEventListener('pointerleave', (event) => {
+          if (event.buttons === 0) stopWalk();
+        });
+      });
+      addEventListener('blur', stopWalk);
 
       if (!window.Sketchfab) {
         status.textContent = '3D viewer 加载失败';
